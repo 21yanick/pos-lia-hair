@@ -10,10 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Scissors } from "lucide-react"
+import { supabase } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
@@ -24,18 +25,24 @@ export default function LoginPage() {
     setError("")
     setIsLoading(true)
 
-    // Simulate API call
     try {
-      // In a real app, this would be an API call to authenticate
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Echte Supabase-Authentifizierung
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      // For demo purposes, hardcoded credentials
-      if ((username === "admin" && password === "password") || (username === "admin" && password === "admin")) {
+      if (authError) {
+        setError(authError.message || "Ungültiger Benutzername oder Passwort")
+        return
+      }
+
+      if (data.session) {
         router.push("/dashboard")
-      } else {
-        setError("Ungültiger Benutzername oder Passwort")
+        router.refresh() // Aktualisieren, um sicherzustellen, dass der Sitzungsstatus aktualisiert wird
       }
     } catch (err) {
+      console.error("Login error:", err)
       setError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.")
     } finally {
       setIsLoading(false)
@@ -61,12 +68,12 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Benutzername</Label>
+              <Label htmlFor="email">E-Mail</Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>

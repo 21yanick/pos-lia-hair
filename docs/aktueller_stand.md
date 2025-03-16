@@ -45,10 +45,11 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 
 ### 2.1 Authentifizierung und Benutzerverwaltung
 
-- ❌ Echte Authentifizierung mit Supabase Auth (derzeit nur simuliert)
+- ✅ Echte Authentifizierung mit Supabase Auth implementiert (Login-Funktionalität)
 - ❌ Benutzerprofile und -verwaltung
 - ❌ Passwort-Reset und Benutzerkonto-Erstellung
 - ❌ Rollen- und Berechtigungssystem in der Anwendung
+- ❌ Logout-Funktion implementieren
 
 ### 2.2 Daten-Integration
 
@@ -171,10 +172,20 @@ Um das Projekt zu vervollständigen, wird ein geschätzter Zeitaufwand von:
 
 ## 6. Nächste unmittelbare Schritte
 
-1. Supabase-Authentifizierung einrichten und an UI anbinden
-2. Datenbank-Hooks für Produkte erstellen und in der Produkt-Verwaltung implementieren
-3. POS-Verkaufsseite mit Datenbankanbindung versehen
-4. Kassenstatus-Verwaltung (Öffnen/Schließen) mit Datenbank verknüpfen
-5. Tagesabschluss-Logik mit Datenbankoperationen implementieren
+1. ✅ Supabase-Authentifizierung einrichten und an UI anbinden
+2. Logout-Funktion implementieren
+3. Datenbank-Hooks für Produkte erstellen und in der Produkt-Verwaltung implementieren
+4. POS-Verkaufsseite mit Datenbankanbindung versehen
+5. Kassenstatus-Verwaltung (Öffnen/Schließen) mit Datenbank verknüpfen
+6. Tagesabschluss-Logik mit Datenbankoperationen implementieren
 
 Diese Schritte bilden die Grundlage für ein funktionsfähiges Minimal Viable Product (MVP) und sollten priorisiert werden.
+
+## 7. Aktueller Status und Fortschritt
+
+### Letzte Änderungen (16.03.2025):
+- Git-Repository initialisiert und auf GitHub gepusht: https://github.com/21yanick/pos-lia-hair
+- Supabase Auth-Integration implementiert
+- Login-Funktionalität mit echter Supabase-Authentifizierung umgesetzt
+- Lokale Entwicklungsumgebung mit Supabase-Docker konfiguriert (auf Port 8000)
+- Diese Dokumentation zur Projektverfolgung aktualisiert
