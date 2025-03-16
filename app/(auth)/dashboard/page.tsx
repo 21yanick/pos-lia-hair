@@ -2,7 +2,7 @@
 
 import { DialogFooter } from "@/components/ui/dialog"
 import { useState, useEffect } from "react"
-import { ShoppingCart, FileText, BookOpen, BarChart4, Clock, CreditCard, Wallet, Loader2 } from "lucide-react"
+import { ShoppingCart, FileText, BookOpen, BarChart4, Clock, CreditCard, Wallet, Loader2, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,21 +16,28 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { AuthDebugPanel } from "@/components/debug/AuthDebugPanel"
 import { useRegisterStatus } from "@/lib/hooks/useRegisterStatus"
 import { useToast } from "@/lib/hooks/useToast"
+import { useDashboardStats } from "@/lib/hooks/useDashboardStats"
 
 export default function Dashboard() {
   // Hooks
   const { 
-    loading, 
-    error, 
+    loading: registerLoading, 
+    error: registerError, 
     isOpen, 
     currentRegisterStatus, 
     openRegister, 
     closeRegister,
     calculateCurrentBalance 
   } = useRegisterStatus()
+  
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+    refreshStats
+  } = useDashboardStats()
   
   const { toast } = useToast()
   
@@ -57,33 +64,27 @@ export default function Dashboard() {
     loadBalances()
   }, [currentRegisterStatus, isOpen, calculateCurrentBalance])
   
-  // Fehlerbehandlung
+  // Fehlerbehandlung für Kassenregister
   useEffect(() => {
-    if (error) {
+    if (registerError) {
       toast({
         title: "Fehler",
-        description: error,
+        description: registerError,
         variant: "destructive"
       })
     }
-  }, [error, toast])
+  }, [registerError, toast])
 
-  const todayStats = {
-    revenue: 1250.5,
-    transactions: 15,
-    paymentMethods: {
-      cash: 450.5,
-      twint: 500.0,
-      sumup: 300.0,
-    },
-    recentTransactions: [
-      { id: "1", time: "14:25", amount: 85.0, method: "cash" },
-      { id: "2", time: "13:10", amount: 120.0, method: "twint" },
-      { id: "3", time: "11:45", amount: 65.5, method: "sumup" },
-      { id: "4", time: "10:30", amount: 95.0, method: "cash" },
-      { id: "5", time: "09:15", amount: 45.0, method: "twint" },
-    ],
-  }
+  // Fehlerbehandlung für Dashboard-Statistiken
+  useEffect(() => {
+    if (statsError) {
+      toast({
+        title: "Fehler beim Laden der Statistiken",
+        description: statsError,
+        variant: "destructive"
+      });
+    }
+  }, [statsError, toast]);
 
   const handleOpenRegister = async () => {
     const amount = Number.parseFloat(registerAmount)
@@ -164,41 +165,70 @@ export default function Dashboard() {
   }
 
   const quickActions = [
-    { name: "Neuer Verkauf", icon: ShoppingCart, href: "/pos", color: "bg-blue-500" },
-    { name: "Tagesabschluss", icon: FileText, href: "/reports/daily", color: "bg-green-500" },
-    { name: "Kassenbuch", icon: BookOpen, href: "/reports/cash-register", color: "bg-purple-500" },
-    { name: "Monatsabschluss", icon: BarChart4, href: "/reports/monthly", color: "bg-orange-500" },
+    { 
+      name: "Neuer Verkauf", 
+      description: "Verkaufsbildschirm öffnen", 
+      icon: ShoppingCart, 
+      href: "/pos", 
+      color: "bg-gradient-to-br from-blue-400 to-blue-600" 
+    },
+    { 
+      name: "Tagesabschluss", 
+      description: "Tagesberichte anzeigen", 
+      icon: FileText, 
+      href: "/reports/daily", 
+      color: "bg-gradient-to-br from-emerald-400 to-emerald-600" 
+    },
+    { 
+      name: "Kassenbuch", 
+      description: "Kassenbewegungen verwalten", 
+      icon: BookOpen, 
+      href: "/reports/cash-register", 
+      color: "bg-gradient-to-br from-violet-400 to-violet-600" 
+    },
+    { 
+      name: "Monatsabschluss", 
+      description: "Monatsberichte anzeigen", 
+      icon: BarChart4, 
+      href: "/reports/monthly", 
+      color: "bg-gradient-to-br from-amber-400 to-amber-600" 
+    },
   ]
 
   return (
     <div className="space-y-6">
-      {/* Debug-Komponente für User-DB-Synchronisation */}
-      <AuthDebugPanel />
-      
       {/* Register Status Card */}
-      <Card>
+      <Card className="overflow-hidden">
+        <div className={`h-1 ${isOpen ? "bg-gradient-to-r from-green-400 to-green-600" : "bg-gradient-to-r from-red-400 to-red-600"}`} />
         <CardContent className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 size={30} className="animate-spin mr-2" />
-              <span>Kassenstatus wird geladen...</span>
+          {registerLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 size={30} className="animate-spin mr-2 text-primary" />
+              <span className="text-lg">Kassenstatus wird geladen...</span>
             </div>
           ) : (
             <div className="flex flex-col md:flex-row items-center justify-between">
-              <div className="flex items-center mb-4 md:mb-0">
+              <div className="flex items-center mb-6 md:mb-0">
                 <div
-                  className={`w-16 h-16 rounded-full flex items-center justify-center ${isOpen ? "bg-green-100" : "bg-red-100"} mr-4`}
+                  className="w-16 h-16 rounded-lg flex items-center justify-center bg-white border border-gray-200 mr-5 shadow-sm"
                 >
-                  <Clock size={32} className={isOpen ? "text-green-600" : "text-red-600"} />
+                  <Clock size={30} className="text-gray-700" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">
-                    Kassenstatus: {isOpen ? "Geöffnet" : "Geschlossen"}
-                  </h2>
+                  <div className="flex items-center">
+                    <h2 className="text-2xl font-bold">
+                      Kassenstatus:
+                    </h2>
+                    <span className={`ml-2 text-lg font-medium px-3 py-1 rounded-full ${isOpen 
+                      ? "bg-green-100 text-green-700" 
+                      : "bg-red-100 text-red-700"}`}>
+                      {isOpen ? "Geöffnet" : "Geschlossen"}
+                    </span>
+                  </div>
                   {isOpen && currentRegisterStatus && (
-                    <p className="text-gray-500">
-                      Geöffnet seit: {new Date(currentRegisterStatus.opened_at).toLocaleTimeString()} • 
-                      Aktueller Bestand: CHF {currentBalance !== null ? currentBalance.toFixed(2) : currentRegisterStatus.starting_amount.toFixed(2)}
+                    <p className="text-gray-600 mt-2">
+                      <span className="font-medium">Geöffnet seit:</span> {new Date(currentRegisterStatus.opened_at).toLocaleTimeString()} <span className="px-2">•</span>
+                      <span className="font-medium">Aktueller Bestand:</span> CHF {currentBalance !== null ? currentBalance.toFixed(2) : currentRegisterStatus.starting_amount.toFixed(2)}
                     </p>
                   )}
                 </div>
@@ -209,15 +239,19 @@ export default function Dashboard() {
                 <DialogTrigger asChild>
                   <Button 
                     size="lg" 
-                    disabled={isOpen || loading || isProcessing}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                    disabled={isOpen || registerLoading || isProcessing}
                   >
                     {isProcessing ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         Wird verarbeitet...
                       </>
                     ) : (
-                      "Kasse öffnen"
+                      <>
+                        <Clock className="mr-2 h-5 w-5" />
+                        Kasse öffnen
+                      </>
                     )}
                   </Button>
                 </DialogTrigger>
@@ -229,7 +263,7 @@ export default function Dashboard() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
-                    {loading ? (
+                    {registerLoading ? (
                       <div className="flex justify-center items-center py-4">
                         <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
                         <span>Vorherigen Kassenstand laden...</span>
@@ -307,7 +341,7 @@ export default function Dashboard() {
                     </Button>
                     <Button 
                       onClick={handleOpenRegister} 
-                      disabled={isProcessing || !registerAmount || loading}
+                      disabled={isProcessing || !registerAmount || registerLoading}
                     >
                       {isProcessing ? (
                         <>
@@ -328,17 +362,19 @@ export default function Dashboard() {
                   <DialogTrigger asChild>
                     <Button 
                       size="lg" 
-                      variant="outline" 
-                      className="ml-2"
-                      disabled={!isOpen || loading || isProcessing}
+                      className="ml-3 border-2 border-red-200 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 hover:border-red-300 shadow-sm transition-all duration-200"
+                      disabled={!isOpen || registerLoading || isProcessing}
                     >
                       {isProcessing ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                           Wird verarbeitet...
                         </>
                       ) : (
-                        "Kasse schließen"
+                        <>
+                          <Clock className="mr-2 h-5 w-5" />
+                          Kasse schließen
+                        </>
                       )}
                     </Button>
                   </DialogTrigger>
@@ -428,94 +464,181 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Schnellzugriff</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {quickActions.map((action) => (
-            <Button
+            <Card
               key={action.name}
-              variant="outline"
-              className="h-32 flex flex-col items-center justify-center space-y-2 border-2"
+              className="overflow-hidden transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer group"
               onClick={() => (window.location.href = action.href)}
             >
-              <div className={`w-12 h-12 rounded-full ${action.color} flex items-center justify-center`}>
-                <action.icon size={24} className="text-white" />
-              </div>
-              <span>{action.name}</span>
-            </Button>
+              <div className={`h-2 ${action.color}`} />
+              <CardContent className="p-6">
+                <div className="flex items-start">
+                  <div className="w-10 h-10 rounded-md bg-white border border-gray-200 flex items-center justify-center mr-4 shadow-sm group-hover:shadow transition-all">
+                    <action.icon size={20} className="text-gray-700" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-lg">{action.name}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{action.description}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
 
       {/* Today's Statistics */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Tagesstatistik</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Umsatz heute</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <Wallet className="mr-2 text-green-500" />
-                <span className="text-2xl font-bold">CHF {todayStats.revenue.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Transaktionen</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <ShoppingCart className="mr-2 text-blue-500" />
-                <span className="text-2xl font-bold">{todayStats.transactions}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Zahlungsarten</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center">
-                  <Wallet className="mr-1 text-green-500" size={16} />
-                  <span>CHF {todayStats.paymentMethods.cash.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center">
-                  <Wallet className="mr-1 text-purple-500" size={16} />
-                  <span>CHF {todayStats.paymentMethods.twint.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center">
-                  <CreditCard className="mr-1 text-blue-500" size={16} />
-                  <span>CHF {todayStats.paymentMethods.sumup.toFixed(2)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Tagesstatistik</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-gray-600"
+            onClick={refreshStats}
+            disabled={statsLoading}
+          >
+            {statsLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            <span className="ml-1 text-xs">Aktualisieren</span>
+          </Button>
         </div>
+        
+        {statsLoading ? (
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            <span>Tagesstatistik wird geladen...</span>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+              <Card className="overflow-hidden hover:shadow-md transition-all duration-200">
+                <div className="h-1 bg-gradient-to-r from-green-400 to-green-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Umsatz heute</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-1">
+                  <div className="flex items-center">
+                    <div className="bg-white border border-gray-200 w-12 h-12 rounded-md flex items-center justify-center shadow-sm mr-4">
+                      <Wallet className="text-gray-700" size={22} />
+                    </div>
+                    <div>
+                      <span className="text-3xl font-bold">CHF {stats.revenue.toFixed(2)}</span>
+                      <p className="text-xs text-gray-500 mt-1">Gesamt eingenommen</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden hover:shadow-md transition-all duration-200">
+                <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Transaktionen</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-1">
+                  <div className="flex items-center">
+                    <div className="bg-white border border-gray-200 w-12 h-12 rounded-md flex items-center justify-center shadow-sm mr-4">
+                      <ShoppingCart className="text-gray-700" size={22} />
+                    </div>
+                    <div>
+                      <span className="text-3xl font-bold">{stats.transactions}</span>
+                      <p className="text-xs text-gray-500 mt-1">Verkäufe heute</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden hover:shadow-md transition-all duration-200">
+                <div className="h-1 bg-gradient-to-r from-violet-400 to-violet-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Zahlungsarten</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-1">
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center justify-between p-2 rounded-md bg-green-50">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-md bg-white border border-gray-200 flex items-center justify-center shadow-sm mr-2">
+                          <Wallet className="text-gray-700" size={14} />
+                        </div>
+                        <span className="text-sm font-medium">Bargeld</span>
+                      </div>
+                      <span className="font-medium">CHF {stats.paymentMethods.cash.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-md bg-violet-50">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-md bg-white border border-gray-200 flex items-center justify-center shadow-sm mr-2">
+                          <Wallet className="text-gray-700" size={14} />
+                        </div>
+                        <span className="text-sm font-medium">Twint</span>
+                      </div>
+                      <span className="font-medium">CHF {stats.paymentMethods.twint.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-md bg-blue-50">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-md bg-white border border-gray-200 flex items-center justify-center shadow-sm mr-2">
+                          <CreditCard className="text-gray-700" size={14} />
+                        </div>
+                        <span className="text-sm font-medium">SumUp</span>
+                      </div>
+                      <span className="font-medium">CHF {stats.paymentMethods.sumup.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+        
 
         {/* Recent Transactions */}
-        <Card>
+        <Card className="overflow-hidden hover:shadow-md transition-all duration-200">
+          <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-600" />
           <CardHeader>
             <CardTitle>Letzte Transaktionen</CardTitle>
             <CardDescription>Die letzten 5 Transaktionen des Tages</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {todayStats.recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-2 border-b last:border-0">
-                  <div className="flex items-center">
-                    {transaction.method === "cash" && <Wallet size={16} className="mr-2 text-green-500" />}
-                    {transaction.method === "twint" && <Wallet size={16} className="mr-2 text-purple-500" />}
-                    {transaction.method === "sumup" && <CreditCard size={16} className="mr-2 text-blue-500" />}
-                    <span>{transaction.time}</span>
+            {statsLoading ? (
+              <div className="flex justify-center items-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
+                <span>Transaktionen werden geladen...</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.recentTransactions.length > 0 ? (
+                  stats.recentTransactions.map((transaction) => {
+                    // Icon basierend auf Zahlungsmethode auswählen
+                    const Icon = transaction.method === "sumup" ? CreditCard : Wallet;
+                    
+                    return (
+                      <div 
+                        key={transaction.id} 
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-md bg-white border border-gray-200 flex items-center justify-center shadow-sm mr-3">
+                            <Icon size={14} className="text-gray-700" />
+                          </div>
+                          <div>
+                            <div className="font-medium">Verkauf</div>
+                            <div className="text-xs text-gray-500">{transaction.time} Uhr</div>
+                          </div>
+                        </div>
+                        <span className="font-bold text-lg">CHF {transaction.amount.toFixed(2)}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Heute wurden noch keine Transaktionen durchgeführt.
                   </div>
-                  <span className="font-medium">CHF {transaction.amount.toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

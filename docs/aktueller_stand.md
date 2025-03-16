@@ -38,7 +38,8 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 - ✅ Dashboard-Seite mit Kassenstatus und Schnellzugriff
 - ✅ POS-Verkaufsseite mit funktionierendem Warenkorb und Zahlungsabwicklung
 - ✅ Produkte-Verwaltungsseite mit vollständigen CRUD-Operationen
-- ✅ Tagesabschluss-Seite (Frontend vorbereitet, Backend-Anbindung in Arbeit)
+- ✅ Tagesabschluss-Seite mit vollständiger Backend-Anbindung
+- ✅ Lieferantenrechnungs-Seite mit vollständiger Backend-Anbindung
 - ✅ Platzhalter-Seiten für andere Bereiche
 
 ## 2. Fehlende Funktionen und offene Punkte
@@ -58,8 +59,8 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 - ✅ Transaktionen-Hook mit Datenbank-Integration
 - ✅ Kassenstatus-Hook mit voller Funktionalität (Öffnen/Schließen)
 - ✅ Tagesberichte-Hook und -Integration implementiert
+- ✅ Lieferantenrechnungs-Hook mit vollständiger CRUD-Funktionalität
 - ✅ RLS-Policies für alle Tabellen definiert
-- ❌ CRUD-Operationen für weitere Entitäten (Lieferantenrechnungen)
 - ❌ API-Endpunkte/Serverfunktionen
 - ❌ State-Management-System (z.B. Zustand)
 - ❌ Datensynchronisation und Caching-Strategie
@@ -72,9 +73,9 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 - ✅ Geschäftsprozess-Validierung (POS nur bei geöffneter Kasse)
 - ✅ Tagesabschlusslogik mit automatischer Berichtserstellung
 - ✅ Berechnung von Tagessummen nach Zahlungsarten
+- ✅ Lieferantenrechnungsverwaltung
 - ❌ Monatsabschlusslogik
 - ❌ Erweiterte Berichterstellung mit Diagrammen
-- ❌ Lieferantenrechnungsverwaltung
 
 ### 2.4 Dokumentenverwaltung
 
@@ -191,13 +192,60 @@ Um das Projekt zu vervollständigen, wird ein geschätzter Zeitaufwand von:
 8. ✅ Kassenbuch-UI mit Datenbank verbinden und Workflow optimieren
 9. PDF-Generierung für Tagesberichte und Quittungen
 10. Monatsabschluss-Funktionalität implementieren
-11. Lieferantenrechnungen verwalten
+11. ✅ Lieferantenrechnungen verwalten
 
 Diese Schritte bilden die Grundlage für ein funktionsfähiges Minimal Viable Product (MVP) und sollten priorisiert werden.
 
 ## 7. Aktueller Status und Fortschritt
 
-### Letzte Änderungen (17.03.2025):
+### Letzte Änderungen (16.03.2025 - Nachmittag):
+- Lieferantenrechnungs-System vollständig implementiert:
+  - Neuer `useSupplierInvoices` Hook erstellt mit vollständiger CRUD-Funktionalität
+  - Oberfläche für Lieferantenrechnungen mit Datenbankanbindung ausgestattet
+  - Effiziente Suchfunktion für Rechnungen nach Lieferant oder Rechnungsnummer
+  - Automatische Statusberechnung für überfällige Rechnungen
+  - "Als bezahlt markieren"-Funktion für schnelles Aktualisieren
+  - Kassenbuchintegration: automatische Erstellung von Ausgabeneinträgen bei Barzahlung
+  - Detaillierte Übersicht mit Gesamtsummen für offene und bezahlte Rechnungen
+  - Modernes Design mit visuellen Indikatoren für verschiedene Rechnungsstatus
+  - Optimierter Dialog zum Hinzufügen und Bearbeiten von Rechnungen
+  - Responsive Ladestate mit Skeleton-Anzeige während Datenabruf
+  - Fehlerbehandlung mit benutzerfreundlichen Benachrichtigungen
+
+### Letzte Änderungen (16.03.2025 - Abend):
+- Kassenbuch-Seite komplett neu gestaltet und verbessert:
+  - Aktueller Kassenbestand wird jetzt groß und deutlich angezeigt
+  - Modernes, übersichtliches Design mit Farbakzenten und Schatten
+  - Optimierte Saldoberechnung für korrekte Anzeige des laufenden Saldos
+  - Verbesserte Darstellung der Kassenbucheinträge in der Tabelle
+  - Bessere Typen-Kennzeichnung (Einnahme/Ausgabe) mit farbigen Badges
+  - Überarbeiteter Dialog zum Hinzufügen neuer Einträge mit intuitiverer Bedienung
+  - Bessere Ladestate-Anzeige während der Datenabrufung
+  - Aktualisieren-Button zum manuellen Neuladen der Daten hinzugefügt
+  - Verbesserte Such- und Filterfunktionen
+
+### Letzte Änderungen (16.03.2025 - Vormittag):
+- Dashboard-Statistik mit Echtdaten implementiert:
+  - Neuer `useDashboardStats` Hook erstellt für die Anzeige aktueller Tagesstatistiken
+  - Echtzeitanzeige des aktuellen Umsatzes, der Anzahl der Transaktionen und der Zahlungsarten
+  - Letzte Transaktionen werden auf dem Dashboard angezeigt
+  - Aktualisieren-Button zum manuellen Neuladen der Daten hinzugefügt
+  - Robustes Fehlerhandling mit aussagekräftigen Fehlermeldungen
+  - Ladestatus während der Datenabfrage
+  - Verbesserte Filterung nach Datum für präzise Tagesstatistiken
+- UI-Verbesserungen am Dashboard:
+  - AuthDebugPanel entfernt, das nicht mehr benötigt wird
+  - Verbesserte Icon-Darstellung für bessere Sichtbarkeit (weiße Hintergründe mit grauen Rändern)
+  - Optimierte Darstellung für unterschiedliche Bildschirmgrößen (Tablet-optimiert)
+  - Verbesserte visuelle Hierarchie und konsistentes Design
+  - Moderneres Design der Schnellzugriffe mit Beschreibungen
+  - Fallback-Anzeigen und "Keine Daten"-Status implementiert
+- Fehlerbehandlung verbessert:
+  - Klarere Namensgebung für Ladezustände und Fehler (z.B. `registerLoading` statt `loading`)
+  - Robustere Fehleranzeige für API-Fehler
+  - Verbesserte Benutzererfahrung bei fehlenden Daten oder Netzwerkproblemen
+
+### Letzte Änderungen (15.03.2025):
 - Kassenbuch-System vollständig implementiert:
   - `useCashRegister` Hook erstellt mit vollständiger CRUD-Funktionalität
   - Kassenbuch-UI mit Datenbankintegration und Echtzeitdaten
