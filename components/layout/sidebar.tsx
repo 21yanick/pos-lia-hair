@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { supabase } from "@/lib/supabase/client"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart4 },
@@ -83,6 +84,13 @@ export function Sidebar() {
             "w-full flex items-center text-red-600 hover:bg-red-50 hover:text-red-700",
             collapsed && "justify-center",
           )}
+          onClick={async () => {
+            const { error } = await supabase.auth.signOut()
+            if (!error) {
+              // Force refresh to apply the redirect in middleware
+              window.location.href = "/login"
+            }
+          }}
         >
           <LogOut size={20} className={cn("flex-shrink-0", collapsed ? "" : "mr-2")} />
           {!collapsed && <span>Abmelden</span>}

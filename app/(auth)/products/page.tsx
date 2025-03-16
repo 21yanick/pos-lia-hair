@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Plus, Pencil, Trash2, Star, StarOff } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, Plus, Pencil, Trash2, Star, StarOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -18,185 +18,270 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-
-// Mock data
-const mockProducts = [
-  {
-    id: "1",
-    name: "Damen Haarschnitt",
-    type: "service",
-    price: 65.0,
-    description: "Standardschnitt für Damen",
-    isFavorite: true,
-    isActive: true,
-  },
-  {
-    id: "2",
-    name: "Herren Haarschnitt",
-    type: "service",
-    price: 45.0,
-    description: "Standardschnitt für Herren",
-    isFavorite: true,
-    isActive: true,
-  },
-  {
-    id: "3",
-    name: "Kinder Haarschnitt",
-    type: "service",
-    price: 35.0,
-    description: "Schnitt für Kinder bis 12 Jahre",
-    isFavorite: false,
-    isActive: true,
-  },
-  {
-    id: "4",
-    name: "Färben",
-    type: "service",
-    price: 85.0,
-    description: "Komplettes Färben",
-    isFavorite: true,
-    isActive: true,
-  },
-  {
-    id: "5",
-    name: "Strähnen",
-    type: "service",
-    price: 95.0,
-    description: "Strähnen mit Folie",
-    isFavorite: false,
-    isActive: true,
-  },
-  {
-    id: "6",
-    name: "Shampoo",
-    type: "product",
-    price: 18.5,
-    description: "Professionelles Shampoo",
-    isFavorite: false,
-    isActive: true,
-  },
-  {
-    id: "7",
-    name: "Conditioner",
-    type: "product",
-    price: 16.5,
-    description: "Pflegender Conditioner",
-    isFavorite: false,
-    isActive: true,
-  },
-  {
-    id: "8",
-    name: "Haarspray",
-    type: "product",
-    price: 22.0,
-    description: "Starker Halt",
-    isFavorite: true,
-    isActive: true,
-  },
-  {
-    id: "9",
-    name: "Styling Gel",
-    type: "product",
-    price: 19.5,
-    description: "Für flexiblen Halt",
-    isFavorite: false,
-    isActive: false,
-  },
-]
-
-type Product = (typeof mockProducts)[0]
+import { useToast } from "@/lib/hooks/useToast"
+import { useItems, type Item, type ItemInsert } from "@/lib/hooks/useItems"
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(mockProducts)
+  const { items, loading, error, addItem, updateItem, toggleFavorite, toggleActive, deleteItem, syncAuthUser } = useItems()
+  const { toast } = useToast()
+  
   const [searchQuery, setSearchQuery] = useState("")
   const [filter, setFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null)
+  const [currentItem, setCurrentItem] = useState<Item | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
     name: "",
-    type: "service",
-    price: "",
+    type: "service" as "service" | "product",
+    default_price: "",
     description: "",
-    isFavorite: false,
-    isActive: true,
+    is_favorite: false,
+    active: true,
   })
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // Zeige Fehler an und versuche automatische Synchronisierung
+  useEffect(() => {
+    if (!error) return
+
+    // Immer allgemeine Fehlermeldung anzeigen
+    toast({
+      title: "Fehler aufgetreten",
+      description: error,
+      variant: "destructive",
+    })
+
+    // Berechtigungsfehler speziell behandeln
+    const isPermissionError = error?.includes('nicht berechtigt') || 
+                              error?.includes('permission') || 
+                              error?.includes('not authorized') ||
+                              error?.includes('Forbidden');
+    
+    if (isPermissionError) {
+      console.log('Berechtigungsfehler erkannt, versuche Auth-Benutzer zu synchronisieren...');
+      
+      // Wir öffnen schon vorher einen Dialog, um Benutzer zu informieren
+      setSyncDialogOpen(true);
+      setSyncMessage("Automatische Synchronisierung läuft...");
+      
+      // Synchronisierung versuchen
+      syncAuthUser().then(result => {
+        if (result.success) {
+          setSyncMessage("Synchronisierung erfolgreich! Die Seite wird neu geladen...");
+          
+          // Kurze Pause zum Lesen der Meldung
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          setSyncMessage(`Fehler bei der Synchronisierung: ${result.error}`);
+        }
+      }).catch(err => {
+        setSyncMessage(`Unerwarteter Fehler: ${err.message}`);
+      });
+    }
+  }, [error, toast, syncAuthUser])
+
+  const filteredItems = items.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesFilter =
       filter === "all" ||
-      (filter === "services" && product.type === "service") ||
-      (filter === "products" && product.type === "product") ||
-      (filter === "favorites" && product.isFavorite)
+      (filter === "services" && item.type === "service") ||
+      (filter === "products" && item.type === "product") ||
+      (filter === "favorites" && item.is_favorite)
 
     return matchesSearch && matchesFilter
   })
 
-  const handleOpenDialog = (product: Product | null = null) => {
-    if (product) {
-      setCurrentProduct(product)
+  const handleOpenDialog = (item: Item | null = null) => {
+    if (item) {
+      setCurrentItem(item)
       setFormData({
-        name: product.name,
-        type: product.type,
-        price: product.price.toString(),
-        description: product.description,
-        isFavorite: product.isFavorite,
-        isActive: product.isActive,
+        name: item.name,
+        type: item.type,
+        default_price: item.default_price.toString(),
+        description: item.description || "",
+        is_favorite: item.is_favorite,
+        active: item.active,
       })
     } else {
-      setCurrentProduct(null)
+      setCurrentItem(null)
       setFormData({
         name: "",
         type: "service",
-        price: "",
+        default_price: "",
         description: "",
-        isFavorite: false,
-        isActive: true,
+        is_favorite: false,
+        active: true,
       })
     }
     setIsDialogOpen(true)
   }
 
-  const handleSaveProduct = () => {
-    const newProduct = {
-      id: currentProduct?.id || Date.now().toString(),
-      name: formData.name,
-      type: formData.type as "service" | "product",
-      price: Number.parseFloat(formData.price),
-      description: formData.description,
-      isFavorite: formData.isFavorite,
-      isActive: formData.isActive,
+  const handleSaveItem = async () => {
+    setIsSubmitting(true)
+    
+    try {
+      const itemData: ItemInsert = {
+        name: formData.name,
+        type: formData.type,
+        default_price: parseFloat(formData.default_price),
+        description: formData.description || null,
+        is_favorite: formData.is_favorite,
+        active: formData.active,
+      }
+
+      if (currentItem) {
+        // Update existing item
+        const { error } = await updateItem({
+          id: currentItem.id,
+          ...itemData
+        })
+        
+        if (error) {
+          toast({
+            title: "Fehler",
+            description: `Fehler beim Aktualisieren: ${error}`,
+            variant: "destructive",
+          })
+          return
+        }
+        
+        toast({
+          title: "Erfolg",
+          description: "Produkt erfolgreich aktualisiert",
+        })
+      } else {
+        // Add new item
+        const { error } = await addItem(itemData)
+        
+        if (error) {
+          toast({
+            title: "Fehler",
+            description: `Fehler beim Hinzufügen: ${error}`,
+            variant: "destructive",
+          })
+          return
+        }
+        
+        toast({
+          title: "Erfolg",
+          description: "Produkt erfolgreich hinzugefügt",
+        })
+      }
+
+      setIsDialogOpen(false)
+    } catch (err) {
+      console.error("Fehler beim Speichern:", err)
+      toast({
+        title: "Fehler",
+        description: "Ein unerwarteter Fehler ist aufgetreten",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
+  }
 
-    if (currentProduct) {
-      // Update existing product
-      setProducts((prevProducts) => prevProducts.map((p) => (p.id === currentProduct.id ? newProduct : p)))
-    } else {
-      // Add new product
-      setProducts((prevProducts) => [...prevProducts, newProduct])
+  const handleToggleFavorite = async (id: string, currentValue: boolean) => {
+    const { error } = await toggleFavorite(id, currentValue)
+    
+    if (error) {
+      toast({
+        title: "Fehler",
+        description: `Fehler beim Ändern des Favoriten-Status: ${error}`,
+        variant: "destructive",
+      })
     }
-
-    setIsDialogOpen(false)
   }
 
-  const toggleFavorite = (id: string) => {
-    setProducts((prevProducts) => prevProducts.map((p) => (p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)))
+  const handleToggleActive = async (id: string, currentValue: boolean) => {
+    const { error } = await toggleActive(id, currentValue)
+    
+    if (error) {
+      toast({
+        title: "Fehler",
+        description: `Fehler beim Ändern des Aktiv-Status: ${error}`,
+        variant: "destructive",
+      })
+    }
   }
 
-  const toggleActive = (id: string) => {
-    setProducts((prevProducts) => prevProducts.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)))
-  }
-
-  const handleDeleteProduct = (id: string) => {
+  const handleDeleteItem = async (id: string) => {
     if (confirm("Sind Sie sicher, dass Sie dieses Produkt löschen möchten?")) {
-      setProducts((prevProducts) => prevProducts.filter((p) => p.id !== id))
+      const { error } = await deleteItem(id)
+      
+      if (error) {
+        toast({
+          title: "Fehler",
+          description: `Fehler beim Löschen: ${error}`,
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Erfolg",
+          description: "Produkt erfolgreich gelöscht",
+        })
+      }
+    }
+  }
+
+  // Manuell Auth-Benutzer synchronisieren
+  const handleManualSync = async () => {
+    setSyncDialogOpen(true)
+    setSyncMessage("Synchronisiere Benutzer...")
+    try {
+      const result = await syncAuthUser()
+      if (result.success) {
+        setSyncMessage("Synchronisierung erfolgreich! Die Seite wird neu geladen...")
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
+      } else {
+        setSyncMessage(`Fehler: ${result.error}`)
+      }
+    } catch (err: any) {
+      setSyncMessage(`Fehler: ${err.message}`)
     }
   }
 
   return (
     <div className="space-y-6">
+      {/* Sync-Dialog */}
+      {error && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
+          <h3 className="font-semibold text-yellow-800 mb-2">Probleme mit der Datenbankkonfiguration erkannt</h3>
+          <p className="text-sm text-yellow-700 mb-3">
+            Es scheint ein Problem mit den Datenbankberechtigungen zu geben. Möglicherweise ist Ihr Benutzer nicht korrekt mit der Datenbank verknüpft.
+          </p>
+          <Button onClick={handleManualSync} className="bg-yellow-500 hover:bg-yellow-600">
+            Benutzer synchronisieren
+          </Button>
+        </div>
+      )}
+      
+      {/* Sync-Dialog */}
+      {syncDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 max-w-md w-full rounded-lg">
+            <h3 className="font-semibold text-lg mb-3">Benutzer-Synchronisierung</h3>
+            <p className="mb-4">{syncMessage}</p>
+            <div className="flex justify-end">
+              <Button 
+                onClick={() => setSyncDialogOpen(false)}
+                variant="outline"
+                disabled={syncMessage === "Synchronisiere Benutzer..."}
+              >
+                Schließen
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex flex-1 items-center gap-4">
           <div className="relative flex-1 max-w-md">
@@ -240,45 +325,54 @@ export default function ProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProducts.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  <div className="flex justify-center items-center">
+                    <Loader2 size={24} className="animate-spin mr-2" />
+                    <span>Daten werden geladen...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredItems.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                   Keine Einträge gefunden.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
+              filteredItems.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>
-                    <Badge variant={product.type === "service" ? "default" : "secondary"}>
-                      {product.type === "service" ? "Dienstleistung" : "Produkt"}
+                    <Badge variant={item.type === "service" ? "default" : "secondary"}>
+                      {item.type === "service" ? "Dienstleistung" : "Produkt"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">{product.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{item.default_price.toFixed(2)}</TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleFavorite(product.id)}
-                      className={product.isFavorite ? "text-yellow-500" : "text-gray-400"}
+                      onClick={() => handleToggleFavorite(item.id, item.is_favorite)}
+                      className={item.is_favorite ? "text-yellow-500" : "text-gray-400"}
                     >
-                      {product.isFavorite ? <Star size={18} /> : <StarOff size={18} />}
+                      {item.is_favorite ? <Star size={18} /> : <StarOff size={18} />}
                     </Button>
                   </TableCell>
                   <TableCell>
-                    <Switch checked={product.isActive} onCheckedChange={() => toggleActive(product.id)} />
+                    <Switch checked={item.active} onCheckedChange={() => handleToggleActive(item.id, item.active)} />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(product)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
                         <Pencil size={16} />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="text-red-500"
-                        onClick={() => handleDeleteProduct(product.id)}
+                        onClick={() => handleDeleteItem(item.id)}
                       >
                         <Trash2 size={16} />
                       </Button>
@@ -295,10 +389,10 @@ export default function ProductsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{currentProduct ? "Produkt bearbeiten" : "Neues Produkt hinzufügen"}</DialogTitle>
+            <DialogTitle>{currentItem ? "Produkt bearbeiten" : "Neues Produkt hinzufügen"}</DialogTitle>
             <DialogDescription>
               Füllen Sie die Felder aus, um{" "}
-              {currentProduct ? "das Produkt zu aktualisieren" : "ein neues Produkt hinzuzufügen"}.
+              {currentItem ? "das Produkt zu aktualisieren" : "ein neues Produkt hinzuzufügen"}.
             </DialogDescription>
           </DialogHeader>
 
@@ -314,7 +408,12 @@ export default function ProductsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="type">Typ</Label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+              <Select 
+                value={formData.type} 
+                onValueChange={(value: "service" | "product") => 
+                  setFormData({ ...formData, type: value })
+                }
+              >
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Typ auswählen" />
                 </SelectTrigger>
@@ -326,14 +425,14 @@ export default function ProductsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Preis (CHF)</Label>
+              <Label htmlFor="default_price">Preis (CHF)</Label>
               <Input
-                id="price"
+                id="default_price"
                 type="number"
                 step="0.05"
                 min="0"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                value={formData.default_price}
+                onChange={(e) => setFormData({ ...formData, default_price: e.target.value })}
               />
             </div>
 
@@ -347,11 +446,11 @@ export default function ProductsPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="favorite">Als Favorit markieren</Label>
+              <Label htmlFor="is_favorite">Als Favorit markieren</Label>
               <Switch
-                id="favorite"
-                checked={formData.isFavorite}
-                onCheckedChange={(checked) => setFormData({ ...formData, isFavorite: checked })}
+                id="is_favorite"
+                checked={formData.is_favorite}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_favorite: checked })}
               />
             </div>
 
@@ -359,18 +458,28 @@ export default function ProductsPage() {
               <Label htmlFor="active">Aktiv</Label>
               <Switch
                 id="active"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                checked={formData.active}
+                onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
               Abbrechen
             </Button>
-            <Button onClick={handleSaveProduct} disabled={!formData.name || !formData.price}>
-              Speichern
+            <Button 
+              onClick={handleSaveItem} 
+              disabled={isSubmitting || !formData.name || !formData.default_price}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird gespeichert...
+                </>
+              ) : (
+                "Speichern"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

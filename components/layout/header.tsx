@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { supabase } from "@/lib/supabase/client"
 
 export function Header() {
   const pathname = usePathname()
@@ -62,7 +63,18 @@ export function Header() {
             <DropdownMenuItem>Profil</DropdownMenuItem>
             <DropdownMenuItem>Einstellungen</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">Abmelden</DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-red-600"
+              onClick={async () => {
+                const { error } = await supabase.auth.signOut()
+                if (!error) {
+                  // Force refresh to apply the redirect in middleware
+                  window.location.href = "/login"
+                }
+              }}
+            >
+              Abmelden
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

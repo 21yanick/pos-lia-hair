@@ -33,12 +33,12 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 - ✅ Datenbankschema in der Migration-Datei definiert
 - ✅ Row-Level Security-Richtlinien konfiguriert
 
-### 1.4 Schlüssel-Seiten (Frontend-Mockups)
+### 1.4 Schlüssel-Seiten
 
 - ✅ Dashboard-Seite mit Kassenstatus und Schnellzugriff
-- ✅ POS-Verkaufsseite mit Warenkorb und Zahlungsabwicklung
-- ✅ Produkte-Verwaltungsseite
-- ✅ Tagesabschluss-Seite
+- ✅ POS-Verkaufsseite mit funktionierendem Warenkorb und Zahlungsabwicklung
+- ✅ Produkte-Verwaltungsseite mit vollständigen CRUD-Operationen
+- ✅ Tagesabschluss-Seite (Frontend vorbereitet, Backend-Anbindung in Arbeit)
 - ✅ Platzhalter-Seiten für andere Bereiche
 
 ## 2. Fehlende Funktionen und offene Punkte
@@ -46,25 +46,34 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 ### 2.1 Authentifizierung und Benutzerverwaltung
 
 - ✅ Echte Authentifizierung mit Supabase Auth implementiert (Login-Funktionalität)
+- ✅ Logout-Funktion implementiert
 - ❌ Benutzerprofile und -verwaltung
 - ❌ Passwort-Reset und Benutzerkonto-Erstellung
 - ❌ Rollen- und Berechtigungssystem in der Anwendung
-- ❌ Logout-Funktion implementieren
 
 ### 2.2 Daten-Integration
 
-- ❌ Anbindung der UI an Supabase-Datenbank
-- ❌ CRUD-Operationen für alle Entitäten
+- ✅ Hooks-System für den Datenbankzugriff implementiert
+- ✅ CRUD-Operationen für Produkte/Dienstleistungen
+- ✅ Transaktionen-Hook mit Datenbank-Integration
+- ✅ Kassenstatus-Hook mit voller Funktionalität (Öffnen/Schließen)
+- ✅ Tagesberichte-Hook und -Integration implementiert
+- ✅ RLS-Policies für alle Tabellen definiert
+- ❌ CRUD-Operationen für weitere Entitäten (Lieferantenrechnungen)
 - ❌ API-Endpunkte/Serverfunktionen
 - ❌ State-Management-System (z.B. Zustand)
 - ❌ Datensynchronisation und Caching-Strategie
 
 ### 2.3 Geschäftslogik
 
-- ❌ Kassenöffnungs-/Kassenschließ-Logik
-- ❌ Transaktionsverarbeitung und -speicherung
-- ❌ Tages-/Monatsabschlusslogik
-- ❌ Berichterstellung und -berechnungen
+- ✅ Kassenöffnungs-/Kassenschließ-Logik
+- ✅ Transaktionsverarbeitung und -speicherung
+- ✅ Kassenbuchführung für Bargeld-Transaktionen
+- ✅ Geschäftsprozess-Validierung (POS nur bei geöffneter Kasse)
+- ✅ Tagesabschlusslogik mit automatischer Berichtserstellung
+- ✅ Berechnung von Tagessummen nach Zahlungsarten
+- ❌ Monatsabschlusslogik
+- ❌ Erweiterte Berichterstellung mit Diagrammen
 - ❌ Lieferantenrechnungsverwaltung
 
 ### 2.4 Dokumentenverwaltung
@@ -173,19 +182,96 @@ Um das Projekt zu vervollständigen, wird ein geschätzter Zeitaufwand von:
 ## 6. Nächste unmittelbare Schritte
 
 1. ✅ Supabase-Authentifizierung einrichten und an UI anbinden
-2. Logout-Funktion implementieren
-3. Datenbank-Hooks für Produkte erstellen und in der Produkt-Verwaltung implementieren
-4. POS-Verkaufsseite mit Datenbankanbindung versehen
-5. Kassenstatus-Verwaltung (Öffnen/Schließen) mit Datenbank verknüpfen
-6. Tagesabschluss-Logik mit Datenbankoperationen implementieren
+2. ✅ Logout-Funktion implementieren
+3. ✅ Datenbank-Hooks für Produkte erstellen und in der Produkt-Verwaltung implementieren
+4. ✅ POS-Verkaufsseite mit Datenbankanbindung versehen
+5. ✅ Transaktionsverarbeitung und Kassenbuchführung implementieren
+6. ✅ Kassenstatus-Verwaltung (Öffnen/Schließen) mit Datenbank verknüpfen
+7. ✅ Tagesabschluss-Logik mit Datenbankoperationen implementieren
+8. ✅ Kassenbuch-UI mit Datenbank verbinden und Workflow optimieren
+9. PDF-Generierung für Tagesberichte und Quittungen
+10. Monatsabschluss-Funktionalität implementieren
+11. Lieferantenrechnungen verwalten
 
 Diese Schritte bilden die Grundlage für ein funktionsfähiges Minimal Viable Product (MVP) und sollten priorisiert werden.
 
 ## 7. Aktueller Status und Fortschritt
 
+### Letzte Änderungen (17.03.2025):
+- Kassenbuch-System vollständig implementiert:
+  - `useCashRegister` Hook erstellt mit vollständiger CRUD-Funktionalität
+  - Kassenbuch-UI mit Datenbankintegration und Echtzeitdaten
+  - Laufende Saldo-Berechnung für jeden Kassenbucheintrag
+  - Suche nach Beschreibungen im Kassenbuch implementiert
+  - Automatische Berechnung von Tages- und Monatssummen
+  - Vollständiger Workflow: Einträge hinzufügen → Summen aktualisieren → Saldo berechnen
+- Kassenöffnungs-/Schließungsprozess verbessert:
+  - Anzeige des vorherigen Kassenstands bei Kassenöffnung
+  - Vergleich zwischen erwartetem (Soll) und tatsächlichem (Ist) Bargeldbestand
+  - Automatische Erfassung und Dokumentation von Kassendifferenzen
+  - Verbesserte Benutzerführung bei Abweichungen
+  - Erweiterte Fehlerbehandlung mit detaillierten Meldungen
+- Datenabfragen optimiert:
+  - Verbesserte Abfrage für historische Kassenstände
+  - Effiziente Berechnung von Summen für Kassenbewegungen
+  - Implementierung von maybeSingle() für robuste Ergebnisse
+- UI/UX-Verbesserungen:
+  - Responsives Design für alle Kassenbuch-Komponenten
+  - Ladezustände während Datenabfragen
+  - Farbliche Kennzeichnung von Ein- und Ausgängen
+  - Verbesserte Dialogkomponenten mit kontextsensitiven Hinweisen
+  - Intuitive Benutzerführung bei der Kasseneröffnung/-schließung
+
 ### Letzte Änderungen (16.03.2025):
+- Tagesberichts-System implementiert und stabilisiert:
+  - `useDailyReports` Hook erstellt mit vollständiger CRUD-Funktionalität
+  - Automatische Tagesberichtserstellung beim Kassenschließen
+  - Verknüpfung von Transaktionen und Kassenbucheinträgen mit Tagesberichten
+  - Berechnung von Tagessummen nach Zahlungsarten
+  - Verarbeitung von Diskrepanzen zwischen erwartetem und tatsächlichem Kassenbestand
+  - Tagesberichte-Seite mit Datenbankanbindung und Datumsfilterung
+  - Vollständiger Geschäftsprozess: Kasse öffnen → Verkäufe tätigen → Kasse schließen → Tagesbericht erstellen
+- RLS-Policies für alle Tabellen implementiert:
+  - Migration `03_daily_reports_rls.sql` für Tagesberichte erstellt
+  - Sicherheitsrichtlinien für Lesen, Schreiben und Aktualisieren
+- Performance-Optimierungen:
+  - Verwendung von useRef für stabile Hook-Referenzen
+  - Optimierte Datenbankabfragen mit maybeSingle() statt single()
+  - Verbesserte Fehlerbehandlung mit aussagekräftigen Meldungen
+- UI-Verbesserungen:
+  - Bessere Ladestatusanzeige mit kontextabhängigen Informationen
+  - Verbesserte Fehlermeldungen mit detaillierten Informationen
+  - Datumsauswahl für die Berichtsfilterung
+  - Anzeige von historischen Berichten ermöglicht
+- Bugfixes und Stabilisierungen:
+  - Behoben: Endloses Laden der Tagesberichte
+  - Behoben: Probleme mit der Tagesberichtserstellung beim Kassenschließen
+  - Behoben: Datumsprobleme bei Abfragen
+
+### Bisherige Features:
 - Git-Repository initialisiert und auf GitHub gepusht: https://github.com/21yanick/pos-lia-hair
 - Supabase Auth-Integration implementiert
 - Login-Funktionalität mit echter Supabase-Authentifizierung umgesetzt
+- Logout-Funktionalität implementiert in Sidebar und Dropdown-Menü
+- Hooks-System reorganisiert und standardisiert in `/lib/hooks`
+- CRUD-Operationen für Produkte/Dienstleistungen implementiert mit Supabase-Datenbank
+- Debug-Tool für Auth-User zur `users`-Tabelle Synchronisierung implementiert
+- Toast-Benachrichtigungen implementiert für Benutzer-Feedback
 - Lokale Entwicklungsumgebung mit Supabase-Docker konfiguriert (auf Port 8000)
+- Datenbankschema und Datenbank-Migration erfolgreich implementiert und getestet
+- Auth-Trigger für automatische Benutzer-Synchronisierung implementiert
+- Bestätigt, dass Produkte korrekt in der Datenbank erstellt und angezeigt werden
+- Row-Level-Security (RLS) Policies aktiv und funktionieren mit auth.user
+- POS-Verkaufsseite mit Datenbank verbunden (echte Produkte werden geladen)
+- Transaktionen-Hook (useTransactions) implementiert für Verkäufe
+- Zahlungsabwicklung mit Twint, SumUp und Bargeld-Optionen
+- Kassenbucheinträge werden automatisch bei Barzahlungen erstellt
+- Warenkorb-Verwaltung mit Mengenänderung und Preisbearbeitung
+- Kassenstatus-Tabelle und Migration erstellt
+- RegisterStatus-Hook implementiert für Kassenöffnung/-schließung
+- Automatische Berechnung des aktuellen Kassenbestands
+- Dashboard mit funktionierender Kassenöffnung/-schließung
+- Sicherheitsprüfung implementiert: Transaktionen nur bei geöffneter Kasse möglich
+- POS-Seite mit Warnung und deaktivierter Zahlung, wenn Kasse geschlossen ist
+- Geschäftsworkflow gesichert: Kasse öffnen → Verkäufe tätigen → Kasse schließen → Tagesbericht erstellen
 - Diese Dokumentation zur Projektverfolgung aktualisiert

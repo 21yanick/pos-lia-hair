@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,30 +14,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Search, Trash2, Plus, Minus, Wallet, CreditCard, CheckCircle, Download, Mail, Pencil } from "lucide-react"
-
-// Mock data
-const mockItems = [
-  { id: "1", name: "Damen Haarschnitt", type: "service", price: 65.0, isFavorite: true },
-  { id: "2", name: "Herren Haarschnitt", type: "service", price: 45.0, isFavorite: true },
-  { id: "3", name: "Kinder Haarschnitt", type: "service", price: 35.0, isFavorite: false },
-  { id: "4", name: "Färben", type: "service", price: 85.0, isFavorite: true },
-  { id: "5", name: "Strähnen", type: "service", price: 95.0, isFavorite: false },
-  { id: "6", name: "Shampoo", type: "product", price: 18.5, isFavorite: false },
-  { id: "7", name: "Conditioner", type: "product", price: 16.5, isFavorite: false },
-  { id: "8", name: "Haarspray", type: "product", price: 22.0, isFavorite: true },
-  { id: "9", name: "Styling Gel", type: "product", price: 19.5, isFavorite: false },
-]
-
-type CartItem = {
-  id: string
-  name: string
-  price: number
-  quantity: number
-  total: number
-}
+import { Search, Trash2, Plus, Minus, Wallet, CreditCard, CheckCircle, Download, Mail, Pencil, Loader2, AlertCircle } from "lucide-react"
+import { useItems } from "@/lib/hooks/useItems"
+import { useTransactions, type CartItem } from "@/lib/hooks/useTransactions"
+import { useRegisterStatus } from "@/lib/hooks/useRegisterStatus"
+import { useToast } from "@/lib/hooks/useToast"
 
 export default function POSPage() {
+  // Hooks
+  const { items, loading: itemsLoading, error: itemsError } = useItems()
+  const { createTransaction, loading: transactionLoading, error: transactionError } = useTransactions()
+  const { isOpen: isRegisterOpen, loading: registerLoading, error: registerError } = useRegisterStatus()
+  const { toast } = useToast()
+  
+  // UI-State
   const [activeTab, setActiveTab] = useState("services")
   const [searchQuery, setSearchQuery] = useState("")
   const [cart, setCart] = useState<CartItem[]>([])
@@ -47,18 +37,52 @@ export default function POSPage() {
   const [cashReceived, setCashReceived] = useState("")
   const [editingItem, setEditingItem] = useState<CartItem | null>(null)
   const [editPrice, setEditPrice] = useState("")
+  const [transactionResult, setTransactionResult] = useState<{
+    success: boolean,
+    transaction?: any,
+    change?: number,
+    error?: string
+  } | null>(null)
 
-  const filteredItems = mockItems.filter((item) => {
+  // Fehlerbehandlung
+  useEffect(() => {
+    if (itemsError) {
+      toast({
+        title: "Fehler beim Laden der Produkte",
+        description: itemsError,
+        variant: "destructive",
+      })
+    }
+    
+    if (transactionError) {
+      toast({
+        title: "Fehler bei der Transaktion",
+        description: transactionError,
+        variant: "destructive",
+      })
+    }
+    
+    if (registerError) {
+      toast({
+        title: "Fehler beim Laden des Kassenstatus",
+        description: registerError,
+        variant: "destructive",
+      })
+    }
+  }, [itemsError, transactionError, registerError, toast])
+
+  // Filtern der Produkte/Dienstleistungen
+  const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesTab =
       (activeTab === "services" && item.type === "service") ||
       (activeTab === "products" && item.type === "product") ||
-      (activeTab === "favorites" && item.isFavorite)
+      (activeTab === "favorites" && item.is_favorite)
 
-    return matchesSearch && matchesTab
+    return matchesSearch && matchesTab && item.active // Nur aktive Items anzeigen
   })
 
-  const addToCart = (item: (typeof mockItems)[0]) => {
+  const addToCart = (item: typeof items[0]) => {
     setCart((prevCart) => {
       const existingItemIndex = prevCart.findIndex((cartItem) => cartItem.id === item.id)
 
@@ -76,9 +100,9 @@ export default function POSPage() {
           {
             id: item.id,
             name: item.name,
-            price: item.price,
+            price: item.default_price,
             quantity: 1,
-            total: item.price,
+            total: item.default_price,
           },
         ]
       }
@@ -134,11 +158,52 @@ export default function POSPage() {
 
   const cartTotal = cart.reduce((sum, item) => sum + item.total, 0)
 
-  const handlePayment = () => {
-    // Here would be the API call to process the payment
-    console.log("Processing payment with method:", selectedPaymentMethod)
-    setIsPaymentDialogOpen(false)
-    setIsConfirmationDialogOpen(true)
+  const handlePayment = async () => {
+    try {
+      // Transaktion erstellen
+      const result = await createTransaction({
+        total_amount: cartTotal,
+        payment_method: selectedPaymentMethod!,
+        items: cart,
+        received_amount: selectedPaymentMethod === 'cash' && cashReceived ? Number.parseFloat(cashReceived) : undefined,
+        notes: cart.length > 3 ? `${cart.length} Produkte/Dienstleistungen` : cart.map(item => item.name).join(', ')
+      })
+
+      console.log("Transaktionsergebnis:", result)
+      
+      // Transaktion speichern für Quittung und andere Informationen
+      setTransactionResult(result)
+      
+      // Dialoge aktualisieren
+      setIsPaymentDialogOpen(false)
+      
+      if (result.success) {
+        // Warenkorb leeren nach erfolgreicher Transaktion
+        setCart([])
+        
+        // Bestätigungsdialog anzeigen
+        setIsConfirmationDialogOpen(true)
+        
+        toast({
+          title: "Transaktion erfolgreich",
+          description: `Zahlung über CHF ${cartTotal.toFixed(2)} wurde verbucht.`,
+          variant: "default",
+        })
+      } else {
+        toast({
+          title: "Fehler bei der Transaktion",
+          description: result.error || "Unbekannter Fehler",
+          variant: "destructive",
+        })
+      }
+    } catch (err: any) {
+      console.error("Fehler bei der Transaktion:", err)
+      toast({
+        title: "Fehler bei der Transaktion",
+        description: err.message || "Ein unerwarteter Fehler ist aufgetreten",
+        variant: "destructive",
+      })
+    }
   }
 
   const startNewSale = () => {
@@ -146,12 +211,34 @@ export default function POSPage() {
     setSelectedPaymentMethod(null)
     setCashReceived("")
     setIsConfirmationDialogOpen(false)
+    setTransactionResult(null)
   }
 
   const cashChange = selectedPaymentMethod === "cash" && cashReceived ? Number.parseFloat(cashReceived) - cartTotal : 0
 
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] gap-4">
+      {/* Warnung, wenn Kasse nicht geöffnet ist */}
+      {!registerLoading && !isRegisterOpen && (
+        <div className="w-full bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
+          <h2 className="font-semibold text-yellow-800 flex items-center">
+            <AlertCircle className="mr-2" size={18} />
+            Kasse ist geschlossen
+          </h2>
+          <p className="text-yellow-700 mt-1">
+            Die Kasse ist derzeit geschlossen. Bitte öffnen Sie zuerst die Kasse auf dem Dashboard, 
+            bevor Sie Transaktionen durchführen.
+          </p>
+          <Button 
+            variant="outline" 
+            className="mt-2 bg-yellow-100 hover:bg-yellow-200 border-yellow-300"
+            onClick={() => window.location.href = "/dashboard"}
+          >
+            Zum Dashboard
+          </Button>
+        </div>
+      )}
+      
       {/* Left side - Products/Services */}
       <div className="md:w-2/3 flex flex-col h-full">
         <div className="mb-4 flex items-center gap-4">
@@ -174,24 +261,32 @@ export default function POSPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto bg-white rounded-md border border-gray-200 p-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredItems.map((item) => (
-              <Card
-                key={item.id}
-                className="cursor-pointer hover:border-blue-300 transition-colors"
-                onClick={() => addToCart(item)}
-              >
-                <CardContent className="p-4 flex flex-col items-center justify-center h-32">
-                  <div className="font-medium text-center mb-2">{item.name}</div>
-                  <div className="text-lg font-bold">CHF {item.price.toFixed(2)}</div>
-                </CardContent>
-              </Card>
-            ))}
+          {itemsLoading ? (
+            <div className="col-span-full flex justify-center items-center py-10">
+              <Loader2 size={30} className="animate-spin mr-2" />
+              <span>Produkte werden geladen...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredItems.map((item) => (
+                <Card
+                  key={item.id}
+                  className="cursor-pointer hover:border-blue-300 transition-colors"
+                  onClick={() => addToCart(item)}
+                >
+                  <CardContent className="p-4 flex flex-col items-center justify-center h-32">
+                    <div className="font-medium text-center mb-2">{item.name}</div>
+                    <div className="text-lg font-bold">CHF {item.default_price.toFixed(2)}</div>
+                    {item.is_favorite && <span className="text-yellow-500 text-xs mt-1">⭐ Favorit</span>}
+                  </CardContent>
+                </Card>
+              ))}
 
-            {filteredItems.length === 0 && (
-              <div className="col-span-full text-center py-8 text-gray-500">Keine Einträge gefunden.</div>
-            )}
-          </div>
+              {!itemsLoading && filteredItems.length === 0 && (
+                <div className="col-span-full text-center py-8 text-gray-500">Keine Einträge gefunden.</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -217,6 +312,7 @@ export default function POSPage() {
                         size="icon"
                         className="h-6 w-6 ml-1"
                         onClick={() => openEditPriceDialog(item)}
+                        disabled={transactionLoading}
                       >
                         <Pencil size={12} />
                       </Button>
@@ -229,6 +325,7 @@ export default function POSPage() {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      disabled={transactionLoading}
                     >
                       <Minus size={14} />
                     </Button>
@@ -238,6 +335,7 @@ export default function POSPage() {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      disabled={transactionLoading}
                     >
                       <Plus size={14} />
                     </Button>
@@ -246,6 +344,7 @@ export default function POSPage() {
                       size="icon"
                       className="h-8 w-8 text-red-500"
                       onClick={() => removeFromCart(item.id)}
+                      disabled={transactionLoading}
                     >
                       <Trash2 size={14} />
                     </Button>
@@ -271,10 +370,19 @@ export default function POSPage() {
           <Button
             className="w-full mt-4"
             size="lg"
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || transactionLoading || !isRegisterOpen}
             onClick={() => setIsPaymentDialogOpen(true)}
           >
-            Bezahlen
+            {transactionLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Wird verarbeitet...
+              </>
+            ) : !isRegisterOpen ? (
+              "Kasse geschlossen"
+            ) : (
+              "Bezahlen"
+            )}
           </Button>
         </div>
       </div>
@@ -385,11 +493,19 @@ export default function POSPage() {
             <Button
               onClick={handlePayment}
               disabled={
+                transactionLoading ||
                 !selectedPaymentMethod ||
                 (selectedPaymentMethod === "cash" && (!cashReceived || Number.parseFloat(cashReceived) < cartTotal))
               }
             >
-              Zahlung abschließen
+              {transactionLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird verarbeitet...
+                </>
+              ) : (
+                "Zahlung abschließen"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -420,7 +536,7 @@ export default function POSPage() {
                   <span>Betrag:</span>
                   <span className="font-medium">CHF {cartTotal.toFixed(2)}</span>
                 </div>
-                {selectedPaymentMethod === "cash" && (
+                {selectedPaymentMethod === "cash" && transactionResult && (
                   <>
                     <div className="flex justify-between mb-2">
                       <span>Erhalten:</span>
@@ -428,7 +544,7 @@ export default function POSPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Rückgeld:</span>
-                      <span className="font-medium">CHF {cashChange.toFixed(2)}</span>
+                      <span className="font-medium">CHF {(transactionResult.change || 0).toFixed(2)}</span>
                     </div>
                   </>
                 )}

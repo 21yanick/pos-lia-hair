@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -16,98 +16,155 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowDownRight, Plus, Download, Search, Calendar, Wallet } from "lucide-react"
+import { ArrowDownRight, Plus, Download, Search, Calendar, Wallet, Loader2 } from "lucide-react"
+import { useToast } from "@/lib/hooks/useToast"
+import { useCashRegister, CashRegisterEntry } from "@/lib/hooks/useCashRegister"
+import { useRegisterStatus } from "@/lib/hooks/useRegisterStatus"
+import { format } from "date-fns"
+import { de } from "date-fns/locale"
 
 export default function CashRegisterPage() {
+  // Hooks
+  const { toast } = useToast()
+  const { 
+    loading, 
+    error, 
+    entries, 
+    summary,
+    loadEntries, 
+    createEntry, 
+    updateSummary,
+    searchEntries 
+  } = useCashRegister()
+  const { calculateCurrentBalance, currentRegisterStatus } = useRegisterStatus()
+
+  // State für laufenden Saldo
+  const [runningBalances, setRunningBalances] = useState<Record<string, number>>({})
+  const [searchTerm, setSearchTerm] = useState("")
+  
   // State for the new entry dialog
   const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false)
   const [entryType, setEntryType] = useState<"income" | "expense">("income")
   const [entryAmount, setEntryAmount] = useState("")
   const [entryDescription, setEntryDescription] = useState("")
 
-  // Mock data
-  const [entries, setEntries] = useState([
-    {
-      id: "1",
-      date: "15.03.2023",
-      time: "14:30",
-      description: "Bareinnahme aus Verkauf",
-      type: "income",
-      amount: 85.0,
-      balance: 1285.0,
-    },
-    {
-      id: "2",
-      date: "15.03.2023",
-      time: "12:15",
-      description: "Einkauf Handtücher",
-      type: "expense",
-      amount: 45.0,
-      balance: 1200.0,
-    },
-    {
-      id: "3",
-      date: "14.03.2023",
-      time: "16:45",
-      description: "Bareinnahme aus Verkauf",
-      type: "income",
-      amount: 120.0,
-      balance: 1245.0,
-    },
-    {
-      id: "4",
-      date: "14.03.2023",
-      time: "10:30",
-      description: "Kaffeebestellung für Salon",
-      type: "expense",
-      amount: 35.0,
-      balance: 1125.0,
-    },
-    {
-      id: "5",
-      date: "13.03.2023",
-      time: "15:20",
-      description: "Bareinnahme aus Verkauf",
-      type: "income",
-      amount: 95.0,
-      balance: 1160.0,
-    },
-  ])
+  // Daten beim ersten Laden abrufen
+  useEffect(() => {
+    const fetchData = async () => {
+      await loadEntries()
+      await updateSummary()
+    }
+    fetchData()
+  }, [])
 
-  const summary = {
-    todayIn: 450.0,
-    todayOut: 120.0,
-    monthIn: 3250.0,
-    monthOut: 850.0,
+  // Kassenbestand und laufenden Saldo berechnen
+  useEffect(() => {
+    const calculateRunningBalances = async () => {
+      // Aktuellen Kassenbestand abrufen (wenn Kasse geöffnet ist)
+      const { success, balance } = await calculateCurrentBalance()
+      
+      if (success && balance) {
+        // Für jede Transaktion den laufenden Saldo berechnen
+        let runningBalance = balance
+        const balances: Record<string, number> = {}
+        
+        // Wir gehen die Einträge in umgekehrter Reihenfolge durch (älteste zuerst)
+        // Sie wurden nach created_at absteigend sortiert, daher umkehren
+        const sortedEntries = [...entries].reverse()
+        
+        // Für jeden Eintrag: Eingang erhöht den Saldo, Ausgang verringert ihn
+        sortedEntries.forEach(entry => {
+          if (entry.type === 'expense') {
+            runningBalance += entry.amount  // Rückwärts: Ausgabe wird hinzugefügt
+          } else {
+            runningBalance -= entry.amount  // Rückwärts: Einnahme wird abgezogen
+          }
+          balances[entry.id] = runningBalance
+        })
+        
+        // Wir kehren die berechneten Salden um, damit der neueste Eintrag den aktuellsten Saldo hat
+        setRunningBalances(balances)
+      }
+    }
+    
+    if (entries.length > 0) {
+      calculateRunningBalances()
+    }
+  }, [entries, calculateCurrentBalance])
+
+  // Suche durchführen
+  const handleSearch = useCallback(async () => {
+    if (searchTerm.trim()) {
+      await searchEntries(searchTerm)
+    } else {
+      await loadEntries()
+    }
+  }, [searchTerm, searchEntries, loadEntries])
+
+  // Suche bei Enter-Taste ausführen
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
   }
 
-  const handleAddEntry = () => {
+  // Neuen Eintrag hinzufügen
+  const handleAddEntry = async () => {
     const amount = Number.parseFloat(entryAmount)
     if (isNaN(amount) || amount <= 0 || !entryDescription) return
 
-    // Calculate new balance
-    const lastBalance = entries.length > 0 ? entries[0].balance : 0
-    const newBalance = entryType === "income" ? lastBalance + amount : lastBalance - amount
+    // Heutiges Datum im Format YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]
 
-    // Create new entry
-    const newEntry = {
-      id: Date.now().toString(),
-      date: new Date().toLocaleDateString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" }),
-      time: new Date().toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" }),
-      description: entryDescription,
+    const result = await createEntry({
+      date: today,
       type: entryType,
       amount: amount,
-      balance: newBalance,
+      description: entryDescription,
+      daily_report_id: null, // Wird später beim Tagesabschluss gesetzt
+    })
+
+    if (result.success) {
+      toast({
+        title: "Eintrag erstellt",
+        description: `${entryType === 'income' ? 'Einnahme' : 'Ausgabe'} über CHF ${amount.toFixed(2)} erfolgreich gespeichert.`,
+      })
+      
+      // Daten aktualisieren
+      await updateSummary()
+      
+      // Formular zurücksetzen und Dialog schließen
+      setEntryType("income")
+      setEntryAmount("")
+      setEntryDescription("")
+      setIsEntryDialogOpen(false)
+    } else {
+      toast({
+        title: "Fehler",
+        description: result.error || "Ein unerwarteter Fehler ist aufgetreten.",
+        variant: "destructive",
+      })
     }
+  }
 
-    // Add to entries
-    setEntries([newEntry, ...entries])
+  // Datum formatieren
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr)
+      return format(date, 'dd.MM.yyyy', { locale: de })
+    } catch (e) {
+      return dateStr
+    }
+  }
 
-    // Reset form and close dialog
-    setEntryType("income")
-    setEntryAmount("")
-    setEntryDescription("")
-    setIsEntryDialogOpen(false)
+  // Zeit aus timestamp extrahieren
+  const formatTime = (dateTimeStr: string) => {
+    try {
+      const date = new Date(dateTimeStr)
+      return format(date, 'HH:mm', { locale: de })
+    } catch (e) {
+      return "00:00"
+    }
   }
 
   return (
@@ -138,7 +195,7 @@ export default function CashRegisterPage() {
           <CardContent>
             <div className="flex items-center">
               <Wallet className="mr-2 text-green-500" size={20} />
-              <span className="text-2xl font-bold">CHF {summary.todayIn.toFixed(2)}</span>
+              <span className="text-2xl font-bold">CHF {summary.dailyIncome.toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
@@ -150,7 +207,7 @@ export default function CashRegisterPage() {
           <CardContent>
             <div className="flex items-center">
               <ArrowDownRight className="mr-2 text-red-500" size={20} />
-              <span className="text-2xl font-bold">CHF {summary.todayOut.toFixed(2)}</span>
+              <span className="text-2xl font-bold">CHF {summary.dailyExpense.toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
@@ -162,7 +219,7 @@ export default function CashRegisterPage() {
           <CardContent>
             <div className="flex items-center">
               <Wallet className="mr-2 text-green-500" size={20} />
-              <span className="text-2xl font-bold">CHF {summary.monthIn.toFixed(2)}</span>
+              <span className="text-2xl font-bold">CHF {summary.monthlyIncome.toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
@@ -174,7 +231,7 @@ export default function CashRegisterPage() {
           <CardContent>
             <div className="flex items-center">
               <ArrowDownRight className="mr-2 text-red-500" size={20} />
-              <span className="text-2xl font-bold">CHF {summary.monthOut.toFixed(2)}</span>
+              <span className="text-2xl font-bold">CHF {summary.monthlyExpense.toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
@@ -183,10 +240,24 @@ export default function CashRegisterPage() {
       <div className="flex flex-col md:flex-row gap-4 mb-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input placeholder="Suche nach Beschreibung..." className="pl-10" />
+          <Input 
+            placeholder="Suche nach Beschreibung..." 
+            className="pl-10" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+          />
         </div>
 
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={handleSearch}
+          >
+            <Search size={16} />
+            Suchen
+          </Button>
           <Button variant="outline" className="flex items-center gap-2">
             <Calendar size={16} />
             Datumsfilter
@@ -196,51 +267,62 @@ export default function CashRegisterPage() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Datum</TableHead>
-                <TableHead>Zeit</TableHead>
-                <TableHead>Beschreibung</TableHead>
-                <TableHead>Typ</TableHead>
-                <TableHead className="text-right">Betrag</TableHead>
-                <TableHead className="text-right">Saldo</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>{entry.date}</TableCell>
-                  <TableCell>{entry.time}</TableCell>
-                  <TableCell>{entry.description}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      {entry.type === "income" ? (
-                        <Wallet className="mr-2 text-green-500" size={16} />
-                      ) : (
-                        <ArrowDownRight className="mr-2 text-red-500" size={16} />
-                      )}
-                      <span>{entry.type === "income" ? "Einnahme" : "Ausgabe"}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell
-                    className={`text-right font-medium ${entry.type === "income" ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {entry.type === "income" ? "+" : "-"} CHF {entry.amount.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right font-medium">CHF {entry.balance.toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-
-              {entries.length === 0 && (
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Daten werden geladen...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    Keine Einträge gefunden.
-                  </TableCell>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Zeit</TableHead>
+                  <TableHead>Beschreibung</TableHead>
+                  <TableHead>Typ</TableHead>
+                  <TableHead className="text-right">Betrag</TableHead>
+                  <TableHead className="text-right">Saldo</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry: CashRegisterEntry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>{formatDate(entry.date)}</TableCell>
+                    <TableCell>{formatTime(entry.created_at)}</TableCell>
+                    <TableCell>{entry.description}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {entry.type === "income" ? (
+                          <Wallet className="mr-2 text-green-500" size={16} />
+                        ) : (
+                          <ArrowDownRight className="mr-2 text-red-500" size={16} />
+                        )}
+                        <span>{entry.type === "income" ? "Einnahme" : "Ausgabe"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-medium ${entry.type === "income" ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {entry.type === "income" ? "+" : "-"} CHF {entry.amount.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {runningBalances[entry.id] !== undefined 
+                        ? `CHF ${runningBalances[entry.id].toFixed(2)}` 
+                        : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {!loading && entries.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      Keine Einträge gefunden.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -296,9 +378,16 @@ export default function CashRegisterPage() {
             </Button>
             <Button
               onClick={handleAddEntry}
-              disabled={!entryAmount || Number.parseFloat(entryAmount) <= 0 || !entryDescription}
+              disabled={loading || !entryAmount || Number.parseFloat(entryAmount) <= 0 || !entryDescription}
             >
-              Eintrag hinzufügen
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird gespeichert...
+                </>
+              ) : (
+                "Eintrag hinzufügen"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

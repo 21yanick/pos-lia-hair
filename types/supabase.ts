@@ -374,6 +374,47 @@ export interface Database {
           updated_at?: string
         }
       }
+      register_status: {
+        Row: {
+          id: string
+          date: string
+          status: 'open' | 'closed'
+          starting_amount: number
+          ending_amount: number | null
+          opened_at: string
+          closed_at: string | null
+          notes: string | null
+          user_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          date: string
+          status: 'open' | 'closed'
+          starting_amount: number
+          ending_amount?: number | null
+          opened_at: string
+          closed_at?: string | null
+          notes?: string | null
+          user_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          date?: string
+          status?: 'open' | 'closed'
+          starting_amount?: number
+          ending_amount?: number | null
+          opened_at?: string
+          closed_at?: string | null
+          notes?: string | null
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
