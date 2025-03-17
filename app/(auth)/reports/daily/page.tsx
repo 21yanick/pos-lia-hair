@@ -19,6 +19,7 @@ import { Wallet, CreditCard, Download, FileText, AlertTriangle, Loader2, Calenda
 import { Badge } from "@/components/ui/badge"
 import { useDailyReports } from "@/lib/hooks/useDailyReports"
 import { useToast } from "@/lib/hooks/useToast"
+import { useRegisterStatus } from "@/lib/hooks/useRegisterStatus"
 import { 
   Popover,
   PopoverContent,
@@ -82,6 +83,10 @@ export default function DailyReportPage() {
     }
   }, [error, toast])
 
+  // Hook für den Kassenstatus (für Berechnung des aktuellen Kassenbestands)
+  const registerStatusHookRef = React.useRef(useRegisterStatus());
+  const { calculateCurrentBalance } = registerStatusHookRef.current;
+
   // Daten laden, wenn sich das Datum ändert
   useEffect(() => {
     const loadReportData = async () => {
@@ -122,6 +127,7 @@ export default function DailyReportPage() {
         let totalRevenue = 0;
         let startingCash = 0;
         let endingCash = 0;
+        let actualEndingCash = 0;
         
         // Wenn ein Bericht existiert, die Daten von dort nehmen
         if (reportResult.success && reportResult.report) {
@@ -147,6 +153,29 @@ export default function DailyReportPage() {
             totalRevenue = summaryResult.summary.totalRevenue || 0;
             // Anfangs- und Endbestand auf 0 belassen
           }
+          
+          // Hier den aktuellen Kassenbestand berechnen, der alle Kassenbucheinträge berücksichtigt
+          // WICHTIG: Wir übergeben das aktuelle Datum als Parameter, damit wir den korrekten Kassenbestand für dieses Datum bekommen
+          const balanceResult = await calculateCurrentBalance(apiDateFormat);
+          console.log("Aktueller Kassenbestand für Datum", apiDateFormat, ":", balanceResult);
+          
+          if (balanceResult.success) {
+            // Der aktuelle Endbestand ist der berechnete Kassenbestand
+            actualEndingCash = balanceResult.balance;
+            
+            // Für einen neuen Bericht den Anfangsbestand setzen
+            if (!reportResult.success || !reportResult.report) {
+              if (balanceResult.startingAmount !== undefined) {
+                // Wenn ein Startbetrag im Ergebnis vorhanden ist, verwenden wir diesen
+                startingCash = balanceResult.startingAmount;
+                console.log("Anfangsbestand aus Kassenstatus übernommen:", startingCash);
+              } else {
+                // Alternativ versuchen wir den Anfangsbestand aus dem Kassenbestand abzüglich der Bareinnahmen zu berechnen
+                startingCash = balanceResult.balance - cashTotal;
+                console.log("Anfangsbestand berechnet:", startingCash, "(Kassenbestand:", balanceResult.balance, "- Bareinnahmen:", cashTotal, ")");
+              }
+            }
+          }
         }
         
         // Zusammenfassung aktualisieren
@@ -156,7 +185,7 @@ export default function DailyReportPage() {
           sumup: sumupTotal,
           total: totalRevenue,
           startingCash: startingCash,
-          endingCash: endingCash,
+          endingCash: endingCash || actualEndingCash,
         };
         
         console.log("Aktualisiere Zusammenfassung:", summaryData);
@@ -201,6 +230,8 @@ export default function DailyReportPage() {
 
     const calculatedDiscrepancy = actualCash - summary.endingCash
     setDiscrepancy(calculatedDiscrepancy)
+
+    console.log("Berechnete Differenz:", calculatedDiscrepancy, "(Tatsächlich:", actualCash, "- Erwartet:", summary.endingCash, ")")
 
     // Dialog schließen und Bestätigung öffnen
     setIsCloseDialogOpen(false)
@@ -498,7 +529,7 @@ export default function DailyReportPage() {
                     </div>
                     <div className="flex justify-between font-medium pt-2 border-t">
                       <span>Endbestand:</span>
-                      <span>CHF {(summary.startingCash + summary.cash).toFixed(2)}</span>
+                      <span>CHF {summary.endingCash.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -526,7 +557,7 @@ export default function DailyReportPage() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="expected-cash">Erwarteter Bargeldbestand</Label>
-                  <Input id="expected-cash" value={(summary.startingCash + summary.cash).toFixed(2)} disabled />
+                  <Input id="expected-cash" value={summary.endingCash.toFixed(2)} disabled />
                 </div>
 
                 <div className="space-y-2">
@@ -579,7 +610,7 @@ export default function DailyReportPage() {
                   <div className="p-4 bg-gray-50 rounded">
                     <div className="flex justify-between mb-2">
                       <span>Erwarteter Bargeldbestand:</span>
-                      <span className="font-medium">CHF {(summary.startingCash + summary.cash).toFixed(2)}</span>
+                      <span className="font-medium">CHF {summary.endingCash.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between mb-2">
                       <span>Tatsächlicher Bargeldbestand:</span>

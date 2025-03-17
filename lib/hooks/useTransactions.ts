@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 // Typen für Transaktionsdaten
 export type Transaction = Database['public']['Tables']['transactions']['Row']
@@ -131,7 +132,134 @@ export function useTransactions() {
       // 6. Aktuelle Transaktion setzen für das UI
       setCurrentTransaction(transaction)
       
-      // 7. Lokale Liste aktualisieren
+      // 7. Automatisch ein Dokument für diese Transaktion erstellen (Quittung)
+      try {
+        // Einfache PDF-Quittung erstellen
+        const pdfDoc = await PDFDocument.create()
+        const page = pdfDoc.addPage([595.28, 841.89]) // A4
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+        
+        const { width, height } = page.getSize()
+        const fontSize = 12
+        const padding = 50
+        
+        // Titel
+        page.drawText('QUITTUNG', {
+          x: padding,
+          y: height - padding,
+          size: 24,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        })
+        
+        // Datum
+        const dateStr = new Date().toLocaleDateString('de-CH')
+        page.drawText(`Datum: ${dateStr}`, {
+          x: padding,
+          y: height - padding - 40,
+          size: fontSize,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        
+        // Transaktions-ID
+        page.drawText(`Belegnummer: ${transaction.id}`, {
+          x: padding,
+          y: height - padding - 60,
+          size: fontSize,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        
+        // Gesamtbetrag
+        page.drawText(`Gesamtbetrag: CHF ${transaction.total_amount.toFixed(2)}`, {
+          x: padding,
+          y: height - padding - 100,
+          size: fontSize + 2,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        })
+        
+        // Zahlungsmethode
+        const paymentMethod = transaction.payment_method === 'cash' 
+          ? 'Barzahlung' 
+          : transaction.payment_method === 'twint' 
+            ? 'TWINT' 
+            : 'SumUp (Karte)'
+            
+        page.drawText(`Zahlungsart: ${paymentMethod}`, {
+          x: padding,
+          y: height - padding - 120,
+          size: fontSize,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        
+        // Artikel auflisten
+        page.drawText('Artikel:', {
+          x: padding,
+          y: height - padding - 160,
+          size: fontSize,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        })
+        
+        // Benutzer-ID
+        page.drawText(`Mitarbeiter: ${userId}`, {
+          x: padding,
+          y: height - padding - 400,
+          size: fontSize - 2,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        
+        // PDF in Bytes umwandeln
+        const pdfBytes = await pdfDoc.save()
+        
+        // Als Datei für Storage vorbereiten
+        const fileName = `quittung-${transaction.id}.pdf`
+        const file = new File([pdfBytes], fileName, { type: 'application/pdf' })
+        
+        // Dateiname generieren
+        const timestamp = new Date().getTime()
+        const filePath = `documents/receipt/${fileName}`
+        
+        // Datei zu Supabase Storage hochladen
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          })
+          
+        if (uploadError) {
+          console.error('Fehler beim Hochladen der PDF:', uploadError)
+          // Wir werfen hier keinen Fehler, damit die Transaktion selbst erfolgreich bleibt
+        } else {
+          // Dokument-Eintrag in der Datenbank erstellen
+          const newDocument = {
+            type: 'receipt' as 'receipt' | 'daily_report' | 'monthly_report' | 'supplier_invoice',
+            reference_id: transaction.id,
+            file_path: filePath,
+            user_id: userId
+          }
+          
+          const { error: documentError } = await supabase
+            .from('documents')
+            .insert(newDocument)
+          
+          if (documentError) {
+            console.error('Fehler beim Erstellen des Dokumenteneintrags:', documentError)
+            // Wir werfen hier keinen Fehler, damit die Transaktion selbst erfolgreich bleibt
+          }
+        }
+      } catch (docErr) {
+        console.error('Fehler bei der automatischen Dokumentenerstellung:', docErr)
+        // Wir werfen hier keinen Fehler, damit die Transaktion selbst erfolgreich bleibt
+      }
+      
+      // 8. Lokale Liste aktualisieren
       setTransactions(prev => [transaction, ...prev])
 
       return { 

@@ -79,9 +79,12 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 
 ### 2.4 Dokumentenverwaltung
 
-- ❌ PDF-Generierung für Quittungen und Berichte
-- ❌ Dokumentenspeicherung in Supabase Storage
-- ❌ Dokumentenverwaltungs-UI
+- ✅ PDF-Generierung für Quittungen implementiert mit pdf-lib
+- ✅ Automatische Dokumentenerstellung bei jeder Transaktion
+- ✅ Dokumentenspeicherung in Supabase Storage mit Bucket-Policies
+- ✅ Tabellenbasierte Dokumentenverwaltungs-UI mit Hochladen, Ansicht und Download
+- ✅ Verknüpfung von Dokumenten mit Originaldaten (Transaktionen, Berichte, Rechnungen)
+- ✅ Vollständige Integration: Anzeige aller Transaktionen im Dokumentenbereich
 - ❌ E-Mail-Versand für Dokumente
 
 ### 2.5 Deployment und Produktionsumgebung
@@ -190,13 +193,43 @@ Um das Projekt zu vervollständigen, wird ein geschätzter Zeitaufwand von:
 6. ✅ Kassenstatus-Verwaltung (Öffnen/Schließen) mit Datenbank verknüpfen
 7. ✅ Tagesabschluss-Logik mit Datenbankoperationen implementieren
 8. ✅ Kassenbuch-UI mit Datenbank verbinden und Workflow optimieren
-9. PDF-Generierung für Tagesberichte und Quittungen
-10. Monatsabschluss-Funktionalität implementieren
+9. ✅ PDF-Generierung für Quittungen (automatisch bei jeder Transaktion)
+10. ❓ Monatsabschluss-Funktionalität implementieren
 11. ✅ Lieferantenrechnungen verwalten
 
 Diese Schritte bilden die Grundlage für ein funktionsfähiges Minimal Viable Product (MVP) und sollten priorisiert werden.
 
 ## 7. Aktueller Status und Fortschritt
+
+### Letzte Änderungen (17.03.2025 - späte Abend):
+- Automatische Dokumentenerstellung & Dokumentenüberblick implementiert:
+  - Automatische Erstellung von PDF-Quittungen bei jeder Transaktion mit pdf-lib
+  - Speicherung der PDFs in Supabase Storage und Datenbank-Verknüpfung
+  - Anzeige aller Transaktionen in der Dokumentenübersicht, auch ohne physisches Dokument
+  - Virtuelle Dokumentenanzeige für Transaktionen ohne gespeicherte Dokumente
+  - "PDF erstellen"-Funktion für Transaktionen mit fehlenden physischen Dokumenten
+  - Automatisierte Prozesse im Hintergrund für bessere Benutzererfahrung
+  - Visuelle Indikatoren für automatisch generierte und virtuelle Dokumente
+  - PDF-Layout mit Geschäftsinformationen, Transaktionsdetails und Artikelliste
+  - Alle Geldbeträge und Kassenbucheinträge bleiben mit Dokumenten verknüpft
+  - Unterscheidung zwischen physischen und virtuellen Dokumenten in der Benutzeroberfläche
+
+### Letzte Änderungen (17.03.2025 - Abend):
+- Dokumentenverwaltungssystem vollständig implementiert:
+  - Neuer `useDocuments` Hook erstellt mit vollständiger CRUD-Funktionalität
+  - Integration mit Supabase Storage für Dokumentenspeicherung 
+  - Tabellenbasierte Benutzeroberfläche für optimale Übersicht aller Dokumente
+  - Verknüpfung mit Originaldaten: Beträge, Daten und Status werden direkt angezeigt
+  - Farbkodierung für finanzielle Beträge (Ausgaben rot, Einnahmen grün)
+  - Filterung nach Dokumenttypen (Quittungen, Tagesabschlüsse, Monatsabschlüsse, Lieferantenrechnungen)
+  - Effiziente Suchfunktion mit Debouncing für Dokumentensuche
+  - Dokument-Upload mit Metadaten, Typenunterstützung und Referenz-ID-Verknüpfung
+  - Vorschau, Download und Löschen von Dokumenten
+  - Statistikkarten mit Dokumentenzusammenfassung nach Typ
+  - Responsive Ladestate mit Tabellen-Skeleton für bessere UX
+  - Fehlerbehandlung mit benutzerfreundlichen Toast-Benachrichtigungen
+  - Integration von @react-pdf/renderer und pdf-lib als Grundlage für zukünftige PDF-Generierung
+  - Migrationsscript für Supabase Storage Bucket (02_storage_buckets.sql)
 
 ### Letzte Änderungen (16.03.2025 - Nachmittag):
 - Lieferantenrechnungs-System vollständig implementiert:

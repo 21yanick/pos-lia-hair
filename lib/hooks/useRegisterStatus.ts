@@ -378,42 +378,69 @@ export function useRegisterStatus() {
   }
   
   // Aktuellen Kassenbestand berechnen (Startbetrag + Einnahmen - Ausgaben)
-  const calculateCurrentBalance = async () => {
+  const calculateCurrentBalance = async (date?: string) => {
     try {
-      if (!currentRegisterStatus) {
+      // Wenn ein Datum angegeben ist, verwenden wir das, sonst das aktuelle Datum
+      const targetDate = date || new Date().toISOString().split('T')[0]
+      console.log("Berechne Kassenbestand für Datum:", targetDate)
+      
+      // Wenn kein spezifisches Datum angegeben ist, prüfen wir den aktuellen Kassenstatus
+      if (!date && !currentRegisterStatus) {
         return { success: false, error: 'Keine geöffnete Kasse gefunden' }
       }
       
-      // Heutiges Datum im Format YYYY-MM-DD
-      const today = new Date().toISOString().split('T')[0]
+      // Kassenstatus für das angegebene Datum abrufen, falls nicht heutiges Datum
+      let registerStatusForDate = currentRegisterStatus;
       
-      // Alle Kassenbucheinträge für heute abrufen
+      if (date) {
+        const { data: statusData } = await getRegisterStatusForDate(date);
+        registerStatusForDate = statusData;
+        console.log("Kassenstatus für Datum", date, ":", registerStatusForDate);
+      }
+      
+      // Startbetrag aus dem Kassenstatus oder 0, wenn kein Status gefunden wurde
+      const startingAmount = registerStatusForDate?.starting_amount || 0;
+      console.log("Startbetrag für Datum", targetDate, ":", startingAmount);
+      
+      // Alle Kassenbucheinträge für das Zieldatum abrufen
       const { data: registerEntries, error: entriesError } = await supabase
         .from('cash_register')
         .select('*')
-        .eq('date', today)
+        .eq('date', targetDate)
       
       if (entriesError) {
         throw entriesError
       }
       
+      console.log("Kassenbucheinträge für Datum", targetDate, ":", registerEntries);
+      
       // Berechnung des aktuellen Kassenbestands
-      let currentBalance = currentRegisterStatus.starting_amount
+      let currentBalance = startingAmount
       
       registerEntries?.forEach(entry => {
         if (entry.type === 'income') {
           currentBalance += entry.amount
+          console.log(`Einnahme: +${entry.amount} (${entry.description}), Neuer Bestand: ${currentBalance}`);
         } else if (entry.type === 'expense') {
           currentBalance -= entry.amount
+          console.log(`Ausgabe: -${entry.amount} (${entry.description}), Neuer Bestand: ${currentBalance}`);
         }
       })
+      
+      console.log("Berechneter Gesamtbestand:", currentBalance);
+      
+      const incomeTotal = registerEntries?.filter(e => e.type === 'income')?.reduce((sum, e) => sum + e.amount, 0) || 0;
+      const expenseTotal = registerEntries?.filter(e => e.type === 'expense')?.reduce((sum, e) => sum + e.amount, 0) || 0;
+      
+      console.log("Summe Einnahmen:", incomeTotal, "Summe Ausgaben:", expenseTotal);
       
       return {
         success: true,
         balance: currentBalance,
+        startingAmount: startingAmount,
         transactions: {
-          income: registerEntries?.filter(e => e.type === 'income')?.reduce((sum, e) => sum + e.amount, 0) || 0,
-          expense: registerEntries?.filter(e => e.type === 'expense')?.reduce((sum, e) => sum + e.amount, 0) || 0
+          income: incomeTotal,
+          expense: expenseTotal
         }
       }
     } catch (err: any) {
