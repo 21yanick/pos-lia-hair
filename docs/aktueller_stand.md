@@ -74,7 +74,7 @@ Dieses Dokument enthält eine detaillierte Übersicht über den aktuellen Entwic
 - ✅ Tagesabschlusslogik mit automatischer Berichtserstellung
 - ✅ Berechnung von Tagessummen nach Zahlungsarten
 - ✅ Lieferantenrechnungsverwaltung
-- ❌ Monatsabschlusslogik
+- ✅ Monatsabschlusslogik
 - ❌ Erweiterte Berichterstellung mit Diagrammen
 
 ### 2.4 Dokumentenverwaltung
@@ -194,12 +194,39 @@ Um das Projekt zu vervollständigen, wird ein geschätzter Zeitaufwand von:
 7. ✅ Tagesabschluss-Logik mit Datenbankoperationen implementieren
 8. ✅ Kassenbuch-UI mit Datenbank verbinden und Workflow optimieren
 9. ✅ PDF-Generierung für Quittungen (automatisch bei jeder Transaktion)
-10. ❓ Monatsabschluss-Funktionalität implementieren
+10. ✅ Monatsabschluss-Funktionalität implementieren
 11. ✅ Lieferantenrechnungen verwalten
 
 Diese Schritte bilden die Grundlage für ein funktionsfähiges Minimal Viable Product (MVP) und sollten priorisiert werden.
 
 ## 7. Aktueller Status und Fortschritt
+
+### Letzte Änderungen (17.03.2025 - Nacht+Fixes):
+- Navigation der Anwendung vereinfacht:
+  - Übergeordneter "Abschlüsse" Menüpunkt entfernt
+  - Tagesabschlüsse, Kassenbuch und Monatsabschlüsse direkt in Sidebar platziert
+  - Middleware aktualisiert für automatische Umleitung des alten Pfads
+  - Verbesserte Benutzerfreundlichkeit durch direkten Zugriff auf wichtige Funktionen
+
+- Monatsabschluss-Funktionalität vollständig implementiert und optimiert:
+  - Neuer `useMonthlyReports` Hook für CRUD-Operationen mit Monatsberichten
+  - Monatsabschluss-Seite mit Echtzeit-Datenanbindung und vollständiger Funktionalität
+  - Umsatzübersicht nach Zahlungsarten, Dienstleistungen und Produkten
+  - Berechnung von Durchschnittswerten und Vergleich zum Vormonat
+  - Top-Dienstleistungen/Produkte des Monats werden automatisch ermittelt
+  - Verknüpfung mit bestehenden Tagesberichten
+  - Vollständiger Workflow zum Abschließen eines Monats
+  - Auswahl und Anzeige verschiedener Monate
+  - Robuste Fehlerbehandlung und Benutzerrückmeldungen
+  - Moderne UI mit responsivem Design
+  - Umfassende Fehlerbehandlung und Logging für einfacheres Debugging
+
+- Fehler in der Berechnung der Umsatzverteilung behoben:
+  - Korrektur der Prozentberechnung für Dienstleistungen und Produkte
+  - Korrekte Darstellung des Gesamtumsatzes als Summe aller Dienstleistungen und Produkte
+  - Verbesserte Konsistenz zwischen Zahlungsarten- und Artikelsummen
+  - Transparente Anzeige von Diskrepanzen für Debugging-Zwecke
+  - Alternative Berechnungsmethoden für Fälle ohne vorhandene Tagesberichte
 
 ### Letzte Änderungen (17.03.2025 - späte Abend):
 - Automatische Dokumentenerstellung & Dokumentenüberblick implementiert:

@@ -56,6 +56,19 @@ Ein modernes Point-of-Sale (POS) System für den Schweizer Coiffeursalon "LIA Ha
    docker-compose up -d
    ```
 
+### Supabase starten und stoppen
+
+- Supabase-Container stoppen (um Ports freizugeben):
+  ```bash
+  docker stop $(docker ps -q --filter "name=supabase")
+  ```
+
+- Supabase-Container wieder starten:
+  ```bash
+  cd /home/satoshi/projects/private/pos-lia-hair/supabase-local/docker
+  docker-compose up -d
+  ```
+
 4. Umgebungsvariablen konfigurieren
    ```bash
    # In das Hauptverzeichnis zurückkehren

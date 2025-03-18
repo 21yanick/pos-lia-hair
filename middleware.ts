@@ -10,6 +10,11 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
+  // Umleitung für die alte Abschlüsse-Übersichtsseite zu Tagesabschlüssen
+  if (req.nextUrl.pathname === '/reports') {
+    return NextResponse.redirect(new URL('/reports/daily', req.url));
+  }
+
   // Wenn nicht eingeloggt und Zugriff auf geschützte Route versucht wird
   if (!session && req.nextUrl.pathname.startsWith('/(auth)')) {
     return NextResponse.redirect(new URL('/login', req.url));

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -15,59 +15,187 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Download, FileText, TrendingUp, TrendingDown, CheckCircle } from "lucide-react"
+import { Download, FileText, TrendingUp, TrendingDown, CheckCircle, Loader2 } from "lucide-react"
+import { useMonthlyReports, type MonthlySummary, type DailyRevenue, type TopItem } from "@/lib/hooks/useMonthlyReports"
+import { useToast } from "@/lib/hooks/useToast"
 
 export default function MonthlyReportPage() {
-  // State for the close month dialog
+  // Toast für Benachrichtigungen
+  const { toast } = useToast()
+
+  // Hooks - einmalige Instanziierung mit useRef
+  const monthlyReportsHookRef = useRef(useMonthlyReports())
+  const {
+    loading,
+    error,
+    currentMonthlyReport,
+    getMonthlyReportByDate,
+    calculateMonthlySummary,
+    getDailyRevenuesForMonth,
+    getTopItemsForMonth,
+    performMonthlyClose
+  } = monthlyReportsHookRef.current
+
+  // State für die Dialoge
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
   const [closeNotes, setCloseNotes] = useState("")
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
+  
+  // State für die Daten
+  const [isLoadingData, setIsLoadingData] = useState(true)
+  const [selectedMonth, setSelectedMonth] = useState<string>(formatYearMonth(new Date()))
+  const [summary, setSummary] = useState<MonthlySummary>({
+    cashTotal: 0,
+    twintTotal: 0,
+    sumupTotal: 0,
+    totalRevenue: 0,
+    transactionCount: 0,
+    servicesTotal: 0,
+    productsTotal: 0,
+    avgDailyRevenue: 0
+  })
+  const [dailyRevenues, setDailyRevenues] = useState<DailyRevenue[]>([])
+  const [topServices, setTopServices] = useState<TopItem[]>([])
 
-  // Mock data
-  const [reportStatus, setReportStatus] = useState("draft") // or 'closed'
-  const currentMonth = new Date().toLocaleDateString("de-CH", { month: "long", year: "numeric" })
+  // Aktuelle Auswahl in Jahr und Monat aufteilen
+  const selectedYear = parseInt(selectedMonth.split('-')[0])
+  const selectedMonthNum = parseInt(selectedMonth.split('-')[1])
+  
+  // Formatierter Monatsname für die Anzeige
+  const formattedMonthYear = new Date(selectedYear, selectedMonthNum - 1, 1).toLocaleDateString("de-CH", { 
+    month: "long", 
+    year: "numeric"
+  })
 
-  const summary = {
-    total: 12450.5,
-    previousMonth: 11200.0,
-    transactions: 185,
-    avgDaily: 415.0,
-    services: 9850.5,
-    products: 2600.0,
-    cash: 4500.5,
-    twint: 5200.0,
-    sumup: 2750.0,
+  // Hilfsfunktion zum Formatieren von Jahr-Monat
+  function formatYearMonth(date: Date): string {
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    return `${year}-${month.toString().padStart(2, '0')}`
   }
 
-  const percentChange = ((summary.total - summary.previousMonth) / summary.previousMonth) * 100
+  // Prozentuale Änderung zum Vormonat berechnen
+  const percentChange = summary.previousMonthRevenue 
+    ? ((summary.totalRevenue - summary.previousMonthRevenue) / summary.previousMonthRevenue) * 100 
+    : 0
 
-  const dailyData = [
-    { day: "01.03.2023", total: 380.5 },
-    { day: "02.03.2023", total: 425.0 },
-    { day: "03.03.2023", total: 510.5 },
-    { day: "04.03.2023", total: 620.0 },
-    { day: "05.03.2023", total: 350.0 },
-    // More days would be here
-  ]
+  // Fehlerbehandlung
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Fehler",
+        description: error,
+        variant: "destructive",
+      })
+    }
+  }, [error, toast])
 
-  const topServices = [
-    { name: "Damen Haarschnitt", count: 45, total: 2925.0 },
-    { name: "Färben", count: 32, total: 2720.0 },
-    { name: "Herren Haarschnitt", count: 38, total: 1710.0 },
-    { name: "Strähnen", count: 15, total: 1425.0 },
-    { name: "Kinder Haarschnitt", count: 25, total: 875.0 },
-  ]
+  // Daten laden, wenn sich der Monat ändert
+  useEffect(() => {
+    const loadMonthlyData = async () => {
+      setIsLoadingData(true)
+      
+      try {
+        console.log(`Lade Daten für ${selectedYear}-${selectedMonthNum}`)
+        
+        // 1. Monatsbericht abrufen (wenn vorhanden)
+        const reportResult = await getMonthlyReportByDate(selectedYear, selectedMonthNum)
+        console.log("Monatsbericht-Ergebnis:", reportResult)
+        
+        // 2. Monatliche Zusammenfassung berechnen
+        const summaryResult = await calculateMonthlySummary(selectedYear, selectedMonthNum)
+        console.log("Zusammenfassung-Ergebnis:", summaryResult)
+        
+        if (summaryResult.success) {
+          setSummary(summaryResult.summary)
+        }
+        
+        // 3. Tägliche Umsätze abrufen (für Diagramm)
+        const revenuesResult = await getDailyRevenuesForMonth(selectedYear, selectedMonthNum)
+        console.log("Tagesumsätze-Ergebnis:", revenuesResult)
+        
+        if (revenuesResult.success) {
+          setDailyRevenues(revenuesResult.dailyRevenues)
+        }
+        
+        // 4. Top-Dienstleistungen abrufen
+        const topServicesResult = await getTopItemsForMonth(selectedYear, selectedMonthNum, 'service', 5)
+        console.log("Top-Dienstleistungen-Ergebnis:", topServicesResult)
+        
+        if (topServicesResult.success) {
+          setTopServices(topServicesResult.topItems)
+        }
+      } catch (err: any) {
+        console.error('Fehler beim Laden der Monatsdaten:', err)
+        toast({
+          title: "Fehler",
+          description: "Die Monatsdaten konnten nicht geladen werden: " + (err.message || "Unbekannter Fehler"),
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingData(false)
+      }
+    }
+    
+    loadMonthlyData()
+  }, [selectedYear, selectedMonthNum])
 
+  // Monatsabschluss vorbereiten
   const handleCloseMonth = () => {
-    // Close the dialog and open confirmation
+    // Dialog schließen und Bestätigung öffnen
     setIsCloseDialogOpen(false)
     setIsConfirmationDialogOpen(true)
   }
 
-  const confirmCloseMonth = () => {
-    // Here would be the API call to close the month
-    setReportStatus("closed")
-    setIsConfirmationDialogOpen(false)
+  // Monatsabschluss durchführen
+  const confirmCloseMonth = async () => {
+    try {
+      console.log(`Führe Monatsabschluss für ${selectedYear}-${selectedMonthNum} durch`)
+      
+      const result = await performMonthlyClose(selectedYear, selectedMonthNum, closeNotes || undefined)
+      
+      if (result.success) {
+        toast({
+          title: "Monatsabschluss erfolgreich",
+          description: `Der Monatsabschluss für ${formattedMonthYear} wurde erfolgreich durchgeführt.`,
+        })
+        
+        // Dialog schließen
+        setIsConfirmationDialogOpen(false)
+        
+        // Daten neu laden
+        const reportResult = await getMonthlyReportByDate(selectedYear, selectedMonthNum)
+        console.log("Aktualisierter Monatsbericht:", reportResult)
+      } else {
+        toast({
+          title: "Fehler",
+          description: result.error || "Der Monatsabschluss konnte nicht durchgeführt werden.",
+          variant: "destructive",
+        })
+      }
+    } catch (err: any) {
+      console.error('Fehler beim Monatsabschluss:', err)
+      toast({
+        title: "Fehler",
+        description: err.message || "Ein unerwarteter Fehler ist aufgetreten.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Monatswahl-Optionen erstellen (letzte 12 Monate)
+  const getMonthOptions = () => {
+    const options = []
+    const now = new Date()
+    
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const yearMonth = formatYearMonth(date)
+      const label = date.toLocaleDateString("de-CH", { month: "long", year: "numeric" })
+      options.push({ value: yearMonth, label })
+    }
+    
+    return options
   }
 
   return (
@@ -75,32 +203,36 @@ export default function MonthlyReportPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Monatsabschluss</h1>
-          <p className="text-gray-500">{currentMonth}</p>
+          <p className="text-gray-500">{formattedMonthYear}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Select defaultValue="march">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Monat auswählen" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="january">Januar 2023</SelectItem>
-              <SelectItem value="february">Februar 2023</SelectItem>
-              <SelectItem value="march">März 2023</SelectItem>
+              {getMonthOptions().map(option => (
+                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Badge variant={reportStatus === "closed" ? "default" : "outline"}>
-            {reportStatus === "closed" ? "Abgeschlossen" : "Entwurf"}
+          <Badge variant={currentMonthlyReport?.status === "closed" ? "default" : "outline"}>
+            {currentMonthlyReport?.status === "closed" ? "Abgeschlossen" : "Entwurf"}
           </Badge>
 
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" disabled={!currentMonthlyReport}>
             <Download size={16} />
             PDF
           </Button>
 
-          {reportStatus !== "closed" && (
-            <Button className="flex items-center gap-2" onClick={() => setIsCloseDialogOpen(true)}>
+          {currentMonthlyReport?.status !== "closed" && (
+            <Button 
+              className="flex items-center gap-2" 
+              onClick={() => setIsCloseDialogOpen(true)}
+              disabled={isLoadingData}
+            >
               <FileText size={16} />
               Abschließen
             </Button>
@@ -108,149 +240,195 @@ export default function MonthlyReportPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Monatsumsatz</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold mr-2">CHF {summary.total.toFixed(2)}</span>
-              <div className={`flex items-center ${percentChange >= 0 ? "text-green-500" : "text-red-500"}`}>
-                {percentChange >= 0 ? (
-                  <TrendingUp size={16} className="mr-1" />
-                ) : (
-                  <TrendingDown size={16} className="mr-1" />
-                )}
-                <span>{Math.abs(percentChange).toFixed(1)}%</span>
-              </div>
-            </div>
-            <p className="text-sm text-gray-500">vs. Vormonat (CHF {summary.previousMonth.toFixed(2)})</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Transaktionen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold">{summary.transactions}</span>
-            </div>
-            <p className="text-sm text-gray-500">Ø {(summary.transactions / 30).toFixed(1)} pro Tag</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Durchschnittlicher Tagesumsatz</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold">CHF {summary.avgDaily.toFixed(2)}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tagesübersicht</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center border border-dashed rounded-md">
-                <p className="text-gray-500">Hier würde ein Diagramm mit den täglichen Umsätzen angezeigt werden.</p>
-              </div>
-
-              <div className="mt-4 grid grid-cols-7 gap-2">
-                {dailyData.map((day, index) => (
-                  <div key={index} className="text-center p-2 border rounded-md">
-                    <div className="text-xs text-gray-500">{day.day.split(".")[0]}</div>
-                    <div className="font-medium">{day.total.toFixed(0)}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+      {isLoadingData ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 size={30} className="animate-spin mb-4" />
+          <span>Daten werden geladen...</span>
+          <p className="text-gray-500 mt-2">
+            Monat: {formattedMonthYear}
+          </p>
         </div>
-
-        <div>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Umsatzverteilung</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm">Dienstleistungen</span>
-                  <span className="text-sm font-medium">{((summary.services / summary.total) * 100).toFixed(0)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${(summary.services / summary.total) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="text-right text-sm mt-1">CHF {summary.services.toFixed(2)}</div>
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm">Produkte</span>
-                  <span className="text-sm font-medium">{((summary.products / summary.total) * 100).toFixed(0)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${(summary.products / summary.total) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="text-right text-sm mt-1">CHF {summary.products.toFixed(2)}</div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <h4 className="font-medium mb-2">Zahlungsarten</h4>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Bar:</span>
-                    <span>CHF {summary.cash.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Twint:</span>
-                    <span>CHF {summary.twint.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>SumUp:</span>
-                    <span>CHF {summary.sumup.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Top 5 Dienstleistungen</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {topServices.map((service, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-gray-500">{service.count}x</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500">Monatsumsatz</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold mr-2">CHF {(summary.servicesTotal + summary.productsTotal).toFixed(2)}</span>
+                  {summary.previousMonthRevenue !== undefined && (
+                    <div className={`flex items-center ${percentChange >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {percentChange >= 0 ? (
+                        <TrendingUp size={16} className="mr-1" />
+                      ) : (
+                        <TrendingDown size={16} className="mr-1" />
+                      )}
+                      <span>{Math.abs(percentChange).toFixed(1)}%</span>
                     </div>
-                    <div className="font-medium">CHF {service.total.toFixed(2)}</div>
+                  )}
+                </div>
+                {summary.previousMonthRevenue !== undefined && (
+                  <p className="text-sm text-gray-500">vs. Vormonat (CHF {summary.previousMonthRevenue.toFixed(2)})</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500">Transaktionen</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold">{summary.transactionCount}</span>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Ø {((summary.transactionCount / new Date(selectedYear, selectedMonthNum, 0).getDate()) || 0).toFixed(1)} pro Tag
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500">Durchschnittlicher Tagesumsatz</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold">CHF {summary.avgDailyRevenue.toFixed(2)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tagesübersicht</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {dailyRevenues.length > 0 ? (
+                    <>
+                      <div className="h-64 flex items-center justify-center border border-dashed rounded-md">
+                        <p className="text-gray-500">Hier würde ein Diagramm mit den täglichen Umsätzen angezeigt werden.</p>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-7 gap-2">
+                        {dailyRevenues.slice(0, 7).map((day, index) => (
+                          <div key={index} className="text-center p-2 border rounded-md">
+                            <div className="text-xs text-gray-500">{day.day.split(".")[0]}</div>
+                            <div className="font-medium">{day.total.toFixed(0)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="h-64 flex items-center justify-center">
+                      <p className="text-gray-500">Keine Tagesberichte für diesen Monat verfügbar.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Umsatzverteilung</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm">Dienstleistungen</span>
+                      <span className="text-sm font-medium">
+                        {(summary.servicesTotal + summary.productsTotal) > 0 
+                          ? ((summary.servicesTotal / (summary.servicesTotal + summary.productsTotal)) * 100).toFixed(0) 
+                          : "0"}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ 
+                          width: (summary.servicesTotal + summary.productsTotal) > 0 
+                            ? `${(summary.servicesTotal / (summary.servicesTotal + summary.productsTotal)) * 100}%` 
+                            : "0%" 
+                        }}
+                      ></div>
+                    </div>
+                    <div className="text-right text-sm mt-1">CHF {summary.servicesTotal.toFixed(2)}</div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm">Produkte</span>
+                      <span className="text-sm font-medium">
+                        {(summary.servicesTotal + summary.productsTotal) > 0 
+                          ? ((summary.productsTotal / (summary.servicesTotal + summary.productsTotal)) * 100).toFixed(0) 
+                          : "0"}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-600 h-2 rounded-full"
+                        style={{ 
+                          width: (summary.servicesTotal + summary.productsTotal) > 0 
+                            ? `${(summary.productsTotal / (summary.servicesTotal + summary.productsTotal)) * 100}%` 
+                            : "0%" 
+                        }}
+                      ></div>
+                    </div>
+                    <div className="text-right text-sm mt-1">CHF {summary.productsTotal.toFixed(2)}</div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <h4 className="font-medium mb-2">Zahlungsarten</h4>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Bar:</span>
+                        <span>CHF {summary.cashTotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Twint:</span>
+                        <span>CHF {summary.twintTotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>SumUp:</span>
+                        <span>CHF {summary.sumupTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top 5 Dienstleistungen</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {topServices.length > 0 ? (
+                    <div className="space-y-3">
+                      {topServices.map((service, index) => (
+                        <div key={index} className="flex justify-between items-center">
+                          <div>
+                            <div className="font-medium">{service.name}</div>
+                            <div className="text-sm text-gray-500">{service.count}x</div>
+                          </div>
+                          <div className="font-medium">CHF {service.total.toFixed(2)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 py-4 text-center">Keine Dienstleistungen für diesen Monat verfügbar.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Close Month Dialog */}
       <Dialog open={isCloseDialogOpen} onOpenChange={setIsCloseDialogOpen}>
@@ -258,7 +436,7 @@ export default function MonthlyReportPage() {
           <DialogHeader>
             <DialogTitle>Monatsabschluss durchführen</DialogTitle>
             <DialogDescription>
-              Möchten Sie den Monatsabschluss für {currentMonth} durchführen? Diese Aktion kann nicht rückgängig gemacht
+              Möchten Sie den Monatsabschluss für {formattedMonthYear} durchführen? Diese Aktion kann nicht rückgängig gemacht
               werden.
             </DialogDescription>
           </DialogHeader>
@@ -267,15 +445,15 @@ export default function MonthlyReportPage() {
             <div className="p-4 bg-gray-50 rounded">
               <div className="flex justify-between mb-2">
                 <span>Gesamtumsatz:</span>
-                <span className="font-medium">CHF {summary.total.toFixed(2)}</span>
+                <span className="font-medium">CHF {summary.totalRevenue.toFixed(2)}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span>Dienstleistungen:</span>
-                <span className="font-medium">CHF {summary.services.toFixed(2)}</span>
+                <span className="font-medium">CHF {summary.servicesTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span>Produkte:</span>
-                <span className="font-medium">CHF {summary.products.toFixed(2)}</span>
+                <span className="font-medium">CHF {summary.productsTotal.toFixed(2)}</span>
               </div>
             </div>
 
@@ -312,18 +490,18 @@ export default function MonthlyReportPage() {
           <div className="py-4">
             <div className="space-y-4">
               <p className="text-center">
-                Sind Sie sicher, dass Sie den Monatsabschluss für {currentMonth} durchführen möchten? Nach dem Abschluss
+                Sind Sie sicher, dass Sie den Monatsabschluss für {formattedMonthYear} durchführen möchten? Nach dem Abschluss
                 können keine Änderungen mehr vorgenommen werden.
               </p>
 
               <div className="p-4 bg-gray-50 rounded">
                 <div className="flex justify-between mb-2">
                   <span>Gesamtumsatz:</span>
-                  <span className="font-medium">CHF {summary.total.toFixed(2)}</span>
+                  <span className="font-medium">CHF {summary.totalRevenue.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span>Anzahl Transaktionen:</span>
-                  <span className="font-medium">{summary.transactions}</span>
+                  <span className="font-medium">{summary.transactionCount}</span>
                 </div>
               </div>
 
