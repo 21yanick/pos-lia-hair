@@ -4,14 +4,15 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 
-// Type für die vollständigen Transaktionsdaten
-type Transaction = {
+// Type für die vollständigen Verkaufsdaten
+type Sale = {
   id: string
   total_amount: number
   payment_method: 'cash' | 'twint' | 'sumup'
   status: 'completed' | 'cancelled' | 'refunded'
-  created_at: string
+  created_at: string | null
   notes: string | null
+  user_id: string
 }
 
 // Type für die vereinfachten Transaktionsdaten im Dashboard
@@ -24,8 +25,11 @@ export type DashboardTransaction = {
 
 // Type für die Statistiken
 export type DashboardStats = {
-  revenue: number
-  transactions: number
+  todayRevenue: number
+  todayTransactions: number
+  weekRevenue: number
+  monthRevenue: number
+  activeProducts: number
   paymentMethods: {
     cash: number
     twint: number
@@ -36,8 +40,11 @@ export type DashboardStats = {
 
 export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats>({
-    revenue: 0,
-    transactions: 0,
+    todayRevenue: 0,
+    todayTransactions: 0,
+    weekRevenue: 0,
+    monthRevenue: 0,
+    activeProducts: 0,
     paymentMethods: {
       cash: 0,
       twint: 0,
@@ -51,32 +58,44 @@ export function useDashboardStats() {
   // Datum für heute formatieren (YYYY-MM-DD)
   const today = format(new Date(), 'yyyy-MM-dd')
 
-  // Funktion zum Laden der Transaktionsdaten
+  // Funktion zum Laden der Verkaufsdaten
   const loadTodayStats = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // Heutige Transaktionen abrufen
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('transactions')
+      // Heutige Verkäufe abrufen
+      const { data: sales, error: salesError } = await supabase
+        .from('sales')
         .select('*')
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`)
         .order('created_at', { ascending: false })
-        .limit(20) // Begrenzen wir auf 20 Transaktionen für bessere Performance
+        .limit(20)
       
-      // Logge nur, falls ein Fehler vorliegt (mit konkreter Fehlermeldung)
-      if (transactionsError) {
-        console.error('Fehler beim Laden der Transaktionen:', 
-          transactionsError.message || 'Unbekannter Datenbankfehler')
-        setError(transactionsError.message || 'Fehler beim Laden der Transaktionen')
+      if (salesError) {
+        console.error('Fehler beim Laden der Verkäufe:', 
+          salesError.message || 'Unbekannter Datenbankfehler')
+        setError(salesError.message || 'Fehler beim Laden der Verkäufe')
         return
       }
 
-      if (!transactions || transactions.length === 0) {
-        // Keine Transaktionen für heute, leere Statistiken zurückgeben
+      // Aktive Produkte zählen
+      const { data: items, error: itemsError } = await supabase
+        .from('items')
+        .select('id')
+        .eq('active', true)
+
+      const activeProductsCount = items?.length || 0
+
+      if (!sales || sales.length === 0) {
+        // Keine Verkäufe für heute
         setStats({
-          revenue: 0,
-          transactions: 0,
+          todayRevenue: 0,
+          todayTransactions: 0,
+          weekRevenue: 0,
+          monthRevenue: 0,
+          activeProducts: activeProductsCount,
           paymentMethods: {
             cash: 0,
             twint: 0,
@@ -87,73 +106,90 @@ export function useDashboardStats() {
         return
       }
 
-      // Filter für heutige Transaktionen mit Status "completed"
-      const todayISO = today + 'T00:00:00';  // Beginnt um 00:00 Uhr
-      const tomorrowISO = format(new Date(new Date().setDate(new Date().getDate() + 1)), 'yyyy-MM-dd') + 'T00:00:00';
+      // Nur abgeschlossene Verkäufe für die Berechnungen verwenden
+      const completedSales = sales.filter(
+        (s: Sale) => s.status === 'completed'
+      )
       
-      const todayTransactions = transactions.filter((t: Transaction) => {
-        const txDate = new Date(t.created_at);
-        const txDateISO = txDate.toISOString();
-        return txDateISO >= todayISO && txDateISO < tomorrowISO;
-      });
-      
-      // Nur abgeschlossene Transaktionen für die Berechnungen verwenden
-      const completedTransactions = todayTransactions.filter(
-        (t: Transaction) => t.status === 'completed'
-      );
-      
-      // Wenn keine abgeschlossenen Transaktionen vorhanden sind
-      if (completedTransactions.length === 0) {
+      // Wenn keine abgeschlossenen Verkäufe vorhanden sind
+      if (completedSales.length === 0) {
         setStats({
-          revenue: 0,
-          transactions: 0,
+          todayRevenue: 0,
+          todayTransactions: 0,
+          weekRevenue: 0,
+          monthRevenue: 0,
+          activeProducts: activeProductsCount,
           paymentMethods: {
             cash: 0,
             twint: 0,
             sumup: 0,
           },
           recentTransactions: [],
-        });
-        return;
+        })
+        return
       }
       
-      // Gesamtumsatz berechnen
-      const totalRevenue = completedTransactions.reduce(
-        (sum: number, t: Transaction) => sum + t.total_amount,
+      // Gesamtumsatz heute berechnen
+      const todayRevenue = completedSales.reduce(
+        (sum: number, s: Sale) => sum + s.total_amount,
         0
       )
 
       // Nach Zahlungsmethode aufteilen
-      const cashTotal = completedTransactions
-        .filter((t: Transaction) => t.payment_method === 'cash')
-        .reduce((sum: number, t: Transaction) => sum + t.total_amount, 0)
+      const cashTotal = completedSales
+        .filter((s: Sale) => s.payment_method === 'cash')
+        .reduce((sum: number, s: Sale) => sum + s.total_amount, 0)
 
-      const twintTotal = completedTransactions
-        .filter((t: Transaction) => t.payment_method === 'twint')
-        .reduce((sum: number, t: Transaction) => sum + t.total_amount, 0)
+      const twintTotal = completedSales
+        .filter((s: Sale) => s.payment_method === 'twint')
+        .reduce((sum: number, s: Sale) => sum + s.total_amount, 0)
 
-      const sumupTotal = completedTransactions
-        .filter((t: Transaction) => t.payment_method === 'sumup')
-        .reduce((sum: number, t: Transaction) => sum + t.total_amount, 0)
+      const sumupTotal = completedSales
+        .filter((s: Sale) => s.payment_method === 'sumup')
+        .reduce((sum: number, s: Sale) => sum + s.total_amount, 0)
 
-      // Neueste 5 Transaktionen für die Anzeige formatieren
-      const recentTransactions: DashboardTransaction[] = completedTransactions
+      // Neueste 5 Verkäufe für die Anzeige formatieren
+      const recentTransactions: DashboardTransaction[] = completedSales
         .slice(0, 5)
-        .map((t: Transaction) => ({
-          id: t.id,
-          // Zeit extrahieren und formatieren (HH:MM)
-          time: new Date(t.created_at).toLocaleTimeString([], {
+        .map((s: Sale) => ({
+          id: s.id,
+          time: s.created_at ? new Date(s.created_at).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
-          }),
-          amount: t.total_amount,
-          method: t.payment_method,
+          }) : '00:00',
+          amount: s.total_amount,
+          method: s.payment_method,
         }))
+
+      // Wochenumsatz (vereinfacht - letzten 7 Tage)
+      const weekStart = new Date()
+      weekStart.setDate(weekStart.getDate() - 7)
+      const { data: weekSales } = await supabase
+        .from('sales')
+        .select('total_amount')
+        .eq('status', 'completed')
+        .gte('created_at', weekStart.toISOString())
+
+      const weekRevenue = weekSales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
+
+      // Monatsumsatz (vereinfacht - letzten 30 Tage)
+      const monthStart = new Date()
+      monthStart.setDate(monthStart.getDate() - 30)
+      const { data: monthSales } = await supabase
+        .from('sales')
+        .select('total_amount')
+        .eq('status', 'completed')
+        .gte('created_at', monthStart.toISOString())
+
+      const monthRevenue = monthSales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
 
       // Dashboard-Statistiken setzen
       setStats({
-        revenue: totalRevenue,
-        transactions: completedTransactions.length,
+        todayRevenue,
+        todayTransactions: completedSales.length,
+        weekRevenue,
+        monthRevenue,
+        activeProducts: activeProductsCount,
         paymentMethods: {
           cash: cashTotal,
           twint: twintTotal,
@@ -162,14 +198,16 @@ export function useDashboardStats() {
         recentTransactions,
       })
     } catch (err: any) {
-      // Fehler-Handling mit besseren Fehlermeldungen
       console.error('Fehler beim Laden der Dashboard-Statistik:', 
         err?.message || 'Unbekannter Fehler')
       
       // Leere Statistiken setzen im Fehlerfall
       setStats({
-        revenue: 0,
-        transactions: 0,
+        todayRevenue: 0,
+        todayTransactions: 0,
+        weekRevenue: 0,
+        monthRevenue: 0,
+        activeProducts: 0,
         paymentMethods: {
           cash: 0,
           twint: 0,
@@ -178,7 +216,6 @@ export function useDashboardStats() {
         recentTransactions: [],
       })
       
-      // Fehlermeldung für UI setzen
       setError(err?.message || 'Fehler beim Laden der Daten')
     } finally {
       setLoading(false)

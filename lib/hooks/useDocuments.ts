@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
+import { generateDocumentDisplayName } from '@/app/(auth)/documents/utils/documentHelpers'
 
 // Typen für Dokumente
 export type Document = Database['public']['Tables']['documents']['Row']
@@ -12,19 +13,14 @@ export type DocumentUpdate = Partial<Omit<Database['public']['Tables']['document
 // Erweiterte Dokumenttypen für die Benutzeroberfläche
 export type DocumentWithDetails = Document & {
   displayName?: string
+  description?: string
   fileSize?: number
   fileType?: string
   url?: string
   amount?: number
   status?: string
-  referenceDetails?: {
-    amount?: number
-    date?: string
-    status?: string
-    supplier?: string
-    invoiceNumber?: string
-    payment_method?: 'cash' | 'twint' | 'sumup'
-  }
+  icon?: any
+  badgeColor?: string
 }
 
 // Zusammenfassungstyp für Übersicht
@@ -34,12 +30,12 @@ export type DocumentSummary = {
     receipt: number
     daily_report: number
     monthly_report: number
-    supplier_invoice: number
+    expense_receipt: number
   }
 }
 
 export type DocumentFilter = {
-  type?: 'receipt' | 'daily_report' | 'monthly_report' | 'supplier_invoice'
+  type?: 'receipt' | 'daily_report' | 'monthly_report' | 'expense_receipt'
   startDate?: string
   endDate?: string
   searchTerm?: string
@@ -55,58 +51,49 @@ export function useDocuments() {
       receipt: 0,
       daily_report: 0,
       monthly_report: 0,
-      supplier_invoice: 0
+      expense_receipt: 0
     }
   })
 
-  // Hilfsfunktion für Storage URL
+  // Hilfsfunktion für Storage URL (GEFIXT: Signed URLs statt Public URLs)
   const getStorageUrl = async (filePath: string) => {
     try {
       // Nur den Pfad ohne Bucket-Prefix verwenden
       const path = filePath.startsWith('documents/') ? filePath : `documents/${filePath}`
       
-      const { data } = await supabase.storage
+      // Signed URL für das PDF abrufen (funktioniert auch bei private buckets)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from('documents')
-        .getPublicUrl(path)
+        .createSignedUrl(path, 3600) // URL gültig für 1 Stunde
       
-      return data.publicUrl
+      if (urlError) {
+        console.error("Fehler beim Erstellen der Signed URL:", urlError)
+        // Fallback auf Public URL versuchen
+        const { data: publicData } = await supabase.storage
+          .from('documents')
+          .getPublicUrl(path)
+        return publicData.publicUrl
+      }
+      
+      return urlData.signedUrl
     } catch (err) {
       console.error("Fehler beim Abrufen der Storage URL:", err)
       return ""
     }
   }
 
-  // Alle Dokumente laden oder Transaktionen ohne Dokumente mit anzeigen
+  // Alle Dokumente laden
   const loadDocuments = async (filter?: DocumentFilter) => {
     try {
       setLoading(true)
       setError(null)
 
-      // Bei Bedarf kann die Migration ausgeführt werden
-      try {
-        // Prüfen ob der Bucket existiert
-        const { data: buckets } = await supabase
-          .storage
-          .listBuckets()
-        
-        const documentsBucketExists = buckets?.some(bucket => bucket.name === 'documents')
-        
-        if (!documentsBucketExists) {
-          console.warn("Storage Bucket 'documents' existiert nicht!")
-          setError("Storage Bucket 'documents' existiert nicht! Bitte die Migration '02_storage_buckets.sql' ausführen.")
-        }
-      } catch (bucketErr) {
-        console.error("Fehler beim Prüfen des Storage Buckets:", bucketErr)
-      }
+      // Storage Bucket Check entfernt - der Bucket existiert bereits
 
       // 1. Dokumente abrufen
-      // Basis-Query
       let documentsQuery = supabase
         .from('documents')
-        .select(`
-          *,
-          users(name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
 
       // Filter nach Dokumenttyp
@@ -121,464 +108,288 @@ export function useDocuments() {
           .lte('created_at', filter.endDate)
       }
 
-      // Suche nach Referenz-ID
-      if (filter?.searchTerm) {
-        documentsQuery = documentsQuery.or(`reference_id.ilike.%${filter.searchTerm}%`)
+      const { data: documentsData, error: documentsError } = await documentsQuery
+
+      if (documentsError) {
+        setError(`Fehler beim Laden der Dokumente: ${documentsError.message}`)
+        return { success: false, error: documentsError.message }
       }
 
-      const { data: documentsData, error: fetchError } = await documentsQuery
+      // Dokumente mit Details anreichern
+      const enrichedDocs: DocumentWithDetails[] = await Promise.all(
+        (documentsData || []).map(async (doc) => {
+          let url = ""
+          if (doc.file_path) {
+            url = await getStorageUrl(doc.file_path)
+          }
 
-      if (fetchError) {
-        throw fetchError
-      }
-      
-      // 2. Wenn wir Transaktionen (Quittungen) anzeigen, auch alle Transaktionen holen
-      // und virtuelle Dokumente für die erstellen, die noch kein Dokument haben
-      const virtualDocuments: any[] = []
-      
-      if (!filter?.type || filter?.type === 'receipt') {
-        // Alle Transaktionen abrufen
-        const { data: transactionsData, error: transactionsError } = await supabase
-          .from('transactions')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100) // Limit setzen, um Performanceprobleme zu vermeiden
-        
-        if (!transactionsError && transactionsData) {
-          // Für jede Transaktion prüfen, ob bereits ein Dokument existiert
-          for (const transaction of transactionsData) {
-            const hasDocument = documentsData?.some(doc => 
-              doc.type === 'receipt' && doc.reference_id === transaction.id
-            )
-            
-            // Wenn kein Dokument existiert, ein virtuelles Dokument erstellen
-            if (!hasDocument) {
-              const { data: userData } = await supabase.auth.getUser()
-              const userId = userData?.user?.id
-              
-              virtualDocuments.push({
-                id: `virtual-${transaction.id}`,
-                type: 'receipt',
-                reference_id: transaction.id,
-                file_path: 'virtuell', // Da noch kein physisches Dokument existiert
-                user_id: userId || transaction.user_id,
-                created_at: transaction.created_at,
-                isVirtual: true // Markierung für virtuelle Dokumente
-              })
-            }
-          }
-        }
-      }
-      
-      // Die virtuellen Dokumente mit den echten Dokumenten kombinieren
-      const combinedData = [...(documentsData || []), ...virtualDocuments]
+          // Betrag und Status aus verknüpften Tabellen laden
+          let amount: number | undefined
+          let status: string | undefined
 
-      // Dokumente mit zusätzlichen Details anreichern
-      const enhancedDocuments: DocumentWithDetails[] = []
-      
-      for (const doc of combinedData) {
-        try {
-          // Storage URL für die Datei abrufen (nur wenn kein virtuelles Dokument)
-          const url = doc.isVirtual ? '' : await getStorageUrl(doc.file_path)
-          
-          // Display Name und referenzierte Daten basierend auf Typ
-          let displayName = '';
-          let fileSize = 0;
-          let fileType = '';
-          let amount = 0;
-          let status = '';
-          let referenceDetails = {};
-          
-          // Dateityp aus dem Dateipfad extrahieren
-          const pathParts = doc.file_path.split('.');
-          if (pathParts.length > 1) {
-            fileType = pathParts.pop()!.toLowerCase();
+          try {
+            if (doc.type === 'expense_receipt' && doc.reference_id) {
+              // Betrag aus expenses Tabelle laden
+              const { data: expenseData } = await supabase
+                .from('expenses')
+                .select('amount')
+                .eq('id', doc.reference_id)
+                .single()
+              
+              if (expenseData) {
+                amount = expenseData.amount
+              }
+            } else if (doc.type === 'receipt' && doc.reference_id) {
+              // Betrag aus sales Tabelle laden
+              const { data: saleData } = await supabase
+                .from('sales')
+                .select('total_amount, status')
+                .eq('id', doc.reference_id)
+                .single()
+              
+              if (saleData) {
+                amount = saleData.total_amount
+                status = saleData.status
+              }
+            } else if (doc.type === 'daily_report' && doc.reference_id) {
+              // Status aus daily_summaries Tabelle laden
+              const { data: summaryData } = await supabase
+                .from('daily_summaries')
+                .select('status, sales_total')
+                .eq('id', doc.reference_id)
+                .single()
+              
+              if (summaryData) {
+                status = summaryData.status
+                amount = summaryData.sales_total
+              }
+            }
+          } catch (err) {
+            console.log('Konnte verknüpfte Daten nicht laden:', err)
           }
-          
-          // Je nach Dokumenttyp weitere Daten abrufen
-          switch (doc.type) {
-            case 'receipt': {
-              // Transaktionsdaten abrufen
-              const { data: transactionData, error: transactionError } = await supabase
-                .from('transactions')
-                .select('total_amount, payment_method, status, created_at')
-                .eq('id', doc.reference_id)
-                .single();
-              
-              if (!transactionError && transactionData) {
-                amount = transactionData.total_amount;
-                status = transactionData.status;
-                
-                displayName = `Quittung-${new Date(transactionData.created_at).toLocaleDateString('de-CH')}-${doc.reference_id.substring(0, 8)}`;
-                
-                referenceDetails = {
-                  amount: transactionData.total_amount,
-                  status: transactionData.status,
-                  payment_method: transactionData.payment_method,
-                  date: transactionData.created_at
-                };
-              } else {
-                displayName = `Quittung-${new Date(doc.created_at).toLocaleDateString('de-CH')}-${doc.reference_id.substring(0, 8)}`;
-              }
-              break;
-            }
-            
-            case 'daily_report': {
-              // Tagesberichtsdaten abrufen
-              const { data: reportData, error: reportError } = await supabase
-                .from('daily_reports')
-                .select('date, cash_total, twint_total, sumup_total, status')
-                .eq('id', doc.reference_id)
-                .single();
-              
-              if (!reportError && reportData) {
-                // Summe aller Zahlungsmethoden
-                amount = reportData.cash_total + reportData.twint_total + reportData.sumup_total;
-                status = reportData.status;
-                
-                displayName = `Tagesabschluss-${reportData.date}`;
-                
-                referenceDetails = {
-                  amount,
-                  date: reportData.date,
-                  status: reportData.status
-                };
-              } else {
-                displayName = `Tagesabschluss-${new Date(doc.created_at).toLocaleDateString('de-CH')}`;
-              }
-              break;
-            }
-            
-            case 'monthly_report': {
-              // Monatsberichtsdaten - hier könnten wir noch keine echten Daten haben
-              displayName = `Monatsabschluss-${new Date(doc.created_at).toLocaleDateString('de-CH', { year: 'numeric', month: 'long' })}`;
-              break;
-            }
-            
-            case 'supplier_invoice': {
-              // Lieferantenrechnungsdaten abrufen
-              const { data: invoiceData, error: invoiceError } = await supabase
-                .from('supplier_invoices')
-                .select('supplier_name, invoice_number, amount, status, invoice_date, due_date')
-                .eq('id', doc.reference_id)
-                .single();
-              
-              if (!invoiceError && invoiceData) {
-                amount = invoiceData.amount;
-                status = invoiceData.status;
-                
-                displayName = `Lieferantenrechnung-${invoiceData.supplier_name}-${invoiceData.invoice_number}`;
-                
-                referenceDetails = {
-                  amount: invoiceData.amount,
-                  status: invoiceData.status,
-                  date: invoiceData.invoice_date,
-                  supplier: invoiceData.supplier_name,
-                  invoiceNumber: invoiceData.invoice_number
-                };
-              } else {
-                displayName = `Lieferantenrechnung-${doc.reference_id.substring(0, 8)}`;
-              }
-              break;
-            }
-            
-            default:
-              displayName = doc.file_path.split('/').pop() || 'Unbekanntes Dokument';
-          }
-          
-          // Dokument mit zusätzlichen Details hinzufügen
-          enhancedDocuments.push({
+
+          // Bessere Dokumentnamen generieren
+          const displayInfo = generateDocumentDisplayName(
+            doc.type,
+            doc.created_at || new Date().toISOString(),
+            doc.reference_id || undefined,
+            amount,
+            doc.payment_method || undefined,
+            status,
+            doc.document_date || undefined
+          )
+
+          return {
             ...doc,
-            displayName,
-            fileSize,
-            fileType,
             url,
             amount,
             status,
-            referenceDetails,
-            isVirtual: doc.isVirtual || false
-          });
-        } catch (err) {
-          console.error(`Fehler beim Verarbeiten des Dokuments ${doc.id}:`, err);
-          // Dokument trotzdem hinzufügen, aber ohne URL
-          enhancedDocuments.push({
-            ...doc,
-            displayName: doc.file_path.split('/').pop() || 'Unbekanntes Dokument',
-            fileType: doc.file_path.split('.').pop()?.toLowerCase() || 'unbekannt',
-            isVirtual: doc.isVirtual || false
-          });
-        }
-      }
-
-      setDocuments(enhancedDocuments)
-      updateSummary(enhancedDocuments)
-      return { success: true, data: enhancedDocuments }
-    } catch (err: any) {
-      console.error('Fehler beim Laden der Dokumente:', err)
-      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
-      return { success: false, error: err.message }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Neues Dokument hochladen und speichern
-  const uploadDocument = async (file: File, type: 'receipt' | 'daily_report' | 'monthly_report' | 'supplier_invoice', referenceId: string, customName?: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Benutzer-ID abrufen
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData?.user) {
-        throw new Error('Nicht angemeldet. Bitte melden Sie sich an.')
-      }
-
-      // Dateiname generieren (mit Zeitstempel um Eindeutigkeit zu gewährleisten)
-      const timestamp = new Date().getTime()
-      const fileExtension = file.name.split('.').pop()
-      const fileName = customName
-        ? `${customName.replace(/\s+/g, '-')}-${timestamp}.${fileExtension}`
-        : `${type}-${timestamp}.${fileExtension}`
-      
-      // Pfad in Supabase Storage
-      const filePath = `documents/${type}/${fileName}`
-
-      // Datei zu Supabase Storage hochladen
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
+            displayName: displayInfo.displayName,
+            description: displayInfo.description,
+            icon: displayInfo.icon,
+            badgeColor: displayInfo.badgeColor,
+            fileType: doc.file_path ? doc.file_path.split('.').pop() : 'pdf'
+          }
         })
+      )
 
-      if (uploadError) {
-        throw uploadError
+      // Filter nach Suchbegriff
+      let filteredDocs = enrichedDocs
+      if (filter?.searchTerm) {
+        filteredDocs = enrichedDocs.filter(doc => 
+          doc.displayName?.toLowerCase().includes(filter.searchTerm!.toLowerCase()) ||
+          doc.type.toLowerCase().includes(filter.searchTerm!.toLowerCase())
+        )
       }
 
-      // Dokument-Eintrag in der Datenbank erstellen
-      const newDocument: DocumentInsert = {
-        type,
-        reference_id: referenceId,
-        file_path: filePath,
-        user_id: userData.user.id
-      }
+      setDocuments(filteredDocs)
 
-      const { data, error: insertError } = await supabase
-        .from('documents')
-        .insert(newDocument)
-        .select()
-        .single()
+      // Zusammenfassung berechnen
+      const receiptCount = documentsData?.filter(doc => doc.type === 'receipt').length || 0
+      const dailyReportCount = documentsData?.filter(doc => doc.type === 'daily_report').length || 0
+      const monthlyReportCount = documentsData?.filter(doc => doc.type === 'monthly_report').length || 0
+      const expenseReceiptCount = documentsData?.filter(doc => doc.type === 'expense_receipt').length || 0
 
-      if (insertError) {
-        // Falls der DB-Eintrag fehlschlägt, Datei aus Storage löschen
-        await supabase.storage
-          .from('documents')
-          .remove([filePath])
-        throw insertError
-      }
-
-      // Falls es sich um eine Lieferantenrechnung handelt, die supplierInvoice aktualisieren
-      if (type === 'supplier_invoice') {
-        const { error: updateError } = await supabase
-          .from('supplier_invoices')
-          .update({ document_id: data.id })
-          .eq('id', referenceId)
-
-        if (updateError) {
-          console.error('Fehler beim Verknüpfen mit Lieferantenrechnung:', updateError)
-          // Wir werfen hier keinen Fehler, da die Hauptoperation erfolgreich war
+      setSummary({
+        total: documentsData?.length || 0,
+        byType: {
+          receipt: receiptCount,
+          daily_report: dailyReportCount,
+          monthly_report: monthlyReportCount,
+          expense_receipt: expenseReceiptCount
         }
-      }
+      })
 
-      // Öffentliche URL der Datei abrufen
-      const url = await getStorageUrl(filePath)
-
-      // Dokument mit zusätzlichen Details
-      const documentWithDetails: DocumentWithDetails = {
-        ...data,
-        displayName: customName || fileName,
-        fileSize: file.size,
-        fileType: fileExtension?.toLowerCase() || '',
-        url
-      }
-
-      // Lokale Liste aktualisieren
-      setDocuments(prev => [documentWithDetails, ...prev])
-      updateSummary([documentWithDetails, ...documents])
-
-      return { success: true, data: documentWithDetails }
+      return { success: true, documents: filteredDocs }
     } catch (err: any) {
-      console.error('Fehler beim Hochladen des Dokuments:', err)
-      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
-      return { success: false, error: err.message }
+      const errorMsg = err?.message || 'Unbekannter Fehler beim Laden der Dokumente'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
     } finally {
       setLoading(false)
     }
   }
 
-  // Dokument löschen
-  const deleteDocument = async (id: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Zuerst Dokument-Details abrufen, um den Dateipfad zu erhalten
-      const { data: docData, error: fetchError } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (fetchError) {
-        throw fetchError
-      }
-
-      // Dokument aus der Datenbank löschen
-      const { error: deleteError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', id)
-
-      if (deleteError) {
-        throw deleteError
-      }
-
-      // Falls es sich um eine Lieferantenrechnung handelt, das Dokument-Feld auf NULL setzen
-      if (docData.type === 'supplier_invoice') {
-        const { error: updateError } = await supabase
-          .from('supplier_invoices')
-          .update({ document_id: null })
-          .eq('id', docData.reference_id)
-
-        if (updateError) {
-          console.error('Fehler beim Aktualisieren der Lieferantenrechnung:', updateError)
-          // Nicht kritisch, daher nur loggen
-        }
-      }
-
-      // Datei aus dem Storage löschen
-      const { error: storageError } = await supabase.storage
-        .from('documents')
-        .remove([docData.file_path])
-
-      if (storageError) {
-        console.error('Fehler beim Löschen der Datei aus dem Storage:', storageError)
-        // Wir werfen hier keinen Fehler, da die Datenbank-Operation erfolgreich war
-      }
-
-      // Lokale Liste aktualisieren
-      const updatedDocuments = documents.filter(doc => doc.id !== id)
-      setDocuments(updatedDocuments)
-      updateSummary(updatedDocuments)
-
-      return { success: true }
-    } catch (err: any) {
-      console.error('Fehler beim Löschen des Dokuments:', err)
-      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
-      return { success: false, error: err.message }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Dokumente nach Text durchsuchen
-  const searchDocuments = async (searchTerm: string) => {
-    return loadDocuments({ searchTerm })
-  }
-
-  // PDF generieren für Transaktionen, Tagesberichte oder Lieferantenrechnungen
-  const generatePDF = async (
-    type: 'receipt' | 'daily_report' | 'monthly_report' | 'supplier_invoice',
-    referenceId: string,
+  // Dokument hochladen
+  const uploadDocument = async (
+    file: File, 
+    type: 'receipt' | 'daily_report' | 'monthly_report' | 'expense_receipt', 
+    referenceId: string, 
     customName?: string
   ) => {
     try {
       setLoading(true)
       setError(null)
 
-      // Hier würde die PDF-Generierungslogik kommen
-      // Als Platzhalter geben wir einen Fehler zurück, da die PDF-Generierung
-      // noch nicht implementiert ist
+      const fileName = customName || `${type}_${Date.now()}_${file.name}`
+      const filePath = `${type}/${fileName}`
 
-      throw new Error('PDF-Generierung ist noch nicht implementiert')
+      // Datei zu Supabase Storage hochladen
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file)
 
-      /* PLATZHALTER FÜR ZUKÜNFTIGE IMPLEMENTIERUNG:
-
-      // Benutzer-ID abrufen
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData?.user) {
-        throw new Error('Nicht angemeldet. Bitte melden Sie sich an.')
+      if (uploadError) {
+        throw new Error(`Upload-Fehler: ${uploadError.message}`)
       }
 
-      // Daten für PDF je nach Typ abrufen
-      let pdfData;
-      switch (type) {
-        case 'receipt':
-          pdfData = await fetchTransactionData(referenceId);
-          break;
-        case 'daily_report':
-          pdfData = await fetchDailyReportData(referenceId);
-          break;
-        case 'monthly_report':
-          pdfData = await fetchMonthlyReportData(referenceId);
-          break;
-        case 'supplier_invoice':
-          pdfData = await fetchSupplierInvoiceData(referenceId);
-          break;
+      // Document-Eintrag in der Datenbank erstellen
+      const { data: user } = await supabase.auth.getUser()
+      if (!user.user) {
+        throw new Error('Benutzer nicht authentifiziert')
       }
 
-      // PDF mit geeigneter Bibliothek erstellen
-      const pdfBlob = await createPDF(type, pdfData);
-
-      // PDF speichern und zurückgeben
-      const uploadResult = await uploadDocument(
-        new File([pdfBlob], `${customName || type}-${new Date().getTime()}.pdf`, { type: 'application/pdf' }),
+      const documentData: DocumentInsert = {
         type,
-        referenceId,
-        customName
-      );
+        reference_id: referenceId,
+        file_path: filePath,
+        document_date: new Date().toISOString().split('T')[0],
+        payment_method: null,
+        user_id: user.user.id
+      }
 
-      return uploadResult;
-      */
+      const { error: dbError } = await supabase
+        .from('documents')
+        .insert(documentData)
 
+      if (dbError) {
+        throw new Error(`Datenbank-Fehler: ${dbError.message}`)
+      }
+
+      return { success: true, filePath, fileName }
     } catch (err: any) {
-      console.error('Fehler bei der PDF-Generierung:', err)
-      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
-      return { success: false, error: err.message }
+      const errorMsg = err?.message || 'Fehler beim Hochladen des Dokuments'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
     } finally {
       setLoading(false)
     }
   }
 
-  // Zusammenfassung aktualisieren
-  const updateSummary = (data: Document[]) => {
-    const total = data.length
-    const receiptCount = data.filter(doc => doc.type === 'receipt').length
-    const dailyReportCount = data.filter(doc => doc.type === 'daily_report').length
-    const monthlyReportCount = data.filter(doc => doc.type === 'monthly_report').length
-    const supplierInvoiceCount = data.filter(doc => doc.type === 'supplier_invoice').length
+  // Dokument löschen
+  const deleteDocument = async (documentId: string) => {
+    try {
+      setLoading(true)
+      setError(null)
 
-    setSummary({
-      total,
-      byType: {
-        receipt: receiptCount,
-        daily_report: dailyReportCount,
-        monthly_report: monthlyReportCount,
-        supplier_invoice: supplierInvoiceCount
+      // Dokumentdaten abrufen, um den Dateipfad zu erhalten
+      const { data: docData, error: fetchError } = await supabase
+        .from('documents')
+        .select('file_path')
+        .eq('id', documentId)
+        .single()
+
+      if (fetchError) {
+        throw new Error(`Fehler beim Abrufen der Dokumentdaten: ${fetchError.message}`)
       }
-    })
+
+      // Datei aus Storage löschen
+      if (docData?.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from('documents')
+          .remove([docData.file_path])
+
+        if (storageError) {
+          console.warn('Warnung: Datei konnte nicht aus Storage gelöscht werden:', storageError.message)
+        }
+      }
+
+      // Datenbankeintrag löschen
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId)
+
+      if (dbError) {
+        throw new Error(`Datenbank-Fehler: ${dbError.message}`)
+      }
+
+      return { success: true }
+    } catch (err: any) {
+      const errorMsg = err?.message || 'Fehler beim Löschen des Dokuments'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Dokument generieren (für PDFs)
+  const generateDocument = async (
+    type: 'receipt' | 'daily_report' | 'monthly_report' | 'expense_receipt',
+    referenceId: string,
+    data: any
+  ) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Hier würde die PDF-Generierung stattfinden
+      // Für jetzt erstellen wir nur einen Datenbankeintrag
+      const { data: user } = await supabase.auth.getUser()
+      if (!user.user) {
+        throw new Error('Benutzer nicht authentifiziert')
+      }
+
+      const fileName = `${type}_${referenceId}_${Date.now()}.pdf`
+      const filePath = `${type}/${fileName}`
+
+      const documentData: DocumentInsert = {
+        type,
+        reference_id: referenceId,
+        file_path: filePath,
+        document_date: new Date().toISOString().split('T')[0],
+        payment_method: data.payment_method || null,
+        user_id: user.user.id
+      }
+
+      const { error: dbError } = await supabase
+        .from('documents')
+        .insert(documentData)
+
+      if (dbError) {
+        throw new Error(`Datenbank-Fehler: ${dbError.message}`)
+      }
+
+      return { success: true, filePath, fileName }
+    } catch (err: any) {
+      const errorMsg = err?.message || 'Fehler beim Generieren des Dokuments'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return {
-    loading,
-    error,
     documents,
     summary,
+    loading,
+    error,
     loadDocuments,
     uploadDocument,
     deleteDocument,
-    searchDocuments,
-    generatePDF
+    generateDocument,
+    getStorageUrl
   }
 }

@@ -6,40 +6,208 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
-      users: {
+      cash_movements: {
         Row: {
           id: string
-          name: string
-          username: string
-          email: string
-          role: 'admin' | 'staff'
-          active: boolean
-          created_at: string
-          updated_at: string
+          amount: number
+          type: 'cash_in' | 'cash_out'
+          description: string
+          reference_type: 'sale' | 'expense' | 'adjustment' | null
+          reference_id: string | null
+          user_id: string
+          created_at: string | null
         }
         Insert: {
           id?: string
-          name: string
-          username: string
-          email: string
-          role: 'admin' | 'staff'
-          active?: boolean
-          created_at?: string
-          updated_at?: string
+          amount: number
+          type: 'cash_in' | 'cash_out'
+          description: string
+          reference_type?: 'sale' | 'expense' | 'adjustment' | null
+          reference_id?: string | null
+          user_id: string
+          created_at?: string | null
         }
         Update: {
           id?: string
-          name?: string
-          username?: string
-          email?: string
-          role?: 'admin' | 'staff'
-          active?: boolean
-          created_at?: string
-          updated_at?: string
+          amount?: number
+          type?: 'cash_in' | 'cash_out'
+          description?: string
+          reference_type?: 'sale' | 'expense' | 'adjustment' | null
+          reference_id?: string | null
+          user_id?: string
+          created_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "cash_movements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      daily_summaries: {
+        Row: {
+          id: string
+          report_date: string
+          sales_cash: number
+          sales_twint: number
+          sales_sumup: number
+          sales_total: number
+          expenses_cash: number
+          expenses_bank: number
+          expenses_total: number
+          cash_starting: number
+          cash_ending: number
+          cash_difference: number
+          status: 'draft' | 'closed'
+          notes: string | null
+          user_id: string
+          created_at: string | null
+          closed_at: string | null
+        }
+        Insert: {
+          id?: string
+          report_date: string
+          sales_cash?: number
+          sales_twint?: number
+          sales_sumup?: number
+          sales_total?: number
+          expenses_cash?: number
+          expenses_bank?: number
+          expenses_total?: number
+          cash_starting?: number
+          cash_ending?: number
+          cash_difference?: number
+          status?: 'draft' | 'closed'
+          notes?: string | null
+          user_id: string
+          created_at?: string | null
+          closed_at?: string | null
+        }
+        Update: {
+          id?: string
+          report_date?: string
+          sales_cash?: number
+          sales_twint?: number
+          sales_sumup?: number
+          sales_total?: number
+          expenses_cash?: number
+          expenses_bank?: number
+          expenses_total?: number
+          cash_starting?: number
+          cash_ending?: number
+          cash_difference?: number
+          status?: 'draft' | 'closed'
+          notes?: string | null
+          user_id?: string
+          created_at?: string | null
+          closed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_summaries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      documents: {
+        Row: {
+          id: string
+          type: 'receipt' | 'daily_report' | 'monthly_report' | 'yearly_report' | 'expense_receipt'
+          reference_id: string
+          file_path: string
+          payment_method: 'cash' | 'twint' | 'sumup' | 'bank' | null
+          document_date: string
+          user_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          type: 'receipt' | 'daily_report' | 'monthly_report' | 'yearly_report' | 'expense_receipt'
+          reference_id: string
+          file_path: string
+          payment_method?: 'cash' | 'twint' | 'sumup' | 'bank' | null
+          document_date: string
+          user_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          type?: 'receipt' | 'daily_report' | 'monthly_report' | 'yearly_report' | 'expense_receipt'
+          reference_id?: string
+          file_path?: string
+          payment_method?: 'cash' | 'twint' | 'sumup' | 'bank' | null
+          document_date?: string
+          user_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      expenses: {
+        Row: {
+          id: string
+          amount: number
+          description: string
+          category: 'rent' | 'supplies' | 'salary' | 'utilities' | 'insurance' | 'other'
+          payment_method: 'bank' | 'cash'
+          payment_date: string
+          supplier_name: string | null
+          invoice_number: string | null
+          notes: string | null
+          user_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          amount: number
+          description: string
+          category: 'rent' | 'supplies' | 'salary' | 'utilities' | 'insurance' | 'other'
+          payment_method: 'bank' | 'cash'
+          payment_date: string
+          supplier_name?: string | null
+          invoice_number?: string | null
+          notes?: string | null
+          user_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          amount?: number
+          description?: string
+          category?: 'rent' | 'supplies' | 'salary' | 'utilities' | 'insurance' | 'other'
+          payment_method?: 'bank' | 'cash'
+          payment_date?: string
+          supplier_name?: string | null
+          invoice_number?: string | null
+          notes?: string | null
+          user_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       items: {
         Row: {
@@ -47,148 +215,87 @@ export interface Database {
           name: string
           default_price: number
           type: 'service' | 'product'
-          description: string | null
           is_favorite: boolean
           active: boolean
-          created_at: string
-          updated_at: string
+          created_at: string | null
         }
         Insert: {
           id?: string
           name: string
           default_price: number
           type: 'service' | 'product'
-          description?: string | null
           is_favorite?: boolean
           active?: boolean
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
         }
         Update: {
           id?: string
           name?: string
           default_price?: number
           type?: 'service' | 'product'
-          description?: string | null
           is_favorite?: boolean
           active?: boolean
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
         }
+        Relationships: []
       }
-      monthly_reports: {
+      sale_items: {
         Row: {
           id: string
-          year: number
-          month: number
-          total_revenue: number
-          cash_total: number
-          twint_total: number
-          sumup_total: number
-          status: 'draft' | 'closed'
+          sale_id: string | null
+          item_id: string | null
+          price: number
           notes: string | null
-          user_id: string
-          created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
-          year: number
-          month: number
-          total_revenue?: number
-          cash_total?: number
-          twint_total?: number
-          sumup_total?: number
-          status: 'draft' | 'closed'
+          sale_id?: string | null
+          item_id?: string | null
+          price: number
           notes?: string | null
-          user_id: string
-          created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
-          year?: number
-          month?: number
-          total_revenue?: number
-          cash_total?: number
-          twint_total?: number
-          sumup_total?: number
-          status?: 'draft' | 'closed'
+          sale_id?: string | null
+          item_id?: string | null
+          price?: number
           notes?: string | null
-          user_id?: string
-          created_at?: string
-          updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          }
+        ]
       }
-      daily_reports: {
-        Row: {
-          id: string
-          date: string
-          cash_total: number
-          twint_total: number
-          sumup_total: number
-          starting_cash: number
-          ending_cash: number
-          status: 'draft' | 'closed'
-          notes: string | null
-          monthly_report_id: string | null
-          user_id: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          date: string
-          cash_total?: number
-          twint_total?: number
-          sumup_total?: number
-          starting_cash: number
-          ending_cash: number
-          status: 'draft' | 'closed'
-          notes?: string | null
-          monthly_report_id?: string | null
-          user_id: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          date?: string
-          cash_total?: number
-          twint_total?: number
-          sumup_total?: number
-          starting_cash?: number
-          ending_cash?: number
-          status?: 'draft' | 'closed'
-          notes?: string | null
-          monthly_report_id?: string | null
-          user_id?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      transactions: {
+      sales: {
         Row: {
           id: string
           total_amount: number
           payment_method: 'cash' | 'twint' | 'sumup'
           status: 'completed' | 'cancelled' | 'refunded'
           notes: string | null
-          daily_report_id: string | null
           user_id: string
-          created_at: string
-          updated_at: string
+          created_at: string | null
         }
         Insert: {
           id?: string
           total_amount: number
           payment_method: 'cash' | 'twint' | 'sumup'
-          status: 'completed' | 'cancelled' | 'refunded'
+          status?: 'completed' | 'cancelled' | 'refunded'
           notes?: string | null
-          daily_report_id?: string | null
           user_id: string
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
         }
         Update: {
           id?: string
@@ -196,234 +303,225 @@ export interface Database {
           payment_method?: 'cash' | 'twint' | 'sumup'
           status?: 'completed' | 'cancelled' | 'refunded'
           notes?: string | null
-          daily_report_id?: string | null
           user_id?: string
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "sales_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
-      transaction_items: {
+      monthly_summaries: {
         Row: {
           id: string
-          transaction_id: string
-          item_id: string
-          price: number
+          year: number
+          month: number
+          sales_cash: number
+          sales_twint: number
+          sales_sumup: number
+          sales_total: number
+          expenses_cash: number
+          expenses_bank: number
+          expenses_total: number
+          transaction_count: number
+          avg_daily_revenue: number
+          status: 'draft' | 'closed'
           notes: string | null
-        }
-        Insert: {
-          id?: string
-          transaction_id: string
-          item_id: string
-          price: number
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          transaction_id?: string
-          item_id?: string
-          price?: number
-          notes?: string | null
-        }
-      }
-      cash_register: {
-        Row: {
-          id: string
-          date: string
-          type: 'income' | 'expense'
-          amount: number
-          description: string
-          daily_report_id: string | null
           user_id: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          date: string
-          type: 'income' | 'expense'
-          amount: number
-          description: string
-          daily_report_id?: string | null
-          user_id: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          date?: string
-          type?: 'income' | 'expense'
-          amount?: number
-          description?: string
-          daily_report_id?: string | null
-          user_id?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      documents: {
-        Row: {
-          id: string
-          type: 'receipt' | 'daily_report' | 'monthly_report' | 'supplier_invoice'
-          reference_id: string
-          file_path: string
-          user_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          type: 'receipt' | 'daily_report' | 'monthly_report' | 'supplier_invoice'
-          reference_id: string
-          file_path: string
-          user_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          type?: 'receipt' | 'daily_report' | 'monthly_report' | 'supplier_invoice'
-          reference_id?: string
-          file_path?: string
-          user_id?: string
-          created_at?: string
-        }
-      }
-      supplier_invoices: {
-        Row: {
-          id: string
-          supplier_name: string
-          invoice_number: string
-          amount: number
-          invoice_date: string
-          due_date: string
-          status: 'pending' | 'paid'
-          payment_date: string | null
-          notes: string | null
-          document_id: string | null
-          user_id: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          supplier_name: string
-          invoice_number: string
-          amount: number
-          invoice_date: string
-          due_date: string
-          status: 'pending' | 'paid'
-          payment_date?: string | null
-          notes?: string | null
-          document_id?: string | null
-          user_id: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          supplier_name?: string
-          invoice_number?: string
-          amount?: number
-          invoice_date?: string
-          due_date?: string
-          status?: 'pending' | 'paid'
-          payment_date?: string | null
-          notes?: string | null
-          document_id?: string | null
-          user_id?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      business_settings: {
-        Row: {
-          id: string
-          business_name: string
-          address_street: string
-          address_city: string
-          address_zip: string
-          contact_phone: string
-          contact_email: string
-          receipt_footer_text: string | null
-          show_logo: boolean
-          additional_info: string | null
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          business_name: string
-          address_street: string
-          address_city: string
-          address_zip: string
-          contact_phone: string
-          contact_email: string
-          receipt_footer_text?: string | null
-          show_logo?: boolean
-          additional_info?: string | null
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          business_name?: string
-          address_street?: string
-          address_city?: string
-          address_zip?: string
-          contact_phone?: string
-          contact_email?: string
-          receipt_footer_text?: string | null
-          show_logo?: boolean
-          additional_info?: string | null
-          updated_at?: string
-        }
-      }
-      register_status: {
-        Row: {
-          id: string
-          date: string
-          status: 'open' | 'closed'
-          starting_amount: number
-          ending_amount: number | null
-          opened_at: string
+          created_at: string | null
           closed_at: string | null
-          notes: string | null
-          user_id: string
-          created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
-          date: string
-          status: 'open' | 'closed'
-          starting_amount: number
-          ending_amount?: number | null
-          opened_at: string
-          closed_at?: string | null
+          year: number
+          month: number
+          sales_cash?: number
+          sales_twint?: number
+          sales_sumup?: number
+          sales_total?: number
+          expenses_cash?: number
+          expenses_bank?: number
+          expenses_total?: number
+          transaction_count?: number
+          avg_daily_revenue?: number
+          status?: 'draft' | 'closed'
           notes?: string | null
           user_id: string
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
+          closed_at?: string | null
         }
         Update: {
           id?: string
-          date?: string
-          status?: 'open' | 'closed'
-          starting_amount?: number
-          ending_amount?: number | null
-          opened_at?: string
-          closed_at?: string | null
+          year?: number
+          month?: number
+          sales_cash?: number
+          sales_twint?: number
+          sales_sumup?: number
+          sales_total?: number
+          expenses_cash?: number
+          expenses_bank?: number
+          expenses_total?: number
+          transaction_count?: number
+          avg_daily_revenue?: number
+          status?: 'draft' | 'closed'
           notes?: string | null
           user_id?: string
-          created_at?: string
-          updated_at?: string
+          created_at?: string | null
+          closed_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_summaries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      users: {
+        Row: {
+          id: string
+          name: string
+          username: string
+          email: string
+          role: 'admin' | 'staff'
+          active: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          username: string
+          email: string
+          role?: 'admin' | 'staff'
+          active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          username?: string
+          email?: string
+          role?: 'admin' | 'staff'
+          active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_daily_summary: {
+        Args: {
+          summary_date: string
+        }
+        Returns: undefined
+      }
+      calculate_monthly_summary: {
+        Args: {
+          summary_year: number
+          summary_month: number
+        }
+        Returns: undefined
+      }
+      get_current_cash_balance: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
     }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
+      Database["public"]["Views"])
+  ? (Database["public"]["Tables"] &
+      Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof Database["public"]["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof Database["public"]["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+    | keyof Database["public"]["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
+  ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+  : never

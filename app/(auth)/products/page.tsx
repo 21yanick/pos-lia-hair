@@ -38,7 +38,6 @@ export default function ProductsPage() {
     name: "",
     type: "service" as "service" | "product",
     default_price: "",
-    description: "",
     is_favorite: false,
     active: true,
   })
@@ -103,7 +102,6 @@ export default function ProductsPage() {
         name: item.name,
         type: item.type,
         default_price: item.default_price.toString(),
-        description: item.description || "",
         is_favorite: item.is_favorite,
         active: item.active,
       })
@@ -113,7 +111,6 @@ export default function ProductsPage() {
         name: "",
         type: "service",
         default_price: "",
-        description: "",
         is_favorite: false,
         active: true,
       })
@@ -129,7 +126,6 @@ export default function ProductsPage() {
         name: formData.name,
         type: formData.type,
         default_price: parseFloat(formData.default_price),
-        description: formData.description || null,
         is_favorite: formData.is_favorite,
         active: formData.active,
       }
@@ -436,14 +432,6 @@ export default function ProductsPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Beschreibung (optional)</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
 
             <div className="flex items-center justify-between">
               <Label htmlFor="is_favorite">Als Favorit markieren</Label>

@@ -17,15 +17,13 @@ import {
 
 import { Search, Trash2, Plus, Minus, Wallet, CreditCard, CheckCircle, Download, Mail, Pencil, Loader2, AlertCircle } from "lucide-react"
 import { useItems } from "@/lib/hooks/useItems"
-import { useTransactions, type CartItem } from "@/lib/hooks/useTransactions"
-import { useRegisterStatus } from "@/lib/hooks/useRegisterStatus"
+import { useSales, type CartItem } from "@/lib/hooks/useSales"
 import { useToast } from "@/lib/hooks/useToast"
 
 export default function POSPage() {
   // Hooks
   const { items, loading: itemsLoading, error: itemsError } = useItems()
-  const { createTransaction, loading: transactionLoading, error: transactionError } = useTransactions()
-  const { isOpen: isRegisterOpen, loading: registerLoading, error: registerError } = useRegisterStatus()
+  const { createSale, loading: transactionLoading, error: transactionError } = useSales()
   const { toast } = useToast()
   
   // UI-State
@@ -42,6 +40,7 @@ export default function POSPage() {
     success: boolean,
     transaction?: any,
     change?: number,
+    receiptUrl?: string,
     error?: string
   } | null>(null)
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
@@ -64,14 +63,8 @@ export default function POSPage() {
       })
     }
     
-    if (registerError) {
-      toast({
-        title: "Fehler beim Laden des Kassenstatus",
-        description: registerError,
-        variant: "destructive",
-      })
-    }
-  }, [itemsError, transactionError, registerError, toast])
+    // Register error removed - simplified workflow
+  }, [itemsError, transactionError, toast])
 
   // Filtern der Produkte/Dienstleistungen
   const filteredItems = items.filter((item) => {
@@ -176,7 +169,7 @@ export default function POSPage() {
   const handlePayment = async () => {
     try {
       // Transaktion erstellen
-      const result = await createTransaction({
+      const result = await createSale({
         total_amount: cartTotal,
         payment_method: selectedPaymentMethod!,
         items: cart,
@@ -242,26 +235,7 @@ export default function POSPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] gap-4">
-      {/* Warnung, wenn Kasse nicht geöffnet ist */}
-      {!registerLoading && !isRegisterOpen && (
-        <div className="w-full bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
-          <h2 className="font-semibold text-yellow-800 flex items-center">
-            <AlertCircle className="mr-2" size={18} />
-            Kasse ist geschlossen
-          </h2>
-          <p className="text-yellow-700 mt-1">
-            Die Kasse ist derzeit geschlossen. Bitte öffnen Sie zuerst die Kasse auf dem Dashboard, 
-            bevor Sie Transaktionen durchführen.
-          </p>
-          <Button 
-            variant="outline" 
-            className="mt-2 bg-yellow-100 hover:bg-yellow-200 border-yellow-300"
-            onClick={() => window.location.href = "/dashboard"}
-          >
-            Zum Dashboard
-          </Button>
-        </div>
-      )}
+      {/* Note: Register status check removed - simplified workflow */}
       
       {/* Universal Layout für alle Bildschirmgrößen */}
       <div className="flex flex-col md:flex-row h-full">
@@ -450,7 +424,7 @@ export default function POSPage() {
             <Button
               className="w-full mt-4 py-5 md:py-6 text-base md:text-lg"
               size="lg"
-              disabled={cart.length === 0 || transactionLoading || !isRegisterOpen}
+              disabled={cart.length === 0 || transactionLoading}
               onClick={() => setIsPaymentDialogOpen(true)}
             >
               {transactionLoading ? (
@@ -458,8 +432,6 @@ export default function POSPage() {
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Wird verarbeitet...
                 </>
-              ) : !isRegisterOpen ? (
-                "Kasse geschlossen"
               ) : (
                 <>
                   <CreditCard className="mr-2 h-5 w-5" />
@@ -682,6 +654,20 @@ export default function POSPage() {
                 <Button 
                   variant="outline" 
                   className="flex items-center justify-center py-6 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                  onClick={() => {
+                    if (transactionResult?.receiptUrl) {
+                      console.log('Opening PDF URL:', transactionResult.receiptUrl)
+                      window.open(transactionResult.receiptUrl, '_blank')
+                    } else {
+                      console.error('No receipt URL available:', transactionResult)
+                      toast({
+                        title: "PDF nicht verfügbar",
+                        description: "Die Quittung konnte nicht erstellt werden.",
+                        variant: "destructive",
+                      })
+                    }
+                  }}
+                  disabled={!transactionResult?.receiptUrl}
                 >
                   <Download className="mr-2" size={20} />
                   <div className="flex flex-col items-start">
@@ -692,6 +678,12 @@ export default function POSPage() {
                 <Button 
                   variant="outline" 
                   className="flex items-center justify-center py-6 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                  onClick={() => {
+                    toast({
+                      title: "E-Mail-Versand",
+                      description: "E-Mail-Funktion noch nicht implementiert.",
+                    })
+                  }}
                 >
                   <Mail className="mr-2" size={20} />
                   <div className="flex flex-col items-start">

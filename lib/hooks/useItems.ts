@@ -8,10 +8,10 @@ import type { Database } from '@/types/supabase'
 export type Item = Database['public']['Tables']['items']['Row']
 
 // Type für das Einfügen eines neuen Items
-export type ItemInsert = Omit<Database['public']['Tables']['items']['Insert'], 'id' | 'created_at' | 'updated_at'>
+export type ItemInsert = Omit<Database['public']['Tables']['items']['Insert'], 'id' | 'created_at'>
 
 // Type für das Aktualisieren eines Items
-export type ItemUpdate = Partial<Omit<Database['public']['Tables']['items']['Update'], 'id' | 'created_at' | 'updated_at'>> & { id: string }
+export type ItemUpdate = Partial<Omit<Database['public']['Tables']['items']['Update'], 'id' | 'created_at'>> & { id: string }
 
 export function useItems() {
   const [items, setItems] = useState<Item[]>([])
@@ -105,9 +105,7 @@ export function useItems() {
       
       // Daten für das Einfügen vorbereiten
       const itemData = {
-        ...newItem,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        ...newItem
       }
       
       console.log('Versuche Item hinzuzufügen:', itemData)
@@ -155,8 +153,7 @@ export function useItems() {
       
       // Daten für die Aktualisierung vorbereiten
       const itemData = {
-        ...rest,
-        updated_at: new Date().toISOString()
+        ...rest
       }
       
       const { data, error } = await supabase
@@ -191,8 +188,7 @@ export function useItems() {
       const { data, error } = await supabase
         .from('items')
         .update({ 
-          is_favorite: !currentValue,
-          updated_at: new Date().toISOString()
+          is_favorite: !currentValue
         })
         .eq('id', id)
         .select('*')
@@ -223,8 +219,7 @@ export function useItems() {
       const { data, error } = await supabase
         .from('items')
         .update({ 
-          active: !currentValue,
-          updated_at: new Date().toISOString()
+          active: !currentValue
         })
         .eq('id', id)
         .select('*')
@@ -308,10 +303,9 @@ export function useItems() {
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
-          id: authUser.id,
           name: authUser.user_metadata?.name || 'Admin Benutzer',
-          username: authUser.email.split('@')[0],
-          email: authUser.email,
+          username: authUser.email?.split('@')[0] || 'admin',
+          email: authUser.email || '',
           role: 'admin',
           active: true
         })

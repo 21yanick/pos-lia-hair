@@ -1,56 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { format } from "date-fns"
-import { de } from "date-fns/locale"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   Search, 
   Upload, 
-  FileText, 
-  Calendar, 
-  BarChart, 
-  Receipt, 
-  Trash2, 
-  Download, 
-  FileUp, 
-  AlertCircle,
-  Eye,
-  Send 
+  AlertCircle 
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/lib/hooks/useToast"
 import { useDocuments } from "@/lib/hooks/useDocuments"
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { DocumentsStats } from "./components/DocumentsStats"
+import { DocumentsTable } from "./components/DocumentsTable"
+import { DocumentsUpload } from "./components/DocumentsUpload"
 
 export default function DocumentsPage() {
   const { toast } = useToast()
@@ -62,20 +26,10 @@ export default function DocumentsPage() {
     loadDocuments,
     uploadDocument,
     deleteDocument,
-    searchDocuments,
-    generatePDF,
   } = useDocuments()
 
   // State für Upload-Dialog
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
-  const [documentName, setDocumentName] = useState("")
-  const [documentType, setDocumentType] = useState<"receipt" | "daily_report" | "monthly_report" | "supplier_invoice">("supplier_invoice")
-  const [referenceId, setReferenceId] = useState("")
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  
-  // State für Löschen-Dialog
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [documentToDelete, setDocumentToDelete] = useState<string | null>(null)
 
   // State für Filter
   const [activeTab, setActiveTab] = useState("all")
@@ -84,7 +38,6 @@ export default function DocumentsPage() {
 
   // Dokumente beim ersten Render laden
   useEffect(() => {
-    // Verzögerte Ausführung um sicherzustellen, dass die Komponente vollständig montiert ist
     const timer = setTimeout(() => {
       loadDocuments()
     }, 500)
@@ -97,7 +50,7 @@ export default function DocumentsPage() {
     if (activeTab === "all") {
       loadDocuments()
     } else {
-      let type: "receipt" | "daily_report" | "monthly_report" | "supplier_invoice" | undefined
+      let type: "receipt" | "daily_report" | "monthly_report" | "expense_receipt" | undefined
       
       switch (activeTab) {
         case "receipts":
@@ -110,7 +63,7 @@ export default function DocumentsPage() {
           type = "monthly_report"
           break
         case "supplier-invoices":
-          type = "supplier_invoice"
+          type = "expense_receipt"
           break
       }
       
@@ -132,7 +85,7 @@ export default function DocumentsPage() {
     }
 
     const timeout = setTimeout(() => {
-      searchDocuments(searchQuery)
+      loadDocuments({ searchTerm: searchQuery })
     }, 300)
 
     setSearchTimeout(timeout)
@@ -144,33 +97,18 @@ export default function DocumentsPage() {
     }
   }, [searchQuery])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0])
-
-      // Wenn kein Name gesetzt ist, Dateinamen verwenden
-      if (!documentName) {
-        setDocumentName(e.target.files[0].name.split(".")[0])
-      }
-    }
-  }
-
-  const handleUpload = async () => {
-    if (!selectedFile || !documentName || !documentType || !referenceId) {
-      toast({
-        title: "Fehler",
-        description: "Bitte füllen Sie alle Pflichtfelder aus",
-        variant: "destructive",
-      })
-      return
-    }
-
+  const handleUpload = async (
+    file: File,
+    type: "receipt" | "daily_report" | "monthly_report" | "expense_receipt",
+    referenceId: string,
+    customName?: string
+  ) => {
     try {
       const result = await uploadDocument(
-        selectedFile,
-        documentType,
+        file,
+        type,
         referenceId,
-        documentName
+        customName
       )
 
       if (result.success) {
@@ -179,12 +117,8 @@ export default function DocumentsPage() {
           description: "Dokument wurde erfolgreich hochgeladen",
         })
         
-        // Formular zurücksetzen und Dialog schließen
-        setDocumentName("")
-        setDocumentType("supplier_invoice")
-        setReferenceId("")
-        setSelectedFile(null)
-        setIsUploadDialogOpen(false)
+        // Dokumente neu laden
+        loadDocuments()
       } else {
         toast({
           title: "Fehler",
@@ -192,31 +126,31 @@ export default function DocumentsPage() {
           variant: "destructive",
         })
       }
+
+      return result
     } catch (err: any) {
+      const errorMsg = err.message || "Ein unerwarteter Fehler ist aufgetreten"
       toast({
         title: "Fehler",
-        description: err.message || "Ein unerwarteter Fehler ist aufgetreten",
+        description: errorMsg,
         variant: "destructive",
       })
+      return { success: false, error: errorMsg }
     }
   }
 
   const handleDelete = async (id: string) => {
-    setDocumentToDelete(id)
-    setDeleteDialogOpen(true)
-  }
-
-  const confirmDelete = async () => {
-    if (!documentToDelete) return
-
     try {
-      const result = await deleteDocument(documentToDelete)
+      const result = await deleteDocument(id)
 
       if (result.success) {
         toast({
           title: "Erfolg",
           description: "Dokument wurde erfolgreich gelöscht",
         })
+        
+        // Dokumente neu laden
+        loadDocuments()
       } else {
         toast({
           title: "Fehler",
@@ -230,88 +164,6 @@ export default function DocumentsPage() {
         description: err.message || "Ein unerwarteter Fehler ist aufgetreten",
         variant: "destructive",
       })
-    } finally {
-      setDeleteDialogOpen(false)
-      setDocumentToDelete(null)
-    }
-  }
-
-  const handleGeneratePDF = async (type: "receipt" | "daily_report" | "monthly_report" | "supplier_invoice", id: string, name?: string) => {
-    try {
-      const result = await generatePDF(type, id, name)
-
-      if (result.success) {
-        toast({
-          title: "Erfolg",
-          description: "PDF wurde erfolgreich erstellt",
-        })
-      } else {
-        toast({
-          title: "Fehler",
-          description: result.error || "PDF konnte nicht erstellt werden",
-          variant: "destructive",
-        })
-      }
-    } catch (err: any) {
-      toast({
-        title: "Fehler",
-        description: err.message || "Ein unerwarteter Fehler ist aufgetreten",
-        variant: "destructive",
-      })
-    }
-  }
-
-  // Icon für Dokumenttyp
-  const getDocumentIcon = (type: string) => {
-    switch (type) {
-      case "receipt":
-        return <Receipt className="h-5 w-5 text-blue-600" />
-      case "daily_report":
-        return <Calendar className="h-5 w-5 text-green-600" />
-      case "monthly_report":
-        return <BarChart className="h-5 w-5 text-purple-600" />
-      case "supplier_invoice":
-        return <FileText className="h-5 w-5 text-orange-600" />
-      default:
-        return <FileText className="h-5 w-5 text-gray-600" />
-    }
-  }
-
-  // Formatierter Dokumenttyp
-  const getDocumentTypeName = (type: string) => {
-    switch (type) {
-      case "receipt":
-        return "Quittung"
-      case "daily_report":
-        return "Tagesabschluss"
-      case "monthly_report":
-        return "Monatsabschluss"
-      case "supplier_invoice":
-        return "Lieferantenrechnung"
-      default:
-        return "Sonstiges"
-    }
-  }
-
-  // Formatiertes Datum
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd.MM.yyyy', { locale: de })
-    } catch (e) {
-      return dateString
-    }
-  }
-
-  // Formatierte Dateigröße
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "Unbekannt"
-    
-    if (bytes < 1024) {
-      return `${bytes} B`
-    } else if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(1)} KB`
-    } else {
-      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
     }
   }
 
@@ -342,60 +194,7 @@ export default function DocumentsPage() {
       )}
 
       {/* Übersichtskarten */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Gesamt</p>
-                <p className="text-2xl font-bold">{summary.total}</p>
-              </div>
-              <div className="p-2 bg-gray-100 rounded-full">
-                <FileText className="h-6 w-6 text-gray-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Quittungen</p>
-                <p className="text-2xl font-bold">{summary.byType.receipt}</p>
-              </div>
-              <div className="p-2 bg-blue-100 rounded-full">
-                <Receipt className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Tagesberichte</p>
-                <p className="text-2xl font-bold">{summary.byType.daily_report}</p>
-              </div>
-              <div className="p-2 bg-green-100 rounded-full">
-                <Calendar className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Lieferantenrechnungen</p>
-                <p className="text-2xl font-bold">{summary.byType.supplier_invoice}</p>
-              </div>
-              <div className="p-2 bg-orange-100 rounded-full">
-                <FileText className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <DocumentsStats summary={summary} />
 
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="relative flex-1 max-w-md">
@@ -418,7 +217,7 @@ export default function DocumentsPage() {
             <TabsTrigger value="receipts">Quittungen</TabsTrigger>
             <TabsTrigger value="daily-reports">Tagesabschlüsse</TabsTrigger>
             <TabsTrigger value="monthly-reports">Monatsabschlüsse</TabsTrigger>
-            <TabsTrigger value="supplier-invoices">Lieferantenrechnungen</TabsTrigger>
+            <TabsTrigger value="supplier-invoices">Ausgabenbelege</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -430,182 +229,12 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="rounded-md border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr>
-                <th className="p-3"><Skeleton className="h-5 w-20" /></th>
-                <th className="p-3"><Skeleton className="h-5 w-16" /></th>
-                <th className="p-3"><Skeleton className="h-5 w-16" /></th>
-                <th className="p-3"><Skeleton className="h-5 w-16" /></th>
-                <th className="p-3 text-right"><Skeleton className="h-5 w-16 ml-auto" /></th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array(6).fill(0).map((_, index) => (
-                <tr key={index} className="border-b">
-                  <td className="p-3">
-                    <div className="flex items-center">
-                      <Skeleton className="h-8 w-8 rounded-full mr-3" />
-                      <Skeleton className="h-5 w-48" />
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <Skeleton className="h-6 w-20" />
-                  </td>
-                  <td className="p-3">
-                    <Skeleton className="h-4 w-24" />
-                  </td>
-                  <td className="p-3">
-                    <Skeleton className="h-4 w-24" />
-                  </td>
-                  <td className="p-3 text-right">
-                    <div className="flex gap-1 justify-end">
-                      <Skeleton className="h-8 w-8 rounded" />
-                      <Skeleton className="h-8 w-8 rounded" />
-                      <Skeleton className="h-8 w-8 rounded" />
-                      <Skeleton className="h-8 w-8 rounded" />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : documents.length > 0 ? (
-        <div className="rounded-md border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr className="text-left">
-                <th className="p-3 font-medium text-sm w-2/5">Dokument</th>
-                <th className="p-3 font-medium text-sm w-1/6">Typ</th>
-                <th className="p-3 font-medium text-sm w-1/6">Betrag</th>
-                <th className="p-3 font-medium text-sm w-1/6">Datum</th>
-                <th className="p-3 font-medium text-sm w-1/6">Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map((doc) => (
-                <tr key={doc.id} className="border-b hover:bg-gray-50 transition-colors">
-                  <td className="p-3">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
-                        {getDocumentIcon(doc.type)}
-                      </div>
-                      <div className="truncate font-medium max-w-xs">
-                        {doc.displayName || doc.file_path.split('/').pop()}
-                        {doc.isVirtual && <span className="ml-2 text-xs text-amber-600">(automatisch)</span>}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <Badge variant="outline">{getDocumentTypeName(doc.type)}</Badge>
-                  </td>
-                  <td className="p-3 text-sm font-medium">
-                    {doc.amount ? (
-                      <span className={doc.type === 'supplier_invoice' ? 'text-red-600' : 'text-green-600'}>
-                        {doc.amount.toFixed(2)} CHF
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="p-3 text-sm text-gray-500">
-                    {doc.referenceDetails?.date ? formatDate(doc.referenceDetails.date) : formatDate(doc.created_at)}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex gap-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => window.open(doc.url, '_blank')}
-                              disabled={!doc.url || doc.isVirtual}
-                            >
-                              <Eye size={16} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Anzeigen</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              disabled={!doc.url || doc.isVirtual}
-                              onClick={() => {
-                                if (doc.url) {
-                                  const a = document.createElement('a')
-                                  a.href = doc.url
-                                  a.download = doc.displayName || doc.file_path.split('/').pop() || 'download'
-                                  document.body.appendChild(a)
-                                  a.click()
-                                  document.body.removeChild(a)
-                                }
-                              }}
-                            >
-                              <Download size={16} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Herunterladen</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleDelete(doc.id)}
-                              className="hover:text-red-600"
-                              disabled={doc.isVirtual} // Virtuelle Dokumente können nicht gelöscht werden
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Löschen</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      {/* PDF-Generieren Button für virtuelle Dokumente */}
-                      {doc.isVirtual && doc.type === 'receipt' && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => handleGeneratePDF('receipt', doc.reference_id, doc.displayName)}
-                              >
-                                <FileText size={16} className="text-green-600" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>PDF erstellen</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {documents.length > 0 || loading ? (
+        <DocumentsTable 
+          documents={documents}
+          loading={loading}
+          onDelete={handleDelete}
+        />
       ) : (
         <Card>
           <CardContent className="p-6">
@@ -623,7 +252,7 @@ export default function DocumentsPage() {
                           ? "Tagesabschlüsse"
                           : activeTab === "monthly-reports"
                             ? "Monatsabschlüsse"
-                            : "Lieferantenrechnungen"
+                            : "Ausgabenbelege"
                     } gefunden.`
                   : "Laden Sie Dokumente hoch oder erstellen Sie neue Dokumente."}
               </p>
@@ -634,96 +263,11 @@ export default function DocumentsPage() {
       )}
 
       {/* Upload Dialog */}
-      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Dokument hochladen</DialogTitle>
-            <DialogDescription>Laden Sie ein neues Dokument hoch und fügen Sie Metadaten hinzu.</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="document-name">Dokumentname</Label>
-              <Input
-                id="document-name"
-                placeholder="Name des Dokuments"
-                value={documentName}
-                onChange={(e) => setDocumentName(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="document-type">Dokumenttyp</Label>
-              <Select value={documentType} onValueChange={(value: any) => setDocumentType(value)}>
-                <SelectTrigger id="document-type">
-                  <SelectValue placeholder="Typ auswählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="receipt">Quittung</SelectItem>
-                  <SelectItem value="daily_report">Tagesabschluss</SelectItem>
-                  <SelectItem value="monthly_report">Monatsabschluss</SelectItem>
-                  <SelectItem value="supplier_invoice">Lieferantenrechnung</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="reference-id">Referenz-ID</Label>
-              <Input
-                id="reference-id"
-                placeholder="ID des zugehörigen Eintrags"
-                value={referenceId}
-                onChange={(e) => setReferenceId(e.target.value)}
-              />
-              <p className="text-xs text-gray-500">
-                Die ID des Eintrags, zu dem dieses Dokument gehört (z.B. Transaktions-ID für Quittungen).
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="document-file">Datei</Label>
-              <div className="flex items-center gap-2">
-                <Input id="document-file" type="file" onChange={handleFileChange} className="flex-1" />
-              </div>
-              {selectedFile && (
-                <p className="text-sm text-gray-500">
-                  Ausgewählte Datei: {selectedFile.name} ({formatFileSize(selectedFile.size)})
-                </p>
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button 
-              onClick={handleUpload} 
-              disabled={!selectedFile || !documentName || !documentType || !referenceId}
-            >
-              Hochladen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Löschen Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Dokument löschen</AlertDialogTitle>
-            <AlertDialogDescription>
-              Sind Sie sicher, dass Sie dieses Dokument löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DocumentsUpload
+        isOpen={isUploadDialogOpen}
+        onOpenChange={setIsUploadDialogOpen}
+        onUpload={handleUpload}
+      />
     </div>
   )
 }

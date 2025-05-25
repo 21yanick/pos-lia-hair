@@ -19,7 +19,7 @@ export function Header() {
 
   // Get page title based on pathname
   const getPageTitle = () => {
-    const path = pathname.split("/")[1]
+    const path = pathname?.split("/")[1] || ""
     switch (path) {
       case "dashboard":
         return "Dashboard"
