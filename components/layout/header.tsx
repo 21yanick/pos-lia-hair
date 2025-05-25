@@ -34,8 +34,6 @@ export function Header() {
         return "Lieferantenrechnungen"
       case "documents":
         return "Dokumente"
-      case "settings":
-        return "Einstellungen"
       default:
         return "Coiffeursalon POS"
     }

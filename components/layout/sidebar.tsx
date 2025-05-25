@@ -10,7 +10,6 @@ import {
   Package,
   FileIcon,
   FolderClosed,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -29,7 +28,6 @@ const navItems = [
   { name: "Produkte", href: "/products", icon: Package },
   { name: "Lieferantenrechnungen", href: "/supplier-invoices", icon: FileIcon },
   { name: "Dokumente", href: "/documents", icon: FolderClosed },
-  { name: "Einstellungen", href: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {
