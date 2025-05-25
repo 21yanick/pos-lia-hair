@@ -317,7 +317,9 @@ export function useDailySummaries() {
       
       console.log('🔍 getSalesForDate Debug:')
       console.log('Input Swiss Date:', date)
+      console.log('Parsed Swiss Date:', swissDate)
       console.log('UTC Range:', { start, end })
+      console.log('Current Zeit:', new Date().toISOString())
 
       const { data, error } = await supabase
         .from('sales')
@@ -335,6 +337,13 @@ export function useDailySummaries() {
       if (error) {
         console.error('Datenbankfehler beim Abrufen der Verkäufe:', error)
         throw error
+      }
+
+      console.log('🔍 getSalesForDate Ergebnis:')
+      console.log('Anzahl Verkäufe gefunden:', data?.length || 0)
+      if (data && data.length > 0) {
+        console.log('Erste Verkauf created_at:', data[0].created_at)
+        console.log('Letzte Verkauf created_at:', data[data.length - 1].created_at)
       }
 
       return { success: true, sales: data || [] }

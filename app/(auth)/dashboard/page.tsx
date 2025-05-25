@@ -5,16 +5,16 @@ import { ShoppingCart, FileText, BookOpen, BarChart4, RefreshCw } from "lucide-r
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/hooks/useToast"
-import { useDashboardStats } from "@/lib/hooks/useDashboardStats"
+import { useReports } from "@/lib/hooks/useReports"
 
 export default function Dashboard() {
   // Hooks
   const {
-    stats,
+    dashboardStats: stats,
     loading: statsLoading,
     error: statsError,
-    refreshStats
-  } = useDashboardStats()
+    refreshDashboard: refreshStats
+  } = useReports()
   
   const { toast } = useToast()
   

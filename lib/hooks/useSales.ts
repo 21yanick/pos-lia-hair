@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { useDocumentGeneration } from './useDocumentGeneration'
 
 // Typen für Verkäufe (ersetzt Transaktionen)
 export type Sale = Database['public']['Tables']['sales']['Row']
@@ -37,6 +37,7 @@ export function useSales() {
   const [error, setError] = useState<string | null>(null)
   const [sales, setSales] = useState<Sale[]>([])
   const [currentSale, setCurrentSale] = useState<Sale | null>(null)
+  const { generateReceipt } = useDocumentGeneration()
 
   // Verkauf erstellen mit allen Posten
   const createSale = async (data: CreateSaleData) => {
@@ -111,10 +112,10 @@ export function useSales() {
       // 6. Aktuelle Verkauf setzen für das UI
       setCurrentSale(sale)
       
-      // 7. Automatisch ein Dokument für diesen Verkauf erstellen (Quittung)
-      let receiptUrl: string | undefined
+      // 7. Automatisch eine Quittung für diesen Verkauf erstellen
+      let receiptResult: any
       try {
-        receiptUrl = await createReceiptPDF(sale, data.items, userId)
+        receiptResult = await createReceiptPDF(sale, data.items)
       } catch (docErr) {
         console.error('Fehler bei der automatischen Quittungserstellung:', docErr)
         // Wir werfen hier keinen Fehler, damit der Verkauf selbst erfolgreich bleibt
@@ -126,7 +127,7 @@ export function useSales() {
       return { 
         success: true, 
         sale,
-        receiptUrl,
+        receiptUrl: receiptResult?.publicUrl,
         change: data.payment_method === 'cash' && data.received_amount 
           ? data.received_amount - data.total_amount 
           : 0
@@ -141,153 +142,16 @@ export function useSales() {
     }
   }
 
-  // Quittungs-PDF erstellen
-  const createReceiptPDF = async (sale: Sale, items: CartItem[], userId: string): Promise<string> => {
-    // Einfache PDF-Quittung erstellen
-    const pdfDoc = await PDFDocument.create()
-    const page = pdfDoc.addPage([595.28, 841.89]) // A4
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  // Moderne Quittungs-PDF erstellen mit @react-pdf/renderer
+  const createReceiptPDF = async (sale: Sale, items: CartItem[]) => {
+    const React = await import('react')
+    const { ReceiptPDF } = await import('@/components/pdf/ReceiptPDF')
     
-    const { width, height } = page.getSize()
-    const fontSize = 12
-    const padding = 50
-    
-    // Titel
-    page.drawText('QUITTUNG', {
-      x: padding,
-      y: height - padding,
-      size: 24,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    
-    // Datum
-    const dateStr = new Date().toLocaleDateString('de-CH')
-    page.drawText(`Datum: ${dateStr}`, {
-      x: padding,
-      y: height - padding - 40,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    
-    // Verkaufs-ID
-    page.drawText(`Belegnummer: ${sale.id}`, {
-      x: padding,
-      y: height - padding - 60,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    
-    // Gesamtbetrag
-    page.drawText(`Gesamtbetrag: CHF ${sale.total_amount.toFixed(2)}`, {
-      x: padding,
-      y: height - padding - 100,
-      size: fontSize + 2,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    
-    // Zahlungsmethode
-    const paymentMethod = sale.payment_method === 'cash' 
-      ? 'Barzahlung' 
-      : sale.payment_method === 'twint' 
-        ? 'TWINT' 
-        : 'SumUp (Karte)'
-        
-    page.drawText(`Zahlungsart: ${paymentMethod}`, {
-      x: padding,
-      y: height - padding - 120,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    
-    // Artikel auflisten
-    page.drawText('Artikel:', {
-      x: padding,
-      y: height - padding - 160,
-      size: fontSize,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    
-    let yPos = height - padding - 180
-    items.forEach((item, index) => {
-      page.drawText(`${item.quantity}x ${item.name} - CHF ${item.total.toFixed(2)}`, {
-        x: padding + 20,
-        y: yPos,
-        size: fontSize - 1,
-        font,
-        color: rgb(0, 0, 0),
-      })
-      yPos -= 20
-    })
-    
-    // Benutzer-ID
-    page.drawText(`Mitarbeiter: ${userId}`, {
-      x: padding,
-      y: height - padding - 400,
-      size: fontSize - 2,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    
-    // PDF in Bytes umwandeln
-    const pdfBytes = await pdfDoc.save()
-    
-    // Als Datei für Storage vorbereiten
-    const fileName = `quittung-${sale.id}.pdf`
-    const file = new File([pdfBytes], fileName, { type: 'application/pdf' })
-    
-    // Datei zu Supabase Storage hochladen
-    const filePath = `documents/receipts/${fileName}`
-    const { error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
-      
-    if (uploadError) {
-      console.error('Fehler beim Hochladen der PDF:', uploadError)
-      throw uploadError
-    }
-
-    // Dokument-Eintrag in der Datenbank erstellen
-    const { error: documentError } = await supabase
-      .from('documents')
-      .insert({
-        type: 'receipt',
-        reference_id: sale.id,
-        file_path: filePath,
-        payment_method: sale.payment_method,
-        document_date: new Date().toISOString().split('T')[0],
-        user_id: userId
-      })
-    
-    if (documentError) {
-      console.error('Fehler beim Erstellen des Dokumenteneintrags:', documentError)
-      throw documentError
-    }
-
-    // Signed URL für das PDF abrufen (funktioniert auch bei private buckets)
-    const { data: urlData, error: urlError } = await supabase.storage
-      .from('documents')
-      .createSignedUrl(filePath, 3600) // URL gültig für 1 Stunde
-    
-    if (urlError) {
-      console.error('Fehler beim Erstellen der URL:', urlError)
-      // Fallback: Public URL versuchen
-      const { data: publicUrlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath)
-      return publicUrlData.publicUrl
-    }
-    
-    return urlData.signedUrl
+    return await generateReceipt(
+      React.createElement(ReceiptPDF, { sale, items }),
+      sale.id,
+      sale.payment_method
+    )
   }
 
   // Verkäufe für den aktuellen Tag laden

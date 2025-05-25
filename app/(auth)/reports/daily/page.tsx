@@ -37,10 +37,10 @@ export default function DailyReportPage() {
     currentDailySummary,
     getDailySummaryByDate,
     createDailySummary,
+    getSalesForDate,
   } = useDailySummaries()
   
   const { 
-    getSalesForDateRange, 
     loading: salesLoading 
   } = useSales()
 
@@ -72,15 +72,17 @@ export default function DailyReportPage() {
     const loadReportData = async () => {
       try {
         setIsLoadingData(true)
-        console.log("Lade Daily Report Daten für:", apiDateFormat)
+        console.log("🔧 DEBUG: Lade Daily Report Daten für:", apiDateFormat)
+        console.log("🔧 DEBUG: Selected Date:", selectedDate)
+        console.log("🔧 DEBUG: API Date Format:", apiDateFormat)
+        console.log("🔧 DEBUG: Aktuell:", new Date().toISOString())
 
         // 1. Daily Summary laden
         const summaryResult = await getDailySummaryByDate(apiDateFormat)
         console.log("Daily Summary Ergebnis:", summaryResult)
 
         // 2. Verkäufe für das Datum laden
-        const { start, end } = getSwissDayRange(selectedDate)
-        const salesResult = await getSalesForDateRange(start, end)
+        const salesResult = await getSalesForDate(apiDateFormat)
         console.log("Sales Ergebnis:", salesResult)
 
         if (salesResult.success && salesResult.sales) {
@@ -122,13 +124,6 @@ export default function DailyReportPage() {
     loadReportData()
   }, [selectedDate, apiDateFormat])
 
-  // Helper function für getSwissDayRange
-  const getSwissDayRange = (date: Date) => {
-    const dateStr = getDateString(date)
-    const start = `${dateStr}T00:00:00.000Z`
-    const end = `${dateStr}T23:59:59.999Z`
-    return { start, end }
-  }
 
   // Error Toast
   useEffect(() => {

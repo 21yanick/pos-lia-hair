@@ -1,6 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { supabase } from '@/lib/supabase/client'
-import { formatDateForDisplay, formatTimeForDisplay } from '@/lib/utils/dateUtils'
+import { formatDateForAPI, formatDateForDisplay, formatTimeForDisplay } from '@/lib/utils/dateUtils'
 import type { DailySummary, TransactionItem, DailyStatsData } from './dailyTypes'
 
 // PDF-Generierung für Daily Reports
@@ -270,7 +270,7 @@ export async function generateDailyReportPDF(
     const { data: userData } = await supabase.auth.getUser()
     if (userData?.user) {
       const documentData = {
-        type: 'daily_report',
+        type: 'daily_report' as const,
         reference_id: summary.id,
         file_path: filePath,
         payment_method: null,
@@ -356,9 +356,9 @@ export function formatTransactionsFromSales(sales: any[]): TransactionItem[] {
 
 // Datum-Utilities
 export function getCurrentDateString(): string {
-  return new Date().toISOString().split('T')[0]
+  return formatDateForAPI(new Date())
 }
 
 export function getDateString(date: Date): string {
-  return date.toISOString().split('T')[0]
+  return formatDateForAPI(date)
 }
