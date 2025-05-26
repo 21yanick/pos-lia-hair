@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
-import { useDocumentGeneration } from './useDocumentGeneration'
+// Entfernt: useDocumentGeneration Hook (direkte react-pdf Integration)
 
 // Typen für Verkäufe (ersetzt Transaktionen)
 export type Sale = Database['public']['Tables']['sales']['Row']
@@ -37,7 +37,7 @@ export function useSales() {
   const [error, setError] = useState<string | null>(null)
   const [sales, setSales] = useState<Sale[]>([])
   const [currentSale, setCurrentSale] = useState<Sale | null>(null)
-  const { generateReceipt } = useDocumentGeneration()
+  // Entfernt: generateReceipt Hook (direkte react-pdf Integration)
 
   // Verkauf erstellen mit allen Posten
   const createSale = async (data: CreateSaleData) => {
@@ -142,16 +142,65 @@ export function useSales() {
     }
   }
 
-  // Moderne Quittungs-PDF erstellen mit @react-pdf/renderer
+  // Moderne Quittungs-PDF erstellen mit @react-pdf/renderer (direkte Integration)
   const createReceiptPDF = async (sale: Sale, items: CartItem[]) => {
-    const React = await import('react')
-    const { ReceiptPDF } = await import('@/components/pdf/ReceiptPDF')
-    
-    return await generateReceipt(
-      React.createElement(ReceiptPDF, { sale, items }),
-      sale.id,
-      sale.payment_method
-    )
+    try {
+      const React = await import('react')
+      const { ReceiptPDF } = await import('@/components/pdf/ReceiptPDF')
+      const { pdf } = await import('@react-pdf/renderer')
+      
+      // PDF erstellen  
+      const pdfComponent = React.createElement(ReceiptPDF, { sale, items }) as any
+      const blob = await pdf(pdfComponent).toBlob()
+      const fileName = `quittung-${sale.id}.pdf`
+      const file = new File([blob], fileName, { type: 'application/pdf' })
+      
+      // Upload zu Storage
+      const filePath = `documents/receipts/${fileName}`
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+      
+      if (uploadError) {
+        console.error('❌ Fehler beim Hochladen der Quittung:', uploadError)
+        throw uploadError
+      }
+      
+      // Document-Eintrag erstellen
+      const { data: userData } = await supabase.auth.getUser()
+      if (userData?.user) {
+        const documentData = {
+          type: 'receipt' as const,
+          reference_id: sale.id,
+          file_path: filePath,
+          payment_method: sale.payment_method,
+          document_date: new Date().toISOString().split('T')[0],
+          user_id: userData.user.id
+        }
+        
+        const { error: documentError } = await supabase
+          .from('documents')
+          .upsert(documentData)
+        
+        if (documentError) {
+          console.error('❌ Fehler beim Erstellen des Quittung Document-Eintrags:', documentError)
+        }
+      }
+      
+      // Public URL zurückgeben
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath)
+      
+      return { success: true, publicUrl: urlData.publicUrl }
+      
+    } catch (error: any) {
+      console.error('❌ Fehler bei PDF-Erstellung:', error)
+      return { success: false, error: error.message }
+    }
   }
 
   // Verkäufe für den aktuellen Tag laden
