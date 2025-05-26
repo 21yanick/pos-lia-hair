@@ -35,6 +35,7 @@ export default function ExpensesPage() {
   
   // State für neue Ausgabe
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -78,6 +79,15 @@ export default function ExpensesPage() {
       })
       return
     }
+
+    if (!selectedFile) {
+      toast({
+        title: "Fehler", 
+        description: "Bitte laden Sie einen Beleg hoch. Ohne Beleg kann keine Ausgabe erstellt werden.",
+        variant: "destructive"
+      })
+      return
+    }
     
     // Get current user
     const { data: userData } = await supabase.auth.getUser()
@@ -100,12 +110,12 @@ export default function ExpensesPage() {
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
       user_id: userData.user.id
-    })
+    }, selectedFile) // Pass the file to createExpense
     
     if (result.success) {
       toast({
         title: "Erfolg",
-        description: "Ausgabe wurde erfolgreich erstellt."
+        description: "Ausgabe und Beleg wurden erfolgreich erstellt."
       })
       setIsDialogOpen(false)
       setFormData({
@@ -118,6 +128,7 @@ export default function ExpensesPage() {
         invoice_number: '',
         notes: ''
       })
+      setSelectedFile(null) // Reset file selection
     }
   }
   
@@ -260,6 +271,38 @@ export default function ExpensesPage() {
                   placeholder="Zusätzliche Informationen..."
                   rows={3}
                 />
+              </div>
+
+              {/* Beleg Upload - PFLICHTFELD */}
+              <div className="space-y-2">
+                <Label htmlFor="receipt-upload">Beleg hochladen *</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <input
+                    id="receipt-upload"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                    required
+                  />
+                  <label 
+                    htmlFor="receipt-upload" 
+                    className="cursor-pointer flex flex-col items-center space-y-2"
+                  >
+                    <Upload className="h-8 w-8 text-gray-400" />
+                    {selectedFile ? (
+                      <div className="text-sm">
+                        <p className="font-medium text-green-600">✓ {selectedFile.name}</p>
+                        <p className="text-gray-500">Klicken zum Ändern</p>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        <p className="font-medium">Rechnung oder Beleg hochladen</p>
+                        <p>PDF, JPG, PNG (max. 10MB)</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
               </div>
               
               <DialogFooter>

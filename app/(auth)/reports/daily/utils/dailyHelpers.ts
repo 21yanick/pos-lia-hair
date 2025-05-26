@@ -1,9 +1,9 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { pdf } from '@react-pdf/renderer'
 import { supabase } from '@/lib/supabase/client'
 import { formatDateForAPI, formatDateForDisplay, formatTimeForDisplay } from '@/lib/utils/dateUtils'
 import type { DailySummary, TransactionItem, DailyStatsData } from './dailyTypes'
 
-// PDF-Generierung für Daily Reports
+// PDF-Generierung für Daily Reports (modernized)
 export async function generateDailyReportPDF(
   summary: DailySummary,
   transactions: TransactionItem[],
@@ -16,228 +16,20 @@ export async function generateDailyReportPDF(
   })
   
   try {
-    // PDF-Dokument erstellen
-    const pdfDoc = await PDFDocument.create()
-    const page = pdfDoc.addPage([595.28, 841.89]) // A4
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    // Import React and DailyReportPDF component dynamically
+    const React = await import('react')
+    const { DailyReportPDF } = await import('@/components/pdf/DailyReportPDF')
     
-    const { width, height } = page.getSize()
-    const fontSize = 12
-    const padding = 50
+    // Generate PDF blob
+    console.log("📄 Generiere PDF...")
+    const pdfComponent = React.createElement(DailyReportPDF, { summary, transactions }) as React.ReactElement<any>
+    const blob = await pdf(pdfComponent).toBlob()
     
-    let yPos = height - padding
-
-    // Titel
-    page.drawText('TAGESABSCHLUSS', {
-      x: padding,
-      y: yPos,
-      size: 24,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 50
-
-    // Datum
-    page.drawText(`Datum: ${formatDateForDisplay(summary.report_date)}`, {
-      x: padding,
-      y: yPos,
-      size: fontSize + 2,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 30
-
-    // Report ID
-    page.drawText(`Bericht-ID: ${summary.id}`, {
-      x: padding,
-      y: yPos,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 40
-
-    // Umsätze nach Zahlungsart
-    page.drawText('UMSÄTZE NACH ZAHLUNGSART', {
-      x: padding,
-      y: yPos,
-      size: fontSize + 2,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 25
-
-    page.drawText(`Bar:     CHF ${summary.sales_cash.toFixed(2)}`, {
-      x: padding + 20,
-      y: yPos,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 20
-
-    page.drawText(`TWINT:   CHF ${summary.sales_twint.toFixed(2)}`, {
-      x: padding + 20,
-      y: yPos,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 20
-
-    page.drawText(`SumUp:   CHF ${summary.sales_sumup.toFixed(2)}`, {
-      x: padding + 20,
-      y: yPos,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 30
-
-    page.drawText(`TOTAL:   CHF ${summary.sales_total.toFixed(2)}`, {
-      x: padding + 20,
-      y: yPos,
-      size: fontSize + 2,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 50
-
-    // Bargeld-Bestand
-    page.drawText('BARGELD-BESTAND', {
-      x: padding,
-      y: yPos,
-      size: fontSize + 2,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 25
-
-    page.drawText(`Anfangsbestand: CHF ${summary.cash_starting.toFixed(2)}`, {
-      x: padding + 20,
-      y: yPos,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 20
-
-    page.drawText(`+ Bareinnahmen: CHF ${summary.sales_cash.toFixed(2)}`, {
-      x: padding + 20,
-      y: yPos,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 20
-
-    page.drawText(`Endbestand:     CHF ${summary.cash_ending.toFixed(2)}`, {
-      x: padding + 20,
-      y: yPos,
-      size: fontSize + 2,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    })
-    yPos -= 30
-
-    if (summary.cash_difference !== 0) {
-      const differenceColor = summary.cash_difference > 0 ? rgb(0, 0.5, 0) : rgb(0.8, 0, 0)
-      page.drawText(`Differenz:      CHF ${summary.cash_difference.toFixed(2)}`, {
-        x: padding + 20,
-        y: yPos,
-        size: fontSize,
-        font: boldFont,
-        color: differenceColor,
-      })
-      yPos -= 30
-    }
-
-    // Transaktionsliste
-    if (transactions.length > 0) {
-      page.drawText('TRANSAKTIONEN', {
-        x: padding,
-        y: yPos,
-        size: fontSize + 2,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      })
-      yPos -= 25
-
-      // Header
-      page.drawText('Zeit    Zahlungsart    Betrag', {
-        x: padding + 20,
-        y: yPos,
-        size: fontSize,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      })
-      yPos -= 20
-
-      // Transaktionen (maximal 30 für PDF)
-      transactions.slice(0, 30).forEach((transaction) => {
-        const methodText = transaction.method === 'cash' ? 'Bar' :
-                         transaction.method === 'twint' ? 'TWINT' : 'SumUp'
-        page.drawText(`${transaction.time}   ${methodText.padEnd(8)}     CHF ${transaction.amount.toFixed(2)}`, {
-          x: padding + 20,
-          y: yPos,
-          size: fontSize - 1,
-          font,
-          color: rgb(0, 0, 0),
-        })
-        yPos -= 16
-      })
-
-      if (transactions.length > 30) {
-        yPos -= 10
-        page.drawText(`... und ${transactions.length - 30} weitere Transaktionen`, {
-          x: padding + 20,
-          y: yPos,
-          size: fontSize - 1,
-          font,
-          color: rgb(0.5, 0.5, 0.5),
-        })
-      }
-    }
-
-    // Notizen
-    if (summary.notes) {
-      yPos -= 20
-      page.drawText('NOTIZEN', {
-        x: padding,
-        y: yPos,
-        size: fontSize + 2,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      })
-      yPos -= 25
-
-      page.drawText(summary.notes, {
-        x: padding + 20,
-        y: yPos,
-        size: fontSize,
-        font,
-        color: rgb(0, 0, 0),
-      })
-    }
-
-    // Footer
-    const now = new Date()
-    page.drawText(`Erstellt am: ${now.toLocaleDateString('de-CH')} um ${now.toLocaleTimeString('de-CH')}`, {
-      x: padding,
-      y: 50,
-      size: fontSize - 2,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    })
-
-    // PDF speichern und hochladen
-    console.log("📄 PDF-Dokument erstellt, speichere...")
-    const pdfBytes = await pdfDoc.save()
+    // Create file for upload
     const fileName = `tagesabschluss-${summary.report_date}.pdf`
-    const file = new File([pdfBytes], fileName, { type: 'application/pdf' })
+    const file = new File([blob], fileName, { type: 'application/pdf' })
     
-    // Datei zu Supabase Storage hochladen
+    // Upload to Supabase Storage
     const filePath = `documents/daily_reports/${fileName}`
     console.log("☁️ Lade PDF zu Storage hoch:", filePath)
     
@@ -249,24 +41,12 @@ export async function generateDailyReportPDF(
       })
       
     if (uploadError) {
-      console.error('Fehler beim Hochladen der PDF:', uploadError)
-      
-      if (!autoGenerated) {
-        // Fallback: Direkter Download ohne Storage
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = fileName
-        a.click()
-        window.URL.revokeObjectURL(url)
-      }
-      
-      return { success: false, error: uploadError.message }
+      console.error('❌ Upload-Fehler:', uploadError)
+      throw uploadError
     }
 
-    // Dokument-Eintrag in der Datenbank erstellen/aktualisieren
-    console.log("🗃️ Erstelle Dokument-Eintrag in Datenbank...")
+    // Create document record in database
+    console.log("🗃️ Erstelle Dokument-Eintrag...")
     const { data: userData } = await supabase.auth.getUser()
     if (userData?.user) {
       const documentData = {
@@ -277,7 +57,6 @@ export async function generateDailyReportPDF(
         document_date: summary.report_date,
         user_id: userData.user.id
       }
-      console.log("📝 Dokument-Daten:", documentData)
       
       const { error: documentError } = await supabase
         .from('documents')
@@ -288,11 +67,9 @@ export async function generateDailyReportPDF(
       } else {
         console.log("✅ Dokument-Eintrag erfolgreich erstellt")
       }
-    } else {
-      console.error("❌ Kein User gefunden für Dokument-Erstellung")
     }
 
-    // PDF nur öffnen wenn nicht automatisch generiert
+    // Open PDF if not auto-generated
     if (!autoGenerated) {
       const { data: urlData } = supabase.storage
         .from('documents')
@@ -300,7 +77,7 @@ export async function generateDailyReportPDF(
       
       window.open(urlData.publicUrl, '_blank')
     }
-
+    
     console.log("🎉 PDF-Generierung erfolgreich abgeschlossen")
     return { success: true, filePath }
 

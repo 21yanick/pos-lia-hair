@@ -20,7 +20,8 @@
 
 **Aktionen:**
 - [x] `useDashboardStats` löschen → `useReports` migrieren ✅
-- [x] PDF-Logik aus 3 Hooks extrahieren → `useDocumentGeneration` 🔄
+- [x] PDF-Logik aus 3 Hooks extrahieren → `useDocumentGeneration` ✅
+- [x] Timezone-Probleme beheben → Dashboard + Daily Reports ✅
 - [ ] Cash-Movement-Logik zentralisieren → `useCashMovements`
 - [ ] Hook-Struktur nach `core/`, `business/`, `ui/` organisieren
 
@@ -30,8 +31,9 @@
 - ✅ `useReports` Hook erstellt mit Dashboard-Funktionalität
 - ✅ Dashboard-Page erfolgreich migriert
 - ✅ `useDashboardStats` gelöscht (238 Zeilen reduziert)
-- ✅ TypeScript-Compilation erfolgreich
-- 🔄 **PDF-Modernisierung**: Migration zu @react-pdf/renderer
+- ✅ **PDF-Modernisierung Phase 1**: useDocumentGeneration + ReceiptPDF erstellt
+- ✅ **POS-Quittungen migriert**: 147 Zeilen pdf-lib → 5 Zeilen react-pdf
+- ✅ **Timezone-Fix**: Swiss/UTC-Konvertierung in getSwissDayRange behoben
 
 ### BEREICH 2: SHARED UI COMPONENTS ⭐⭐⭐
 **Status:** 🔴 Pending  
@@ -135,23 +137,45 @@ app/(auth)/
 - 🔧 **Ansatz**: Komponentenbasierte PDFs statt manuelle Assembly
 - 📋 **Plan**: 3 bestehende PDF-Generierungen zentralisieren und modernisieren
 
+**Session 3 - PDF-Modernisierung Phase 1 & Timezone-Fix:**
+- ✅ **useDocumentGeneration Hook**: Zentrale PDF-API mit Upload/Download-Management
+- ✅ **ReceiptPDF Komponente**: Erste moderne React-PDF-Komponente erstellt
+- ✅ **useSales Migration**: 147 Zeilen pdf-lib Code → 5 Zeilen react-pdf Integration
+- ✅ **Auto-Download deaktiviert**: PDFs werden nur gespeichert, Download via UI
+- ✅ **Timezone-Problem gelöst**: getSwissDayRange korrigiert für Swiss/UTC-Konvertierung
+- 📊 **Ergebnis**: Dashboard zeigt jetzt korrekt 7 Verkäufe mit 275 CHF für heute
+
+**Session 4 - PDF-Modernisierung Phase 2 & Workflow-Fix:**
+- ✅ **DailyReportPDF Komponente**: Moderne React-PDF für Tagesabschlüsse erstellt
+- ✅ **dailyHelpers Migration**: 305 Zeilen pdf-lib Code → 87 Zeilen react-pdf Integration
+- ✅ **Tagesabschluss-Workflow**: Update-Button nach Abschluss entfernt (buchhalterisch korrekt)
+- ✅ **Expense Receipts Cleanup**: Fake-PDF-Generation entfernt, echtes Upload-System bereits vorhanden
+- ✅ **Expense-Workflow repariert**: Pflicht-Upload für alle Expenses, Documents-Page zentral
+- 🔧 **Hook-Problem gelöst**: useDocumentGeneration nicht in Utilities verwendbar
+- 🔧 **TypeScript-Fehler behoben**: React.createElement Type-Inference für @react-pdf/renderer
+- 📊 **Ergebnis**: PDFs funktionieren, Tagesabschlüsse final, Expense-System zentral über Documents
+
 ## 🔄 Nächste Session
 
-**Aktueller Fokus:** BEREICH 1 - PDF-Modernisierung  
-**Nächster Schritt:** @react-pdf/renderer Installation und erste PDF-Komponente  
-**Geschätzte Zeit:** 2-3 Stunden
+**Aktueller Fokus:** BEREICH 1 - PDF-Modernisierung Phase 3 (Final)  
+**Nächster Schritt:** Monthly Reports zu @react-pdf/renderer migrieren (monthlyHelpers.ts)  
+**Geschätzte Zeit:** 2-3 Stunden (letzte pdf-lib Verwendung im System)
 
 ## 🎯 PDF-Modernisierung Roadmap
 
-### **Phase 1: Setup & Foundation**
-1. @react-pdf/renderer installieren
-2. Erste ReceiptPDF-Komponente erstellen
-3. useDocumentGeneration Hook-Grundstruktur
+### **Phase 1: Setup & Foundation** ✅
+1. ✅ @react-pdf/renderer installieren
+2. ✅ Erste ReceiptPDF-Komponente erstellen
+3. ✅ useDocumentGeneration Hook-Grundstruktur
+4. ✅ POS-Quittungen migrieren (useSales.ts)
 
-### **Phase 2: Migration bestehender PDFs**
-1. POS-Quittungen (aus useSales)
-2. Daily Reports (aus dailyHelpers)
-3. Expense Receipts (aus useExpenses)
+### **Phase 2: Migration bestehender PDFs** ✅
+1. ✅ POS-Quittungen (aus useSales) - Bereits in Phase 1 migriert
+2. ✅ Daily Reports (aus dailyHelpers) - 305 → 87 Zeilen, DailyReportPDF Komponente
+3. ✅ Expense Receipts (aus useExpenses) - Fake-Generation entfernt, Workflow zu Documents-Page
+
+### **Phase 3: Finale Migration** ⏳
+1. ⏳ Monthly Reports (aus monthlyHelpers) - ~300 Zeilen pdf-lib Code, komplexe Tabellen
 
 ### **Phase 3: Verbesserungen**
 1. Einheitliches PDF-Design System
@@ -169,4 +193,35 @@ app/(auth)/
 
 **Letzte Aktualisierung:** 26.05.2025  
 **Bearbeitet von:** Claude Code  
-**Review Status:** PDF-Modernisierung geplant
+**Review Status:** PDF-Modernisierung Phase 2 abgeschlossen, Phase 3 (Monthly Reports) bereit
+
+## 📊 Session 3 Zusammenfassung
+
+**Erfolge:**
+- ✅ PDF-System modernisiert: useDocumentGeneration + ReceiptPDF
+- ✅ 147 Zeilen pdf-lib Code eliminiert aus useSales 
+- ✅ Timezone-Problem komplett gelöst (Dashboard + Daily Reports)
+- ✅ Auto-Download-Problem behoben
+
+## 📊 Session 4 Zusammenfassung
+
+**Erfolge:**
+- ✅ Daily Reports PDF-Migration: DailyReportPDF Komponente + 305 → 87 Zeilen
+- ✅ Expense-System komplett repariert: Pflicht-Upload + zentrale Documents-Page
+- ✅ Tagesabschluss-Workflow buchhalterisch korrekt (Update-Button entfernt)
+- ✅ TypeScript-Probleme mit @react-pdf/renderer behoben
+
+**Code-Reduktion Session 4:**
+- dailyHelpers: 305 → 87 Zeilen (PDF-Generierung)
+- useExpenses: 62 Zeilen Fake-PDF-Code entfernt
+- Expense-Workflow: Zentrale Documents-Page statt verstreute Listen
+
+**Verbleibt:** Nur noch Monthly Reports (~300 Zeilen pdf-lib) für komplette Modernisierung
+
+**Nächste Prioritäten:**
+1. ✅ Daily Reports PDF-Migration abgeschlossen (305 → 87 Zeilen)
+2. ✅ Expense Receipts Cleanup: Fake-PDF-Generation entfernt (62 Zeilen Code cleanup)
+3. ✅ Expense-Workflow repariert: Pflicht-Upload, zentral über Documents-Page
+4. ✅ Tagesabschluss-Workflow repariert (Update-Button entfernt)
+5. ⏳ Monthly Reports PDF-Migration (monthlyHelpers.ts ~300 Zeilen pdf-lib) - Session 5
+6. 🔄 Korrektur-System für geschlossene Tagesabschlüsse (langfristig)

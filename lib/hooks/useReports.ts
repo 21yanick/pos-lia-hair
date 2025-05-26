@@ -49,7 +49,8 @@ export function useReports() {
   // Daily summaries Hook für erweiterte Funktionalitäten
   const dailySummariesHook = useDailySummaries()
 
-  // Datum für heute formatieren (YYYY-MM-DD) in Schweizer Zeitzone
+  // WICHTIG: Verwende das gleiche Datum wie alle anderen Systeme
+  // Das ist der aktuelle Tag in Schweizer Zeit (YYYY-MM-DD)
   const today = formatDateForAPI(new Date())
 
   // Dashboard-Statistiken laden (migriert von useDashboardStats)
@@ -59,6 +60,8 @@ export function useReports() {
       setDashboardError(null)
       
       console.log('🔍 Loading dashboard stats for date:', today)
+      console.log('🔍 Current Date Object:', new Date())
+      console.log('🔍 Current UTC:', new Date().toISOString())
 
       // Heutige Verkäufe mit korrekter Schweizer Zeitzone abrufen
       const { start, end } = getSwissDayRange(new Date())
@@ -78,7 +81,11 @@ export function useReports() {
         return
       }
       
-      console.log('📊 Sales data loaded:', sales?.length || 0, 'sales found')
+      console.log('🔍 Dashboard Sales gefunden:', sales?.length || 0)
+      if (sales && sales.length > 0) {
+        console.log('🔍 Erste Sale created_at:', sales[0].created_at)
+        console.log('🔍 Letzte Sale created_at:', sales[sales.length - 1].created_at)
+      }
 
       // Aktive Produkte zählen
       const { data: items } = await supabase

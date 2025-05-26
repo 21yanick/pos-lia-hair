@@ -89,13 +89,22 @@ export function getTodaySwissString(): string {
  * Output: UTC Zeitbereich für diesen Tag
  */
 export function getSwissDayRange(swissDate: Date): { start: string, end: string } {
-  // Schweizer Datum als YYYY-MM-DD String
+  // WICHTIG: Das Input-Datum kann sowohl für "heute" als auch für spezifische Tage verwendet werden
+  // Wenn es ein spezifisches Datum ist (z.B. von einem Datepicker), verwende das direkt
+  // Wenn es "heute" ist, verwende das aktuelle Schweizer Datum
+  
+  // Schweizer Datum als YYYY-MM-DD String - das ist der Tag für den wir suchen
   const dateStr = formatDateForAPI(swissDate)
   
-  // EINFACHER ANSATZ: Verwende explizite ISO-Strings mit Schweizer Zeitzone
-  // Mai 2025 ist Sommerzeit (CEST = UTC+2)
-  const startISO = `${dateStr}T00:00:00.000+02:00` // 00:00 CEST
-  const endISO = `${dateStr}T23:59:59.999+02:00`   // 23:59 CEST
+  // Dynamische Zeitzone-Erkennung (Sommerzeit vs. Winterzeit)
+  // Erstelle ein Beispieldatum für diesen Tag in Schweizer Zeit
+  const testDate = new Date(`${dateStr}T12:00:00`)
+  const offsetHours = getSwissTimezoneOffset(testDate)
+  const offsetString = offsetHours >= 0 ? `+${offsetHours.toString().padStart(2, '0')}:00` : `-${Math.abs(offsetHours).toString().padStart(2, '0')}:00`
+  
+  // Start und Ende des Tages in Schweizer Zeit
+  const startISO = `${dateStr}T00:00:00.000${offsetString}` // 00:00 Schweizer Zeit
+  const endISO = `${dateStr}T23:59:59.999${offsetString}`   // 23:59 Schweizer Zeit
   
   // Browser konvertiert automatisch zu UTC
   const startUTC = new Date(startISO)
@@ -104,8 +113,9 @@ export function getSwissDayRange(swissDate: Date): { start: string, end: string 
   console.log('🕐 getSwissDayRange Debug:')
   console.log('Input Swiss Date:', swissDate)
   console.log('Date String:', dateStr)
-  console.log('Start CEST:', startISO, '→ UTC:', startUTC.toISOString())
-  console.log('End CEST:', endISO, '→ UTC:', endUTC.toISOString())
+  console.log('Swiss Offset:', offsetString)
+  console.log('Start Swiss:', startISO, '→ UTC:', startUTC.toISOString())
+  console.log('End Swiss:', endISO, '→ UTC:', endUTC.toISOString())
   
   return {
     start: startUTC.toISOString(),

@@ -30,7 +30,7 @@ export function DailyActions({
   isLoading = false
 }: DailyActionsProps) {
   const canClose = hasTransactions && dailySummary?.status !== "closed"
-  const canUpdate = dailySummary?.status === "closed"
+  const canUpdate = false // Deaktiviert - Tagesabschluss soll final sein (TODO: Korrektur-System implementieren)
   const canExportPDF = dailySummary !== null
   
   return (
