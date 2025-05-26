@@ -24,7 +24,7 @@
 - [x] `useDocumentGeneration` Hook entfernt → 247 Zeilen Dead Code ✅
 - [x] Timezone-Probleme beheben → Dashboard + Daily Reports ✅
 - [x] pdf-lib komplett eliminiert → Moderne @react-pdf/renderer ✅
-- [ ] Cash-Movement-Logik zentralisieren → `useCashMovements`
+- [x] Cash-Movement-Logik zentralisieren → `useCashMovements` ✅
 - [ ] Hook-Struktur nach `core/`, `business/`, `ui/` organisieren
 
 **Zwischenergebnis:** 🎉 **68% Code-Reduktion in PDF-System, einheitliche Architektur**
@@ -36,6 +36,10 @@
 - ✅ **PDF-Modernisierung Phase 1**: useDocumentGeneration + ReceiptPDF erstellt
 - ✅ **POS-Quittungen migriert**: 147 Zeilen pdf-lib → 5 Zeilen react-pdf
 - ✅ **Timezone-Fix**: Swiss/UTC-Konvertierung in getSwissDayRange behoben
+- ✅ **Cash-Movement-Zentralisierung**: `useCashMovements` Hook implementiert
+  - Scattered Logic aus `useSales`, `useExpenses` zentralisiert
+  - Atomic Transactions + Reversals für Sales/Expenses
+  - Cash Adjustments Support + Balance Caching
 
 ### BEREICH 2: SHARED UI COMPONENTS ⭐⭐⭐
 **Status:** 🟡 Ready to Start  

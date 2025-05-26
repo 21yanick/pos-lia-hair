@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
+import { useCashMovements } from './useCashMovements'
 // Entfernt: useDocumentGeneration Hook (direkte react-pdf Integration)
 
 // Typen für Verkäufe (ersetzt Transaktionen)
@@ -37,6 +38,7 @@ export function useSales() {
   const [error, setError] = useState<string | null>(null)
   const [sales, setSales] = useState<Sale[]>([])
   const [currentSale, setCurrentSale] = useState<Sale | null>(null)
+  const { createSaleCashMovement, reverseCashMovement } = useCashMovements()
   // Entfernt: generateReceipt Hook (direkte react-pdf Integration)
 
   // Verkauf erstellen mit allen Posten
@@ -92,18 +94,9 @@ export function useSales() {
 
       // 5. Bargeld-Bewegung erstellen, wenn es eine Barzahlung ist
       if (data.payment_method === 'cash') {
-        const { error: cashError } = await supabase
-          .from('cash_movements')
-          .insert({
-            amount: data.total_amount,
-            type: 'cash_in',
-            description: `Barzahlung (Verkauf: ${sale.id})`,
-            reference_type: 'sale',
-            reference_id: sale.id,
-            user_id: userId
-          })
-
-        if (cashError) {
+        try {
+          await createSaleCashMovement(sale.id, data.total_amount)
+        } catch (cashError) {
           console.error('Fehler beim Erstellen der Bargeld-Bewegung:', cashError)
           // Hier keine Exception werfen, da der Verkauf selbst erfolgreich war
         }
@@ -260,29 +253,12 @@ export function useSales() {
         throw error
       }
 
-      // Wenn es eine Barzahlung war, eine Bargeld-Bewegung für die Rückerstattung erstellen
+      // Wenn es eine Barzahlung war, Cash Movement rückgängig machen
       if (data.payment_method === 'cash') {
-        // Benutzer-ID abrufen
-        const { data: userData } = await supabase.auth.getUser()
-        if (!userData?.user) {
-          throw new Error('Nicht angemeldet. Bitte melden Sie sich an.')
-        }
-        const userId = userData.user.id
-
-        // Ausgabe als Bargeld-Bewegung verbuchen
-        const { error: cashError } = await supabase
-          .from('cash_movements')
-          .insert({
-            amount: data.total_amount,
-            type: 'cash_out',
-            description: `Stornierung (Verkauf: ${saleId})`,
-            reference_type: 'sale',
-            reference_id: saleId,
-            user_id: userId
-          })
-
-        if (cashError) {
-          console.error('Fehler beim Erstellen der Bargeld-Bewegung für Stornierung:', cashError)
+        try {
+          await reverseCashMovement(saleId, 'sale')
+        } catch (cashError) {
+          console.error('Fehler beim Rückgängigmachen der Bargeld-Bewegung:', cashError)
           // Hier keine Exception werfen, da die Stornierung selbst erfolgreich war
         }
       }

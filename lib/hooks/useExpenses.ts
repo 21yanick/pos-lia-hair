@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
+import { useCashMovements } from './useCashMovements'
 
 // Typen für Ausgaben (ersetzt SupplierInvoices)
 export type Expense = Database['public']['Tables']['expenses']['Row']
@@ -26,6 +27,7 @@ export function useExpenses() {
   const [error, setError] = useState<string | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [currentExpense, setCurrentExpense] = useState<Expense | null>(null)
+  const { createExpenseCashMovement, reverseCashMovement } = useCashMovements()
 
   // Ausgabe erstellen (mit Pflicht-Beleg-Upload)
   const createExpense = async (data: ExpenseInsert, receiptFile: File) => {
@@ -57,18 +59,14 @@ export function useExpenses() {
 
       // Bargeld-Bewegung erstellen, wenn es eine Barzahlung ist
       if (data.payment_method === 'cash') {
-        const { error: cashError } = await supabase
-          .from('cash_movements')
-          .insert({
-            amount: data.amount,
-            type: 'cash_out',
-            description: `${EXPENSE_CATEGORIES[data.category]}: ${data.description}`,
-            reference_type: 'expense',
-            reference_id: expense.id,
-            user_id: userId
-          })
-
-        if (cashError) {
+        try {
+          await createExpenseCashMovement(
+            expense.id, 
+            data.amount, 
+            EXPENSE_CATEGORIES[data.category], 
+            data.description
+          )
+        } catch (cashError) {
           console.error('Fehler beim Erstellen der Bargeld-Bewegung:', cashError)
           // Hier keine Exception werfen, da die Ausgabe selbst erfolgreich war
         }
@@ -229,26 +227,13 @@ export function useExpenses() {
         throw deleteError
       }
 
-      // Wenn es eine Barzahlung war, die Bargeld-Bewegung stornieren
+      // Wenn es eine Barzahlung war, Cash Movement rückgängig machen
       if (expense.payment_method === 'cash') {
-        // Benutzer-ID abrufen
-        const { data: userData } = await supabase.auth.getUser()
-        if (userData?.user) {
-          const { error: cashError } = await supabase
-            .from('cash_movements')
-            .insert({
-              amount: expense.amount,
-              type: 'cash_in',
-              description: `Stornierung: ${EXPENSE_CATEGORIES[expense.category as ExpenseCategory]}: ${expense.description}`,
-              reference_type: 'expense',
-              reference_id: expense.id,
-              user_id: userData.user.id
-            })
-
-          if (cashError) {
-            console.error('Fehler beim Stornieren der Bargeld-Bewegung:', cashError)
-            // Hier keine Exception werfen, da das Löschen selbst erfolgreich war
-          }
+        try {
+          await reverseCashMovement(expense.id, 'expense')
+        } catch (cashError) {
+          console.error('Fehler beim Rückgängigmachen der Bargeld-Bewegung:', cashError)
+          // Hier keine Exception werfen, da das Löschen selbst erfolgreich war
         }
       }
 
