@@ -1,6 +1,6 @@
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
-import type { Sale, CartItem } from '@/lib/hooks/useSales'
+import type { Sale, CartItem } from '@/lib/hooks/business/useSales'
 
 interface ReceiptPDFProps {
   sale: Sale

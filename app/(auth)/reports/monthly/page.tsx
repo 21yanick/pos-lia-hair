@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
-import { useDailySummaries } from "@/lib/hooks/useDailySummaries"
-import { useMonthlySummaries } from "@/lib/hooks/useMonthlySummaries"
-import { useExpenses } from "@/lib/hooks/useExpenses"
-import { useToast } from "@/lib/hooks/useToast"
+import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
+import { useMonthlySummaries } from "@/lib/hooks/business/useMonthlySummaries"
+import { useExpenses } from "@/lib/hooks/business/useExpenses"
+import { useToast } from "@/lib/hooks/core/useToast"
 
 // Komponenten
 import { MonthlyStats, type MonthlyStatsData } from "./components/MonthlyStats"

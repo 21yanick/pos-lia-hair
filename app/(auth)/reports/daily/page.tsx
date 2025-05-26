@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { useToast } from "@/lib/hooks/useToast"
-import { useDailySummaries } from "@/lib/hooks/useDailySummaries"
-import { useSales } from "@/lib/hooks/useSales"
+import { useToast } from "@/lib/hooks/core/useToast"
+import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
+import { useSales } from "@/lib/hooks/business/useSales"
 import { formatDateForAPI, formatDateForDisplay, getTodaySwiss } from "@/lib/utils/dateUtils"
 
 // Komponenten importieren

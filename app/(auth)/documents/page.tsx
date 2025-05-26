@@ -10,8 +10,8 @@ import {
   Upload, 
   AlertCircle 
 } from "lucide-react"
-import { useToast } from "@/lib/hooks/useToast"
-import { useDocuments } from "@/lib/hooks/useDocuments"
+import { useToast } from "@/lib/hooks/core/useToast"
+import { useDocuments } from "@/lib/hooks/business/useDocuments"
 import { DocumentsStats } from "./components/DocumentsStats"
 import { DocumentsTable } from "./components/DocumentsTable"
 import { DocumentsUpload } from "./components/DocumentsUpload"

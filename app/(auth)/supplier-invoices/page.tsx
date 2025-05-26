@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useExpenses, EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/hooks/useExpenses"
-import { useToast } from "@/lib/hooks/useToast"
+import { useExpenses, EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/hooks/business/useExpenses"
+import { useToast } from "@/lib/hooks/core/useToast"
 import { format, parseISO } from "date-fns"
 import { de } from "date-fns/locale"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

@@ -18,8 +18,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/lib/hooks/useToast"
-import { useItems, type Item, type ItemInsert } from "@/lib/hooks/useItems"
+import { useToast } from "@/lib/hooks/core/useToast"
+import { useItems, type Item, type ItemInsert } from "@/lib/hooks/business/useItems"
 
 export default function ProductsPage() {
   const { items, loading, error, addItem, updateItem, toggleFavorite, toggleActive, deleteItem, syncAuthUser } = useItems()

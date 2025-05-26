@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { ShoppingCart, FileText, BookOpen, BarChart4, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/lib/hooks/useToast"
-import { useReports } from "@/lib/hooks/useReports"
+import { useToast } from "@/lib/hooks/core/useToast"
+import { useReports } from "@/lib/hooks/business/useReports"
 
 export default function Dashboard() {
   // Hooks

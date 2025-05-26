@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/dialog"
 
 import { Search, Trash2, Plus, Minus, Wallet, CreditCard, CheckCircle, Download, Mail, Pencil, Loader2, AlertCircle } from "lucide-react"
-import { useItems } from "@/lib/hooks/useItems"
-import { useSales, type CartItem } from "@/lib/hooks/useSales"
-import { useToast } from "@/lib/hooks/useToast"
+import { useItems } from "@/lib/hooks/business/useItems"
+import { useSales, type CartItem } from "@/lib/hooks/business/useSales"
+import { useToast } from "@/lib/hooks/core/useToast"
 
 export default function POSPage() {
   // Hooks

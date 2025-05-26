@@ -24,7 +24,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { formatDisplayDate, getDocumentTypeName, getBadgeVariant } from "@/app/(auth)/documents/utils/documentHelpers"
-import type { DocumentWithDetails } from "@/lib/hooks/useDocuments"
+import type { DocumentWithDetails } from "@/lib/hooks/business/useDocuments"
 
 interface DocumentsTableProps {
   documents: DocumentWithDetails[]

@@ -15,7 +15,7 @@
 ## 📋 Bereiche & Status
 
 ### BEREICH 1: HOOKS & DATA LAYER ⭐⭐⭐
-**Status:** 🟡 In Progress (PDF-Modernisierung ✅, Hook-Struktur ausstehend)  
+**Status:** ✅ Completed  
 **Ziel:** Hook-Struktur vereinfachen und zentralisieren
 
 **Aktionen:**
@@ -25,7 +25,7 @@
 - [x] Timezone-Probleme beheben → Dashboard + Daily Reports ✅
 - [x] pdf-lib komplett eliminiert → Moderne @react-pdf/renderer ✅
 - [x] Cash-Movement-Logik zentralisieren → `useCashMovements` ✅
-- [ ] Hook-Struktur nach `core/`, `business/`, `ui/` organisieren
+- [x] Hook-Struktur nach `core/`, `business/`, `ui/` organisieren ✅
 
 **Zwischenergebnis:** 🎉 **68% Code-Reduktion in PDF-System, einheitliche Architektur**
 
@@ -40,9 +40,37 @@
   - Scattered Logic aus `useSales`, `useExpenses` zentralisiert
   - Atomic Transactions + Reversals für Sales/Expenses
   - Cash Adjustments Support + Balance Caching
+- ✅ **Hook-Struktur-Organisation**: Klare Trennung core/business/ui
+  - 3 Core Hooks: useCashMovements, useToast, useMobile
+  - 7 Business Hooks: useSales, useExpenses, useItems, etc.
+  - 25 Dateien erfolgreich aktualisiert (Imports)
+
+### BEREICH 1.5: DAILY/MONTHLY CLOSURE VALIDATION ⭐⭐
+
+**Status:** 🟡 Ready to Start  
+**Ziel:** Fehlende Tagesabschlüsse verhindern und validieren
+
+**Problem:**
+- Vergessene Tagesabschlüsse "verschwinden" aus Monatsberichten
+- Keine Warnung bei fehlenden Abschlüssen  
+- User merkt nicht dass vergangene Tage offen sind
+- Monatsabschluss möglich trotz fehlender Tagesabschlüsse
+
+**Lösung:**
+- **Missing Daily Closures Detection:** SQL-Funktion findet Tage mit Sales aber ohne daily_summary
+- **Monthly Report Validation:** Verhindert Monatsabschluss wenn Tagesabschlüsse fehlen
+- **Daily Report UI Warnings:** Zeigt fehlende Abschlüsse der letzten Tage an
+- **Bulk Closure Funktion:** Mehrere fehlende Tage auf einmal abschließen
+
+**Implementation Tasks:**
+- [ ] SQL-Funktion `find_missing_daily_closures(start_date, end_date)`
+- [ ] Hook-Funktion `getMissingDailyClosures()` 
+- [ ] Daily Report UI Warning-Komponente
+- [ ] Monthly Report Prerequisite-Validation
+- [ ] Bulk Closure UI und Backend-Logik
 
 ### BEREICH 2: SHARED UI COMPONENTS ⭐⭐⭐
-**Status:** 🟡 Ready to Start  
+**Status:** 🔴 Pending  
 **Ziel:** Gemeinsame UI-Patterns extrahieren
 
 **Aktionen:**
