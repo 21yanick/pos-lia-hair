@@ -416,7 +416,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      recent_missing_closures: {
+        Row: {
+          missing_date: string
+          sales_count: number
+          sales_total: number
+          has_draft_summary: boolean
+          days_ago: number
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_daily_summary: {
@@ -435,6 +444,56 @@ export type Database = {
       get_current_cash_balance: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      find_missing_daily_closures: {
+        Args: {
+          start_date: string
+          end_date: string
+        }
+        Returns: {
+          missing_date: string
+          sales_count: number
+          sales_total: number
+          has_draft_summary: boolean
+        }[]
+      }
+      validate_monthly_closure_prerequisites: {
+        Args: {
+          check_year: number
+          check_month: number
+        }
+        Returns: {
+          is_valid: boolean
+          missing_count: number
+          missing_dates: string[]
+        }[]
+      }
+      create_daily_summary_for_date: {
+        Args: {
+          target_date: string
+          cash_starting?: number
+          cash_ending?: number
+          notes?: string
+        }
+        Returns: {
+          success: boolean
+          summary_id: string | null
+          error_message: string | null
+        }[]
+      }
+      bulk_close_daily_summaries: {
+        Args: {
+          target_dates: string[]
+          default_cash_starting?: number
+          default_cash_ending?: number
+          default_notes?: string
+        }
+        Returns: {
+          processed_date: string
+          success: boolean
+          summary_id: string | null
+          error_message: string | null
+        }[]
       }
     }
     Enums: {

@@ -12,6 +12,8 @@ import { DailyStats } from "./components/DailyStats"
 import { TransactionsList } from "./components/TransactionsList"
 import { DailyActions } from "./components/DailyActions"
 import { CashCountDialog } from "./components/CashCountDialog"
+import { MissingClosuresWarning } from "./components/MissingClosuresWarning"
+import { BulkClosureDialog } from "./components/BulkClosureDialog"
 
 // Utils importieren
 import { 
@@ -61,6 +63,8 @@ export default function DailyReportPage() {
   // Dialog State
   const [isCashCountDialogOpen, setIsCashCountDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isBulkClosureDialogOpen, setIsBulkClosureDialogOpen] = useState(false)
+  const [missingClosuresForBulk, setMissingClosuresForBulk] = useState<any[]>([])
 
   // Berechnete Werte
   const apiDateFormat = formatDateForAPI(selectedDate)
@@ -138,16 +142,29 @@ export default function DailyReportPage() {
 
   // Action Handler
   const handleAction = async (action: DailyActionType) => {
+    const hasTransactions = transactions.length > 0
+    
     switch (action) {
       case 'close':
       case 'update':
-        // Erwarteten Bargeldbestand setzen
-        if (stats.endingCash > 0 || currentDailySummary?.cash_ending) {
-          setIsCashCountDialogOpen(true)
+        // Prüfung ob Transaktionen oder bestehender Abschluss vorhanden
+        if (hasTransactions || currentDailySummary?.cash_ending) {
+          // Nur bei Bargeld oder bestehenden Cash-Daten Cash-Dialog öffnen
+          if (stats.endingCash > 0 || currentDailySummary?.cash_ending) {
+            setIsCashCountDialogOpen(true)
+          } else {
+            // Direkter Abschluss ohne Cash-Dialog für TWINT/SumUp-only Tage
+            await handleCashCountConfirm({ 
+              expectedCash: 0, 
+              actualCash: 0, 
+              difference: 0,
+              notes: "Automatischer Abschluss - keine Bargeldtransaktionen"
+            })
+          }
         } else {
           toast({
-            title: "Keine Bardaten",
-            description: "Es sind keine Bargeldtransaktionen vorhanden.",
+            title: "Keine Transaktionen",
+            description: "Es sind keine Transaktionen für diesen Tag vorhanden.",
             variant: "destructive",
           })
         }
@@ -242,6 +259,25 @@ export default function DailyReportPage() {
     }
   }
 
+  // Bulk Closure Handler
+  const handleBulkClosure = (dates: string[]) => {
+    // Erstelle Missing Closures Array für Dialog
+    const missingClosures = dates.map(date => ({
+      missing_date: date,
+      sales_count: 1, // Placeholder
+      sales_total: 0, // Placeholder  
+      has_draft_summary: false
+    }))
+    setMissingClosuresForBulk(missingClosures)
+    setIsBulkClosureDialogOpen(true)
+  }
+
+  // Nach Bulk Closure abgeschlossen
+  const handleBulkClosureComplete = () => {
+    // Daten neu laden nach Bulk Closure
+    window.location.reload() // Einfache Lösung für jetzt
+  }
+
   return (
     <div className="space-y-6">
       {/* Header mit Actions */}
@@ -318,6 +354,12 @@ export default function DailyReportPage() {
         </>
       )}
 
+      {/* Missing Closures Warning */}
+      <MissingClosuresWarning 
+        onBulkClosure={handleBulkClosure}
+        className="mb-4"
+      />
+
       {/* Cash Count Dialog */}
       <CashCountDialog
         isOpen={isCashCountDialogOpen}
@@ -326,6 +368,14 @@ export default function DailyReportPage() {
         currentStatus={currentDailySummary?.status || 'draft'}
         onConfirm={handleCashCountConfirm}
         isSubmitting={isSubmitting}
+      />
+
+      {/* Bulk Closure Dialog */}
+      <BulkClosureDialog
+        isOpen={isBulkClosureDialogOpen}
+        onOpenChange={setIsBulkClosureDialogOpen}
+        missingClosures={missingClosuresForBulk}
+        onComplete={handleBulkClosureComplete}
       />
     </div>
   )

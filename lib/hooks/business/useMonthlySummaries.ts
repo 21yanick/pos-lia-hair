@@ -65,6 +65,27 @@ export function useMonthlySummaries() {
       const userId = userData.user.id
       console.log("👤 User ID:", userId)
 
+      // NEUE VALIDIERUNG: Prüfen ob alle Tagesabschlüsse vorhanden sind
+      console.log("🔍 Validiere Monatsabschluss-Voraussetzungen...")
+      const { data: validationData, error: validationError } = await supabase.rpc('validate_monthly_closure_prerequisites', {
+        check_year: year,
+        check_month: month
+      })
+
+      if (validationError) {
+        console.error("❌ Fehler bei der Validierung:", validationError)
+        throw validationError
+      }
+
+      if (validationData && validationData.length > 0) {
+        const validation = validationData[0]
+        if (!validation.is_valid) {
+          const missingDatesStr = validation.missing_dates?.join(', ') || 'Unbekannt'
+          throw new Error(`Monatsabschluss nicht möglich: ${validation.missing_count} Tagesabschlüsse fehlen noch (${missingDatesStr}). Bitte schließen Sie zuerst alle offenen Tage ab.`)
+        }
+      }
+      console.log("✅ Validierung erfolgreich - alle Tagesabschlüsse vorhanden")
+
       // Prüfen, ob bereits ein Abschluss für diesen Monat existiert
       const { data: existingSummary, error: checkError } = await supabase
         .from('monthly_summaries')

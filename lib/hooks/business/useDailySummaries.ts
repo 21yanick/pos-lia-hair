@@ -464,6 +464,91 @@ export function useDailySummaries() {
     }
   }
 
+  // Fehlende Tagesabschlüsse identifizieren
+  const getMissingDailyClosures = async (startDate: string, endDate: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error } = await supabase.rpc('find_missing_daily_closures', {
+        start_date: startDate,
+        end_date: endDate
+      })
+
+      if (error) {
+        console.error('Fehler bei getMissingDailyClosures:', error)
+        throw error
+      }
+
+      return { success: true, missingClosures: data || [] }
+    } catch (err: any) {
+      console.error('Fehler beim Abrufen fehlender Tagesabschlüsse:', err)
+      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
+      return { success: false, error: err.message, missingClosures: [] }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fehlende Abschlüsse der letzten Tage abrufen (für Warnungen)
+  const getRecentMissingClosures = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error } = await supabase
+        .from('recent_missing_closures')
+        .select('*')
+        .order('missing_date', { ascending: false })
+
+      if (error) {
+        console.error('Fehler bei getRecentMissingClosures:', error)
+        throw error
+      }
+
+      return { success: true, missingClosures: data || [] }
+    } catch (err: any) {
+      console.error('Fehler beim Abrufen aktueller fehlender Abschlüsse:', err)
+      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
+      return { success: false, error: err.message, missingClosures: [] }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Bulk Closure für mehrere Tage
+  const bulkCloseDailySummaries = async (
+    dates: string[], 
+    cashStarting: number = 0, 
+    cashEnding: number = 0, 
+    notes: string = 'Bulk Closure - automatisch geschlossen'
+  ) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error } = await supabase.rpc('bulk_close_daily_summaries', {
+        target_dates: dates,
+        default_cash_starting: cashStarting,
+        default_cash_ending: cashEnding,
+        default_notes: notes
+      })
+
+      if (error) {
+        console.error('Fehler bei bulkCloseDailySummaries:', error)
+        throw error
+      }
+
+      return { success: true, results: data || [] }
+    } catch (err: any) {
+      console.error('Fehler beim Bulk-Schließen der Tagesabschlüsse:', err)
+      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
+      return { success: false, error: err.message, results: [] }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return {
     loading,
     error,
@@ -477,6 +562,10 @@ export function useDailySummaries() {
     getExpensesForDate,
     getCurrentCashBalance,
     getCashMovementsForDate,
-    getCashMovementsForMonth
+    getCashMovementsForMonth,
+    // Neue Funktionen für Bereich 1.5
+    getMissingDailyClosures,
+    getRecentMissingClosures,
+    bulkCloseDailySummaries
   }
 }
