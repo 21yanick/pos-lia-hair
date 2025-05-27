@@ -66,7 +66,8 @@ export type Database = {
           cash_difference: number
           status: 'draft' | 'closed'
           notes: string | null
-          user_id: string
+          created_by: string | null  // NEW: Audit trail (who created)
+          user_id: string | null     // CHANGED: Now optional for compatibility
           created_at: string | null
           closed_at: string | null
         }
@@ -85,7 +86,8 @@ export type Database = {
           cash_difference?: number
           status?: 'draft' | 'closed'
           notes?: string | null
-          user_id: string
+          created_by?: string | null  // NEW: Optional for insert
+          user_id?: string | null     // CHANGED: Now optional
           created_at?: string | null
           closed_at?: string | null
         }
@@ -104,11 +106,19 @@ export type Database = {
           cash_difference?: number
           status?: 'draft' | 'closed'
           notes?: string | null
-          user_id?: string
+          created_by?: string | null  // NEW: Can be updated
+          user_id?: string | null     // CHANGED: Now optional
           created_at?: string | null
           closed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "daily_summaries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "daily_summaries_user_id_fkey"
             columns: ["user_id"]
@@ -215,8 +225,8 @@ export type Database = {
           name: string
           default_price: number
           type: 'service' | 'product'
-          is_favorite: boolean
-          active: boolean
+          is_favorite: boolean | null
+          active: boolean | null
           created_at: string | null
         }
         Insert: {
@@ -224,8 +234,8 @@ export type Database = {
           name: string
           default_price: number
           type: 'service' | 'product'
-          is_favorite?: boolean
-          active?: boolean
+          is_favorite?: boolean | null
+          active?: boolean | null
           created_at?: string | null
         }
         Update: {
@@ -233,11 +243,11 @@ export type Database = {
           name?: string
           default_price?: number
           type?: 'service' | 'product'
-          is_favorite?: boolean
-          active?: boolean
+          is_favorite?: boolean | null
+          active?: boolean | null
           created_at?: string | null
         }
-        Relationships: []
+        Relationships: []  // CHANGED: No user_id relationship anymore (shared resources)
       }
       sale_items: {
         Row: {
@@ -332,7 +342,8 @@ export type Database = {
           avg_daily_revenue: number
           status: 'draft' | 'closed'
           notes: string | null
-          user_id: string
+          created_by: string | null  // NEW: Audit trail (who created)
+          user_id: string | null     // CHANGED: Now optional for compatibility
           created_at: string | null
           closed_at: string | null
         }
@@ -351,7 +362,8 @@ export type Database = {
           avg_daily_revenue?: number
           status?: 'draft' | 'closed'
           notes?: string | null
-          user_id: string
+          created_by?: string | null  // NEW: Optional for insert
+          user_id?: string | null     // CHANGED: Now optional
           created_at?: string | null
           closed_at?: string | null
         }
@@ -370,11 +382,19 @@ export type Database = {
           avg_daily_revenue?: number
           status?: 'draft' | 'closed'
           notes?: string | null
-          user_id?: string
+          created_by?: string | null  // NEW: Can be updated
+          user_id?: string | null     // CHANGED: Now optional
           created_at?: string | null
           closed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "monthly_summaries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "monthly_summaries_user_id_fkey"
             columns: ["user_id"]
@@ -418,11 +438,11 @@ export type Database = {
     Views: {
       recent_missing_closures: {
         Row: {
-          missing_date: string
-          sales_count: number
-          sales_total: number
-          has_draft_summary: boolean
-          days_ago: number
+          missing_date: string | null
+          sales_count: number | null
+          sales_total: number | null
+          has_draft_summary: boolean | null
+          days_ago: number | null
         }
         Relationships: []
       }

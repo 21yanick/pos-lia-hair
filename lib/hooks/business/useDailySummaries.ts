@@ -77,7 +77,7 @@ export function useDailySummaries() {
             status: 'closed',
             notes: notes || null,
             closed_at: new Date().toISOString(),
-            user_id: userId
+            created_by: userId  // BUSINESS-CENTRIC: Use created_by for audit trail
           })
           .eq('id', existingSummary.id)
           .select()
@@ -130,7 +130,7 @@ export function useDailySummaries() {
           status: 'closed',
           notes: notes || null,
           closed_at: new Date().toISOString(),
-          user_id: userId
+          created_by: userId  // BUSINESS-CENTRIC: Use created_by for audit trail
         })
         .eq('id', summary.id)
         .select()

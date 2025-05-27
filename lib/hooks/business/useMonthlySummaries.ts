@@ -4,43 +4,10 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
 
-// Typen für Monatsabschlüsse (analog zu DailySummaries)
-export type MonthlySummary = {
-  id: string
-  year: number
-  month: number
-  sales_cash: number
-  sales_twint: number
-  sales_sumup: number
-  sales_total: number
-  expenses_cash: number
-  expenses_bank: number
-  expenses_total: number
-  transaction_count: number
-  avg_daily_revenue: number
-  status: 'draft' | 'closed'
-  notes: string | null
-  user_id: string
-  created_at: string | null
-  closed_at: string | null
-}
+// Typen für Monatsabschlüsse (Business-Centric Schema)
+export type MonthlySummary = Database['public']['Tables']['monthly_summaries']['Row']
 
-export type MonthlySummaryInsert = {
-  year: number
-  month: number
-  sales_cash?: number
-  sales_twint?: number
-  sales_sumup?: number
-  sales_total?: number
-  expenses_cash?: number
-  expenses_bank?: number
-  expenses_total?: number
-  transaction_count?: number
-  avg_daily_revenue?: number
-  status?: 'draft' | 'closed'
-  notes?: string | null
-  user_id: string
-}
+export type MonthlySummaryInsert = Database['public']['Tables']['monthly_summaries']['Insert']
 
 export type MonthlySummaryUpdate = Partial<MonthlySummaryInsert> & { id: string }
 
