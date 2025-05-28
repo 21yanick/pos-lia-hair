@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
+import Link from "next/link"
 import { Bell, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -59,7 +60,9 @@ export function Header() {
             <DropdownMenuLabel>Mein Konto</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profil</DropdownMenuItem>
-            <DropdownMenuItem>Einstellungen</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">Einstellungen</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-red-600"
