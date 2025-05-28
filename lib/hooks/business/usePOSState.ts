@@ -20,7 +20,7 @@ export type TransactionResult = {
 
 export function usePOSState() {
   // Tab und Such-States
-  const [activeTab, setActiveTab] = useState<ProductTab>("services")
+  const [activeTab, setActiveTab] = useState<ProductTab>("favorites")
   const [searchQuery, setSearchQuery] = useState("")
 
   // Dialog-States

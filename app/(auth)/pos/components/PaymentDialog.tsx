@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle, CreditCard, Loader2, Wallet } from "lucide-react"
+import { CheckCircle, CreditCard, Loader2, Wallet, Smartphone, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 import {
   Dialog,
   DialogContent,
@@ -79,65 +81,72 @@ export function PaymentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl flex items-center">
-            <CreditCard className="mr-2" />
-            Zahlung
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="pb-6">
+          <DialogTitle className="text-2xl font-bold flex items-center">
+            <div className="mr-3 p-2 bg-blue-100 rounded-xl">
+              <CreditCard className="text-blue-600" size={24} />
+            </div>
+            Zahlung abschließen
           </DialogTitle>
-          <DialogDescription>
-            Wählen Sie die Zahlungsmethode und schließen Sie den Verkauf ab.
+          <DialogDescription className="text-base text-gray-600">
+            Wählen Sie Ihre bevorzugte Zahlungsmethode und schließen Sie den Verkauf ab.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <Button
-              variant={selectedPaymentMethod === "cash" ? "default" : "outline"}
-              className={`flex flex-col items-center justify-center h-28 rounded-lg transition-all ${
-                selectedPaymentMethod === "cash" ? "ring-2 ring-primary shadow-md" : ""
-              }`}
-              onClick={() => onPaymentMethodChange("cash")}
-            >
-              <Wallet className="mb-2" size={28} />
-              <span className="text-base">Bar</span>
-            </Button>
-            <Button
-              variant={selectedPaymentMethod === "twint" ? "default" : "outline"}
-              className={`flex flex-col items-center justify-center h-28 rounded-lg transition-all ${
-                selectedPaymentMethod === "twint" ? "ring-2 ring-primary shadow-md" : ""
-              }`}
-              onClick={() => onPaymentMethodChange("twint")}
-            >
-              <svg 
-                className="mb-2" 
-                width="28" 
-                height="28" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
+        <div className="py-6 space-y-6">
+          {/* Payment Method Selection */}
+          <div>
+            <Label className="text-base font-semibold mb-4 block">Zahlungsmethode wählen</Label>
+            <div className="grid grid-cols-3 gap-3">
+              <Button
+                variant={selectedPaymentMethod === "cash" ? "default" : "outline"}
+                className={`flex flex-col items-center justify-center h-28 rounded-xl transition-all duration-200 ${
+                  selectedPaymentMethod === "cash" 
+                    ? "bg-green-600 hover:bg-green-700 text-white shadow-lg ring-2 ring-green-200" 
+                    : "hover:bg-green-50 hover:border-green-300"
+                }`}
+                onClick={() => onPaymentMethodChange("cash")}
               >
-                <path d="M5 7v10h14V7H5z" fill={selectedPaymentMethod === "twint" ? "white" : "currentColor"} />
-                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM7.5 12c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-6c-.83 0-1.5-.67-1.5-1.5S11.17 7.5 12 7.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" fill={selectedPaymentMethod === "twint" ? "white" : "currentColor"} />
-              </svg>
-              <span className="text-base">Twint</span>
-            </Button>
-            <Button
-              variant={selectedPaymentMethod === "sumup" ? "default" : "outline"}
-              className={`flex flex-col items-center justify-center h-28 rounded-lg transition-all ${
-                selectedPaymentMethod === "sumup" ? "ring-2 ring-primary shadow-md" : ""
-              }`}
-              onClick={() => onPaymentMethodChange("sumup")}
-            >
-              <CreditCard className="mb-2" size={28} />
-              <span className="text-base">SumUp</span>
-            </Button>
+                <Wallet className="mb-2" size={28} />
+                <span className="font-semibold">Bargeld</span>
+              </Button>
+              
+              <Button
+                variant={selectedPaymentMethod === "twint" ? "default" : "outline"}
+                className={`flex flex-col items-center justify-center h-28 rounded-xl transition-all duration-200 ${
+                  selectedPaymentMethod === "twint" 
+                    ? "bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg ring-2 ring-yellow-200" 
+                    : "hover:bg-yellow-50 hover:border-yellow-300 text-yellow-600"
+                }`}
+                onClick={() => onPaymentMethodChange("twint")}
+              >
+                <div className="mb-2 text-2xl font-bold">T</div>
+                <span className="font-semibold">TWINT</span>
+              </Button>
+              
+              <Button
+                variant={selectedPaymentMethod === "sumup" ? "default" : "outline"}
+                className={`flex flex-col items-center justify-center h-28 rounded-xl transition-all duration-200 ${
+                  selectedPaymentMethod === "sumup" 
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg ring-2 ring-blue-200" 
+                    : "hover:bg-blue-50 hover:border-blue-300"
+                }`}
+                onClick={() => onPaymentMethodChange("sumup")}
+              >
+                <CreditCard className="mb-2" size={28} />
+                <span className="font-semibold">SumUp</span>
+              </Button>
+            </div>
           </div>
 
+          {/* Cash Input Section */}
           {selectedPaymentMethod === "cash" && (
-            <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
-              <div className="space-y-2">
-                <Label htmlFor="cash-received" className="text-base">Erhaltener Betrag (CHF)</Label>
+            <div className="space-y-4 p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50">
+              <div className="space-y-3">
+                <Label htmlFor="cash-received" className="text-base font-semibold text-green-800">
+                  Erhaltener Betrag (CHF)
+                </Label>
                 <Input
                   id="cash-received"
                   type="number"
@@ -146,48 +155,58 @@ export function PaymentDialog({
                   placeholder="0.00"
                   value={cashReceived}
                   onChange={(e) => onCashReceivedChange(e.target.value)}
-                  className="text-lg py-6"
+                  className="text-xl py-4 bg-white/80 border-green-300 focus:border-green-500 focus:ring-green-500/20"
                 />
               </div>
 
               {cashReceived && Number.parseFloat(cashReceived) >= cartTotal && (
-                <div className="flex justify-between p-3 bg-green-100 rounded-lg border border-green-200">
-                  <span className="font-medium text-green-800">Rückgeld:</span>
-                  <span className="font-bold text-green-800">CHF {cashChange.toFixed(2)}</span>
+                <div className="p-4 bg-gradient-to-r from-green-100 to-green-200/80 rounded-lg border border-green-300/50">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-green-800">Rückgeld:</span>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-green-700">CHF {cashChange.toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          <div className="mt-6 p-4 bg-gray-100 rounded-lg border border-gray-200">
+          {/* Total Amount */}
+          <div className="p-6 bg-gradient-to-r from-gray-100/80 to-blue-100/40 rounded-xl border border-gray-200/50">
             <div className="flex justify-between items-center">
-              <span className="font-bold text-lg">Gesamtbetrag:</span>
-              <span className="font-bold text-xl">CHF {cartTotal.toFixed(2)}</span>
+              <div>
+                <span className="text-gray-600 text-sm">Zu zahlender Betrag</span>
+                <div className="font-bold text-xl text-gray-800">Gesamtbetrag</div>
+              </div>
+              <div className="text-right">
+                <span className="text-3xl font-bold text-blue-600">CHF {cartTotal.toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6">
           <Button 
             variant="outline" 
             onClick={onClose} 
-            className="w-full sm:w-auto text-base py-6"
+            className="w-full sm:w-auto py-4 text-base rounded-xl border-gray-300 hover:bg-gray-50"
           >
             Abbrechen
           </Button>
           <Button
             onClick={handlePayment}
             disabled={isPaymentDisabled}
-            className="w-full sm:w-auto text-base py-6"
+            className="w-full sm:flex-1 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl"
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
                 Wird verarbeitet...
               </>
             ) : (
               <>
-                <CheckCircle className="mr-2" size={18} />
+                <Zap className="mr-3 h-5 w-5" />
                 Zahlung abschließen
               </>
             )}

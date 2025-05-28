@@ -175,7 +175,6 @@ export default function POSPage() {
     <div className="flex flex-col h-[calc(100vh-8rem)] gap-4">
       {/* Universal Layout für alle Bildschirmgrößen */}
       <div className="flex flex-col md:flex-row h-full">
-        
         {/* Left side - Products/Services */}
         <ProductGrid
           activeTab={activeTab}

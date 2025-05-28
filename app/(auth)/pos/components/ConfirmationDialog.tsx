@@ -57,18 +57,21 @@ export function ConfirmationDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-center text-center text-xl">
-            <CheckCircle className="text-green-500 mr-2" size={28} />
-            Zahlung erfolgreich
+        <DialogHeader className="text-center pb-6">
+          <div className="mx-auto mb-4 p-3 bg-green-100 rounded-full w-fit">
+            <CheckCircle className="text-green-600" size={32} />
+          </div>
+          <DialogTitle className="text-2xl font-bold text-gray-800">
+            Zahlung erfolgreich!
           </DialogTitle>
+          <p className="text-gray-600 mt-2">Die Transaktion wurde erfolgreich abgeschlossen.</p>
         </DialogHeader>
 
         <div className="py-6">
           <div className="space-y-6">
-            <div className="p-5 bg-green-50 rounded-lg border border-green-200">
-              <div className="mb-4 pb-2 border-b border-green-200">
-                <h3 className="font-semibold text-green-800">Transaktionsdetails</h3>
+            <div className="p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50">
+              <div className="mb-4 pb-3 border-b border-green-200/50">
+                <h3 className="font-bold text-green-800 text-lg">Transaktionsdetails</h3>
               </div>
               
               <div className="flex justify-between mb-3">
@@ -97,27 +100,27 @@ export function ConfirmationDialog({
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <Button 
                 variant="outline" 
-                className="flex items-center justify-center py-6 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                className="flex items-center justify-center py-5 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-150 text-blue-700 border-blue-200 rounded-xl transition-all duration-200"
                 onClick={handleDownloadPDF}
                 disabled={!transactionResult?.receiptUrl}
               >
-                <Download className="mr-2" size={20} />
+                <Download className="mr-3" size={20} />
                 <div className="flex flex-col items-start">
-                  <span className="text-sm font-normal">Herunterladen</span>
-                  <span className="text-xs text-blue-600">PDF Quittung</span>
+                  <span className="text-sm font-semibold">PDF</span>
+                  <span className="text-xs text-blue-600">Herunterladen</span>
                 </div>
               </Button>
               <Button 
                 variant="outline" 
-                className="flex items-center justify-center py-6 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                className="flex items-center justify-center py-5 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-150 text-purple-700 border-purple-200 rounded-xl transition-all duration-200"
                 onClick={handleEmailSend}
               >
-                <Mail className="mr-2" size={20} />
+                <Mail className="mr-3" size={20} />
                 <div className="flex flex-col items-start">
-                  <span className="text-sm font-normal">Per E-Mail</span>
+                  <span className="text-sm font-semibold">E-Mail</span>
                   <span className="text-xs text-purple-600">Senden</span>
                 </div>
               </Button>
@@ -125,9 +128,12 @@ export function ConfirmationDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button onClick={onStartNewSale} className="w-full py-6 text-lg">
-            <CheckCircle className="mr-2" size={20} />
+        <DialogFooter className="pt-6">
+          <Button 
+            onClick={onStartNewSale} 
+            className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl"
+          >
+            <CheckCircle className="mr-3" size={20} />
             Neuer Verkauf starten
           </Button>
         </DialogFooter>
