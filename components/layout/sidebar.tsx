@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   BookOpen,
+  Settings,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -22,12 +23,13 @@ import { supabase } from "@/lib/supabase/client"
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart4 },
   { name: "Verkauf", href: "/pos", icon: ShoppingCart },
-  { name: "Tagesabschlüsse", href: "/reports/daily", icon: FileText },
+  { name: "Tagesabschluss", href: "/reports/daily", icon: FileText },
   { name: "Kassenbuch", href: "/reports/cash-register", icon: BookOpen },
   { name: "Monatsabschlüsse", href: "/reports/monthly", icon: BarChart4 },
   { name: "Produkte", href: "/products", icon: Package },
   { name: "Lieferantenrechnungen", href: "/supplier-invoices", icon: FileIcon },
   { name: "Dokumente", href: "/documents", icon: FolderClosed },
+  { name: "Einstellungen", href: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {

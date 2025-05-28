@@ -55,23 +55,23 @@ export function useDocuments() {
     }
   })
 
-  // Hilfsfunktion für Storage URL (GEFIXT: Signed URLs statt Public URLs)
+  // Hilfsfunktion für Storage URL (GEFIXT: Kein doppeltes documents/ Prefix)
   const getStorageUrl = async (filePath: string) => {
     try {
-      // Nur den Pfad ohne Bucket-Prefix verwenden
-      const path = filePath.startsWith('documents/') ? filePath : `documents/${filePath}`
+      // filePath ist bereits korrekt (z.B. "receipts/receipt_*.pdf")
+      // NICHT nochmal documents/ hinzufügen!
       
       // Signed URL für das PDF abrufen (funktioniert auch bei private buckets)
       const { data: urlData, error: urlError } = await supabase.storage
         .from('documents')
-        .createSignedUrl(path, 3600) // URL gültig für 1 Stunde
+        .createSignedUrl(filePath, 3600) // URL gültig für 1 Stunde
       
       if (urlError) {
         console.error("Fehler beim Erstellen der Signed URL:", urlError)
         // Fallback auf Public URL versuchen
         const { data: publicData } = await supabase.storage
           .from('documents')
-          .getPublicUrl(path)
+          .getPublicUrl(filePath)
         return publicData.publicUrl
       }
       

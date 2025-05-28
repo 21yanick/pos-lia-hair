@@ -134,6 +134,11 @@ export type Database = {
           type: 'receipt' | 'daily_report' | 'monthly_report' | 'yearly_report' | 'expense_receipt'
           reference_id: string
           file_path: string
+          file_name: string | null
+          file_size: number | null
+          mime_type: string | null
+          reference_type: 'sale' | 'expense' | 'report' | null
+          notes: string | null
           payment_method: 'cash' | 'twint' | 'sumup' | 'bank' | null
           document_date: string
           user_id: string
@@ -144,6 +149,11 @@ export type Database = {
           type: 'receipt' | 'daily_report' | 'monthly_report' | 'yearly_report' | 'expense_receipt'
           reference_id: string
           file_path: string
+          file_name?: string | null
+          file_size?: number | null
+          mime_type?: string | null
+          reference_type?: 'sale' | 'expense' | 'report' | null
+          notes?: string | null
           payment_method?: 'cash' | 'twint' | 'sumup' | 'bank' | null
           document_date: string
           user_id: string
@@ -154,6 +164,11 @@ export type Database = {
           type?: 'receipt' | 'daily_report' | 'monthly_report' | 'yearly_report' | 'expense_receipt'
           reference_id?: string
           file_path?: string
+          file_name?: string | null
+          file_size?: number | null
+          mime_type?: string | null
+          reference_type?: 'sale' | 'expense' | 'report' | null
+          notes?: string | null
           payment_method?: 'cash' | 'twint' | 'sumup' | 'bank' | null
           document_date?: string
           user_id?: string

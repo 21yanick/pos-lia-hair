@@ -215,7 +215,7 @@ export default function DocumentsPage() {
           <TabsList className="grid grid-cols-5 w-full md:w-auto">
             <TabsTrigger value="all">Alle</TabsTrigger>
             <TabsTrigger value="receipts">Quittungen</TabsTrigger>
-            <TabsTrigger value="daily-reports">Tagesabschlüsse</TabsTrigger>
+            <TabsTrigger value="daily-reports">Tagesabschluss</TabsTrigger>
             <TabsTrigger value="monthly-reports">Monatsabschlüsse</TabsTrigger>
             <TabsTrigger value="supplier-invoices">Ausgabenbelege</TabsTrigger>
           </TabsList>
@@ -249,7 +249,7 @@ export default function DocumentsPage() {
                       activeTab === "receipts"
                         ? "Quittungen"
                         : activeTab === "daily-reports"
-                          ? "Tagesabschlüsse"
+                          ? "Tagesabschluss"
                           : activeTab === "monthly-reports"
                             ? "Monatsabschlüsse"
                             : "Ausgabenbelege"

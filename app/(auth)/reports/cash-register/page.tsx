@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { ArrowDownRight, Download, Search, Calendar, Loader2, RefreshCw, ArrowUpRight, ReceiptIcon } from "lucide-react"
+import { ArrowDownRight, Download, Search, Calendar, Loader2, RefreshCw, ArrowUpRight, ReceiptIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { useToast } from "@/lib/hooks/core/useToast"
 import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
 import { format } from "date-fns"
@@ -27,7 +27,7 @@ export default function CashRegisterPage() {
   const [currentBalance, setCurrentBalance] = useState<number | null>(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [currentMonth] = useState<Date>(getTodaySwiss())
+  const [currentMonth, setCurrentMonth] = useState<Date>(getTodaySwiss())
   const [summary, setSummary] = useState({
     monthlyIncome: 0,
     monthlyExpense: 0
@@ -80,6 +80,9 @@ export default function CashRegisterPage() {
         } else {
           console.error('🏦 Kassenbuch Fehler:', movementsResult.error)
         }
+        
+        // Entries nach Datum sortieren (älteste zuerst für korrekte Saldo-Berechnung)
+        allEntries.sort((a, b) => new Date(a.created_at || a.date).getTime() - new Date(b.created_at || b.date).getTime())
         
         setEntries(allEntries)
         
@@ -174,6 +177,23 @@ export default function CashRegisterPage() {
       return "--:--"
     }
   }
+
+  // Navigation functions
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
+  }
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
+  }
+
+  const goToCurrentMonth = () => {
+    setCurrentMonth(getTodaySwiss())
+  }
+
+  // Check if current month is selected
+  const isCurrentMonth = currentMonth.getMonth() === getTodaySwiss().getMonth() && 
+                         currentMonth.getFullYear() === getTodaySwiss().getFullYear()
 
   return (
     <div className="space-y-6">
@@ -294,9 +314,42 @@ export default function CashRegisterPage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <div className="text-sm font-medium bg-blue-100 px-3 py-2 rounded border border-blue-200 text-blue-800">
-                {format(currentMonth, "MMMM yyyy", { locale: de })}
+              {/* Month Navigation */}
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={goToPreviousMonth}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+                
+                <div className="text-sm font-medium bg-blue-100 px-3 py-2 rounded border border-blue-200 text-blue-800 min-w-[120px] text-center">
+                  {format(currentMonth, "MMMM yyyy", { locale: de })}
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={goToNextMonth}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight size={16} />
+                </Button>
               </div>
+              
+              {/* Jump to current month button */}
+              {!isCurrentMonth && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={goToCurrentMonth}
+                  className="text-xs"
+                >
+                  Aktueller Monat
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -330,41 +383,72 @@ export default function CashRegisterPage() {
                 </TableHeader>
                 <TableBody>
                   {/* Einträge werden nach Erstellungsdatum absteigend angezeigt (neueste zuerst) */}
-                  {entries
-                    .filter(entry => searchTerm === "" || entry.description.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map((entry: any) => (
-                    <TableRow 
-                      key={entry.id} 
-                      className="border-b hover:bg-gray-50 transition-colors"
-                    >
-                      <TableCell className="text-gray-700">{formatDate(entry.date)}</TableCell>
-                      <TableCell className="text-gray-700">{formatTime(entry.created_at)}</TableCell>
-                      <TableCell className="text-gray-700 font-medium">{entry.description}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          {entry.type === "cash_in" ? (
-                            <div className="flex items-center bg-green-100 px-2 py-1 rounded-full text-sm">
-                              <ArrowUpRight className="mr-1 text-green-600" size={14} />
-                              <span className="text-green-800">Einnahme</span>
+                  {(() => {
+                    const filteredEntries = entries.filter(entry => searchTerm === "" || entry.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                    
+                    // Für laufenden Saldo: Startpunkt berechnen
+                    // (Aktueller Saldo minus alle Bewegungen dieses Monats)
+                    const monthlyChange = filteredEntries.reduce((sum, entry) => {
+                      return sum + (entry.type === 'cash_in' ? entry.amount : -entry.amount)
+                    }, 0)
+                    const startBalance = (currentBalance || 0) - monthlyChange
+                    
+                    // Entries in chronologischer Reihenfolge für Saldo-Berechnung
+                    const chronologicalEntries = [...filteredEntries].sort((a, b) => 
+                      new Date(a.created_at || a.date).getTime() - new Date(b.created_at || b.date).getTime()
+                    )
+                    
+                    // Für Anzeige: neueste zuerst
+                    const displayEntries = [...filteredEntries].sort((a, b) => 
+                      new Date(b.created_at || b.date).getTime() - new Date(a.created_at || a.date).getTime()
+                    )
+                    
+                    return displayEntries.map((entry: any, displayIndex: number) => {
+                      // Finde Index in chronologischer Liste für Saldo-Berechnung
+                      const chronoIndex = chronologicalEntries.findIndex(e => e.id === entry.id)
+                      
+                      // Berechne laufenden Saldo bis zu diesem Punkt
+                      let runningBalance = startBalance
+                      for (let i = 0; i <= chronoIndex; i++) {
+                        const e = chronologicalEntries[i]
+                        runningBalance += e.type === 'cash_in' ? e.amount : -e.amount
+                      }
+                      
+                      return (
+                        <TableRow 
+                          key={entry.id} 
+                          className="border-b hover:bg-gray-50 transition-colors"
+                        >
+                          <TableCell className="text-gray-700">{formatDate(entry.date)}</TableCell>
+                          <TableCell className="text-gray-700">{formatTime(entry.created_at)}</TableCell>
+                          <TableCell className="text-gray-700 font-medium">{entry.description}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {entry.type === "cash_in" ? (
+                                <div className="flex items-center bg-green-100 px-2 py-1 rounded-full text-sm">
+                                  <ArrowUpRight className="mr-1 text-green-600" size={14} />
+                                  <span className="text-green-800">Einnahme</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center bg-red-100 px-2 py-1 rounded-full text-sm">
+                                  <ArrowDownRight className="mr-1 text-red-600" size={14} />
+                                  <span className="text-red-800">Ausgabe</span>
+                                </div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="flex items-center bg-red-100 px-2 py-1 rounded-full text-sm">
-                              <ArrowDownRight className="mr-1 text-red-600" size={14} />
-                              <span className="text-red-800">Ausgabe</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-medium ${entry.type === "cash_in" ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {entry.type === "cash_in" ? "+" : "-"} CHF {entry.amount.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-gray-800">
-                        CHF {currentBalance ? currentBalance.toFixed(2) : "0.00"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          </TableCell>
+                          <TableCell
+                            className={`text-right font-medium ${entry.type === "cash_in" ? "text-green-600" : "text-red-600"}`}
+                          >
+                            {entry.type === "cash_in" ? "+" : "-"} CHF {entry.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-gray-800">
+                            CHF {runningBalance.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  })()}
 
                   {!loading && entries.length === 0 && (
                     <TableRow>

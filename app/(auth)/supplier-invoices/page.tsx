@@ -28,6 +28,7 @@ export default function ExpensesPage() {
     calculateExpenseStats,
     getExpensesByCategory,
     uploadExpenseReceipt,
+    generatePlaceholderReceipt,
     EXPENSE_CATEGORIES
   } = useExpenses()
   
@@ -36,6 +37,8 @@ export default function ExpensesPage() {
   // State für neue Ausgabe
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [receiptType, setReceiptType] = useState<'upload' | 'physical'>('upload')
+  const [archiveLocation, setArchiveLocation] = useState('')
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -54,7 +57,7 @@ export default function ExpensesPage() {
   
   // Lade Ausgaben beim Start
   useEffect(() => {
-    loadCurrentMonthExpenses()
+    loadExpenses() // Lädt alle Ausgaben statt nur aktueller Monat
   }, [])
   
   // Fehlerbehandlung
@@ -80,10 +83,10 @@ export default function ExpensesPage() {
       return
     }
 
-    if (!selectedFile) {
+    if (receiptType === 'upload' && !selectedFile) {
       toast({
         title: "Fehler", 
-        description: "Bitte laden Sie einen Beleg hoch. Ohne Beleg kann keine Ausgabe erstellt werden.",
+        description: "Bitte laden Sie einen Beleg hoch oder wählen Sie 'Physischer Beleg'.",
         variant: "destructive"
       })
       return
@@ -100,7 +103,8 @@ export default function ExpensesPage() {
       return
     }
     
-    const result = await createExpense({
+    // Create expense data
+    const expenseData = {
       amount: parseFloat(formData.amount),
       description: formData.description,
       category: formData.category as ExpenseCategory,
@@ -110,12 +114,39 @@ export default function ExpensesPage() {
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
       user_id: userData.user.id
-    }, selectedFile) // Pass the file to createExpense
+    }
+
+    let result
+    if (receiptType === 'upload' && selectedFile) {
+      // Traditional upload flow
+      result = await createExpense(expenseData, selectedFile)
+    } else {
+      // Physical receipt flow - create expense without file first
+      result = await createExpense(expenseData)
+      
+      if (result.success) {
+        // Then generate placeholder receipt
+        const placeholderResult = await generatePlaceholderReceipt(
+          result.expense.id, 
+          archiveLocation || undefined
+        )
+        
+        if (!placeholderResult.success) {
+          toast({
+            title: "Warnung",
+            description: "Ausgabe erstellt, aber Platzhalter-Beleg konnte nicht generiert werden.",
+            variant: "destructive"
+          })
+        }
+      }
+    }
     
     if (result.success) {
       toast({
         title: "Erfolg",
-        description: "Ausgabe und Beleg wurden erfolgreich erstellt."
+        description: receiptType === 'upload' 
+          ? "Ausgabe und Beleg wurden erfolgreich erstellt."
+          : "Ausgabe und Platzhalter-Beleg wurden erfolgreich erstellt."
       })
       setIsDialogOpen(false)
       setFormData({
@@ -128,7 +159,9 @@ export default function ExpensesPage() {
         invoice_number: '',
         notes: ''
       })
-      setSelectedFile(null) // Reset file selection
+      setSelectedFile(null)
+      setReceiptType('upload')
+      setArchiveLocation('')
     }
   }
   
@@ -273,36 +306,88 @@ export default function ExpensesPage() {
                 />
               </div>
 
-              {/* Beleg Upload - PFLICHTFELD */}
-              <div className="space-y-2">
-                <Label htmlFor="receipt-upload">Beleg hochladen *</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <input
-                    id="receipt-upload"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="hidden"
-                    required
-                  />
-                  <label 
-                    htmlFor="receipt-upload" 
-                    className="cursor-pointer flex flex-col items-center space-y-2"
-                  >
-                    <Upload className="h-8 w-8 text-gray-400" />
-                    {selectedFile ? (
-                      <div className="text-sm">
-                        <p className="font-medium text-green-600">✓ {selectedFile.name}</p>
-                        <p className="text-gray-500">Klicken zum Ändern</p>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500">
-                        <p className="font-medium">Rechnung oder Beleg hochladen</p>
-                        <p>PDF, JPG, PNG (max. 10MB)</p>
-                      </div>
-                    )}
-                  </label>
+              {/* Beleg-Optionen */}
+              <div className="space-y-4">
+                <Label>Beleg-Verwaltung *</Label>
+                
+                {/* Receipt Type Selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="receipt-upload"
+                      name="receiptType"
+                      value="upload"
+                      checked={receiptType === 'upload'}
+                      onChange={(e) => setReceiptType(e.target.value as 'upload' | 'physical')}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <Label htmlFor="receipt-upload" className="cursor-pointer">
+                      Digitalen Beleg hochladen
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="receipt-physical"
+                      name="receiptType"
+                      value="physical"
+                      checked={receiptType === 'physical'}
+                      onChange={(e) => setReceiptType(e.target.value as 'upload' | 'physical')}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <Label htmlFor="receipt-physical" className="cursor-pointer">
+                      Physischer Beleg vorhanden
+                    </Label>
+                  </div>
                 </div>
+
+                {/* Upload Section - nur wenn Upload gewählt */}
+                {receiptType === 'upload' && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input
+                      id="file-upload"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <label 
+                      htmlFor="file-upload" 
+                      className="cursor-pointer flex flex-col items-center space-y-2"
+                    >
+                      <Upload className="h-8 w-8 text-gray-400" />
+                      {selectedFile ? (
+                        <div className="text-sm">
+                          <p className="font-medium text-green-600">✓ {selectedFile.name}</p>
+                          <p className="text-gray-500">Klicken zum Ändern</p>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          <p className="font-medium">Rechnung oder Beleg hochladen</p>
+                          <p>PDF, JPG, PNG (max. 10MB)</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                )}
+
+                {/* Archive Location - nur wenn Physical gewählt */}
+                {receiptType === 'physical' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="archive-location">Archiv-Standort (optional)</Label>
+                    <Input
+                      id="archive-location"
+                      value={archiveLocation}
+                      onChange={(e) => setArchiveLocation(e.target.value)}
+                      placeholder="z.B. Ordner 2025-A, Aktenschrank 3, etc."
+                    />
+                    <p className="text-xs text-gray-500">
+                      📁 Es wird automatisch ein Platzhalter-PDF erstellt mit Verweis auf den physischen Beleg.
+                    </p>
+                  </div>
+                )}
               </div>
               
               <DialogFooter>
