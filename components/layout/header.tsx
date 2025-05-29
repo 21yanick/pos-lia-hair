@@ -41,7 +41,7 @@ export function Header() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 py-3 px-4 md:px-6 flex items-center justify-between">
+    <header className="bg-background border-b border-border py-3 px-4 md:px-6 flex items-center justify-between">
       <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
 
       <div className="flex items-center space-x-3">
@@ -65,7 +65,7 @@ export function Header() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              className="text-red-600"
+              className="text-destructive"
               onClick={async () => {
                 const { error } = await supabase.auth.signOut()
                 if (!error) {

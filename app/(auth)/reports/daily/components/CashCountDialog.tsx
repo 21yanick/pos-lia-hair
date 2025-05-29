@@ -90,7 +90,7 @@ export function CashCountDialog({
 
           <div className="py-4">
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded">
+              <div className="p-4 bg-muted/50 rounded">
                 <div className="flex justify-between mb-2">
                   <span>Erwarteter Bargeldbestand:</span>
                   <span className="font-medium">CHF {expectedCash.toFixed(2)}</span>
@@ -104,10 +104,10 @@ export function CashCountDialog({
                   <span
                     className={`font-medium ${
                       difference === 0 
-                        ? "text-green-600" 
+                        ? "text-success" 
                         : difference > 0 
-                        ? "text-blue-600" 
-                        : "text-red-600"
+                        ? "text-primary" 
+                        : "text-destructive"
                     }`}
                   >
                     CHF {difference.toFixed(2)}
@@ -119,8 +119,8 @@ export function CashCountDialog({
                 <div
                   className={`flex items-start p-3 rounded ${
                     difference > 0 
-                      ? "bg-blue-50 text-blue-700" 
-                      : "bg-red-50 text-red-700"
+                      ? "bg-primary/10 text-primary" 
+                      : "bg-destructive/10 text-destructive"
                   }`}
                 >
                   <AlertTriangle className="mr-2 mt-0.5 flex-shrink-0" size={16} />
@@ -135,7 +135,7 @@ export function CashCountDialog({
               {notes && (
                 <div className="space-y-2">
                   <Label>Notizen:</Label>
-                  <div className="p-3 bg-gray-50 rounded text-sm">{notes}</div>
+                  <div className="p-3 bg-muted/50 rounded text-sm">{notes}</div>
                 </div>
               )}
             </div>

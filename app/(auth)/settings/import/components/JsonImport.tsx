@@ -103,7 +103,7 @@ export function JsonImport() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <FileJson className="h-5 w-5 text-blue-600" />
+            <FileJson className="h-5 w-5 text-primary" />
             <CardTitle>JSON Import</CardTitle>
           </div>
           <Badge variant="secondary">Phase 1 - MVP</Badge>
@@ -117,8 +117,8 @@ export function JsonImport() {
         {/* File Upload */}
         {state.status === 'idle' && (
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+              <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <div className="space-y-2">
                 <p className="text-sm font-medium">JSON-Datei auswählen</p>
                 <p className="text-xs text-muted-foreground">
@@ -173,21 +173,21 @@ export function JsonImport() {
             <h4 className="font-medium">Daten-Vorschau</h4>
             <div className="grid gap-4 md:grid-cols-3">
               {jsonData.items && (
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="font-medium text-blue-800">Produkte</p>
-                  <p className="text-2xl font-bold text-blue-600">{jsonData.items.length}</p>
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <p className="font-medium text-primary-foreground">Produkte</p>
+                  <p className="text-2xl font-bold text-primary">{jsonData.items.length}</p>
                 </div>
               )}
               {jsonData.sales && (
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <p className="font-medium text-green-800">Verkäufe</p>
-                  <p className="text-2xl font-bold text-green-600">{jsonData.sales.length}</p>
+                <div className="bg-success/10 p-3 rounded-lg">
+                  <p className="font-medium text-success-foreground">Verkäufe</p>
+                  <p className="text-2xl font-bold text-success">{jsonData.sales.length}</p>
                 </div>
               )}
               {jsonData.expenses && (
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <p className="font-medium text-orange-800">Ausgaben</p>
-                  <p className="text-2xl font-bold text-orange-600">{jsonData.expenses.length}</p>
+                <div className="bg-warning/10 p-3 rounded-lg">
+                  <p className="font-medium text-warning-foreground">Ausgaben</p>
+                  <p className="text-2xl font-bold text-warning">{jsonData.expenses.length}</p>
                 </div>
               )}
             </div>
@@ -269,7 +269,7 @@ export function JsonImport() {
 
         {/* JSON Format Info */}
         {state.status === 'idle' && !jsonData && (
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-muted/50 p-4 rounded-lg">
             <h4 className="font-medium mb-2">Erwartetes JSON-Format:</h4>
             <pre className="text-xs text-muted-foreground overflow-x-auto">
 {`{

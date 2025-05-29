@@ -129,11 +129,11 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
             {documents.map((doc) => {
               const IconComponent = doc.icon
               return (
-                <tr key={doc.id} className="border-b hover:bg-gray-50 transition-colors">
+                <tr key={doc.id} className="border-b hover:bg-muted/30 transition-colors">
                   <td className="p-3">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
-                        {IconComponent && <IconComponent className="h-5 w-5 text-blue-600" />}
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        {IconComponent && <IconComponent className="h-5 w-5 text-primary" />}
                       </div>
                       <div className="truncate font-medium max-w-xs">
                         {doc.displayName || doc.file_path?.split('/').pop()}
@@ -145,12 +145,12 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
                       {getDocumentTypeName(doc.type)}
                     </Badge>
                   </td>
-                  <td className="p-3 text-sm text-gray-600">
+                  <td className="p-3 text-sm text-muted-foreground">
                     <div className="truncate max-w-xs">
                       {doc.description || '-'}
                     </div>
                   </td>
-                  <td className="p-3 text-sm text-gray-500">
+                  <td className="p-3 text-sm text-muted-foreground">
                     {doc.created_at ? formatDisplayDate(doc.created_at) : '-'}
                   </td>
                   <td className="p-3">
@@ -198,7 +198,7 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
                               variant="ghost" 
                               size="icon" 
                               onClick={() => handleDelete(doc.id)}
-                              className="hover:text-red-600"
+                              className="hover:text-destructive"
                             >
                               <Trash2 size={16} />
                             </Button>
@@ -228,7 +228,7 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
               Löschen
             </AlertDialogAction>
           </AlertDialogFooter>

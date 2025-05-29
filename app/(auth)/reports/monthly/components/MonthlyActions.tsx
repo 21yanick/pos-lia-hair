@@ -94,19 +94,19 @@ export function MonthlyActions({
 
           <div className="space-y-4 py-4">
             {/* Zusammenfassung */}
-            <div className="p-4 bg-gray-50 rounded">
+            <div className="p-4 bg-muted/50 rounded">
               <h4 className="font-medium mb-3">Zusammenfassung</h4>
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-green-600">Gesamtumsatz:</span>
-                  <span className="font-medium text-green-600">CHF {stats.salesTotal.toFixed(2)}</span>
+                  <span className="text-success">Gesamtumsatz:</span>
+                  <span className="font-medium text-success">CHF {stats.salesTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>├── Bar:</span>
                   <span>CHF {stats.salesCash.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>├── TWINT:</span>
                   <span>CHF {stats.salesTwint.toFixed(2)}</span>
                 </div>
@@ -116,14 +116,14 @@ export function MonthlyActions({
                 </div>
 
                 <div className="flex justify-between border-t pt-2">
-                  <span className="text-red-600">Gesamtausgaben:</span>
-                  <span className="font-medium text-red-600">CHF {stats.expensesTotal.toFixed(2)}</span>
+                  <span className="text-destructive">Gesamtausgaben:</span>
+                  <span className="font-medium text-destructive">CHF {stats.expensesTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>├── Bar:</span>
                   <span>CHF {stats.expensesCash.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>└── Bank:</span>
                   <span>CHF {stats.expensesBank.toFixed(2)}</span>
                 </div>

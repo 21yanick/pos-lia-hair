@@ -79,7 +79,7 @@ export default function ImportPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <FileJson className="h-5 w-5 text-blue-600" />
+                    <FileJson className="h-5 w-5 text-primary" />
                     <CardTitle className="text-lg">JSON Import</CardTitle>
                   </div>
                   <Badge variant="default">Verfügbar</Badge>
@@ -110,7 +110,7 @@ export default function ImportPage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-center space-x-2">
-                  <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                  <FileSpreadsheet className="h-5 w-5 text-success" />
                   <CardTitle className="text-lg">CSV Import</CardTitle>
                 </div>
                 <CardDescription>
@@ -137,7 +137,7 @@ export default function ImportPage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-center space-x-2">
-                  <Database className="h-5 w-5 text-purple-600" />
+                  <Database className="h-5 w-5 text-metric-yearly" />
                   <CardTitle className="text-lg">Test-Daten</CardTitle>
                 </div>
                 <CardDescription>
@@ -179,22 +179,22 @@ export default function ImportPage() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Benutzer</p>
-                  <p className="text-2xl font-bold text-blue-600">2</p>
+                  <p className="text-2xl font-bold text-primary">2</p>
                   <p className="text-xs text-muted-foreground">System + Admin</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Produkte</p>
-                  <p className="text-2xl font-bold text-green-600">10</p>
+                  <p className="text-2xl font-bold text-success">10</p>
                   <p className="text-xs text-muted-foreground">Shared Catalog</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Verkäufe</p>
-                  <p className="text-2xl font-bold text-gray-400">0</p>
+                  <p className="text-2xl font-bold text-muted-foreground">0</p>
                   <p className="text-xs text-muted-foreground">Bereit für Import</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Ausgaben</p>
-                  <p className="text-2xl font-bold text-gray-400">0</p>
+                  <p className="text-2xl font-bold text-muted-foreground">0</p>
                   <p className="text-xs text-muted-foreground">Bereit für Import</p>
                 </div>
               </div>
@@ -205,13 +205,13 @@ export default function ImportPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-orange-500" />
+                <AlertCircle className="h-5 w-5 text-warning" />
                 <span>Wichtige Hinweise</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <h4 className="font-medium text-green-600">✅ Business-Centric Vorteile</h4>
+                <h4 className="font-medium text-success">✅ Business-Centric Vorteile</h4>
                 <ul className="text-sm text-muted-foreground space-y-1 ml-4">
                   <li>• Produkte sind shared resources - keine user_id erforderlich</li>
                   <li>• System User für automatische Daily Summary Berechnung</li>
@@ -220,7 +220,7 @@ export default function ImportPage() {
               </div>
               
               <div className="space-y-2">
-                <h4 className="font-medium text-blue-600">📋 Unterstützte Formate</h4>
+                <h4 className="font-medium text-primary">📋 Unterstützte Formate</h4>
                 <ul className="text-sm text-muted-foreground space-y-1 ml-4">
                   <li>• JSON: Vollständiger strukturierter Import (empfohlen)</li>
                   <li>• CSV: Einzelne Tabellen (Phase 3)</li>
@@ -229,7 +229,7 @@ export default function ImportPage() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-orange-600">⚠️ Vorsichtsmaßnahmen</h4>
+                <h4 className="font-medium text-warning">⚠️ Vorsichtsmaßnahmen</h4>
                 <ul className="text-sm text-muted-foreground space-y-1 ml-4">
                   <li>• Backup wird automatisch erstellt vor Import</li>
                   <li>• Validierung verhindert ungültige Daten</li>

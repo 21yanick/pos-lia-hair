@@ -25,11 +25,11 @@ export function MonthlyStats({ data, loading = false }: MonthlyStatsProps) {
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="pb-2">
-              <div className="h-4 bg-gray-200 animate-pulse rounded" />
+              <div className="h-4 bg-muted animate-pulse rounded" />
             </CardHeader>
             <CardContent>
-              <div className="h-8 bg-gray-200 animate-pulse rounded mb-2" />
-              <div className="h-3 bg-gray-200 animate-pulse rounded" />
+              <div className="h-8 bg-muted animate-pulse rounded mb-2" />
+              <div className="h-3 bg-muted animate-pulse rounded" />
             </CardContent>
           </Card>
         ))}
@@ -44,11 +44,11 @@ export function MonthlyStats({ data, loading = false }: MonthlyStatsProps) {
       {/* Monatsumsatz */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-500">Monatsumsatz</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Monatsumsatz</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">CHF {data.salesTotal.toFixed(2)}</div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {data.transactionDays} von {data.daysInMonth} Tagen
           </p>
         </CardContent>
@@ -57,11 +57,11 @@ export function MonthlyStats({ data, loading = false }: MonthlyStatsProps) {
       {/* Bar-Umsätze */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-500">Bar-Umsätze</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Bar-Umsätze</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">CHF {data.salesCash.toFixed(2)}</div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {data.salesTotal > 0 ? ((data.salesCash / data.salesTotal) * 100).toFixed(0) : 0}% vom Umsatz
           </p>
         </CardContent>
@@ -70,11 +70,11 @@ export function MonthlyStats({ data, loading = false }: MonthlyStatsProps) {
       {/* Karten-Umsätze */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-500">Karten-Umsätze</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Karten-Umsätze</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">CHF {cardsRevenue.toFixed(2)}</div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             TWINT: {data.salesTwint.toFixed(0)} | SumUp: {data.salesSumup.toFixed(0)}
           </p>
         </CardContent>
@@ -83,11 +83,11 @@ export function MonthlyStats({ data, loading = false }: MonthlyStatsProps) {
       {/* Ausgaben */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-500">Ausgaben</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Ausgaben</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">CHF {data.expensesTotal.toFixed(2)}</div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Bar: {data.expensesCash.toFixed(0)} | Bank: {data.expensesBank.toFixed(0)}
           </p>
         </CardContent>

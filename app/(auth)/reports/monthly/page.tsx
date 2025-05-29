@@ -295,7 +295,7 @@ export default function MonthlyReportPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Monatsabschluss</h1>
-          <p className="text-gray-500">{formattedMonthYear}</p>
+          <p className="text-muted-foreground">{formattedMonthYear}</p>
         </div>
 
         <div className="flex items-center gap-2">

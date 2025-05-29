@@ -32,10 +32,10 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
             {[...Array(8)].map((_, i) => (
               <div key={i} className="flex justify-between items-center p-3 border rounded">
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 animate-pulse rounded w-24" />
-                  <div className="h-3 bg-gray-200 animate-pulse rounded w-32" />
+                  <div className="h-4 bg-muted animate-pulse rounded w-24" />
+                  <div className="h-3 bg-muted animate-pulse rounded w-32" />
                 </div>
-                <div className="h-6 bg-gray-200 animate-pulse rounded w-20" />
+                <div className="h-6 bg-muted animate-pulse rounded w-20" />
               </div>
             ))}
           </div>
@@ -52,7 +52,7 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
         </CardHeader>
         <CardContent>
           <div className="h-40 flex items-center justify-center">
-            <p className="text-gray-500">Keine Aktivitäten verfügbar.</p>
+            <p className="text-muted-foreground">Keine Aktivitäten verfügbar.</p>
           </div>
         </CardContent>
       </Card>
@@ -80,24 +80,24 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
 
   const getActivityIcon = (activity: ActivityItem) => {
     if (activity.type === 'sale') {
-      return <ShoppingCart size={16} className="text-green-600" />
+      return <ShoppingCart size={16} className="text-success" />
     } else {
-      return <TrendingDown size={16} className="text-red-600" />
+      return <TrendingDown size={16} className="text-destructive" />
     }
   }
 
   const getPaymentMethodIcon = (paymentMethod: string) => {
     switch (paymentMethod) {
       case 'cash':
-        return <Wallet size={14} className="text-green-600" />
+        return <Wallet size={14} className="text-payment-cash" />
       case 'twint':
-        return <Wallet size={14} className="text-purple-600" />
+        return <Wallet size={14} className="text-payment-twint" />
       case 'sumup':
-        return <CreditCard size={14} className="text-blue-600" />
+        return <CreditCard size={14} className="text-payment-sumup" />
       case 'bank':
-        return <CreditCard size={14} className="text-blue-600" />
+        return <CreditCard size={14} className="text-payment-sumup" />
       default:
-        return <Receipt size={14} className="text-gray-600" />
+        return <Receipt size={14} className="text-muted-foreground" />
     }
   }
 
@@ -131,8 +131,8 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
           {sortedActivities.map((activity) => (
             <div 
               key={activity.id} 
-              className={`flex justify-between items-center p-3 border rounded-md hover:bg-gray-50 ${
-                activity.type === 'expense' ? 'border-l-4 border-l-red-200' : 'border-l-4 border-l-green-200'
+              className={`flex justify-between items-center p-3 border rounded-md hover:bg-accent ${
+                activity.type === 'expense' ? 'border-l-4 border-l-destructive/20' : 'border-l-4 border-l-success/20'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -149,10 +149,10 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
                       {getActivityDescription(activity)}
                     </Badge>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     {activity.description}
                   </div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
                     {getPaymentMethodIcon(activity.paymentMethod)}
                     {getPaymentMethodLabel(activity.paymentMethod)}
                   </div>
@@ -160,7 +160,7 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
               </div>
               <div className="text-right">
                 <div className={`font-medium ${
-                  activity.type === 'sale' ? 'text-green-600' : 'text-red-600'
+                  activity.type === 'sale' ? 'text-success' : 'text-destructive'
                 }`}>
                   {activity.type === 'sale' ? '+' : '-'}CHF {Math.abs(activity.amount).toFixed(2)}
                 </div>

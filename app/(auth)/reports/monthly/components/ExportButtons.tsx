@@ -34,7 +34,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
       label: 'Einnahmen Bar',
       icon: <Wallet size={16} />,
       description: `CHF ${stats.salesCash.toFixed(2)}`,
-      color: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200',
+      color: 'bg-payment-cash/10 hover:bg-payment-cash/20 text-payment-cash border-payment-cash/20',
       getValue: () => stats.salesCash
     },
     {
@@ -42,7 +42,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
       label: 'Einnahmen TWINT',
       icon: <Wallet size={16} />,
       description: `CHF ${stats.salesTwint.toFixed(2)}`,
-      color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200',
+      color: 'bg-payment-twint/10 hover:bg-payment-twint/20 text-payment-twint border-payment-twint/20',
       getValue: () => stats.salesTwint
     },
     {
@@ -50,7 +50,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
       label: 'Einnahmen SumUp',
       icon: <CreditCard size={16} />,
       description: `CHF ${stats.salesSumup.toFixed(2)}`,
-      color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200',
+      color: 'bg-payment-sumup/10 hover:bg-payment-sumup/20 text-payment-sumup border-payment-sumup/20',
       getValue: () => stats.salesSumup
     },
     {
@@ -58,7 +58,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
       label: 'Ausgaben Bar',
       icon: <TrendingDown size={16} />,
       description: `CHF ${stats.expensesCash.toFixed(2)}`,
-      color: 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200',
+      color: 'bg-warning/10 hover:bg-warning/20 text-warning border-warning/20',
       getValue: () => stats.expensesCash
     },
     {
@@ -66,7 +66,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
       label: 'Ausgaben Bank',
       icon: <CreditCard size={16} />,
       description: `CHF ${stats.expensesBank.toFixed(2)}`,
-      color: 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200',
+      color: 'bg-destructive/10 hover:bg-destructive/20 text-destructive border-destructive/20',
       getValue: () => stats.expensesBank
     },
     {
@@ -74,7 +74,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
       label: 'Kompletter Monat',
       icon: <FileText size={16} />,
       description: 'Alles chronologisch',
-      color: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200',
+      color: 'bg-muted hover:bg-muted/80 text-foreground border-border',
       getValue: () => stats.salesTotal + stats.expensesTotal
     }
   ]
@@ -139,7 +139,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
                   {config.label}
                 </div>
                 <div className="text-sm font-normal">{config.description}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-muted-foreground">
                   {filteredCount} Einträge
                 </div>
               </Button>
@@ -147,7 +147,7 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
           })}
         </div>
         
-        <div className="mt-4 text-sm text-gray-500">
+        <div className="mt-4 text-sm text-muted-foreground">
           <p>💡 Tipp: Jeder Export erstellt eine separate CSV/PDF-Datei mit den gefilterten Daten.</p>
         </div>
       </CardContent>

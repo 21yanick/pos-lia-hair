@@ -179,12 +179,12 @@ export default function DocumentsPage() {
 
       {/* Info Box für Supabase Storage Bucket */}
       {error && error.includes("bucket") && (
-        <div className="bg-amber-50 border border-amber-200 rounded p-4 mb-4">
+        <div className="bg-warning/10 border border-warning/20 rounded p-4 mb-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
             <div>
-              <h3 className="font-medium text-amber-800">Supabase Storage Bucket fehlt</h3>
-              <p className="text-amber-700 text-sm mt-1">
+              <h3 className="font-medium text-warning-foreground">Supabase Storage Bucket fehlt</h3>
+              <p className="text-warning-foreground/80 text-sm mt-1">
                 Der Dokumenten-Storage Bucket wurde noch nicht erstellt. Bitte führen Sie die Migration
                 "02_storage_buckets.sql" aus oder erstellen Sie den Bucket manuell in der Supabase Console.
               </p>
@@ -198,7 +198,7 @@ export default function DocumentsPage() {
 
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
             placeholder="Suche nach Dokumenten..."
             className="pl-10"
@@ -223,9 +223,9 @@ export default function DocumentsPage() {
       </div>
 
       {error && !error.includes("bucket") && (
-        <div className="p-4 border border-red-300 bg-red-50 rounded-md flex items-center gap-2">
-          <AlertCircle className="text-red-500" size={20} />
-          <p className="text-red-700">{error}</p>
+        <div className="p-4 border border-destructive/20 bg-destructive/10 rounded-md flex items-center gap-2">
+          <AlertCircle className="text-destructive" size={20} />
+          <p className="text-destructive-foreground">{error}</p>
         </div>
       )}
 
@@ -239,11 +239,11 @@ export default function DocumentsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-center py-12">
-              <div className="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Upload className="h-8 w-8 text-gray-400" />
+              <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Upload className="h-8 w-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-medium mb-2">Keine Dokumente gefunden</h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-muted-foreground mb-4">
                 {activeTab !== "all"
                   ? `Es wurden keine ${
                       activeTab === "receipts"

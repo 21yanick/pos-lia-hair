@@ -69,11 +69,11 @@ export function MissingClosuresWarning({ onBulkClosure, className }: MissingClos
   const totalMissingSales = missingClosures.reduce((sum, closure) => sum + closure.sales_total, 0)
 
   return (
-    <Alert className={`border-orange-200 bg-orange-50 ${className}`}>
-      <AlertTriangle className="h-4 w-4 text-orange-600" />
+    <Alert className={`border-warning/20 bg-warning/10 ${className}`}>
+      <AlertTriangle className="h-4 w-4 text-warning" />
       <div className="flex justify-between items-start w-full">
         <div className="flex-1">
-          <AlertDescription className="text-orange-800">
+          <AlertDescription className="text-warning-foreground">
             <div className="font-medium mb-2">
               ⚠️ {missingClosures.length} offene Tagesabschlüsse gefunden
             </div>
@@ -108,7 +108,7 @@ export function MissingClosuresWarning({ onBulkClosure, className }: MissingClos
                   onClick={handleBulkClosure}
                   size="sm"
                   variant="outline"
-                  className="text-orange-700 border-orange-300 hover:bg-orange-100"
+                  className="text-warning hover:text-warning border-warning/30 hover:bg-warning/10"
                 >
                   Alle schließen
                 </Button>
@@ -117,7 +117,7 @@ export function MissingClosuresWarning({ onBulkClosure, className }: MissingClos
                 onClick={() => setIsVisible(false)}
                 size="sm"
                 variant="ghost"
-                className="text-orange-700 hover:bg-orange-100"
+                className="text-warning hover:text-warning hover:bg-warning/10"
               >
                 Ausblenden
               </Button>
@@ -129,7 +129,7 @@ export function MissingClosuresWarning({ onBulkClosure, className }: MissingClos
           onClick={() => setIsVisible(false)}
           size="sm"
           variant="ghost"
-          className="ml-2 h-6 w-6 p-0 text-orange-600 hover:bg-orange-100"
+          className="ml-2 h-6 w-6 p-0 text-warning hover:bg-warning/10"
         >
           <X className="h-4 w-4" />
         </Button>

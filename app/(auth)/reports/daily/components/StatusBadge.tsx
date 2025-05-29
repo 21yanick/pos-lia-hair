@@ -19,21 +19,21 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
           label: "Entwurf",
           variant: "outline" as const,
           icon: <Clock size={14} className="mr-1" />,
-          className: "bg-yellow-50 text-yellow-700 border-yellow-200"
+          className: "bg-status-draft/10 text-status-draft-foreground border-status-draft/20"
         }
       case "closed":
         return {
           label: "Abgeschlossen",
           variant: "default" as const,
           icon: <CheckCircle size={14} className="mr-1" />,
-          className: "bg-green-50 text-green-700 border-green-200"
+          className: "bg-success/10 text-success border-success/20"
         }
       case "corrected":
         return {
           label: "Korrigiert",
           variant: "outline" as const,
           icon: <AlertCircle size={14} className="mr-1" />,
-          className: "bg-orange-50 text-orange-700 border-orange-200"
+          className: "bg-status-corrected/10 text-status-corrected-foreground border-status-corrected/20"
         }
     }
   }

@@ -25,7 +25,7 @@ export default function SettingsPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <Upload className="h-5 w-5 text-blue-600" />
+              <Upload className="h-5 w-5 text-primary" />
               <CardTitle>Import</CardTitle>
             </div>
             <CardDescription>
@@ -56,7 +56,7 @@ export default function SettingsPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <Download className="h-5 w-5 text-green-600" />
+              <Download className="h-5 w-5 text-success" />
               <CardTitle>Export & Backup</CardTitle>
             </div>
             <CardDescription>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <SettingsIcon className="h-5 w-5 text-purple-600" />
+              <SettingsIcon className="h-5 w-5 text-metric-yearly" />
               <CardTitle>Geschäft</CardTitle>
             </div>
             <CardDescription>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-orange-600" />
+              <Users className="h-5 w-5 text-warning" />
               <CardTitle>Benutzer</CardTitle>
             </div>
             <CardDescription>
@@ -143,7 +143,7 @@ export default function SettingsPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <Database className="h-5 w-5 text-gray-600" />
+              <Database className="h-5 w-5 text-muted-foreground" />
               <CardTitle>System</CardTitle>
             </div>
             <CardDescription>

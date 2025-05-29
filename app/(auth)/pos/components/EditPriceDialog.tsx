@@ -36,19 +36,19 @@ export function EditPriceDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="pb-6">
           <DialogTitle className="text-xl font-bold flex items-center">
-            <div className="mr-3 p-2 bg-blue-100 rounded-xl">
-              <Pencil className="text-blue-600" size={20} />
+            <div className="mr-3 p-2 bg-primary/10 rounded-xl">
+              <Pencil className="text-primary" size={20} />
             </div>
             Preis bearbeiten
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 mt-2">
-            Passen Sie den Preis für <span className="font-semibold text-gray-800">{editingItem?.name}</span> an.
+          <DialogDescription className="text-base text-muted-foreground mt-2">
+            Passen Sie den Preis für <span className="font-semibold text-foreground">{editingItem?.name}</span> an.
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-6">
           <div className="space-y-4">
-            <Label htmlFor="price" className="text-base font-semibold text-gray-700">Preis (CHF)</Label>
+            <Label htmlFor="price" className="text-base font-semibold text-foreground">Preis (CHF)</Label>
             <Input
               id="price"
               type="number"
@@ -56,7 +56,7 @@ export function EditPriceDialog({
               min="0"
               value={editPrice}
               onChange={(e) => onEditPriceChange(e.target.value)}
-              className="text-2xl py-4 text-center bg-gray-50/50 border-gray-300 focus:border-blue-400 focus:ring-blue-400/20 rounded-xl"
+              className="text-2xl py-4 text-center bg-muted/50 border-border focus:border-primary focus:ring-primary/20 rounded-xl"
               placeholder="0.00"
             />
           </div>
@@ -66,13 +66,13 @@ export function EditPriceDialog({
           <Button 
             variant="outline" 
             onClick={onClose}
-            className="py-4 text-base w-full sm:w-auto rounded-xl border-gray-300 hover:bg-gray-50"
+            className="py-4 text-base w-full sm:w-auto rounded-xl border-border hover:bg-muted"
           >
             Abbrechen
           </Button>
           <Button 
             onClick={onSave}
-            className="py-4 text-base w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl"
+            className="py-4 text-base w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl"
           >
             <CheckCircle className="mr-2" size={18} />
             Preis speichern

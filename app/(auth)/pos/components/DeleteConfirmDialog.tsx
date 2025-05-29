@@ -27,7 +27,7 @@ export function DeleteConfirmDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center text-xl">
-            <Trash2 className="text-red-500 mr-2" size={20} />
+            <Trash2 className="text-destructive mr-2" size={20} />
             Artikel aus Warenkorb entfernen
           </DialogTitle>
           <DialogDescription>

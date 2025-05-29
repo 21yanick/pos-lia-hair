@@ -200,7 +200,7 @@ export default function CashRegisterPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Kassenbuch</h1>
-          <p className="text-gray-500">Übersicht aller Bargeldbewegungen</p>
+          <p className="text-muted-foreground">Übersicht aller Bargeldbewegungen</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -229,9 +229,9 @@ export default function CashRegisterPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {/* Main Balance Card */}
         <Card className="col-span-1 md:col-span-1 shadow-md border-0 overflow-hidden">
-          <div className="h-2 w-full bg-blue-500"></div>
+          <div className="h-2 w-full bg-primary"></div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium text-gray-700">Aktueller Kassenbestand</CardTitle>
+            <CardTitle className="text-lg font-medium text-foreground">Aktueller Kassenbestand</CardTitle>
             <CardDescription>
               Bargeld-Bestand (automatisch berechnet)
             </CardDescription>
@@ -240,16 +240,16 @@ export default function CashRegisterPage() {
             {balanceLoading ? (
               <div className="flex items-center justify-center py-2">
                 <Loader2 className="mr-2 animate-spin text-primary" size={24} />
-                <span className="text-xl font-medium text-gray-600">Wird berechnet...</span>
+                <span className="text-xl font-medium text-muted-foreground">Wird berechnet...</span>
               </div>
             ) : currentBalance !== null ? (
               <div className="text-center">
-                <div className="text-3xl font-bold text-gray-800 mb-1">
+                <div className="text-3xl font-bold text-foreground mb-1">
                   CHF {currentBalance.toFixed(2)}
                 </div>
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-500 italic">
+              <div className="text-center py-4 text-muted-foreground italic">
                 Kassenbestand nicht verfügbar
               </div>
             )}
@@ -270,25 +270,25 @@ export default function CashRegisterPage() {
 
         {/* Daily Summary Cards */}
         <Card className="col-span-1 md:col-span-2 shadow-md border-0">
-          <div className="h-2 w-full bg-blue-500"></div>
+          <div className="h-2 w-full bg-primary"></div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium text-gray-700">Monatsüberblick</CardTitle>
+            <CardTitle className="text-lg font-medium text-foreground">Monatsüberblick</CardTitle>
             <CardDescription>Bargeld-Bewegungen für {format(currentMonth, "MMMM yyyy", { locale: de })}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center p-3 rounded-lg bg-gray-50">
-                <ArrowUpRight size={24} className="text-green-500 mb-1" />
-                <span className="text-sm text-gray-500">Einnahmen</span>
-                <span className="text-xl font-bold text-green-600">
+              <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+                <ArrowUpRight size={24} className="text-success mb-1" />
+                <span className="text-sm text-muted-foreground">Einnahmen</span>
+                <span className="text-xl font-bold text-success">
                   CHF {summary.monthlyIncome.toFixed(2)}
                 </span>
               </div>
               
-              <div className="flex flex-col items-center p-3 rounded-lg bg-gray-50">
-                <ArrowDownRight size={24} className="text-red-500 mb-1" />
-                <span className="text-sm text-gray-500">Ausgaben</span>
-                <span className="text-xl font-bold text-red-600">
+              <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+                <ArrowDownRight size={24} className="text-destructive mb-1" />
+                <span className="text-sm text-muted-foreground">Ausgaben</span>
+                <span className="text-xl font-bold text-destructive">
                   CHF {summary.monthlyExpense.toFixed(2)}
                 </span>
               </div>
@@ -300,11 +300,11 @@ export default function CashRegisterPage() {
 
       {/* Search and Filter Card */}
       <Card className="shadow-md border-0 overflow-hidden mb-6">
-        <div className="h-2 w-full bg-gray-300"></div>
+        <div className="h-2 w-full bg-muted"></div>
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
               <Input 
                 placeholder="Suche nach Beschreibung..." 
                 className="pl-10" 
@@ -325,7 +325,7 @@ export default function CashRegisterPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 
-                <div className="text-sm font-medium bg-blue-100 px-3 py-2 rounded border border-blue-200 text-blue-800 min-w-[120px] text-center">
+                <div className="text-sm font-medium bg-primary/10 px-3 py-2 rounded border border-primary/20 text-primary min-w-[120px] text-center">
                   {format(currentMonth, "MMMM yyyy", { locale: de })}
                 </div>
                 
@@ -357,28 +357,28 @@ export default function CashRegisterPage() {
 
       {/* Transactions Table Card */}
       <Card className="shadow-md border-0 overflow-hidden">
-        <div className="h-2 w-full bg-indigo-500"></div>
+        <div className="h-2 w-full bg-secondary"></div>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium text-gray-700">Kassenbucheinträge</CardTitle>
+          <CardTitle className="text-lg font-medium text-foreground">Kassenbucheinträge</CardTitle>
           <CardDescription>Chronologische Auflistung aller Bargeldbewegungen</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="flex flex-col justify-center items-center py-12 space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="text-gray-500">Daten werden geladen...</span>
+              <span className="text-muted-foreground">Daten werden geladen...</span>
             </div>
           ) : (
-            <div className="rounded-lg border border-gray-100 overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead className="text-gray-600 font-medium">Datum</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Zeit</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Beschreibung</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Typ</TableHead>
-                    <TableHead className="text-right text-gray-600 font-medium">Betrag</TableHead>
-                    <TableHead className="text-right text-gray-600 font-medium">Laufender Saldo</TableHead>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="text-muted-foreground font-medium">Datum</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Zeit</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Beschreibung</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Typ</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-medium">Betrag</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-medium">Laufender Saldo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -417,32 +417,32 @@ export default function CashRegisterPage() {
                       return (
                         <TableRow 
                           key={entry.id} 
-                          className="border-b hover:bg-gray-50 transition-colors"
+                          className="border-b hover:bg-muted/30 transition-colors"
                         >
-                          <TableCell className="text-gray-700">{formatDate(entry.date)}</TableCell>
-                          <TableCell className="text-gray-700">{formatTime(entry.created_at)}</TableCell>
-                          <TableCell className="text-gray-700 font-medium">{entry.description}</TableCell>
+                          <TableCell className="text-foreground">{formatDate(entry.date)}</TableCell>
+                          <TableCell className="text-foreground">{formatTime(entry.created_at)}</TableCell>
+                          <TableCell className="text-foreground font-medium">{entry.description}</TableCell>
                           <TableCell>
                             <div className="flex items-center">
                               {entry.type === "cash_in" ? (
-                                <div className="flex items-center bg-green-100 px-2 py-1 rounded-full text-sm">
-                                  <ArrowUpRight className="mr-1 text-green-600" size={14} />
-                                  <span className="text-green-800">Einnahme</span>
+                                <div className="flex items-center bg-success/10 px-2 py-1 rounded-full text-sm">
+                                  <ArrowUpRight className="mr-1 text-success" size={14} />
+                                  <span className="text-success">Einnahme</span>
                                 </div>
                               ) : (
-                                <div className="flex items-center bg-red-100 px-2 py-1 rounded-full text-sm">
-                                  <ArrowDownRight className="mr-1 text-red-600" size={14} />
-                                  <span className="text-red-800">Ausgabe</span>
+                                <div className="flex items-center bg-destructive/10 px-2 py-1 rounded-full text-sm">
+                                  <ArrowDownRight className="mr-1 text-destructive" size={14} />
+                                  <span className="text-destructive">Ausgabe</span>
                                 </div>
                               )}
                             </div>
                           </TableCell>
                           <TableCell
-                            className={`text-right font-medium ${entry.type === "cash_in" ? "text-green-600" : "text-red-600"}`}
+                            className={`text-right font-medium ${entry.type === "cash_in" ? "text-success" : "text-destructive"}`}
                           >
                             {entry.type === "cash_in" ? "+" : "-"} CHF {entry.amount.toFixed(2)}
                           </TableCell>
-                          <TableCell className="text-right font-medium text-gray-800">
+                          <TableCell className="text-right font-medium text-foreground">
                             CHF {runningBalance.toFixed(2)}
                           </TableCell>
                         </TableRow>
@@ -452,11 +452,11 @@ export default function CashRegisterPage() {
 
                   {!loading && entries.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12 text-gray-500">
+                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                         <div className="flex flex-col items-center space-y-2">
-                          <ReceiptIcon size={32} className="text-gray-300" />
+                          <ReceiptIcon size={32} className="text-muted-foreground" />
                           <span>Keine Einträge gefunden.</span>
-                          <span className="text-sm text-gray-400">Verwenden Sie POS und Ausgaben für neue Einträge</span>
+                          <span className="text-sm text-muted-foreground">Verwenden Sie POS und Ausgaben für neue Einträge</span>
                         </div>
                       </TableCell>
                     </TableRow>

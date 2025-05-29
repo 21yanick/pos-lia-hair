@@ -124,7 +124,7 @@ export default function ExpensesPage() {
       // Physical receipt flow - create expense without file first
       result = await createExpense(expenseData)
       
-      if (result.success) {
+      if (result.success && result.expense) {
         // Then generate placeholder receipt
         const placeholderResult = await generatePlaceholderReceipt(
           result.expense.id, 
@@ -320,7 +320,7 @@ export default function ExpensesPage() {
                       value="upload"
                       checked={receiptType === 'upload'}
                       onChange={(e) => setReceiptType(e.target.value as 'upload' | 'physical')}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-primary"
                     />
                     <Label htmlFor="receipt-upload" className="cursor-pointer">
                       Digitalen Beleg hochladen
@@ -335,7 +335,7 @@ export default function ExpensesPage() {
                       value="physical"
                       checked={receiptType === 'physical'}
                       onChange={(e) => setReceiptType(e.target.value as 'upload' | 'physical')}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-primary"
                     />
                     <Label htmlFor="receipt-physical" className="cursor-pointer">
                       Physischer Beleg vorhanden
@@ -345,7 +345,7 @@ export default function ExpensesPage() {
 
                 {/* Upload Section - nur wenn Upload gewählt */}
                 {receiptType === 'upload' && (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                     <input
                       id="file-upload"
                       type="file"
@@ -357,14 +357,14 @@ export default function ExpensesPage() {
                       htmlFor="file-upload" 
                       className="cursor-pointer flex flex-col items-center space-y-2"
                     >
-                      <Upload className="h-8 w-8 text-gray-400" />
+                      <Upload className="h-8 w-8 text-muted-foreground" />
                       {selectedFile ? (
                         <div className="text-sm">
-                          <p className="font-medium text-green-600">✓ {selectedFile.name}</p>
-                          <p className="text-gray-500">Klicken zum Ändern</p>
+                          <p className="font-medium text-success">✓ {selectedFile.name}</p>
+                          <p className="text-muted-foreground">Klicken zum Ändern</p>
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           <p className="font-medium">Rechnung oder Beleg hochladen</p>
                           <p>PDF, JPG, PNG (max. 10MB)</p>
                         </div>
@@ -383,7 +383,7 @@ export default function ExpensesPage() {
                       onChange={(e) => setArchiveLocation(e.target.value)}
                       placeholder="z.B. Ordner 2025-A, Aktenschrank 3, etc."
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       📁 Es wird automatisch ein Platzhalter-PDF erstellt mit Verweis auf den physischen Beleg.
                     </p>
                   </div>

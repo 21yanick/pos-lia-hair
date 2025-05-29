@@ -103,8 +103,8 @@ export function PaymentDialog({
                 variant={selectedPaymentMethod === "cash" ? "default" : "outline"}
                 className={`flex flex-col items-center justify-center h-28 rounded-xl transition-all duration-200 ${
                   selectedPaymentMethod === "cash" 
-                    ? "bg-green-600 hover:bg-green-700 text-white shadow-lg ring-2 ring-green-200" 
-                    : "hover:bg-green-50 hover:border-green-300"
+                    ? "bg-payment-cash hover:bg-payment-cash/90 text-payment-cash-foreground shadow-lg ring-2 ring-payment-cash/20" 
+                    : "hover:bg-payment-cash/10 hover:border-payment-cash/30"
                 }`}
                 onClick={() => onPaymentMethodChange("cash")}
               >
@@ -116,8 +116,8 @@ export function PaymentDialog({
                 variant={selectedPaymentMethod === "twint" ? "default" : "outline"}
                 className={`flex flex-col items-center justify-center h-28 rounded-xl transition-all duration-200 ${
                   selectedPaymentMethod === "twint" 
-                    ? "bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg ring-2 ring-yellow-200" 
-                    : "hover:bg-yellow-50 hover:border-yellow-300 text-yellow-600"
+                    ? "bg-payment-twint hover:bg-payment-twint/90 text-payment-twint-foreground shadow-lg ring-2 ring-payment-twint/20" 
+                    : "hover:bg-payment-twint/10 hover:border-payment-twint/30 text-payment-twint"
                 }`}
                 onClick={() => onPaymentMethodChange("twint")}
               >
@@ -129,8 +129,8 @@ export function PaymentDialog({
                 variant={selectedPaymentMethod === "sumup" ? "default" : "outline"}
                 className={`flex flex-col items-center justify-center h-28 rounded-xl transition-all duration-200 ${
                   selectedPaymentMethod === "sumup" 
-                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg ring-2 ring-blue-200" 
-                    : "hover:bg-blue-50 hover:border-blue-300"
+                    ? "bg-payment-sumup hover:bg-payment-sumup/90 text-payment-sumup-foreground shadow-lg ring-2 ring-payment-sumup/20" 
+                    : "hover:bg-payment-sumup/10 hover:border-payment-sumup/30"
                 }`}
                 onClick={() => onPaymentMethodChange("sumup")}
               >
@@ -142,9 +142,9 @@ export function PaymentDialog({
 
           {/* Cash Input Section */}
           {selectedPaymentMethod === "cash" && (
-            <div className="space-y-4 p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50">
+            <div className="space-y-4 p-6 bg-gradient-to-br from-payment-cash/10 to-payment-cash/5 rounded-xl border border-payment-cash/20">
               <div className="space-y-3">
-                <Label htmlFor="cash-received" className="text-base font-semibold text-green-800">
+                <Label htmlFor="cash-received" className="text-base font-semibold text-payment-cash">
                   Erhaltener Betrag (CHF)
                 </Label>
                 <Input
@@ -155,16 +155,16 @@ export function PaymentDialog({
                   placeholder="0.00"
                   value={cashReceived}
                   onChange={(e) => onCashReceivedChange(e.target.value)}
-                  className="text-xl py-4 bg-white/80 border-green-300 focus:border-green-500 focus:ring-green-500/20"
+                  className="text-xl py-4 bg-white/80 border-payment-cash/30 focus:border-payment-cash focus:ring-payment-cash/20"
                 />
               </div>
 
               {cashReceived && Number.parseFloat(cashReceived) >= cartTotal && (
-                <div className="p-4 bg-gradient-to-r from-green-100 to-green-200/80 rounded-lg border border-green-300/50">
+                <div className="p-4 bg-gradient-to-r from-payment-cash/20 to-payment-cash/10 rounded-lg border border-payment-cash/30">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-green-800">Rückgeld:</span>
+                    <span className="font-semibold text-payment-cash">Rückgeld:</span>
                     <div className="text-right">
-                      <span className="text-2xl font-bold text-green-700">CHF {cashChange.toFixed(2)}</span>
+                      <span className="text-2xl font-bold text-payment-cash">CHF {cashChange.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -173,14 +173,14 @@ export function PaymentDialog({
           )}
 
           {/* Total Amount */}
-          <div className="p-6 bg-gradient-to-r from-gray-100/80 to-blue-100/40 rounded-xl border border-gray-200/50">
+          <div className="p-6 bg-gradient-to-r from-muted/50 to-primary/10 rounded-xl border border-border">
             <div className="flex justify-between items-center">
               <div>
-                <span className="text-gray-600 text-sm">Zu zahlender Betrag</span>
-                <div className="font-bold text-xl text-gray-800">Gesamtbetrag</div>
+                <span className="text-muted-foreground text-sm">Zu zahlender Betrag</span>
+                <div className="font-bold text-xl text-foreground">Gesamtbetrag</div>
               </div>
               <div className="text-right">
-                <span className="text-3xl font-bold text-blue-600">CHF {cartTotal.toFixed(2)}</span>
+                <span className="text-3xl font-bold text-primary">CHF {cartTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>

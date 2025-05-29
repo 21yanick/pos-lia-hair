@@ -20,15 +20,15 @@ interface MonthlyTrendChartProps {
 const chartConfig = {
   revenue: {
     label: "Umsatz",
-    color: "#22c55e", // green-500
+    color: "hsl(var(--success))",
   },
   expenses: {
     label: "Ausgaben", 
-    color: "#ef4444", // red-500
+    color: "hsl(var(--destructive))",
   },
   profit: {
     label: "Gewinn",
-    color: "#3b82f6", // blue-500
+    color: "hsl(var(--primary))",
   },
 }
 
@@ -40,7 +40,7 @@ export function MonthlyTrendChart({ data, loading = false }: MonthlyTrendChartPr
           <CardTitle>Jahresverlauf</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[250px] w-full animate-pulse bg-gray-200 rounded" />
+          <div className="h-[250px] w-full animate-pulse bg-muted rounded" />
         </CardContent>
       </Card>
     )

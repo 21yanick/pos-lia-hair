@@ -50,11 +50,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-4">
-            <Scissors className="text-white" size={24} />
+          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-4">
+            <Scissors className="text-primary-foreground" size={24} />
           </div>
           <CardTitle className="text-2xl font-bold text-center">Coiffeursalon POS</CardTitle>
           <CardDescription className="text-center">
@@ -64,7 +64,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">{error}</div>
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-sm">{error}</div>
             )}
 
             <div className="space-y-2">

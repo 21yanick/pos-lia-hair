@@ -33,11 +33,11 @@ export function TransactionsList({ transactions, loading = false }: Transactions
   const getPaymentMethodIcon = (method: TransactionItem['method']) => {
     switch (method) {
       case "cash":
-        return <Wallet size={16} className="mr-2 text-green-500" />
+        return <Wallet size={16} className="mr-2 text-payment-cash" />
       case "twint":
-        return <Wallet size={16} className="mr-2 text-purple-500" />
+        return <Wallet size={16} className="mr-2 text-payment-twint" />
       case "sumup":
-        return <CreditCard size={16} className="mr-2 text-blue-500" />
+        return <CreditCard size={16} className="mr-2 text-payment-sumup" />
     }
   }
 
@@ -54,9 +54,9 @@ export function TransactionsList({ transactions, loading = false }: Transactions
 
   const getStatusBadge = (status: TransactionItem['status']) => {
     const variants = {
-      completed: "bg-green-50 text-green-700 hover:bg-green-50",
-      cancelled: "bg-red-50 text-red-700 hover:bg-red-50",
-      refunded: "bg-yellow-50 text-yellow-700 hover:bg-yellow-50"
+      completed: "bg-success/10 text-success hover:bg-success/10",
+      cancelled: "bg-destructive/10 text-destructive hover:bg-destructive/10",
+      refunded: "bg-warning/10 text-warning hover:bg-warning/10"
     }
 
     const labels = {
@@ -84,7 +84,7 @@ export function TransactionsList({ transactions, loading = false }: Transactions
       </CardHeader>
       <CardContent>
         {transactions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             Noch keine Transaktionen für heute vorhanden.
           </div>
         ) : (

@@ -284,7 +284,7 @@ export default function DailyReportPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Tagesabschluss</h1>
-          <p className="text-gray-500">{formattedDate}</p>
+          <p className="text-muted-foreground">{formattedDate}</p>
         </div>
 
         <DailyActions
@@ -302,7 +302,7 @@ export default function DailyReportPage() {
         <div className="flex flex-col items-center justify-center py-8">
           <Loader2 size={30} className="animate-spin mb-4" />
           <span>Daten werden geladen...</span>
-          <p className="text-gray-500 mt-2">
+          <p className="text-muted-foreground mt-2">
             Datum: {apiDateFormat}
           </p>
         </div>
@@ -323,7 +323,7 @@ export default function DailyReportPage() {
 
             {/* Bargeld Info */}
             <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-muted/50 p-4 rounded-lg">
                 <h3 className="font-medium mb-3">Bargeld-Bestand</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -332,7 +332,7 @@ export default function DailyReportPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>+ Bareinnahmen:</span>
-                    <span className="font-medium text-green-600">CHF {stats.cash.toFixed(2)}</span>
+                    <span className="font-medium text-payment-cash">CHF {stats.cash.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t">
                     <span>Erwarteter Endbestand:</span>
@@ -342,9 +342,9 @@ export default function DailyReportPage() {
               </div>
 
               {currentDailySummary?.notes && (
-                <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="bg-primary/5 p-4 rounded-lg">
                   <h3 className="font-medium mb-2">Notizen</h3>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-muted-foreground">
                     {currentDailySummary.notes}
                   </p>
                 </div>

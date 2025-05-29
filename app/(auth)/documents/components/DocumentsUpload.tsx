@@ -126,7 +126,7 @@ export function DocumentsUpload({ isOpen, onOpenChange, onUpload }: DocumentsUpl
               value={referenceId}
               onChange={(e) => setReferenceId(e.target.value)}
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Die ID des Eintrags, zu dem dieses Dokument gehört (z.B. Transaktions-ID für Quittungen).
             </p>
           </div>
@@ -143,7 +143,7 @@ export function DocumentsUpload({ isOpen, onOpenChange, onUpload }: DocumentsUpl
               />
             </div>
             {selectedFile && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Ausgewählte Datei: {selectedFile.name} ({formatFileSize(selectedFile.size)})
               </p>
             )}

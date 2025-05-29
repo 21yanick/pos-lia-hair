@@ -248,12 +248,12 @@ export default function ProductsPage() {
     <div className="space-y-6">
       {/* Sync-Dialog */}
       {error && (
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-          <h3 className="font-semibold text-yellow-800 mb-2">Probleme mit der Datenbankkonfiguration erkannt</h3>
-          <p className="text-sm text-yellow-700 mb-3">
+        <div className="bg-warning/10 border border-warning/20 p-4 rounded-md">
+          <h3 className="font-semibold text-warning-foreground mb-2">Probleme mit der Datenbankkonfiguration erkannt</h3>
+          <p className="text-sm text-warning-foreground mb-3">
             Es scheint ein Problem mit den Datenbankberechtigungen zu geben. Möglicherweise ist Ihr Benutzer nicht korrekt mit der Datenbank verknüpft.
           </p>
-          <Button onClick={handleManualSync} className="bg-yellow-500 hover:bg-yellow-600">
+          <Button onClick={handleManualSync} className="bg-warning hover:bg-warning/90">
             Benutzer synchronisieren
           </Button>
         </div>
@@ -262,7 +262,7 @@ export default function ProductsPage() {
       {/* Sync-Dialog */}
       {syncDialogOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 max-w-md w-full rounded-lg">
+          <div className="bg-background p-6 max-w-md w-full rounded-lg border">
             <h3 className="font-semibold text-lg mb-3">Benutzer-Synchronisierung</h3>
             <p className="mb-4">{syncMessage}</p>
             <div className="flex justify-end">
@@ -281,7 +281,7 @@ export default function ProductsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex flex-1 items-center gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
             <Input
               placeholder="Suche nach Produkten oder Dienstleistungen..."
               className="pl-10"
@@ -308,7 +308,7 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+      <div className="bg-background rounded-md border border-border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -332,7 +332,7 @@ export default function ProductsPage() {
               </TableRow>
             ) : filteredItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   Keine Einträge gefunden.
                 </TableCell>
               </TableRow>
@@ -351,7 +351,7 @@ export default function ProductsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleToggleFavorite(item.id, item.is_favorite)}
-                      className={item.is_favorite ? "text-yellow-500" : "text-gray-400"}
+                      className={item.is_favorite ? "text-warning" : "text-muted-foreground"}
                     >
                       {item.is_favorite ? <Star size={18} /> : <StarOff size={18} />}
                     </Button>
@@ -367,7 +367,7 @@ export default function ProductsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-red-500"
+                        className="text-destructive"
                         onClick={() => handleDeleteItem(item.id)}
                       >
                         <Trash2 size={16} />

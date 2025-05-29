@@ -359,7 +359,7 @@
     {
       "date": "2025-01-30",
       "time": "12:30",
-      "total_amount": 140.00,
+      "total_amount": 134.50,
       "payment_method": "sumup",
       "status": "completed",
       "items": [
@@ -879,7 +879,7 @@
     {
       "date": "2025-05-10",
       "time": "09:00",
-      "total_amount": 46.50,
+      "total_amount": 46.00,
       "payment_method": "sumup",
       "status": "completed",
       "items": [
@@ -899,7 +899,7 @@
     {
       "date": "2025-05-12",
       "time": "16:15",
-      "total_amount": 162.00,
+      "total_amount": 160.50,
       "payment_method": "twint",
       "status": "completed",
       "items": [
@@ -939,7 +939,7 @@
     {
       "date": "2025-05-18",
       "time": "13:45",
-      "total_amount": 110.00,
+      "total_amount": 104.50,
       "payment_method": "sumup",
       "status": "completed",
       "items": [
@@ -964,7 +964,7 @@
     {
       "date": "2025-05-20",
       "time": "11:00",
-      "total_amount": 175.00,
+      "total_amount": 169.50,
       "payment_method": "twint",
       "status": "completed",
       "items": [
@@ -1114,7 +1114,7 @@
     {
       "date": "2025-06-12",
       "time": "12:15",
-      "total_amount": 58.50,
+      "total_amount": 58.00,
       "payment_method": "sumup",
       "status": "completed",
       "items": [
@@ -1229,7 +1229,7 @@
     {
       "date": "2025-06-28",
       "time": "15:45",
-      "total_amount": 160.00,
+      "total_amount": 153.00,
       "payment_method": "sumup",
       "status": "completed",
       "items": [

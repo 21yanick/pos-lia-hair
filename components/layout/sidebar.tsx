@@ -39,11 +39,11 @@ export function Sidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300",
+        "flex flex-col h-screen bg-background border-r border-border transition-all duration-300",
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         {!collapsed && <h1 className="text-xl font-semibold">Coiffeursalon</h1>}
         <Button
           variant="ghost"
@@ -67,7 +67,7 @@ export function Sidebar() {
                   href={item.href}
                   className={cn(
                     "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100",
+                    isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent hover:text-accent-foreground",
                     collapsed && "justify-center",
                   )}
                 >
@@ -80,11 +80,11 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-border">
         <Button
           variant="ghost"
           className={cn(
-            "w-full flex items-center text-red-600 hover:bg-red-50 hover:text-red-700",
+            "w-full flex items-center text-destructive hover:bg-destructive/10 hover:text-destructive",
             collapsed && "justify-center",
           )}
           onClick={async () => {

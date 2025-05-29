@@ -41,6 +41,14 @@ const config: Config = {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
   			},
+  			success: {
+  				DEFAULT: 'hsl(var(--success))',
+  				foreground: 'hsl(var(--success-foreground))'
+  			},
+  			warning: {
+  				DEFAULT: 'hsl(var(--warning))',
+  				foreground: 'hsl(var(--warning-foreground))'
+  			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
@@ -60,6 +68,35 @@ const config: Config = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
+  			},
+  			payment: {
+  				cash: 'hsl(var(--payment-cash))',
+  				'cash-foreground': 'hsl(var(--payment-cash-foreground))',
+  				twint: 'hsl(var(--payment-twint))',
+  				'twint-foreground': 'hsl(var(--payment-twint-foreground))',
+  				sumup: 'hsl(var(--payment-sumup))',
+  				'sumup-foreground': 'hsl(var(--payment-sumup-foreground))'
+  			},
+  			category: {
+  				service: 'hsl(var(--category-service))',
+  				'service-foreground': 'hsl(var(--category-service-foreground))',
+  				'service-bg': 'hsl(var(--category-service-bg))',
+  				product: 'hsl(var(--category-product))',
+  				'product-foreground': 'hsl(var(--category-product-foreground))',
+  				'product-bg': 'hsl(var(--category-product-bg))',
+  				favorite: 'hsl(var(--category-favorite))',
+  				'favorite-foreground': 'hsl(var(--category-favorite-foreground))'
+  			},
+  			metric: {
+  				cash: 'hsl(var(--metric-cash))',
+  				monthly: 'hsl(var(--metric-monthly))',
+  				yearly: 'hsl(var(--metric-yearly))'
+  			},
+  			status: {
+  				draft: 'hsl(var(--status-draft))',
+  				'draft-foreground': 'hsl(var(--status-draft-foreground))',
+  				corrected: 'hsl(var(--status-corrected))',
+  				'corrected-foreground': 'hsl(var(--status-corrected-foreground))'
   			}
   		},
   		borderRadius: {

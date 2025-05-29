@@ -26,7 +26,7 @@ export default function Loading() {
 
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
           <Skeleton className="h-10 w-full pl-10" />
         </div>
 
