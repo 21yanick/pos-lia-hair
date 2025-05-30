@@ -6,7 +6,8 @@ import {
   Settings as SettingsIcon, 
   Users, 
   Download,
-  Database
+  Database,
+  Calculator
 } from "lucide-react"
 
 export default function SettingsPage() {
@@ -77,6 +78,45 @@ export default function SettingsPage() {
               <Button variant="outline" className="w-full mt-4" disabled>
                 Bald verfügbar
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Buchhaltung-System - Settlement moved to Monthly Reports */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Calculator className="h-5 w-5 text-primary" />
+              <CardTitle>Buchhaltung</CardTitle>
+            </div>
+            <CardDescription>
+              Swiss Accounting System - Vollständig implementiert
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <p className="text-sm text-success">
+                ✅ Payment Provider Settlement
+              </p>
+              <p className="text-sm text-success">
+                ✅ Bank Reconciliation (CAMT.053)
+              </p>
+              <p className="text-sm text-success">
+                ✅ Swiss Legal Compliance
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • VAT System (Optional)
+              </p>
+              <div className="pt-3 border-t">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Settlement Import ist jetzt im <strong>Monatsabschluss</strong> integriert für optimalen Workflow.
+                </p>
+                <Button variant="outline" asChild className="w-full">
+                  <Link href="/reports/monthly">
+                    Zum Monatsabschluss
+                  </Link>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

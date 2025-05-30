@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { JsonImport } from "./components/JsonImport"
+import { CsvImport } from "./components/CsvImport"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,7 +20,7 @@ import {
 } from "lucide-react"
 
 export default function ImportPage() {
-  const [activeTab, setActiveTab] = useState<'upload' | 'history' | 'json-import'>('upload')
+  const [activeTab, setActiveTab] = useState<'upload' | 'history' | 'json-import' | 'csv-import'>('upload')
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -49,6 +50,14 @@ export default function ImportPage() {
         >
           <Upload className="h-4 w-4 mr-2" />
           Import
+        </Button>
+        <Button 
+          variant={activeTab === 'csv-import' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('csv-import')}
+        >
+          <FileSpreadsheet className="h-4 w-4 mr-2" />
+          CSV Import
         </Button>
         <Button 
           variant={activeTab === 'json-import' ? 'default' : 'ghost'}
@@ -109,25 +118,30 @@ export default function ImportPage() {
             {/* CSV Import */}
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <FileSpreadsheet className="h-5 w-5 text-success" />
-                  <CardTitle className="text-lg">CSV Import</CardTitle>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileSpreadsheet className="h-5 w-5 text-success" />
+                    <CardTitle className="text-lg">CSV Import</CardTitle>
+                  </div>
+                  <Badge variant="default">GO-Live Ready</Badge>
                 </div>
                 <CardDescription>
-                  Einfacher Import für einzelne Datentabellen
+                  Excel/CSV Import für historische GO-Live Daten
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="text-sm text-muted-foreground space-y-1">
-                    <p>📄 Separate CSV-Dateien</p>
-                    <p>📄 Items.csv</p>
-                    <p>📄 Sales.csv</p>
-                    <p>📄 Expenses.csv</p>
+                    <p>✅ Excel → CSV → Import</p>
+                    <p>✅ Spalten-Mapping UI</p>
+                    <p>✅ Daten-Vorschau</p>
+                    <p>✅ Vollständige Integration</p>
                   </div>
-                  <Button variant="outline" className="w-full" disabled>
-                    CSV-Dateien auswählen
-                    <span className="ml-2 text-xs opacity-75">(Phase 3)</span>
+                  <Button 
+                    className="w-full"
+                    onClick={() => setActiveTab('csv-import')}
+                  >
+                    CSV Import starten
                   </Button>
                 </div>
               </CardContent>
@@ -240,6 +254,12 @@ export default function ImportPage() {
             </CardContent>
           </Card>
 
+        </div>
+      )}
+
+      {activeTab === 'csv-import' && (
+        <div className="space-y-6">
+          <CsvImport />
         </div>
       )}
 
