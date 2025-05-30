@@ -14,7 +14,7 @@ import {
   Loader2
 } from "lucide-react"
 import { useImport } from '@/lib/hooks/business/useImport'
-import type { ItemImport } from '@/lib/types/import'
+import type { ItemImport } from '@/shared/types/import'
 
 // Sample JSON für Tests
 const SAMPLE_ITEMS: ItemImport[] = [

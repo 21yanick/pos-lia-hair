@@ -19,7 +19,7 @@ import {
   X
 } from 'lucide-react'
 import { useSettlementImport } from '@/lib/hooks/business/useSettlementImport'
-import { formatDateForDisplay } from '@/lib/utils/dateUtils'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 
 interface SettlementImportDialogProps {
   isOpen: boolean

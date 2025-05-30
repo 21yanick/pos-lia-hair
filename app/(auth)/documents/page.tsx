@@ -30,8 +30,8 @@ import { DocumentsTable } from "./components/DocumentsTable"
 import { DocumentsUpload } from "./components/DocumentsUpload"
 
 // Types and Utils
-import type { TransactionItem } from "@/lib/types/transactions"
-import { getCurrentYearMonth, getMonthOptions, formatMonthYear } from "@/lib/utils/reportHelpers"
+import type { TransactionItem } from "@/shared/types/transactions"
+import { getCurrentYearMonth, getMonthOptions, formatMonthYear } from "@/shared/utils/reportHelpers"
 
 export default function DocumentsPage() {
   const { toast } = useToast()

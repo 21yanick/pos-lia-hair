@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react"
 import { useToast } from "@/lib/hooks/core/useToast"
 import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
 import { useSales } from "@/lib/hooks/business/useSales"
-import { formatDateForAPI, formatDateForDisplay, getTodaySwiss } from "@/lib/utils/dateUtils"
+import { formatDateForAPI, formatDateForDisplay, getTodaySwiss } from "@/shared/utils/dateUtils"
 
 // Komponenten importieren
 import { DailyStats } from "./components/DailyStats"

@@ -2,7 +2,7 @@
 // Core database operations and business logic for imports
 
 import { supabase } from '@/lib/supabase/client'
-import type { ItemImport, SaleImport, ExpenseImport } from '@/lib/types/import'
+import type { ItemImport, SaleImport, ExpenseImport } from '@/shared/types/import'
 
 // =================================
 // Progress Callback Type

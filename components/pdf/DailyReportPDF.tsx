@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
-import { formatDateForDisplay } from '@/lib/utils/dateUtils'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 import type { DailySummary, TransactionItem } from '@/app/(auth)/reports/daily/utils/dailyTypes'
 
 export type DailyReportPDFProps = {

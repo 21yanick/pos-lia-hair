@@ -6,7 +6,7 @@ import type {
   ParsedCsvData, 
   CsvRow, 
   CsvParseOptions 
-} from '@/lib/types/csvImport'
+} from '@/shared/types/csvImport'
 
 // =================================
 // CSV Parser Class

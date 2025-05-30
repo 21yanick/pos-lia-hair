@@ -1,6 +1,6 @@
 import { pdf } from '@react-pdf/renderer'
 import { supabase } from '@/lib/supabase/client'
-import { formatDateForAPI, formatDateForDisplay, formatTimeForDisplay } from '@/lib/utils/dateUtils'
+import { formatDateForAPI, formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
 import type { DailySummary, TransactionItem, DailyStatsData } from './dailyTypes'
 
 // PDF-Generierung für Daily Reports (modernized)

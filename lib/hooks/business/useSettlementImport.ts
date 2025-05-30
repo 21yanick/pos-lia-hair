@@ -9,7 +9,7 @@ import {
   type SettlementTransaction,
   type BankEntry,
   type SettlementImportResult 
-} from '@/lib/utils/settlementImport'
+} from '@/shared/utils/settlementImport'
 
 // ============================================================================
 // TYPES

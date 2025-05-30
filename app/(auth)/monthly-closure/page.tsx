@@ -19,7 +19,7 @@ import {
 import { useToast } from "@/lib/hooks/core/useToast"
 import { useMonthlySummaries } from "@/lib/hooks/business/useMonthlySummaries"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getCurrentYearMonth, getMonthOptions, formatMonthYear } from "@/lib/utils/reportHelpers"
+import { getCurrentYearMonth, getMonthOptions, formatMonthYear } from "@/shared/utils/reportHelpers"
 
 // Wizard Steps
 import { DataCheckStep } from "./components/steps/DataCheckStep"

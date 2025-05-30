@@ -18,7 +18,7 @@ import {
   generateSettlementTestJSON, 
   getTestDataStats,
   generateSettlementTestData 
-} from '@/lib/utils/generateSettlementTestData'
+} from '@/shared/utils/generateSettlementTestData'
 
 interface SettlementTestDataGeneratorProps {
   onTestDataGenerated?: (jsonData: string) => void

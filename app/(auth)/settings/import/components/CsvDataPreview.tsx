@@ -29,7 +29,7 @@ import type {
   CsvMappingConfig,
   CsvImportType,
   CsvValidationResult
-} from '@/lib/types/csvImport'
+} from '@/shared/types/csvImport'
 
 import type {
   ItemImport,
@@ -37,8 +37,8 @@ import type {
   ExpenseImport
 } from '@/lib/hooks/business/useImport'
 
-import { getCsvStats } from '@/lib/utils/csvParser'
-import { validateTransformedData } from '@/lib/utils/csvToJsonTransform'
+import { getCsvStats } from '@/shared/utils/csvParser'
+import { validateTransformedData } from '@/shared/utils/csvToJsonTransform'
 
 interface CsvDataPreviewProps {
   csvData: ParsedCsvData

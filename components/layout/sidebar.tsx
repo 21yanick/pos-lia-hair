@@ -17,7 +17,7 @@ import {
   Settings,
   Lock,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/utils"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase/client"
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { parseRaiffeisenCAMT053, type BankEntry } from '@/lib/utils/settlementImport'
+import { parseRaiffeisenCAMT053, type BankEntry } from '@/shared/utils/settlementImport'
 
 // ============================================================================
 // TYPES

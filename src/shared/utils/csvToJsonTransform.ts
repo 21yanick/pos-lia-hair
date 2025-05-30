@@ -7,13 +7,13 @@ import type {
   CsvMappingConfig,
   CsvValidationResult,
   CsvImportType
-} from '@/lib/types/csvImport'
+} from '@/shared/types/csvImport'
 
 import type {
   ItemImport,
   SaleImport,
   ExpenseImport
-} from '@/lib/types/import'
+} from '@/shared/types/import'
 
 // =================================
 // Main Transformer Class

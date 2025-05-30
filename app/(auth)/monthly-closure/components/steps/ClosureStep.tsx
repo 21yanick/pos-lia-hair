@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { CheckCircle2, AlertTriangle, Lock, FileText, Download, Archive } from "lucide-react"
 import { useToast } from "@/lib/hooks/core/useToast"
 import { useMonthlySummaries } from "@/lib/hooks/business/useMonthlySummaries"
-import { exportMonthlyPDF, openMonthlyPDF } from "@/lib/utils/exportHelpers"
+import { exportMonthlyPDF, openMonthlyPDF } from "@/shared/utils/exportHelpers"
 import { formatAllTransactions } from "@/app/(auth)/reports/daily/utils/dailyHelpers"
 
 interface ClosureStepProps {

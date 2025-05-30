@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
-import { getSwissDayRange } from '@/lib/utils/dateUtils'
+import { getSwissDayRange } from '@/shared/utils/dateUtils'
 
 // Typen für Tagesabschlüsse (ersetzt DailyReports)
 export type DailySummary = Database['public']['Tables']['daily_summaries']['Row']

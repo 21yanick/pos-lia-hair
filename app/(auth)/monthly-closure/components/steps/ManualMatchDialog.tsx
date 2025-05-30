@@ -21,7 +21,7 @@ import {
   Receipt,
   AlertTriangle
 } from "lucide-react"
-import { formatDateForDisplay } from "@/lib/utils/dateUtils"
+import { formatDateForDisplay } from "@/shared/utils/dateUtils"
 
 interface BankEntry {
   id: string

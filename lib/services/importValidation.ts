@@ -7,7 +7,7 @@ import type {
   ExpenseImport, 
   ImportDataContainer,
   ValidationResult 
-} from '@/lib/types/import'
+} from '@/shared/types/import'
 
 // =================================
 // Individual Validation Functions

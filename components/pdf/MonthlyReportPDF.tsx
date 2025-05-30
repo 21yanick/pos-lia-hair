@@ -2,8 +2,8 @@
 
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
-import type { MonthlyStatsData } from '@/lib/types/monthly'
-import type { TransactionItem } from '@/lib/types/transactions'
+import type { MonthlyStatsData } from '@/shared/types/monthly'
+import type { TransactionItem } from '@/shared/types/transactions'
 
 export type MonthlyReportPDFProps = {
   stats: MonthlyStatsData

@@ -9,7 +9,7 @@ import { useReports } from "@/lib/hooks/business/useReports"
 import { MonthlyTrendChart } from "./components/MonthlyTrendChart"
 import { DashboardStats } from "./components/DashboardStats"
 import { RecentActivities } from "./components/RecentActivities"
-import { shouldShowSettlementImport, getSettlementImportMessage, getSettlementMonth } from "@/lib/utils/monthUtils"
+import { shouldShowSettlementImport, getSettlementImportMessage, getSettlementMonth } from "@/shared/utils/monthUtils"
 
 export default function Dashboard() {
   const {

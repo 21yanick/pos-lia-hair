@@ -10,7 +10,7 @@ import { useToast } from "@/lib/hooks/core/useToast"
 import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
 import { format } from "date-fns"
 import { de } from "date-fns/locale"
-import { formatDateForAPI, getTodaySwiss } from "@/lib/utils/dateUtils"
+import { formatDateForAPI, getTodaySwiss } from "@/shared/utils/dateUtils"
 
 export default function CashRegisterPage() {
   // Hooks

@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, Wallet, CreditCard, Receipt, TrendingDown, FileText } from "lucide-react"
-import type { MonthlyStatsData, ExportType } from "@/lib/types/monthly"
-import type { TransactionItem } from "@/lib/types/transactions"
+import type { MonthlyStatsData, ExportType } from "@/shared/types/monthly"
+import type { TransactionItem } from "@/shared/types/transactions"
 
 interface ExportButtonsProps {
   transactions: TransactionItem[]
@@ -12,7 +12,7 @@ interface ExportButtonsProps {
   loading?: boolean
 }
 
-// ExportType is now imported from @/lib/types/monthly
+// ExportType is now imported from @/shared/types/monthly
 
 export function ExportButtons({ transactions, stats, selectedMonth, onExport, loading = false }: ExportButtonsProps) {
   const exportConfigs: Array<{

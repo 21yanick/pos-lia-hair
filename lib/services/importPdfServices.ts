@@ -2,7 +2,7 @@
 // Handles all PDF generation for import processes
 
 import { supabase } from '@/lib/supabase/client'
-import type { SaleImport, ExpenseImport } from '@/lib/types/import'
+import type { SaleImport, ExpenseImport } from '@/shared/types/import'
 
 // =================================
 // Progress Callback Type

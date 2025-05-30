@@ -5,7 +5,7 @@
  * for testing the settlement import system.
  */
 
-import type { SaleImport, ItemImport, ExpenseImport } from '@/lib/types/import'
+import type { SaleImport, ItemImport, ExpenseImport } from '@/shared/types/import'
 
 // ============================================================================
 // REAL PROVIDER DATA ANALYSIS

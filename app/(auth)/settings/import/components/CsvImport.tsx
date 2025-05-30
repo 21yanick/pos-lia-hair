@@ -18,8 +18,8 @@ import {
 } from "lucide-react"
 
 import { useImport } from '@/lib/hooks/business/useImport'
-import { CsvParser, suggestImportType } from '@/lib/utils/csvParser'
-import { CsvToJsonTransformer } from '@/lib/utils/csvToJsonTransform'
+import { CsvParser, suggestImportType } from '@/shared/utils/csvParser'
+import { CsvToJsonTransformer } from '@/shared/utils/csvToJsonTransform'
 import { ColumnMappingDialog } from './ColumnMappingDialog'
 import { CsvDataPreview } from './CsvDataPreview'
 
@@ -28,7 +28,7 @@ import type {
   ParsedCsvData,
   CsvImportType,
   CsvMappingConfig
-} from '@/lib/types/csvImport'
+} from '@/shared/types/csvImport'
 
 export function CsvImport() {
   const fileInputRef = useRef<HTMLInputElement>(null)

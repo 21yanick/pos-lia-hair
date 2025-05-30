@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { formatDateForAPI, getSwissDayRange } from '@/lib/utils/dateUtils'
+import { formatDateForAPI, getSwissDayRange } from '@/shared/utils/dateUtils'
 import { useDailySummaries } from './useDailySummaries'
 import { useExpenses } from './useExpenses'
 

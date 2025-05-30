@@ -17,7 +17,7 @@ import {
   Eye
 } from 'lucide-react'
 import { useSettlementImport } from '@/lib/hooks/business/useSettlementImport'
-import { formatDateForDisplay } from '@/lib/utils/dateUtils'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 
 export default function SettlementImportPage() {
   const [dragActive, setDragActive] = useState(false)

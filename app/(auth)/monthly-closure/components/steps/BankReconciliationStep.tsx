@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CheckCircle2, AlertTriangle, Upload, Building, Check, X, TrendingUp, TrendingDown } from "lucide-react"
 import { useToast } from "@/lib/hooks/core/useToast"
 import { useBankReconciliation } from "@/lib/hooks/business/useBankReconciliation"
-import { formatDateForDisplay } from "@/lib/utils/dateUtils"
+import { formatDateForDisplay } from "@/shared/utils/dateUtils"
 import { ManualMatchDialog } from "./ManualMatchDialog"
 
 interface BankReconciliationStepProps {

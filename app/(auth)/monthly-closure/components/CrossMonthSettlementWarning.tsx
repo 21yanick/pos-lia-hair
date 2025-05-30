@@ -4,7 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, AlertTriangle, Clock, CreditCard } from "lucide-react"
-import { formatDateForDisplay } from "@/lib/utils/dateUtils"
+import { formatDateForDisplay } from "@/shared/utils/dateUtils"
 
 interface PendingSettlement {
   id: string

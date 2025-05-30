@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { MonthlyStatsData } from "@/lib/types/monthly"
+import type { MonthlyStatsData } from "@/shared/types/monthly"
 
 interface MonthlyStatsProps {
   data: MonthlyStatsData

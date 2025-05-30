@@ -7,8 +7,8 @@ import type {
   ImportConfig, 
   ImportState, 
   ImportDataContainer
-} from '@/lib/types/import'
-import { DEFAULT_CONFIG as CONFIG, SYSTEM_USER_ID as SYSTEM_ID } from '@/lib/types/import'
+} from '@/shared/types/import'
+import { DEFAULT_CONFIG as CONFIG, SYSTEM_USER_ID as SYSTEM_ID } from '@/shared/types/import'
 
 // Import Services
 import { validateImportData } from '@/lib/services/importValidation'
@@ -234,4 +234,4 @@ export type {
   ItemImport, 
   SaleImport, 
   ExpenseImport 
-} from '@/lib/types/import'
+} from '@/shared/types/import'

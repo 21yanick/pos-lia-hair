@@ -1,6 +1,6 @@
 import React from 'react'
-import type { MonthlyStatsData, ExportType, ExportData } from '@/lib/types/monthly'
-import type { TransactionItem } from '@/lib/types/transactions'
+import type { MonthlyStatsData, ExportType, ExportData } from '@/shared/types/monthly'
+import type { TransactionItem } from '@/shared/types/transactions'
 import { formatMonthYear } from './reportHelpers'
 
 // CSV Export functionality

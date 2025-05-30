@@ -22,9 +22,9 @@ import type {
   CsvMappingConfig,
   ColumnMapping,
   FieldDefinition
-} from '@/lib/types/csvImport'
+} from '@/shared/types/csvImport'
 
-import { FIELD_DEFINITIONS } from '@/lib/types/csvImport'
+import { FIELD_DEFINITIONS } from '@/shared/types/csvImport'
 
 interface ColumnMappingDialogProps {
   isOpen: boolean
