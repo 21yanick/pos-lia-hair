@@ -4,7 +4,7 @@ import { CreditCard, Loader2, Minus, Pencil, Plus, Trash2, ShoppingBag, Zap } fr
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import type { CartItem } from "@/lib/hooks/business/useSales"
+import type { CartItem } from "../hooks/useSales"
 
 interface ShoppingCartProps {
   cart: CartItem[]
@@ -23,7 +23,7 @@ export function ShoppingCart({
   onDeleteItem,
   onCheckout,
 }: ShoppingCartProps) {
-  const cartTotal = cart.reduce((sum, item) => sum + item.total, 0)
+  const cartTotal = cart?.reduce((sum, item) => sum + item.total, 0) || 0
 
   return (
     <div className="w-full md:w-1/3 flex flex-col h-full bg-gradient-to-br from-muted/50 to-background rounded-2xl border border-border shadow-sm backdrop-blur-sm">
@@ -34,7 +34,7 @@ export function ShoppingCart({
             <ShoppingBag className="text-primary" size={20} />
           </div>
           Warenkorb
-          {cart.length > 0 && (
+          {cart && cart.length > 0 && (
             <Badge className="ml-3 bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1">
               {cart.length}
             </Badge>
@@ -44,7 +44,7 @@ export function ShoppingCart({
 
       {/* Das URSPRÜNGLICHE Layout: flex-1 + overflow-y-auto */}
       <div className="flex-1 overflow-y-auto p-4">
-        {cart.length === 0 ? (
+        {!cart || cart.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
             <div className="p-4 bg-muted rounded-full mb-4">
               <ShoppingBag className="text-muted-foreground" size={32} />
@@ -54,7 +54,7 @@ export function ShoppingCart({
           </div>
         ) : (
           <div className="space-y-3">
-            {cart.map((item, index) => (
+            {cart && cart.map((item, index) => (
               <div 
                 key={item.id} 
                 className="group bg-background/60 backdrop-blur-sm border border-border rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:bg-background/80"
@@ -98,7 +98,9 @@ export function ShoppingCart({
                     >
                       <Minus size={14} />
                     </Button>
-                    <span className="w-8 text-center text-sm font-semibold">{item.quantity}</span>
+                    <span className="mx-3 font-semibold text-foreground min-w-[20px] text-center">
+                      {item.quantity}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -109,15 +111,15 @@ export function ShoppingCart({
                       <Plus size={14} />
                     </Button>
                   </div>
-                  
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                    className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                    title="Artikel entfernen"
                     onClick={() => onDeleteItem(item.id)}
                     disabled={loading}
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={16} />
                   </Button>
                 </div>
               </div>
@@ -126,41 +128,40 @@ export function ShoppingCart({
         )}
       </div>
 
-      {/* Footer - fest unten */}
-      <div className="p-4 border-t border-border bg-gradient-to-r from-muted/50 to-primary/5 rounded-b-2xl backdrop-blur-sm">
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground font-medium">Zwischensumme</span>
-            <span className="text-foreground font-semibold">CHF {cartTotal.toFixed(2)}</span>
+      {/* Checkout-Bereich */}
+      {cart && cart.length > 0 && (
+        <div className="p-4 border-t border-border bg-gradient-to-r from-secondary/5 to-primary/5 rounded-b-2xl">
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-muted-foreground text-sm">Zwischensumme</span>
+              <span className="font-semibold text-foreground">CHF {cartTotal.toFixed(2)}</span>
+            </div>
+            <Separator className="bg-border/50" />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-lg font-bold text-foreground">Total</span>
+              <span className="text-xl font-bold text-primary">CHF {cartTotal.toFixed(2)}</span>
+            </div>
           </div>
-          
-          <Separator />
-          
-          <div className="flex justify-between items-center py-1">
-            <span className="text-lg font-bold text-foreground">Gesamtbetrag</span>
-            <span className="text-xl font-bold text-primary">CHF {cartTotal.toFixed(2)}</span>
-          </div>
-
-          <Button
-            className="w-full mt-4 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl"
-            size="lg"
-            disabled={cart.length === 0 || loading}
+          <Button 
             onClick={onCheckout}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group"
+            disabled={loading}
           >
             {loading ? (
               <>
-                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                Wird verarbeitet...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Verarbeiten...
               </>
             ) : (
               <>
-                <Zap className="mr-3 h-5 w-5" />
-                Zur Kasse ({cart.length} Artikel)
+                <CreditCard className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                Zur Kasse
+                <Zap className="ml-2 h-4 w-4 group-hover:scale-110 transition-transform" />
               </>
             )}
           </Button>
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { useItems } from "@/lib/hooks/business/useItems"
-import type { ProductTab } from "@/lib/hooks/business/usePOSState"
+import type { ProductTab } from "../hooks/usePOSState"
 import type { Item } from "@/lib/hooks/business/useItems"
 
 interface ProductGridProps {
@@ -30,7 +30,7 @@ export function ProductGrid({
   const { items, loading: itemsLoading } = useItems()
 
   // Filtern der Produkte/Dienstleistungen
-  const filteredItems = items.filter((item) => {
+  const filteredItems = (items || []).filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesTab =
       (activeTab === "services" && item.type === "service") ||
@@ -118,6 +118,7 @@ export function ProductGrid({
                 }`}
                 onClick={(e) => {
                   e.preventDefault();
+                  console.log('Product clicked:', item.name); // Debug
                   onAddToCart(item);
                 }}
               >

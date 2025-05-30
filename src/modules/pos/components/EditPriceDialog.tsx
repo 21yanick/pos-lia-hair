@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import type { CartItem } from "@/lib/hooks/business/useSales"
+import type { CartItem } from "../hooks/useSales"
 
 interface EditPriceDialogProps {
   isOpen: boolean
@@ -48,17 +48,41 @@ export function EditPriceDialog({
 
         <div className="py-6">
           <div className="space-y-4">
-            <Label htmlFor="price" className="text-base font-semibold text-foreground">Preis (CHF)</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.05"
-              min="0"
-              value={editPrice}
-              onChange={(e) => onEditPriceChange(e.target.value)}
-              className="text-2xl py-4 text-center bg-muted/50 border-border focus:border-primary focus:ring-primary/20 rounded-xl"
-              placeholder="0.00"
-            />
+            <div>
+              <Label htmlFor="editPrice" className="text-base font-semibold">
+                Neuer Preis (CHF)
+              </Label>
+              <Input
+                id="editPrice"
+                type="number"
+                step="0.05"
+                min="0"
+                placeholder="0.00"
+                value={editPrice}
+                onChange={(e) => onEditPriceChange(e.target.value)}
+                className="text-lg h-12 mt-2"
+                autoFocus
+              />
+            </div>
+            
+            {editingItem && (
+              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Ursprünglicher Preis:</span>
+                  <span className="font-semibold">CHF {editingItem.price.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Menge:</span>
+                  <span className="font-semibold">{editingItem.quantity}x</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Neuer Gesamtpreis:</span>
+                  <span className="font-bold text-primary">
+                    CHF {((parseFloat(editPrice) || 0) * editingItem.quantity).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -66,15 +90,16 @@ export function EditPriceDialog({
           <Button 
             variant="outline" 
             onClick={onClose}
-            className="py-4 text-base w-full sm:w-auto rounded-xl border-border hover:bg-muted"
+            className="w-full sm:w-auto"
           >
             Abbrechen
           </Button>
           <Button 
             onClick={onSave}
-            className="py-4 text-base w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl"
+            disabled={!editPrice || parseFloat(editPrice) < 0}
+            className="w-full sm:w-auto"
           >
-            <CheckCircle className="mr-2" size={18} />
+            <CheckCircle className="mr-2 h-4 w-4" />
             Preis speichern
           </Button>
         </DialogFooter>
