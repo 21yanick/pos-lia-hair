@@ -1,17 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-export type MonthlyStatsData = {
-  salesTotal: number
-  salesCash: number
-  salesTwint: number
-  salesSumup: number
-  expensesTotal: number
-  expensesCash: number
-  expensesBank: number
-  transactionDays: number
-  daysInMonth: number
-  avgDailyRevenue: number
-}
+import type { MonthlyStatsData } from "@/lib/types/monthly"
 
 interface MonthlyStatsProps {
   data: MonthlyStatsData

@@ -6,7 +6,7 @@ export default function Loading() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Lieferantenrechnungen</h1>
+        <h1 className="text-2xl font-bold">Ausgaben</h1>
         <Skeleton className="h-10 w-40" />
       </div>
       

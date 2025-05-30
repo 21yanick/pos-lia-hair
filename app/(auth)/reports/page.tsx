@@ -55,7 +55,7 @@ export default function ReportsPage() {
               </div>
             </div>
             <Button asChild className="w-full">
-              <Link href="/reports/monthly">Monatsabschlüsse anzeigen</Link>
+              <Link href="/documents">Dokumente anzeigen</Link>
             </Button>
           </CardContent>
         </Card>

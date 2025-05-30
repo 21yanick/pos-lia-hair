@@ -1,12 +1,15 @@
 "use client"
 
-import { RefreshCw } from "lucide-react"
+import Link from "next/link"
+import { RefreshCw, FileUp, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/lib/hooks/core/useToast"
 import { useReports } from "@/lib/hooks/business/useReports"
 import { MonthlyTrendChart } from "./components/MonthlyTrendChart"
 import { DashboardStats } from "./components/DashboardStats"
 import { RecentActivities } from "./components/RecentActivities"
+import { shouldShowSettlementImport, getSettlementImportMessage, getSettlementMonth } from "@/lib/utils/monthUtils"
 
 export default function Dashboard() {
   const {
@@ -83,6 +86,38 @@ export default function Dashboard() {
         data={stats.dashboardStatsData} 
         loading={statsLoading} 
       />
+
+      {/* Settlement Import - Only End of Month (Phase 1) */}
+      {shouldShowSettlementImport() && (
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileUp className="h-5 w-5 text-primary" />
+                <CardTitle>Settlement Import</CardTitle>
+              </div>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <CardDescription>
+              {getSettlementImportMessage()} für {getSettlementMonth()}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Button asChild>
+                <Link href="/settings/settlement-import">
+                  Settlement Import starten
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/documents">
+                  Monatsabschluss
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Chart and Activities Side by Side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

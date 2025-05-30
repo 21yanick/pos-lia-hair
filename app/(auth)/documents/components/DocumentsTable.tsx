@@ -23,7 +23,7 @@ import {
   Trash2 
 } from "lucide-react"
 import { useState } from "react"
-import { formatDisplayDate, getDocumentTypeName, getBadgeVariant } from "@/app/(auth)/documents/utils/documentHelpers"
+import { formatDisplayDate, getDocumentTypeName, getBadgeVariant, formatFileSize } from "@/app/(auth)/documents/utils/documentHelpers"
 import type { DocumentWithDetails } from "@/lib/hooks/business/useDocuments"
 
 interface DocumentsTableProps {
@@ -76,6 +76,8 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
               <th className="p-3"><Skeleton className="h-5 w-16" /></th>
               <th className="p-3"><Skeleton className="h-5 w-16" /></th>
               <th className="p-3"><Skeleton className="h-5 w-16" /></th>
+              <th className="p-3"><Skeleton className="h-5 w-16" /></th>
+              <th className="p-3"><Skeleton className="h-5 w-16" /></th>
               <th className="p-3 text-right"><Skeleton className="h-5 w-16 ml-auto" /></th>
             </tr>
           </thead>
@@ -92,10 +94,16 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
                   <Skeleton className="h-6 w-20" />
                 </td>
                 <td className="p-3">
-                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-16" />
+                </td>
+                <td className="p-3">
+                  <Skeleton className="h-4 w-12" />
                 </td>
                 <td className="p-3">
                   <Skeleton className="h-4 w-24" />
+                </td>
+                <td className="p-3">
+                  <Skeleton className="h-6 w-20" />
                 </td>
                 <td className="p-3 text-right">
                   <div className="flex gap-1 justify-end">
@@ -118,11 +126,13 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
         <table className="w-full">
           <thead className="bg-muted">
             <tr className="text-left">
-              <th className="p-3 font-medium text-sm w-2/5">Dokument</th>
-              <th className="p-3 font-medium text-sm w-1/6">Typ</th>
-              <th className="p-3 font-medium text-sm w-1/6">Beschreibung</th>
-              <th className="p-3 font-medium text-sm w-1/6">Datum</th>
-              <th className="p-3 font-medium text-sm w-1/6">Aktionen</th>
+              <th className="p-3 font-medium text-sm">Dokument</th>
+              <th className="p-3 font-medium text-sm">Typ</th>
+              <th className="p-3 font-medium text-sm">Referenz</th>
+              <th className="p-3 font-medium text-sm">Größe</th>
+              <th className="p-3 font-medium text-sm">Erstellt</th>
+              <th className="p-3 font-medium text-sm">Status</th>
+              <th className="p-3 font-medium text-sm">Aktionen</th>
             </tr>
           </thead>
           <tbody>
@@ -147,11 +157,30 @@ export function DocumentsTable({ documents, loading, onDelete }: DocumentsTableP
                   </td>
                   <td className="p-3 text-sm text-muted-foreground">
                     <div className="truncate max-w-xs">
-                      {doc.description || '-'}
+                      {doc.reference_id ? (
+                        <span className="font-mono text-xs">
+                          {doc.reference_id.substring(0, 8)}...
+                        </span>
+                      ) : '-'}
                     </div>
                   </td>
                   <td className="p-3 text-sm text-muted-foreground">
-                    {doc.created_at ? formatDisplayDate(doc.created_at) : '-'}
+                    {doc.fileSize ? formatFileSize(doc.fileSize) : '-'}
+                  </td>
+                  <td className="p-3 text-sm text-muted-foreground">
+                    <div className="space-y-1">
+                      <div>{doc.created_at ? formatDisplayDate(doc.created_at) : '-'}</div>
+                      {doc.user_id && (
+                        <div className="text-xs text-muted-foreground">
+                          von {doc.user_id.substring(0, 8)}...
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <Badge variant={doc.url ? "default" : "secondary"}>
+                      {doc.url ? "Verfügbar" : "Verarbeitung"}
+                    </Badge>
                   </td>
                   <td className="p-3">
                     <div className="flex gap-1">

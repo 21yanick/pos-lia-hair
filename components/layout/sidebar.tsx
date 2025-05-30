@@ -15,6 +15,7 @@ import {
   X,
   BookOpen,
   Settings,
+  Lock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,10 +26,10 @@ const navItems = [
   { name: "Verkauf", href: "/pos", icon: ShoppingCart },
   { name: "Tagesabschluss", href: "/reports/daily", icon: FileText },
   { name: "Kassenbuch", href: "/reports/cash-register", icon: BookOpen },
-  { name: "Monatsabschlüsse", href: "/reports/monthly", icon: BarChart4 },
-  { name: "Produkte", href: "/products", icon: Package },
-  { name: "Lieferantenrechnungen", href: "/supplier-invoices", icon: FileIcon },
   { name: "Dokumente", href: "/documents", icon: FolderClosed },
+  { name: "Monatsabschluss", href: "/monthly-closure", icon: Lock },
+  { name: "Produkte", href: "/products", icon: Package },
+  { name: "Ausgaben", href: "/expenses", icon: FileIcon },
   { name: "Einstellungen", href: "/settings", icon: Settings },
 ]
 

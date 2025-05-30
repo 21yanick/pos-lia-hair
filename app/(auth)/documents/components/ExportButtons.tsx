@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, Wallet, CreditCard, Receipt, TrendingDown, FileText } from "lucide-react"
-import type { TransactionItem } from "./TransactionsList"
-import type { MonthlyStatsData } from "./MonthlyStats"
+import type { MonthlyStatsData, ExportType } from "@/lib/types/monthly"
+import type { TransactionItem } from "@/lib/types/transactions"
 
 interface ExportButtonsProps {
   transactions: TransactionItem[]
@@ -12,13 +12,7 @@ interface ExportButtonsProps {
   loading?: boolean
 }
 
-export type ExportType = 
-  | 'revenue_cash' 
-  | 'revenue_twint' 
-  | 'revenue_sumup' 
-  | 'expenses_cash' 
-  | 'expenses_bank' 
-  | 'complete_month'
+// ExportType is now imported from @/lib/types/monthly
 
 export function ExportButtons({ transactions, stats, selectedMonth, onExport, loading = false }: ExportButtonsProps) {
   const exportConfigs: Array<{

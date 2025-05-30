@@ -312,6 +312,13 @@ export type Database = {
           notes: string | null
           user_id: string
           created_at: string | null
+          // Settlement tracking fields (Phase 1)
+          gross_amount: number | null
+          provider_fee: number | null
+          net_amount: number | null
+          settlement_status: 'pending' | 'settled' | 'failed' | 'weekend_delay' | 'charged_back' | null
+          settlement_date: string | null
+          provider_reference_id: string | null
         }
         Insert: {
           id?: string
@@ -321,6 +328,13 @@ export type Database = {
           notes?: string | null
           user_id: string
           created_at?: string | null
+          // Settlement tracking fields (Phase 1)
+          gross_amount?: number | null
+          provider_fee?: number | null
+          net_amount?: number | null
+          settlement_status?: 'pending' | 'settled' | 'failed' | 'weekend_delay' | 'charged_back' | null
+          settlement_date?: string | null
+          provider_reference_id?: string | null
         }
         Update: {
           id?: string
@@ -330,6 +344,13 @@ export type Database = {
           notes?: string | null
           user_id?: string
           created_at?: string | null
+          // Settlement tracking fields (Phase 1)
+          gross_amount?: number | null
+          provider_fee?: number | null
+          net_amount?: number | null
+          settlement_status?: 'pending' | 'settled' | 'failed' | 'weekend_delay' | 'charged_back' | null
+          settlement_date?: string | null
+          provider_reference_id?: string | null
         }
         Relationships: [
           {

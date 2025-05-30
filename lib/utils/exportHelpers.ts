@@ -1,84 +1,27 @@
 import React from 'react'
-import { MonthlyReportPDF } from '@/components/pdf/MonthlyReportPDF'
-import type { TransactionItem } from '../components/TransactionsList'
-import type { MonthlyStatsData } from '../components/MonthlyStats'
-import type { ExportType } from '../components/ExportButtons'
+import type { MonthlyStatsData, ExportType, ExportData } from '@/lib/types/monthly'
+import type { TransactionItem } from '@/lib/types/transactions'
+import { formatMonthYear } from './reportHelpers'
 
-export type ExportData = {
-  type: ExportType
-  label: string
-  transactions: TransactionItem[]
-  stats: MonthlyStatsData
-  selectedMonth: string
-  total: number
-}
-
-// Hilfsfunktion: Aktueller Monat/Jahr formatiert
-export function getCurrentYearMonth(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
-  return `${year}-${month.toString().padStart(2, '0')}`
-}
-
-// Hilfsfunktion: Monatsoptionen für Dropdown
-export function getMonthOptions() {
-  const options = []
-  const currentDate = new Date()
-  
-  // Die letzten 12 Monate
-  for (let i = 0; i < 12; i++) {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
-    const year = date.getFullYear()
-    const month = date.getMonth() + 1
-    const value = `${year}-${month.toString().padStart(2, '0')}`
-    const label = date.toLocaleDateString("de-CH", { month: "long", year: "numeric" })
-    options.push({ value, label })
-  }
-  
-  return options
-}
-
-// Hilfsfunktion: Formatiertes Datum für Anzeige
-export function formatMonthYear(yearMonth: string): string {
-  const [year, month] = yearMonth.split('-').map(Number)
-  return new Date(year, month - 1, 1).toLocaleDateString("de-CH", { 
-    month: "long", 
-    year: "numeric"
-  })
-}
-
-// CSV Export
+// CSV Export functionality
 export function exportToCSV(data: ExportData): void {
   const { type, label, transactions, selectedMonth } = data
   
   let csvContent = `${label} - ${formatMonthYear(selectedMonth)}\n`
   csvContent += `Exportiert am: ${new Date().toLocaleDateString('de-CH')}\n\n`
   
-  // Header je nach Export-Typ
-  if (type === 'complete_month') {
-    csvContent += 'Datum,Typ,Beschreibung,Bar,TWINT,SumUp,Total,Status\n'
-  } else if (type.startsWith('revenue_')) {
-    csvContent += 'Datum,Beschreibung,Betrag,Status\n'
-  } else {
-    csvContent += 'Datum,Kategorie,Beschreibung,Betrag,Zahlungsart\n'
-  }
+  // Header für neue TransactionItem Struktur
+  csvContent += 'Datum,Typ,Beschreibung,Betrag,Zahlungsart,Status\n'
   
   // Daten hinzufügen
   transactions.forEach(transaction => {
     const date = new Date(transaction.date).toLocaleDateString('de-CH')
+    const sign = transaction.amount < 0 ? '-' : ''
+    const typeLabel = transaction.type === 'sale' ? 'Verkauf' : 
+                     transaction.type === 'expense' ? 'Ausgabe' : 
+                     transaction.type === 'bank_deposit' ? 'Bankeinzahlung' : 'Unbekannt'
     
-    if (type === 'complete_month') {
-      const sign = transaction.type === 'daily_report' ? '' : '-'
-      csvContent += `${date},"${transaction.type === 'daily_report' ? 'Tagesabschluss' : 'Ausgabe'}","${transaction.description}",${transaction.cash || 0},${transaction.twint || 0},${transaction.sumup || 0},${sign}${transaction.total},${transaction.status || ''}\n`
-    } else if (type.startsWith('revenue_')) {
-      const amount = type === 'revenue_cash' ? transaction.cash : 
-                   type === 'revenue_twint' ? transaction.twint : 
-                   transaction.sumup
-      csvContent += `${date},"${transaction.description}",${amount},${transaction.status}\n`
-    } else {
-      csvContent += `${date},"${transaction.category || 'Ausgabe'}","${transaction.description}",${transaction.total},"${transaction.paymentMethod === 'cash' ? 'Bar' : 'Bank'}"\n`
-    }
+    csvContent += `${date},"${typeLabel}","${transaction.description || ''}",${sign}${Math.abs(transaction.amount)},${transaction.method},${transaction.status}\n`
   })
   
   // CSV-Datei herunterladen
@@ -101,12 +44,15 @@ export async function exportMonthlyPDF(
   console.log("🔧 Monthly PDF Generierung gestartet für:", selectedMonth)
   
   try {
+    // Dynamischer Import für PDF-Komponente
+    const { MonthlyReportPDF } = await import('@/components/pdf/MonthlyReportPDF')
+    
     // React-PDF Komponente erstellen
-    const pdfComponent = <MonthlyReportPDF 
-      stats={stats}
-      transactions={transactions} 
-      selectedMonth={selectedMonth}
-    />
+    const pdfComponent = React.createElement(MonthlyReportPDF, {
+      stats,
+      transactions,
+      selectedMonth
+    })
     
     // PDF direkt mit react-pdf erstellen
     const { pdf } = await import('@react-pdf/renderer')
@@ -189,22 +135,50 @@ export async function exportMonthlyPDF(
   }
 }
 
-// Fallback-Funktion für direkten Download (vereinfacht)
-async function createFallbackPDF(
-  stats: MonthlyStatsData,
-  transactions: TransactionItem[],
-  selectedMonth: string
-): Promise<Blob> {
-  // Dynamischer Import für React-PDF
-  const { pdf } = await import('@react-pdf/renderer')
-  
-  const pdfComponent = <MonthlyReportPDF 
-    stats={stats}
-    transactions={transactions}
-    selectedMonth={selectedMonth}
-  />
-  
-  return await pdf(pdfComponent).toBlob()
+// PDF für bestimmten Monat öffnen/downloaden
+export async function openMonthlyPDF(selectedMonth: string): Promise<void> {
+  try {
+    const { supabase } = await import('@/lib/supabase/client')
+    
+    // Prüfen ob PDF bereits existiert
+    const fileName = `monatsabschluss-${selectedMonth}.pdf`
+    const filePath = `documents/monthly_reports/${fileName}`
+    
+    console.log("🔍 Suche nach existierendem PDF:", filePath)
+    
+    // Erst in der documents table suchen
+    const monthDate = `${selectedMonth}-01`
+    const { data: documentData, error: documentError } = await supabase
+      .from('documents')
+      .select('file_path')
+      .eq('type', 'monthly_report')
+      .eq('document_date', monthDate)
+      .single()
+    
+    if (documentData && !documentError) {
+      // PDF existiert in Datenbank, versuche es zu öffnen
+      console.log("📄 PDF gefunden in Datenbank:", documentData.file_path)
+      
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(documentData.file_path)
+      
+      if (urlData.publicUrl) {
+        console.log("🌐 Öffne existierendes PDF:", urlData.publicUrl)
+        window.open(urlData.publicUrl, '_blank')
+        return
+      }
+    }
+    
+    // PDF existiert nicht, weiterleiten zur Documents-Seite
+    console.log("⚠️ PDF nicht gefunden, leite zu Documents weiter")
+    window.open(`/documents?month=${selectedMonth}`, '_blank')
+    
+  } catch (error: any) {
+    console.error('❌ Fehler beim Öffnen des PDFs:', error)
+    // Fallback: Documents-Seite öffnen
+    window.open(`/documents?month=${selectedMonth}`, '_blank')
+  }
 }
 
 // Hauptexport-Funktion
@@ -218,4 +192,23 @@ export async function handleExport(data: ExportData): Promise<void> {
     // Für spezifische Exports CSV erstellen
     exportToCSV(data)
   }
+}
+
+// Fallback-Funktion für direkten Download (vereinfacht)
+async function createFallbackPDF(
+  stats: MonthlyStatsData,
+  transactions: TransactionItem[],
+  selectedMonth: string
+): Promise<Blob> {
+  // Dynamischer Import für React-PDF
+  const { pdf } = await import('@react-pdf/renderer')
+  const { MonthlyReportPDF } = await import('@/components/pdf/MonthlyReportPDF')
+  
+  const pdfComponent = React.createElement(MonthlyReportPDF, {
+    stats,
+    transactions,
+    selectedMonth
+  })
+  
+  return await pdf(pdfComponent).toBlob()
 }

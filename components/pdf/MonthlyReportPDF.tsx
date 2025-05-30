@@ -1,9 +1,9 @@
 'use client'
 
 import React from 'react'
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
-import type { MonthlyStatsData } from '@/app/(auth)/reports/monthly/components/MonthlyStats'
-import type { TransactionItem } from '@/app/(auth)/reports/monthly/components/TransactionsList'
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import type { MonthlyStatsData } from '@/lib/types/monthly'
+import type { TransactionItem } from '@/lib/types/transactions'
 
 export type MonthlyReportPDFProps = {
   stats: MonthlyStatsData
@@ -321,8 +321,17 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
   selectedMonth 
 }) => {
   // Transaktionen sortieren (neueste zuerst) und limitieren
-  const sortedTransactions = [...transactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  const sortedTransactions = (transactions || [])
+    .filter(t => t && t.date) // Nur gültige Transaktionen
+    .sort((a, b) => {
+      try {
+        const dateA = new Date(a.date).getTime()
+        const dateB = new Date(b.date).getTime()
+        return dateB - dateA
+      } catch (e) {
+        return 0
+      }
+    })
     .slice(0, 20)
 
   return (
@@ -331,10 +340,8 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
         {/* Professional Header */}
         <View style={styles.headerContainer}>
           <View style={styles.logoSection}>
-            <Image 
-              src="/logo.png" 
-              style={styles.logo}
-            />
+            {/* Logo temporarily disabled for PDF stability */}
+            <View style={styles.logo} />
           </View>
           
           <View style={styles.companyInfo}>
@@ -358,23 +365,23 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
           
           <View style={styles.dataRow}>
             <Text style={styles.label}>Bar:</Text>
-            <Text style={styles.value}>CHF {stats.salesCash.toFixed(2)}</Text>
+            <Text style={styles.value}>CHF {(stats.salesCash || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.dataRowAlt}>
             <Text style={styles.label}>TWINT:</Text>
-            <Text style={styles.value}>CHF {stats.salesTwint.toFixed(2)}</Text>
+            <Text style={styles.value}>CHF {(stats.salesTwint || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.dataRow}>
             <Text style={styles.label}>SumUp:</Text>
-            <Text style={styles.value}>CHF {stats.salesSumup.toFixed(2)}</Text>
+            <Text style={styles.value}>CHF {(stats.salesSumup || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.salesTotalSection}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>GESAMTUMSATZ:</Text>
-              <Text style={styles.salesTotal}>CHF {stats.salesTotal.toFixed(2)}</Text>
+              <Text style={styles.salesTotal}>CHF {(stats.salesTotal || 0).toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -385,18 +392,18 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
           
           <View style={styles.dataRow}>
             <Text style={styles.label}>Bar:</Text>
-            <Text style={styles.value}>CHF {stats.expensesCash.toFixed(2)}</Text>
+            <Text style={styles.value}>CHF {(stats.expensesCash || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.dataRowAlt}>
             <Text style={styles.label}>Bank:</Text>
-            <Text style={styles.value}>CHF {stats.expensesBank.toFixed(2)}</Text>
+            <Text style={styles.value}>CHF {(stats.expensesBank || 0).toFixed(2)}</Text>
           </View>
           
           <View style={styles.expensesTotalSection}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>GESAMTAUSGABEN:</Text>
-              <Text style={styles.expensesTotal}>CHF {stats.expensesTotal.toFixed(2)}</Text>
+              <Text style={styles.expensesTotal}>CHF {(stats.expensesTotal || 0).toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -408,20 +415,20 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>Umsatztage</Text>
-              <Text style={styles.statValue}>{stats.transactionDays}/{stats.daysInMonth}</Text>
+              <Text style={styles.statValue}>{stats.transactionDays || 0}/{stats.daysInMonth || 30}</Text>
             </View>
             
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>Ø Tagesumsatz</Text>
-              <Text style={styles.statValue}>CHF {stats.avgDailyRevenue.toFixed(0)}</Text>
+              <Text style={styles.statValue}>CHF {(stats.avgDailyRevenue || 0).toFixed(0)}</Text>
             </View>
           </View>
           
           <View style={styles.totalSection}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>NETTO-ERGEBNIS:</Text>
-              <Text style={stats.salesTotal - stats.expensesTotal >= 0 ? styles.salesTotal : styles.expensesTotal}>
-                CHF {(stats.salesTotal - stats.expensesTotal).toFixed(2)}
+              <Text style={(stats.salesTotal || 0) - (stats.expensesTotal || 0) >= 0 ? styles.salesTotal : styles.expensesTotal}>
+                CHF {((stats.salesTotal || 0) - (stats.expensesTotal || 0)).toFixed(2)}
               </Text>
             </View>
           </View>
@@ -440,17 +447,28 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
               </View>
               
               {sortedTransactions.map((transaction, index) => {
-                const date = new Date(transaction.date).toLocaleDateString('de-CH')
-                const isRevenue = transaction.type === 'daily_report'
-                const type = isRevenue ? 'Tagesabschluss' : 'Ausgabe'
+                // Robust date parsing
+                let date = 'N/A'
+                try {
+                  if (transaction.date) {
+                    const dateStr = transaction.time ? `${transaction.date} ${transaction.time}` : transaction.date
+                    date = new Date(dateStr).toLocaleDateString('de-CH')
+                  }
+                } catch (e) {
+                  date = transaction.date || 'N/A'
+                }
+                
+                const isRevenue = transaction.type === 'sale'
+                const type = isRevenue ? 'Verkauf' : (transaction.type === 'expense' ? 'Ausgabe' : 'Andere')
                 const amountStyle = isRevenue ? styles.transactionPositive : styles.transactionNegative
-                const sign = isRevenue ? '+' : '-'
+                const amount = Math.abs(transaction.amount || 0)
+                const sign = (transaction.amount || 0) >= 0 ? '+' : '-'
                 
                 return (
-                  <View key={transaction.id} style={index % 2 === 0 ? styles.transactionRow : styles.transactionRowAlt}>
+                  <View key={transaction.id || index} style={index % 2 === 0 ? styles.transactionRow : styles.transactionRowAlt}>
                     <Text style={styles.transactionDate}>{date}</Text>
-                    <Text style={styles.transactionType}>{type}</Text>
-                    <Text style={amountStyle}>CHF {sign}{transaction.total.toFixed(2)}</Text>
+                    <Text style={styles.transactionType}>{type} ({transaction.method || 'unknown'})</Text>
+                    <Text style={amountStyle}>CHF {sign}{amount.toFixed(2)}</Text>
                   </View>
                 )
               })}

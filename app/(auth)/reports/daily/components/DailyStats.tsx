@@ -30,61 +30,65 @@ export function DailyStats({ stats, loading = false }: DailyStatsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {/* Bar-Umsätze */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Bar-Umsätze</CardTitle>
-          <Wallet className="h-4 w-4 text-payment-cash" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-payment-cash">
-            CHF {stats.cash.toFixed(2)}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      {/* Main Revenue Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Bar-Umsätze */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Bar-Umsätze</CardTitle>
+            <Wallet className="h-4 w-4 text-payment-cash" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-payment-cash">
+              CHF {stats.cash.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* TWINT-Umsätze */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">TWINT-Umsätze</CardTitle>
-          <Wallet className="h-4 w-4 text-payment-twint" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-payment-twint">
-            CHF {stats.twint.toFixed(2)}
-          </div>
-        </CardContent>
-      </Card>
+        {/* TWINT-Umsätze */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">TWINT-Umsätze</CardTitle>
+            <Wallet className="h-4 w-4 text-payment-twint" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-payment-twint">
+              CHF {stats.twint.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* SumUp-Umsätze */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">SumUp-Umsätze</CardTitle>
-          <CreditCard className="h-4 w-4 text-payment-sumup" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-payment-sumup">
-            CHF {stats.sumup.toFixed(2)}
-          </div>
-        </CardContent>
-      </Card>
+        {/* SumUp-Umsätze */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">SumUp-Umsätze</CardTitle>
+            <CreditCard className="h-4 w-4 text-payment-sumup" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-payment-sumup">
+              CHF {stats.sumup.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Gesamtumsatz */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Gesamtumsatz</CardTitle>
-          <TrendingUp className="h-4 w-4 text-primary" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-primary">
-            CHF {stats.total.toFixed(2)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {stats.transactionCount} Transaktionen
-          </p>
-        </CardContent>
-      </Card>
+        {/* Gesamtumsatz */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Gesamtumsatz</CardTitle>
+            <TrendingUp className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">
+              CHF {stats.total.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.transactionCount} Transaktionen
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
     </div>
   )
 }

@@ -90,7 +90,8 @@ export async function generateDailyReportPDF(
 // Stats aus Transaktionen berechnen
 export function calculateDailyStats(
   transactions: TransactionItem[],
-  startingCash: number = 0
+  startingCash: number = 0,
+  includeSettlementStats: boolean = false // Phase 1: Settlement optional
 ): DailyStatsData {
   const completedTransactions = transactions.filter(t => t.status === 'completed')
   
@@ -109,7 +110,8 @@ export function calculateDailyStats(
   const total = cash + twint + sumup
   const endingCash = startingCash + cash
 
-  return {
+  // Base stats (always included)
+  const baseStats = {
     cash,
     twint,
     sumup,
@@ -118,17 +120,143 @@ export function calculateDailyStats(
     endingCash,
     transactionCount: completedTransactions.length
   }
+
+  // Settlement calculations (Phase 1) - only when requested
+  if (!includeSettlementStats) {
+    return baseStats
+  }
+
+  const twintTransactions = completedTransactions.filter(t => t.method === 'twint')
+  const sumupTransactions = completedTransactions.filter(t => t.method === 'sumup')
+  
+  const twintGross = twintTransactions.reduce((sum, t) => sum + (t.grossAmount || t.amount), 0)
+  const twintFees = twintTransactions.reduce((sum, t) => sum + (t.providerFee || 0), 0)
+  const twintNet = twintTransactions.reduce((sum, t) => sum + (t.netAmount || t.amount), 0)
+  const twintSettled = twintTransactions.filter(t => t.settlementStatus === 'settled').length
+  const twintPending = twintTransactions.filter(t => t.settlementStatus === 'pending').length
+
+  const sumupGross = sumupTransactions.reduce((sum, t) => sum + (t.grossAmount || t.amount), 0)
+  const sumupFees = sumupTransactions.reduce((sum, t) => sum + (t.providerFee || 0), 0)
+  const sumupNet = sumupTransactions.reduce((sum, t) => sum + (t.netAmount || t.amount), 0)
+  const sumupSettled = sumupTransactions.filter(t => t.settlementStatus === 'settled').length
+  const sumupPending = sumupTransactions.filter(t => t.settlementStatus === 'pending').length
+
+  const totalFees = twintFees + sumupFees
+  const totalProviderTransactions = twintTransactions.length + sumupTransactions.length
+  const totalSettled = twintSettled + sumupSettled
+  const settlementRate = totalProviderTransactions > 0 ? (totalSettled / totalProviderTransactions) * 100 : 0
+
+  return {
+    ...baseStats,
+    settlementStats: {
+      twintGross,
+      twintFees,
+      twintNet,
+      twintSettled,
+      twintPending,
+      sumupGross,
+      sumupFees,
+      sumupNet,
+      sumupSettled,
+      sumupPending,
+      totalFees,
+      settlementRate
+    }
+  }
 }
 
-// Transaktionen aus Sales formatieren
+// Transaktionen aus Sales formatieren (Legacy - wird ersetzt)
 export function formatTransactionsFromSales(sales: any[]): TransactionItem[] {
   return sales.map(sale => ({
     id: sale.id,
+    date: formatDateForDisplay(sale.created_at), // Datum hinzugefügt
     time: formatTimeForDisplay(sale.created_at),
     amount: sale.total_amount,
     method: sale.payment_method,
-    status: sale.status
+    status: sale.status,
+    type: 'sale' as const,
+    description: `Verkauf ${sale.id.substring(0, 8)}`,
+    // Settlement fields (Phase 1)
+    grossAmount: sale.gross_amount,
+    providerFee: sale.provider_fee,
+    netAmount: sale.net_amount,
+    settlementStatus: sale.settlement_status,
+    settlementDate: sale.settlement_date,
+    providerReferenceId: sale.provider_reference_id
   }))
+}
+
+// NEUE umfassende Transaktionsfunktion
+export function formatAllTransactions(
+  sales: any[] = [], 
+  expenses: any[] = [], 
+  bankDeposits: any[] = []
+): TransactionItem[] {
+  const allTransactions: TransactionItem[] = []
+
+  // 1. Sales (Verkäufe)
+  sales.forEach(sale => {
+    allTransactions.push({
+      id: sale.id,
+      date: formatDateForDisplay(sale.created_at),
+      time: formatTimeForDisplay(sale.created_at),
+      amount: sale.total_amount,
+      method: sale.payment_method,
+      status: sale.status,
+      type: 'sale',
+      description: `Verkauf`,
+      category: 'revenue',
+      // Settlement fields (nur für TWINT/SumUp)
+      grossAmount: sale.gross_amount,
+      providerFee: sale.provider_fee,
+      netAmount: sale.net_amount,
+      settlementStatus: sale.settlement_status,
+      settlementDate: sale.settlement_date,
+      providerReferenceId: sale.provider_reference_id
+    })
+  })
+
+  // 2. Expenses (Ausgaben)
+  expenses.forEach(expense => {
+    allTransactions.push({
+      id: expense.id,
+      date: formatDateForDisplay(expense.payment_date || expense.created_at),
+      time: formatTimeForDisplay(expense.payment_date || expense.created_at),
+      amount: -expense.amount, // Negativ für Ausgaben
+      method: expense.payment_method || 'bank',
+      status: 'completed',
+      type: 'expense',
+      description: expense.description || 'Geschäftsausgabe',
+      category: expense.category || 'business_expense',
+      // Expenses haben normalerweise kein Settlement (außer bei speziellen Fällen)
+      settlementStatus: expense.payment_method === 'cash' ? 'settled' : null
+    })
+  })
+
+  // 3. Bank Deposits (zukünftig - für Phase 2)
+  bankDeposits.forEach(deposit => {
+    allTransactions.push({
+      id: deposit.id,
+      date: formatDateForDisplay(deposit.deposit_date || deposit.created_at),
+      time: formatTimeForDisplay(deposit.deposit_date || deposit.created_at),
+      amount: deposit.amount,
+      method: 'bank',
+      status: 'completed',
+      type: 'bank_deposit',
+      description: deposit.description || 'Bankeinzahlung',
+      category: 'bank_operation',
+      // Bank Deposits werden über Bank Settlement abgewickelt
+      settlementStatus: 'settled',
+      settlementDate: deposit.settlement_date
+    })
+  })
+
+  // Sortieren nach Datum (neueste zuerst)
+  return allTransactions.sort((a, b) => {
+    const dateA = new Date(a.date + ' ' + a.time)
+    const dateB = new Date(b.date + ' ' + b.time)
+    return dateB.getTime() - dateA.getTime()
+  })
 }
 
 // Datum-Utilities

@@ -47,9 +47,11 @@ export function Header() {
         return "Abschlüsse"
       case "products":
         return "Produkte"
-      case "supplier-invoices":
-        return "Lieferantenrechnungen"
+      case "expenses":
+        return "Ausgaben"
       case "documents":
+        return "Dokumente"
+      case "transactions":
         return "Dokumente"
       default:
         return "Coiffeursalon POS"

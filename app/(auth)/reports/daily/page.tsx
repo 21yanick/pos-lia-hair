@@ -98,7 +98,7 @@ export default function DailyReportPage() {
           const startingCash = summaryResult.success && summaryResult.summary 
             ? summaryResult.summary.cash_starting 
             : 0
-          const calculatedStats = calculateDailyStats(formattedTransactions, startingCash)
+          const calculatedStats = calculateDailyStats(formattedTransactions, startingCash, false) // Phase 1: No settlement stats
           setStats(calculatedStats)
         } else {
           setTransactions([])

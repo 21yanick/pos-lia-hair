@@ -112,7 +112,7 @@ export default function SettingsPage() {
                   Settlement Import ist jetzt im <strong>Monatsabschluss</strong> integriert für optimalen Workflow.
                 </p>
                 <Button variant="outline" asChild className="w-full">
-                  <Link href="/reports/monthly">
+                  <Link href="/documents">
                     Zum Monatsabschluss
                   </Link>
                 </Button>

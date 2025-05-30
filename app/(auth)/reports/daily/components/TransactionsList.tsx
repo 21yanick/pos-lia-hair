@@ -3,7 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Wallet, CreditCard, Loader2 } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Wallet, CreditCard, Loader2, CheckCircle, Clock, AlertCircle } from "lucide-react"
 import type { TransactionItem } from "../utils/dailyTypes"
 
 export type { TransactionItem }
@@ -11,9 +12,14 @@ export type { TransactionItem }
 interface TransactionsListProps {
   transactions: TransactionItem[]
   loading?: boolean
+  showSettlementDetails?: boolean // Phase 1: Settlement optional
 }
 
-export function TransactionsList({ transactions, loading = false }: TransactionsListProps) {
+export function TransactionsList({ 
+  transactions, 
+  loading = false, 
+  showSettlementDetails = false // Phase 1: Default aus
+}: TransactionsListProps) {
   if (loading) {
     return (
       <Card>
@@ -72,13 +78,87 @@ export function TransactionsList({ transactions, loading = false }: Transactions
     )
   }
 
+  const getSettlementBadge = (transaction: TransactionItem) => {
+    if (transaction.method === 'cash') {
+      return null // Cash transactions don't need settlement
+    }
+
+    const settlementStatus = transaction.settlementStatus || 'pending'
+    
+    const variants = {
+      settled: { 
+        icon: CheckCircle, 
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-300",
+        label: "Settled" 
+      },
+      pending: { 
+        icon: Clock, 
+        variant: "secondary" as const,
+        className: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-900 dark:text-orange-300",
+        label: "Pending" 
+      },
+      failed: { 
+        icon: AlertCircle, 
+        variant: "destructive" as const,
+        className: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-300",
+        label: "Failed" 
+      },
+      weekend_delay: { 
+        icon: Clock, 
+        variant: "outline" as const,
+        className: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300",
+        label: "Weekend Delay" 
+      },
+      charged_back: { 
+        icon: AlertCircle, 
+        variant: "destructive" as const,
+        className: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-300",
+        label: "Charged Back" 
+      }
+    }
+
+    const config = variants[settlementStatus] || variants.pending
+    const Icon = config.icon
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge variant={config.variant} className={config.className}>
+              <Icon className="h-3 w-3 mr-1" />
+              {config.label}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="space-y-1">
+              <p>Settlement Status: {config.label}</p>
+              {transaction.providerFee && (
+                <p>Fee: CHF {transaction.providerFee.toFixed(2)}</p>
+              )}
+              {transaction.netAmount && (
+                <p>Net: CHF {transaction.netAmount.toFixed(2)}</p>
+              )}
+              {transaction.settlementDate && (
+                <p>Date: {transaction.settlementDate}</p>
+              )}
+              {transaction.providerReferenceId && (
+                <p>Ref: {transaction.providerReferenceId}</p>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Transaktionen</CardTitle>
         {transactions.length > 0 && (
           <p className="text-sm text-muted-foreground">
-            {transactions.length} Transaktion{transactions.length !== 1 ? 'en' : ''} heute
+            {transactions.length} Transaktion{transactions.length !== 1 ? 'en' : ''}
           </p>
         )}
       </CardHeader>
@@ -91,9 +171,11 @@ export function TransactionsList({ transactions, loading = false }: Transactions
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Datum</TableHead>
                 <TableHead>Zeit</TableHead>
                 <TableHead>Zahlungsart</TableHead>
                 <TableHead>Status</TableHead>
+                {showSettlementDetails && <TableHead>Settlement</TableHead>}
                 <TableHead className="text-right">Betrag</TableHead>
               </TableRow>
             </TableHeader>
@@ -101,6 +183,9 @@ export function TransactionsList({ transactions, loading = false }: Transactions
               {transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">
+                    {transaction.date}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {transaction.time}
                   </TableCell>
                   <TableCell>
@@ -112,8 +197,27 @@ export function TransactionsList({ transactions, loading = false }: Transactions
                   <TableCell>
                     {getStatusBadge(transaction.status)}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
-                    CHF {transaction.amount.toFixed(2)}
+                  {showSettlementDetails && (
+                    <TableCell>
+                      {getSettlementBadge(transaction)}
+                    </TableCell>
+                  )}
+                  <TableCell className="text-right">
+                    <div className="space-y-1">
+                      <div className="font-medium">
+                        CHF {transaction.amount.toFixed(2)}
+                      </div>
+                      {showSettlementDetails && transaction.providerFee && transaction.providerFee > 0 && (
+                        <div className="text-xs text-red-500">
+                          -CHF {transaction.providerFee.toFixed(2)} (Fee)
+                        </div>
+                      )}
+                      {showSettlementDetails && transaction.netAmount && transaction.netAmount !== transaction.amount && (
+                        <div className="text-xs text-green-600">
+                          CHF {transaction.netAmount.toFixed(2)} (Net)
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

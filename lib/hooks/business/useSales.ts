@@ -305,6 +305,34 @@ export function useSales() {
     }
   }
 
+  // Verkäufe für Datumsbereich laden und in State setzen
+  const loadSalesForDateRange = async (startDate: string, endDate: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error } = await supabase
+        .from('sales')
+        .select('*')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        throw error
+      }
+
+      setSales(data || [])
+      return { success: true, sales: data }
+    } catch (err: any) {
+      console.error('Fehler beim Laden der Verkäufe für Datumsbereich:', err)
+      setError(err.message || 'Fehler beim Laden der Verkäufe')
+      return { success: false, error: err.message, sales: [] }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return {
     loading,
     error,
@@ -313,6 +341,7 @@ export function useSales() {
     createSale,
     loadTodaySales,
     getSalesForDateRange,
+    loadSalesForDateRange,
     cancelSale
   }
 }

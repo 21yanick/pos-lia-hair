@@ -17,6 +17,36 @@ export function useMonthlySummaries() {
   const [monthlySummaries, setMonthlySummaries] = useState<MonthlySummary[]>([])
   const [currentMonthlySummary, setCurrentMonthlySummary] = useState<MonthlySummary | null>(null)
 
+  // Prüfen ob ein Monat bereits abgeschlossen ist
+  const checkMonthClosure = async (year: number, month: number): Promise<{ 
+    isClosed: boolean, 
+    summary?: MonthlySummary,
+    error?: string 
+  }> => {
+    try {
+      const { data, error } = await supabase
+        .from('monthly_summaries')
+        .select('*')
+        .eq('year', year)
+        .eq('month', month)
+        .eq('status', 'closed')
+        .maybeSingle()
+      
+      if (error) {
+        console.error('Error checking month closure:', error)
+        return { isClosed: false, error: error.message }
+      }
+      
+      return { 
+        isClosed: !!data, 
+        summary: data || undefined 
+      }
+    } catch (err: any) {
+      console.error('Error checking month closure:', err)
+      return { isClosed: false, error: err.message }
+    }
+  }
+
   // Monatsabschluss erstellen mit automatischer Berechnung
   const createMonthlySummary = async (year: number, month: number, notes?: string) => {
     console.log("🔧 createMonthlySummary gestartet", { year, month, notes })
@@ -280,6 +310,7 @@ export function useMonthlySummaries() {
     getMonthlySummaryByDate,
     closeMonthlySummary,
     loadMonthlySummaries,
-    updateMonthlySummary
+    updateMonthlySummary,
+    checkMonthClosure
   }
 }
