@@ -11,11 +11,10 @@ import {
   FileJson,
   CheckCircle,
   AlertCircle,
-  Loader2,
-  TestTube
+  Loader2
 } from "lucide-react"
-import { useImport, type ItemImport } from '@/lib/hooks/business/useImport'
-import { SettlementTestDataGenerator } from './SettlementTestDataGenerator'
+import { useImport } from '@/lib/hooks/business/useImport'
+import type { ItemImport } from '@/lib/types/import'
 
 // Sample JSON für Tests
 const SAMPLE_ITEMS: ItemImport[] = [
@@ -46,7 +45,7 @@ export function JsonImport() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [jsonData, setJsonData] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState<'upload' | 'test-data'>('upload')
+  // Removed activeTab - only single upload tab now
   
   const { state, processImport, resetState } = useImport()
 
@@ -99,50 +98,12 @@ export function JsonImport() {
   const loadSampleData = () => {
     setJsonData({ items: SAMPLE_ITEMS })
     setSelectedFile(null)
-    setActiveTab('upload')
-  }
-
-  const handleTestDataGenerated = (testJsonData: string) => {
-    try {
-      const data = JSON.parse(testJsonData)
-      setJsonData(data)
-      setSelectedFile(null)
-      setActiveTab('upload') // Switch back to upload tab after generating
-    } catch (error) {
-      console.error('Error parsing test data:', error)
-    }
   }
 
   return (
     <div className="space-y-6">
       
-      {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
-        <Button 
-          variant={activeTab === 'upload' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setActiveTab('upload')}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          JSON Import
-        </Button>
-        <Button 
-          variant={activeTab === 'test-data' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setActiveTab('test-data')}
-        >
-          <TestTube className="h-4 w-4 mr-2" />
-          Settlement Test Data
-        </Button>
-      </div>
-
-      {/* Settlement Test Data Generator */}
-      {activeTab === 'test-data' && (
-        <SettlementTestDataGenerator onTestDataGenerated={handleTestDataGenerated} />
-      )}
-
       {/* JSON Import */}
-      {activeTab === 'upload' && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -150,10 +111,10 @@ export function JsonImport() {
                 <FileJson className="h-5 w-5 text-primary" />
                 <CardTitle>JSON Import</CardTitle>
               </div>
-              <Badge variant="secondary">Phase 1 - MVP</Badge>
+              <Badge variant="default">Vollständig verfügbar</Badge>
             </div>
             <CardDescription>
-              Importieren Sie Produkte und Services aus einer JSON-Datei
+              Vollständiger Import von Produkten, Verkäufen und Ausgaben mit automatischer PDF-Generierung
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -164,9 +125,9 @@ export function JsonImport() {
             <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
               <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <div className="space-y-2">
-                <p className="text-sm font-medium">JSON-Datei auswählen</p>
+                <p className="text-sm font-medium">JSON-Datei hochladen</p>
                 <p className="text-xs text-muted-foreground">
-                  Oder verwenden Sie die Beispieldaten zum Testen
+                  Ihre Daten werden validiert und sicher importiert
                 </p>
               </div>
               <div className="flex justify-center space-x-2 mt-4">
@@ -333,7 +294,6 @@ export function JsonImport() {
 
           </CardContent>
         </Card>
-      )}
     </div>
   )
 }

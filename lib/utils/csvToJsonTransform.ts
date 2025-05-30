@@ -13,7 +13,7 @@ import type {
   ItemImport,
   SaleImport,
   ExpenseImport
-} from '@/lib/hooks/business/useImport'
+} from '@/lib/types/import'
 
 // =================================
 // Main Transformer Class

@@ -1,7 +1,7 @@
 // CSV Import Type Definitions
 // Extends existing import system with CSV-specific functionality
 
-import { ItemImport, SaleImport, ExpenseImport } from '@/lib/hooks/business/useImport'
+import { ItemImport, SaleImport, ExpenseImport } from '@/lib/types/import'
 
 // =================================
 // CSV Data Types
