@@ -154,11 +154,15 @@ export function usePOS() {
     const result = await sales.createSale(data)
     
     if (result.success) {
+      // Speichere alle notwendigen Daten für den ConfirmationDialog
       posState.setTransactionResult({
         success: true,
         transaction: result.sale,
         change: result.change,
-        receiptUrl: result.receiptUrl
+        receiptUrl: result.receiptUrl,
+        amount: cart.getCartTotal(),
+        paymentMethod: posState.selectedPaymentMethod || undefined,
+        cashReceived: posState.selectedPaymentMethod === 'cash' ? parseFloat(posState.cashReceived) : undefined
       })
       posState.closePaymentDialog()
       posState.openConfirmationDialog()

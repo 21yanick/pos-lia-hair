@@ -139,7 +139,7 @@ export function useSales() {
   const createReceiptPDF = async (sale: Sale, items: CartItem[]) => {
     try {
       const React = await import('react')
-      const { ReceiptPDF } = await import('@/components/pdf/ReceiptPDF')
+      const { ReceiptPDF } = await import('@/shared/components/pdf/ReceiptPDF')
       const { pdf } = await import('@react-pdf/renderer')
       
       // PDF erstellen  

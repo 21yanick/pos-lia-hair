@@ -67,11 +67,7 @@ export function Header() {
         {mounted && (
           <button
             onClick={toggleTheme}
-            className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-gray-700"
-            style={{
-              backgroundColor: isDarkMode ? '#374151' : '#e5e7eb',
-              transition: 'background-color 500ms cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
+            className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-gray-700"
           >
             {/* Fixed Sun Icon - Left */}
             <Sun 

@@ -45,7 +45,7 @@ export async function exportMonthlyPDF(
   
   try {
     // Dynamischer Import für PDF-Komponente
-    const { MonthlyReportPDF } = await import('@/components/pdf/MonthlyReportPDF')
+    const { MonthlyReportPDF } = await import('@/shared/components/pdf/MonthlyReportPDF')
     
     // React-PDF Komponente erstellen
     const pdfComponent = React.createElement(MonthlyReportPDF, {
@@ -202,7 +202,7 @@ async function createFallbackPDF(
 ): Promise<Blob> {
   // Dynamischer Import für React-PDF
   const { pdf } = await import('@react-pdf/renderer')
-  const { MonthlyReportPDF } = await import('@/components/pdf/MonthlyReportPDF')
+  const { MonthlyReportPDF } = await import('@/shared/components/pdf/MonthlyReportPDF')
   
   const pdfComponent = React.createElement(MonthlyReportPDF, {
     stats,

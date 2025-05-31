@@ -18,7 +18,7 @@ export async function generateDailyReportPDF(
   try {
     // Import React and DailyReportPDF component dynamically
     const React = await import('react')
-    const { DailyReportPDF } = await import('@/components/pdf/DailyReportPDF')
+    const { DailyReportPDF } = await import('@/shared/components/pdf/DailyReportPDF')
     
     // Generate PDF blob
     console.log("📄 Generiere PDF...")

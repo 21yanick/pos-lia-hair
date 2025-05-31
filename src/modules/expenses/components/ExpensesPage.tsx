@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useExpenses, EXPENSE_CATEGORIES, type ExpenseCategory } from "../hooks/useExpenses"
+import { useExpenses, EXPENSE_CATEGORIES, type ExpenseCategory } from "@/shared/hooks/business/useExpenses"
 import { useToast } from "@/shared/hooks/core/useToast"
 import { format, parseISO } from "date-fns"
 import { de } from "date-fns/locale"

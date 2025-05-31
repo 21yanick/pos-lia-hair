@@ -2,25 +2,14 @@
 
 import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import type { Database } from '@/types/supabase'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
-
-// Typen für Ausgaben (ersetzt SupplierInvoices)
-export type Expense = Database['public']['Tables']['expenses']['Row']
-export type ExpenseInsert = Omit<Database['public']['Tables']['expenses']['Insert'], 'id' | 'created_at'>
-export type ExpenseUpdate = Partial<Omit<Database['public']['Tables']['expenses']['Update'], 'id' | 'created_at'>> & { id: string }
-
-// Kategorien für bessere UI-Darstellung
-export const EXPENSE_CATEGORIES = {
-  rent: 'Miete',
-  supplies: 'Einkauf/Material',
-  salary: 'Lohn',
-  utilities: 'Nebenkosten',
-  insurance: 'Versicherung',
-  other: 'Sonstiges'
-} as const
-
-export type ExpenseCategory = keyof typeof EXPENSE_CATEGORIES
+import type { 
+  Expense, 
+  ExpenseInsert, 
+  ExpenseUpdate, 
+  ExpenseCategory 
+} from '@/shared/types/expenses'
+import { EXPENSE_CATEGORIES } from '@/shared/types/expenses'
 
 export function useExpenses() {
   const [loading, setLoading] = useState(false)
@@ -396,7 +385,7 @@ export function useExpenses() {
 
       // Import PDF libraries dynamically
       const React = await import('react')
-      const { PlaceholderReceiptPDF } = await import('@/components/pdf/PlaceholderReceiptPDF')
+      const { PlaceholderReceiptPDF } = await import('@/shared/components/pdf/PlaceholderReceiptPDF')
       const { pdf } = await import('@react-pdf/renderer')
       
       // Generate PDF

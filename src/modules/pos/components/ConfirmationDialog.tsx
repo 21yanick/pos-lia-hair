@@ -80,19 +80,19 @@ export function ConfirmationDialog({
           <div className="bg-muted/50 rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Betrag:</span>
-              <span className="font-bold text-lg">CHF {cartTotal.toFixed(2)}</span>
+              <span className="font-bold text-lg">CHF {(transactionResult?.amount || cartTotal).toFixed(2)}</span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Zahlungsmethode:</span>
-              <span className="font-semibold">{getPaymentMethodLabel(selectedPaymentMethod)}</span>
+              <span className="font-semibold">{getPaymentMethodLabel(transactionResult?.paymentMethod || selectedPaymentMethod)}</span>
             </div>
 
-            {selectedPaymentMethod === 'cash' && cashReceived && (
+            {(transactionResult?.paymentMethod === 'cash' || selectedPaymentMethod === 'cash') && (transactionResult?.cashReceived || cashReceived) && (
               <>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Erhalten:</span>
-                  <span className="font-semibold">CHF {parseFloat(cashReceived).toFixed(2)}</span>
+                  <span className="font-semibold">CHF {(transactionResult?.cashReceived || parseFloat(cashReceived)).toFixed(2)}</span>
                 </div>
                 {transactionResult?.change && transactionResult.change > 0 && (
                   <div className="flex justify-between items-center">

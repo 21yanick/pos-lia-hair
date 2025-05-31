@@ -164,7 +164,7 @@ export async function generateReceiptPDFsForSales(
       try {
         // Import PDF library dynamically
         const { pdf } = await import('@react-pdf/renderer')
-        const { ReceiptPDF } = await import('@/components/pdf/ReceiptPDF')
+        const { ReceiptPDF } = await import('@/shared/components/pdf/ReceiptPDF')
         const { createElement } = await import('react')
         
         // Generate PDF blob
@@ -350,7 +350,7 @@ export async function generateDailyReportPDFs(
       try {
         // Import PDF libraries dynamically
         const { pdf } = await import('@react-pdf/renderer')
-        const { DailyReportPDF } = await import('@/components/pdf/DailyReportPDF')
+        const { DailyReportPDF } = await import('@/shared/components/pdf/DailyReportPDF')
         const { createElement } = await import('react')
         
         // Generate PDF blob
@@ -454,7 +454,7 @@ export async function generateExpenseReceiptPDFs(
       try {
         // Import PDF libraries dynamically
         const { pdf } = await import('@react-pdf/renderer')
-        const { PlaceholderReceiptPDF } = await import('@/components/pdf/PlaceholderReceiptPDF')
+        const { PlaceholderReceiptPDF } = await import('@/shared/components/pdf/PlaceholderReceiptPDF')
         const { createElement } = await import('react')
         
         // Generate PDF blob
