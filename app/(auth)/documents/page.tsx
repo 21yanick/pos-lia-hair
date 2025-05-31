@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Input } from "@/shared/components/ui/input"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs"
+import { Badge } from "@/shared/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 import { 
   Search, 
   Filter,
@@ -15,7 +15,7 @@ import {
   CreditCard,
   Calendar
 } from "lucide-react"
-import { useToast } from "@/lib/hooks/core/useToast"
+import { useToast } from "@/shared/hooks/core/useToast"
 import { useSales } from "@/lib/hooks/business/useSales"
 import { useExpenses } from "@/lib/hooks/business/useExpenses"
 import { useDocuments } from "@/lib/hooks/business/useDocuments"

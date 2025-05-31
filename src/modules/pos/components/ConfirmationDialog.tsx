@@ -1,15 +1,15 @@
 "use client"
 
 import { CheckCircle, Download, Mail } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/shared/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { useToast } from "@/lib/hooks/core/useToast"
+} from "@/shared/components/ui/dialog"
+import { useToast } from "@/shared/hooks/core/useToast"
 import type { PaymentMethod, TransactionResult } from "../hooks/usePOSState"
 
 interface ConfirmationDialogProps {

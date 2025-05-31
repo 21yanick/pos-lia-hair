@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
 
 // Type für das Item, wie es aus der Datenbank kommt

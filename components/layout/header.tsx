@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { Bell, User, Sun, Moon, Monitor } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/shared/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +13,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { supabase } from "@/lib/supabase/client"
+} from "@/shared/components/ui/dropdown-menu"
+import { supabase } from "@/shared/lib/supabase/client"
 
 export function Header() {
   const pathname = usePathname()

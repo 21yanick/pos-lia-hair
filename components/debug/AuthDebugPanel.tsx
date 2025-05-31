@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
+import { supabase } from "@/shared/lib/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 export function AuthDebugPanel() {

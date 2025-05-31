@@ -1,13 +1,13 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/shared/components/ui/button"
 import { Download, FileText, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { 
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+} from "@/shared/components/ui/popover"
+import { Calendar as CalendarComponent } from "@/shared/components/ui/calendar"
 import { de } from "date-fns/locale"
 import { StatusBadge } from "./StatusBadge"
 import type { DailySummary, DailyActionType } from "../utils/dailyTypes"

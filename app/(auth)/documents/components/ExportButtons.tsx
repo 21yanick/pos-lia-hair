@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Download, Wallet, CreditCard, Receipt, TrendingDown, FileText } from "lucide-react"
 import type { MonthlyStatsData, ExportType } from "@/shared/types/monthly"
 import type { TransactionItem } from "@/shared/types/transactions"

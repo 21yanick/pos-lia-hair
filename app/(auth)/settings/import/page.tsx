@@ -4,10 +4,10 @@ import { useState } from "react"
 import { JsonImport } from "./components/JsonImport"
 import { CsvImport } from "./components/CsvImport"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { Separator } from "@/shared/components/ui/separator"
 import { 
   ArrowLeft,
   Upload, 

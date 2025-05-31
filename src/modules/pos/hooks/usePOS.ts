@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { usePOSState } from './usePOSState'
 import { useSales } from './useSales'
-import { useItems } from '@/lib/hooks/business/useItems'
-import type { Item } from '@/lib/hooks/business/useItems'
+import { useItems } from '@/shared/hooks/business/useItems'
+import type { Item } from '@/shared/hooks/business/useItems'
 import type { CartItem, CreateSaleData } from './useSales'
 
 // Warenkorb-Logik Hook

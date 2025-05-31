@@ -11,19 +11,19 @@ import type {
 import { DEFAULT_CONFIG as CONFIG, SYSTEM_USER_ID as SYSTEM_ID } from '@/shared/types/import'
 
 // Import Services
-import { validateImportData } from '@/lib/services/importValidation'
+import { validateImportData } from '@/shared/services/importValidation'
 import { 
   importItems,
   importSales, 
   importExpenses,
   generateCashMovements,
   calculateDailySummariesForImport
-} from '@/lib/services/importServices'
+} from '@/shared/services/importServices'
 import {
   generateReceiptPDFsForSales,
   generateDailyReportPDFs,
   generateExpenseReceiptPDFs
-} from '@/lib/services/importPdfServices'
+} from '@/shared/services/importPdfServices'
 
 export function useImport() {
   const [state, setState] = useState<ImportState>({

@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Wallet, CreditCard, TrendingUp } from "lucide-react"
 import type { DailyStatsData } from "../utils/dailyTypes"
 

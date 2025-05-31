@@ -18,8 +18,8 @@ import {
   Lock,
 } from "lucide-react"
 import { cn } from "@/shared/utils"
-import { Button } from "@/components/ui/button"
-import { supabase } from "@/lib/supabase/client"
+import { Button } from "@/shared/components/ui/button"
+import { supabase } from "@/shared/lib/supabase/client"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart4 },

@@ -61,7 +61,7 @@ export async function exportMonthlyPDF(
     const file = new File([blob], fileName, { type: 'application/pdf' })
     
     // Datei zu Supabase Storage hochladen
-    const { supabase } = await import('@/lib/supabase/client')
+    const { supabase } = await import('@/shared/lib/supabase/client')
     const filePath = `documents/monthly_reports/${fileName}`
     console.log("☁️ Lade Monthly PDF zu Storage hoch:", filePath)
     
@@ -138,7 +138,7 @@ export async function exportMonthlyPDF(
 // PDF für bestimmten Monat öffnen/downloaden
 export async function openMonthlyPDF(selectedMonth: string): Promise<void> {
   try {
-    const { supabase } = await import('@/lib/supabase/client')
+    const { supabase } = await import('@/shared/lib/supabase/client')
     
     // Prüfen ob PDF bereits existiert
     const fileName = `monatsabschluss-${selectedMonth}.pdf`

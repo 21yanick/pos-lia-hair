@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { Progress } from "@/shared/components/ui/progress"
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -16,9 +16,9 @@ import {
   Eye,
   Lock
 } from "lucide-react"
-import { useToast } from "@/lib/hooks/core/useToast"
+import { useToast } from "@/shared/hooks/core/useToast"
 import { useMonthlySummaries } from "@/lib/hooks/business/useMonthlySummaries"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 import { getCurrentYearMonth, getMonthOptions, formatMonthYear } from "@/shared/utils/reportHelpers"
 
 // Wizard Steps

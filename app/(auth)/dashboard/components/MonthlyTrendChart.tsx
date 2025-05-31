@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/shared/components/ui/chart"
 import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Line, ComposedChart, LineChart } from "recharts"
 
 export type MonthlyData = {

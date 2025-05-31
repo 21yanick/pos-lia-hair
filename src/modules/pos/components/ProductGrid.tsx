@@ -1,14 +1,14 @@
 "use client"
 
 import { Loader2, Search, X, Scissors, Package, Heart } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { useItems } from "@/lib/hooks/business/useItems"
+import { Button } from "@/shared/components/ui/button"
+import { Input } from "@/shared/components/ui/input"
+import { Card, CardContent } from "@/shared/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
+import { Badge } from "@/shared/components/ui/badge"
+import { useItems } from "@/shared/hooks/business/useItems"
 import type { ProductTab } from "../hooks/usePOSState"
-import type { Item } from "@/lib/hooks/business/useItems"
+import type { Item } from "@/shared/hooks/business/useItems"
 
 interface ProductGridProps {
   activeTab: ProductTab

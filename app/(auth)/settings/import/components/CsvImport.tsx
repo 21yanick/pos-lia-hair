@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { Alert, AlertDescription } from "@/shared/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 import { 
   Upload, 
   FileSpreadsheet,
@@ -17,7 +17,7 @@ import {
   Zap
 } from "lucide-react"
 
-import { useImport } from '@/lib/hooks/business/useImport'
+import { useImport } from '@/shared/hooks/business/useImport'
 import { CsvParser, suggestImportType } from '@/shared/utils/csvParser'
 import { CsvToJsonTransformer } from '@/shared/utils/csvToJsonTransform'
 import { ColumnMappingDialog } from './ColumnMappingDialog'

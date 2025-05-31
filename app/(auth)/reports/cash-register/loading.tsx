@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
 
 export default function Loading() {
   return (

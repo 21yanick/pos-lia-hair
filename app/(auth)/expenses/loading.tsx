@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { FileText, AlertTriangle, Clock } from "lucide-react"
 
 export default function Loading() {

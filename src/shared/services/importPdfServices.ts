@@ -1,7 +1,7 @@
 // Import PDF Generation Services
 // Handles all PDF generation for import processes
 
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/shared/lib/supabase/client'
 import type { SaleImport, ExpenseImport } from '@/shared/types/import'
 
 // =================================

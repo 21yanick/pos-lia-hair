@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { useToast } from "@/lib/hooks/core/useToast"
+import { useToast } from "@/shared/hooks/core/useToast"
 import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
 import { useSales } from "@/lib/hooks/business/useSales"
 import { formatDateForAPI, formatDateForDisplay, getTodaySwiss } from "@/shared/utils/dateUtils"

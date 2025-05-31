@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import type { MonthlyStatsData } from "@/shared/types/monthly"
 
 interface MonthlyStatsProps {

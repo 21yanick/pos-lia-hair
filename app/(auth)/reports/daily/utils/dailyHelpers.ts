@@ -1,5 +1,5 @@
 import { pdf } from '@react-pdf/renderer'
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/shared/lib/supabase/client'
 import { formatDateForAPI, formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
 import type { DailySummary, TransactionItem, DailyStatsData } from './dailyTypes'
 

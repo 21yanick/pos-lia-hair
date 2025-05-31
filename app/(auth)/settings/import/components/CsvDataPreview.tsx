@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { ScrollArea } from "@/shared/components/ui/scroll-area"
+import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { 
   Table, 
   TableBody, 
@@ -13,7 +13,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table"
+} from "@/shared/components/ui/table"
 import { 
   Eye, 
   FileText, 
@@ -35,7 +35,7 @@ import type {
   ItemImport,
   SaleImport,
   ExpenseImport
-} from '@/lib/hooks/business/useImport'
+} from '@/shared/hooks/business/useImport'
 
 import { getCsvStats } from '@/shared/utils/csvParser'
 import { validateTransformedData } from '@/shared/utils/csvToJsonTransform'

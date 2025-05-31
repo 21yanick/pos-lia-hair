@@ -1,7 +1,7 @@
 // Import Business Logic Services
 // Core database operations and business logic for imports
 
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/shared/lib/supabase/client'
 import type { ItemImport, SaleImport, ExpenseImport } from '@/shared/types/import'
 
 // =================================

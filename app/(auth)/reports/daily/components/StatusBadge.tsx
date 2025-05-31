@@ -1,6 +1,6 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/shared/components/ui/badge"
 import { CheckCircle, Clock, AlertCircle } from "lucide-react"
 import type { DailySummaryStatus } from "../utils/dailyTypes"
 

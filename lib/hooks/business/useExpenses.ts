@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
-import { useCashMovements } from '../core/useCashMovements'
+import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
 
 // Typen für Ausgaben (ersetzt SupplierInvoices)
 export type Expense = Database['public']['Tables']['expenses']['Row']

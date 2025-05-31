@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { Alert, AlertDescription } from "@/shared/components/ui/alert"
+import { Checkbox } from "@/shared/components/ui/checkbox"
 import { CheckCircle2, AlertTriangle, FileText, CreditCard, Receipt, Building, Eye } from "lucide-react"
 
 interface ReviewStepProps {
