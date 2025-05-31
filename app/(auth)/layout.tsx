@@ -1,6 +1,6 @@
 import type React from "react"
-import { Sidebar } from "@/components/layout/sidebar"
-import { Header } from "@/components/layout/header"
+import { Sidebar } from "@/shared/components/layout/sidebar"
+import { Header } from "@/shared/components/layout/header"
 
 export default function AuthLayout({
   children,

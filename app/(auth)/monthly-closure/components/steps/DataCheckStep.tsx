@@ -7,7 +7,7 @@ import { Badge } from "@/shared/components/ui/badge"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, CheckCircle2, AlertTriangle, Calendar, CreditCard, Receipt } from "lucide-react"
 import { useSales } from "@/shared/hooks/business/useSales"
-import { useExpenses } from "@/shared/hooks/business/useExpenses"
+import { useExpenses } from "@/modules/expenses"
 import { useDailySummaries } from "@/shared/hooks/business/useDailySummaries"
 
 interface DataCheckStepProps {

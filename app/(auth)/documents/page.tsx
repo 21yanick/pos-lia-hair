@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/shared/hooks/core/useToast"
 import { useSales } from "@/shared/hooks/business/useSales"
-import { useExpenses } from "@/shared/hooks/business/useExpenses"
+import { useExpenses } from "@/modules/expenses"
 import { useDocuments } from "@/shared/hooks/business/useDocuments"
 
 // Phase 1B Components - Erweiterte Transaction List mit Settlement Details
