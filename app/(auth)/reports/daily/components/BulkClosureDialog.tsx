@@ -334,7 +334,7 @@ export function BulkClosureDialog({
                 placeholder="0.00"
                 className="mt-1"
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Der Endbestand jedes Tages wird automatisch zum Anfangsbestand des nächsten Tages.
               </p>
             </div>
@@ -343,43 +343,43 @@ export function BulkClosureDialog({
             {cashChain.length > 0 && (
               <div>
                 <Label className="text-base font-medium">Bargeld-Kette mit SOLL/IST ({cashChain.length} Tage)</Label>
-                <div className="mt-2 p-4 bg-blue-50 rounded-lg max-h-64 overflow-y-auto">
+                <div className="mt-2 p-4 bg-muted/50 rounded-lg max-h-64 overflow-y-auto">
                   <div className="space-y-4">
                     {cashChain.map((item, index) => (
-                      <div key={item.date} className="bg-white p-4 rounded-lg border border-blue-200">
+                      <div key={item.date} className="bg-card p-4 rounded-lg border">
                         {/* Header */}
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-blue-600" />
+                            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             <span className="font-semibold">{formatDate(item.date)}</span>
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-muted-foreground">
                             Anfang: CHF {item.cash_starting.toFixed(2)}
                           </div>
                         </div>
                         
                         {/* Sales */}
                         <div className="mb-3 text-sm">
-                          <span className="text-green-600">+ Bargeld-Umsatz: CHF {item.sales_cash.toFixed(2)}</span>
+                          <span className="text-green-600 dark:text-green-400">+ Bargeld-Umsatz: CHF {item.sales_cash.toFixed(2)}</span>
                         </div>
                         
                         {/* SOLL vs IST */}
                         <div className="grid grid-cols-2 gap-3">
                           {/* SOLL */}
-                          <div className="bg-blue-100 p-2 rounded">
-                            <div className="text-xs text-blue-600 font-medium">SOLL-Endbestand</div>
+                          <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded">
+                            <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">SOLL-Endbestand</div>
                             <div className="text-sm font-semibold">CHF {item.cash_ending_soll.toFixed(2)}</div>
                           </div>
                           
                           {/* IST Eingabe */}
-                          <div className="bg-green-100 p-2 rounded">
-                            <div className="text-xs text-green-600 font-medium">IST-Endbestand (gezählt)</div>
+                          <div className="bg-green-100 dark:bg-green-900/20 p-2 rounded">
+                            <div className="text-xs text-green-600 dark:text-green-400 font-medium">IST-Endbestand (gezählt)</div>
                             <Input
                               type="number"
                               step="0.01"
                               value={item.cash_ending_ist}
                               onChange={(e) => updateCashChainIst(item.date, parseFloat(e.target.value) || 0)}
-                              className="h-6 text-sm mt-1 bg-white"
+                              className="h-6 text-sm mt-1 bg-background"
                               placeholder="0.00"
                             />
                           </div>
@@ -388,7 +388,7 @@ export function BulkClosureDialog({
                         {/* Differenz */}
                         {item.difference !== 0 && (
                           <div className={`mt-2 text-center text-sm font-medium ${
-                            item.difference > 0 ? 'text-green-600' : 'text-red-600'
+                            item.difference > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                           }`}>
                             Differenz: {item.difference > 0 ? '+' : ''}{item.difference.toFixed(2)} CHF
                           </div>
@@ -397,7 +397,7 @@ export function BulkClosureDialog({
                         {/* Pfeil zum nächsten Tag */}
                         {index < cashChain.length - 1 && (
                           <div className="flex justify-center mt-3">
-                            <ArrowDown className="h-4 w-4 text-blue-400" />
+                            <ArrowDown className="h-4 w-4 text-blue-400 dark:text-blue-500" />
                           </div>
                         )}
                       </div>
@@ -405,7 +405,7 @@ export function BulkClosureDialog({
                   </div>
                   
                   {/* Zusammenfassung */}
-                  <div className="mt-4 p-3 bg-white rounded border border-blue-200">
+                  <div className="mt-4 p-3 bg-card rounded border">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <strong>Gesamtumsatz Bargeld:</strong><br />
@@ -413,7 +413,7 @@ export function BulkClosureDialog({
                       </div>
                       <div>
                         <strong>Gesamtdifferenz:</strong><br />
-                        <span className={cashChain.reduce((sum, item) => sum + item.difference, 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        <span className={cashChain.reduce((sum, item) => sum + item.difference, 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                           {cashChain.reduce((sum, item) => sum + item.difference, 0) > 0 ? '+' : ''}
                           {cashChain.reduce((sum, item) => sum + item.difference, 0).toFixed(2)} CHF
                         </span>
@@ -456,13 +456,13 @@ export function BulkClosureDialog({
             <div>
               <div className="flex justify-between items-center mb-2">
                 <Label>Fortschritt</Label>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   {currentProcessingDay > 0 ? `Tag ${currentProcessingDay}/${cashChain.length}` : `${successCount + failureCount} / ${cashChain.length}`}
                 </span>
               </div>
               <Progress value={progress} className="w-full" />
               {currentProcessingDay > 0 && isProcessing && (
-                <p className="text-sm text-blue-600 mt-1">
+                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
                   Verarbeite {formatDate(cashChain[currentProcessingDay - 1]?.date || '')}...
                 </p>
               )}
@@ -471,15 +471,15 @@ export function BulkClosureDialog({
             {/* Zusammenfassung */}
             {results.length > 0 && (
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-green-50 rounded-lg text-center">
-                  <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                  <div className="font-semibold text-green-800">{successCount}</div>
-                  <div className="text-sm text-green-600">Erfolgreich</div>
+                <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg text-center">
+                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400 mx-auto mb-1" />
+                  <div className="font-semibold text-green-800 dark:text-green-400">{successCount}</div>
+                  <div className="text-sm text-green-600 dark:text-green-400">Erfolgreich</div>
                 </div>
-                <div className="p-3 bg-red-50 rounded-lg text-center">
-                  <XCircle className="h-6 w-6 text-red-600 mx-auto mb-1" />
-                  <div className="font-semibold text-red-800">{failureCount}</div>
-                  <div className="text-sm text-red-600">Fehlgeschlagen</div>
+                <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg text-center">
+                  <XCircle className="h-6 w-6 text-red-600 dark:text-red-400 mx-auto mb-1" />
+                  <div className="font-semibold text-red-800 dark:text-red-400">{failureCount}</div>
+                  <div className="text-sm text-red-600 dark:text-red-400">Fehlgeschlagen</div>
                 </div>
               </div>
             )}
@@ -490,23 +490,23 @@ export function BulkClosureDialog({
                 <Label className="text-base font-medium">Detaillierte Ergebnisse</Label>
                 <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                   {results.map((result) => (
-                    <div key={result.date} className="flex items-center justify-between p-3 bg-gray-50 rounded text-sm">
+                    <div key={result.date} className="flex items-center justify-between p-3 bg-muted/50 rounded text-sm">
                       <div className="flex items-center gap-2">
                         {result.success ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                         ) : (
-                          <XCircle className="h-4 w-4 text-red-600" />
+                          <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                         )}
                         <div>
                           <div className="font-medium">{formatDate(result.date)}</div>
                           {result.success && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               CHF {result.cash_starting.toFixed(2)} → CHF {result.cash_ending.toFixed(2)} 
                               (Cash: +{result.sales_cash.toFixed(2)})
                               {(() => {
                                 const chainItem = cashChain.find(c => c.date === result.date)
                                 return chainItem && chainItem.difference !== 0 ? (
-                                  <div className={`${chainItem.difference > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  <div className={`${chainItem.difference > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                     Diff: {chainItem.difference > 0 ? '+' : ''}{chainItem.difference.toFixed(2)} CHF
                                   </div>
                                 ) : null
@@ -517,13 +517,13 @@ export function BulkClosureDialog({
                       </div>
                       <div className="text-right">
                         {result.success && result.pdf_created && (
-                          <div className="text-xs text-green-600">✓ PDF erstellt</div>
+                          <div className="text-xs text-green-600 dark:text-green-400">✓ PDF erstellt</div>
                         )}
                         {result.success && !result.pdf_created && (
-                          <div className="text-xs text-orange-600">⚠ Ohne PDF</div>
+                          <div className="text-xs text-orange-600 dark:text-orange-400">⚠ Ohne PDF</div>
                         )}
                         {result.error_message && (
-                          <span className="text-red-600 text-xs">{result.error_message}</span>
+                          <span className="text-red-600 dark:text-red-400 text-xs">{result.error_message}</span>
                         )}
                       </div>
                     </div>
