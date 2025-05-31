@@ -21,8 +21,7 @@ import { useExpenses } from "@/modules/expenses"
 import { useDocuments } from "@/shared/hooks/business/useDocuments"
 
 // Phase 1B Components - Erweiterte Transaction List mit Settlement Details
-import { TransactionsList } from "@/app/(auth)/reports/daily/components/TransactionsList" 
-import { formatAllTransactions } from "@/app/(auth)/reports/daily/utils/dailyHelpers"
+import { TransactionsList, formatAllTransactions } from "@/modules/reports/daily"
 
 // Renamed Components 
 import { DocumentsStats } from "./components/DocumentsStats"
@@ -184,7 +183,7 @@ export default function DocumentsPage() {
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         
         filtered = filtered.filter(doc => {
-          const docDate = new Date(doc.document_date || doc.created_at)
+          const docDate = new Date(doc.document_date || doc.created_at || new Date())
           
           switch (documentDateFilter) {
             case "today":

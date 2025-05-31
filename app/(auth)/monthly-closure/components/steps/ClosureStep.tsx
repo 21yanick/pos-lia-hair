@@ -11,7 +11,7 @@ import { CheckCircle2, AlertTriangle, Lock, FileText, Download, Archive } from "
 import { useToast } from "@/shared/hooks/core/useToast"
 import { useMonthlySummaries } from "@/shared/hooks/business/useMonthlySummaries"
 import { exportMonthlyPDF, openMonthlyPDF } from "@/shared/utils/exportHelpers"
-import { formatAllTransactions } from "@/app/(auth)/reports/daily/utils/dailyHelpers"
+import { formatAllTransactions } from "@/modules/reports/daily"
 
 interface ClosureStepProps {
   selectedMonth: string

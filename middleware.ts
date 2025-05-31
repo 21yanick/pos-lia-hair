@@ -40,8 +40,8 @@ export async function middleware(req: NextRequest) {
           .insert({
             id: session.user.id,
             name: session.user.user_metadata?.name || session.user.email,
-            username: session.user.email.split('@')[0],
-            email: session.user.email,
+            username: session.user.email?.split('@')[0] || 'unknown',
+            email: session.user.email || '',
             role: 'admin', // Standardrolle für neue Benutzer
             active: true
           });

@@ -11,6 +11,10 @@ import type {
 } from '@/shared/types/expenses'
 import { EXPENSE_CATEGORIES } from '@/shared/types/expenses'
 
+// Re-export types and constants for modules
+export type { ExpenseCategory }
+export { EXPENSE_CATEGORIES }
+
 export function useExpenses() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

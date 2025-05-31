@@ -102,8 +102,8 @@ export default function ProductsPage() {
         name: item.name,
         type: item.type,
         default_price: item.default_price.toString(),
-        is_favorite: item.is_favorite,
-        active: item.active,
+        is_favorite: item.is_favorite ?? false,
+        active: item.active ?? true,
       })
     } else {
       setCurrentItem(null)
@@ -350,14 +350,14 @@ export default function ProductsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleToggleFavorite(item.id, item.is_favorite)}
+                      onClick={() => handleToggleFavorite(item.id, item.is_favorite ?? false)}
                       className={item.is_favorite ? "text-warning" : "text-muted-foreground"}
                     >
                       {item.is_favorite ? <Star size={18} /> : <StarOff size={18} />}
                     </Button>
                   </TableCell>
                   <TableCell>
-                    <Switch checked={item.active} onCheckedChange={() => handleToggleActive(item.id, item.active)} />
+                    <Switch checked={item.active ?? true} onCheckedChange={() => handleToggleActive(item.id, item.active ?? true)} />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

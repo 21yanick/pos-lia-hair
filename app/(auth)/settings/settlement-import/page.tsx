@@ -273,7 +273,7 @@ export default function SettlementImportPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <Badge variant="outline">{transaction.payment_method}</Badge>
                       <span className="text-sm text-muted-foreground">
-                        {formatDateForDisplay(transaction.created_at)}
+                        {formatDateForDisplay(transaction.created_at || '')}
                       </span>
                     </div>
                     <div className="text-sm">

@@ -88,15 +88,15 @@ export function ExportButtons({ transactions, stats, selectedMonth, onExport, lo
   const getFilteredData = (type: ExportType): TransactionItem[] => {
     switch (type) {
       case 'revenue_cash':
-        return transactions.filter(t => t.type === 'daily_report' && t.cash && t.cash > 0)
+        return transactions.filter(t => t.method === 'cash' && t.amount > 0)
       case 'revenue_twint':
-        return transactions.filter(t => t.type === 'daily_report' && t.twint && t.twint > 0)
+        return transactions.filter(t => t.method === 'twint' && t.amount > 0)
       case 'revenue_sumup':
-        return transactions.filter(t => t.type === 'daily_report' && t.sumup && t.sumup > 0)
+        return transactions.filter(t => t.method === 'sumup' && t.amount > 0)
       case 'expenses_cash':
-        return transactions.filter(t => t.type === 'expense' && t.paymentMethod === 'cash')
+        return transactions.filter(t => t.type === 'expense' && t.method === 'cash')
       case 'expenses_bank':
-        return transactions.filter(t => t.type === 'expense' && t.paymentMethod === 'bank')
+        return transactions.filter(t => t.type === 'expense' && t.method === 'bank')
       case 'complete_month':
         return transactions
       default:
