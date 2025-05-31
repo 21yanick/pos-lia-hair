@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import { formatDateForAPI, getSwissDayRange } from '@/shared/utils/dateUtils'
-import { useDailySummaries } from '@/lib/hooks/business/useDailySummaries'
-import { useExpenses } from '@/lib/hooks/business/useExpenses'
+import { useDailySummaries } from '@/shared/hooks/business/useDailySummaries'
+import { useExpenses } from '@/shared/hooks/business/useExpenses'
 
 // Type für die vereinfachten Transaktionsdaten im Dashboard
 export type DashboardTransaction = {

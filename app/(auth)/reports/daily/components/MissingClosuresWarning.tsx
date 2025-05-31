@@ -5,7 +5,7 @@ import { AlertTriangle, X, Calendar, DollarSign } from "lucide-react"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
-import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
+import { useDailySummaries } from "@/shared/hooks/business/useDailySummaries"
 
 type MissingClosure = {
   missing_date: string

@@ -7,7 +7,7 @@ import { Badge } from "@/shared/components/ui/badge"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, CheckCircle2, AlertTriangle, Upload, Building, Check, X, TrendingUp, TrendingDown } from "lucide-react"
 import { useToast } from "@/shared/hooks/core/useToast"
-import { useBankReconciliation } from "@/lib/hooks/business/useBankReconciliation"
+import { useBankReconciliation } from "@/shared/hooks/business/useBankReconciliation"
 import { formatDateForDisplay } from "@/shared/utils/dateUtils"
 import { ManualMatchDialog } from "./ManualMatchDialog"
 

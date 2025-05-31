@@ -7,7 +7,7 @@ import { Badge } from "@/shared/components/ui/badge"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, CheckCircle2, AlertTriangle, FileUp, Download } from "lucide-react"
 import { useToast } from "@/shared/hooks/core/useToast"
-import { useSales } from "@/lib/hooks/business/useSales"
+import { useSales } from "@/shared/hooks/business/useSales"
 import { SettlementImportDialog } from "@/app/(auth)/documents/components/SettlementImportDialog"
 import { CrossMonthSettlementWarning } from "../CrossMonthSettlementWarning"
 

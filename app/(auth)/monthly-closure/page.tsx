@@ -17,7 +17,7 @@ import {
   Lock
 } from "lucide-react"
 import { useToast } from "@/shared/hooks/core/useToast"
-import { useMonthlySummaries } from "@/lib/hooks/business/useMonthlySummaries"
+import { useMonthlySummaries } from "@/shared/hooks/business/useMonthlySummaries"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 import { getCurrentYearMonth, getMonthOptions, formatMonthYear } from "@/shared/utils/reportHelpers"
 

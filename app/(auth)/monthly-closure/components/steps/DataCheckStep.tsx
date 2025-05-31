@@ -6,9 +6,9 @@ import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, CheckCircle2, AlertTriangle, Calendar, CreditCard, Receipt } from "lucide-react"
-import { useSales } from "@/lib/hooks/business/useSales"
-import { useExpenses } from "@/lib/hooks/business/useExpenses"
-import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
+import { useSales } from "@/shared/hooks/business/useSales"
+import { useExpenses } from "@/shared/hooks/business/useExpenses"
+import { useDailySummaries } from "@/shared/hooks/business/useDailySummaries"
 
 interface DataCheckStepProps {
   selectedMonth: string

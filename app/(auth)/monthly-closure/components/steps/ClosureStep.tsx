@@ -9,7 +9,7 @@ import { Textarea } from "@/shared/components/ui/textarea"
 import { Label } from "@/shared/components/ui/label"
 import { CheckCircle2, AlertTriangle, Lock, FileText, Download, Archive } from "lucide-react"
 import { useToast } from "@/shared/hooks/core/useToast"
-import { useMonthlySummaries } from "@/lib/hooks/business/useMonthlySummaries"
+import { useMonthlySummaries } from "@/shared/hooks/business/useMonthlySummaries"
 import { exportMonthlyPDF, openMonthlyPDF } from "@/shared/utils/exportHelpers"
 import { formatAllTransactions } from "@/app/(auth)/reports/daily/utils/dailyHelpers"
 

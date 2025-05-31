@@ -16,9 +16,9 @@ import {
   Calendar
 } from "lucide-react"
 import { useToast } from "@/shared/hooks/core/useToast"
-import { useSales } from "@/lib/hooks/business/useSales"
-import { useExpenses } from "@/lib/hooks/business/useExpenses"
-import { useDocuments } from "@/lib/hooks/business/useDocuments"
+import { useSales } from "@/shared/hooks/business/useSales"
+import { useExpenses } from "@/shared/hooks/business/useExpenses"
+import { useDocuments } from "@/shared/hooks/business/useDocuments"
 
 // Phase 1B Components - Erweiterte Transaction List mit Settlement Details
 import { TransactionsList } from "@/app/(auth)/reports/daily/components/TransactionsList" 

@@ -15,7 +15,7 @@ import { Label } from "@/shared/components/ui/label"
 import { Textarea } from "@/shared/components/ui/textarea"
 import { Badge } from "@/shared/components/ui/badge"
 import { Progress } from "@/shared/components/ui/progress"
-import { useDailySummaries } from "@/lib/hooks/business/useDailySummaries"
+import { useDailySummaries } from "@/shared/hooks/business/useDailySummaries"
 import { generateDailyReportPDF, formatTransactionsFromSales } from "../utils/dailyHelpers"
 
 type MissingClosure = {

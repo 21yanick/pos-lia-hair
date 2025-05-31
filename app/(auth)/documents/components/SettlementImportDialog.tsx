@@ -18,7 +18,7 @@ import {
   Eye,
   X
 } from 'lucide-react'
-import { useSettlementImport } from '@/lib/hooks/business/useSettlementImport'
+import { useSettlementImport } from '@/shared/hooks/business/useSettlementImport'
 import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 
 interface SettlementImportDialogProps {

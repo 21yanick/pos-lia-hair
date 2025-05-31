@@ -1,6 +1,6 @@
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
-import type { Expense } from '@/lib/hooks/business/useExpenses'
+import type { Expense } from '@/shared/hooks/business/useExpenses'
 
 interface PlaceholderReceiptPDFProps {
   expense: Expense

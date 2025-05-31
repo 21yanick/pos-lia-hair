@@ -5,7 +5,7 @@ import {
   Calendar, 
   BarChart 
 } from "lucide-react"
-import type { DocumentSummary } from "@/lib/hooks/business/useDocuments"
+import type { DocumentSummary } from "@/shared/hooks/business/useDocuments"
 
 interface DocumentsStatsProps {
   summary: DocumentSummary
