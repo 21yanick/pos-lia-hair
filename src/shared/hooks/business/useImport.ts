@@ -21,7 +21,7 @@ import {
 } from '@/shared/services/importServices'
 import {
   generateReceiptPDFsForSales,
-  generateDailyReportPDFs,
+  // generateDailyReportPDFs, // Disabled - Banking Module will replace Daily Reports
   generateExpenseReceiptPDFs
 } from '@/shared/services/importPdfServices'
 
@@ -157,13 +157,10 @@ export function useImport() {
 
       // 6b: Daily Report PDFs
       if ((data.sales && data.sales.length > 0) || (data.expenses && data.expenses.length > 0)) {
-        const dailyReportPDFs = await generateDailyReportPDFs(
-          data.sales || [], 
-          data.expenses || [], 
-          fullConfig.targetUserId,
-          updateProgress
-        )
-        documentsGenerated += dailyReportPDFs
+        // Daily Report PDFs disabled - Banking Module will replace Daily Reports
+        const dailyReportPDFs: { id: string, filePath: string }[] = []
+        // await generateDailyReportPDFs(data.sales || [], data.expenses || [], fullConfig.targetUserId, updateProgress)
+        documentsGenerated += dailyReportPDFs.length
       }
 
       // 6c: Expense Receipt PDFs

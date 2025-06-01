@@ -254,150 +254,21 @@ startxref
 // Daily Report PDF Generation
 // =================================
 
+// LEGACY: Daily Reports disabled - Banking Module will replace Daily Reports
 export async function generateDailyReportPDFs(
   sales: SaleImport[], 
   expenses: ExpenseImport[], 
   targetUserId: string,
   updateProgress: ProgressCallback
-): Promise<number> {
-  updateProgress(97, 'Generiere Daily Report PDFs...')
-  
-  let generatedPDFs = 0
-  
-  // Get all unique dates from imported data
-  const allDates = new Set<string>()
-  sales.forEach(sale => allDates.add(sale.date))
-  expenses.forEach(expense => allDates.add(expense.date))
-  const uniqueDates = Array.from(allDates).sort()
-  
-  console.log(`🔍 Generating Daily Report PDFs for dates: ${uniqueDates.join(', ')}`)
-  
-  for (const date of uniqueDates) {
-    try {
-      // Get daily summary for this date
-      const { data: summary, error: summaryError } = await supabase
-        .from('daily_summaries')
-        .select('*')
-        .eq('report_date', date)
-        .single()
-      
-      if (summaryError || !summary) {
-        console.warn(`❌ No daily summary found for ${date}`)
-        continue
-      }
-      
-      // Check if daily report PDF already exists
-      const { data: existingDoc } = await supabase
-        .from('documents')
-        .select('id')
-        .eq('type', 'daily_report')
-        .eq('reference_type', 'report')
-        .eq('reference_id', summary.id)
-        .maybeSingle()
-      
-      if (existingDoc) {
-        console.log(`🔍 Daily report PDF already exists for ${date}, skipping`)
-        continue
-      }
-      
-      // Get transactions for this date
-      const { data: salesData } = await supabase
-        .from('sales')
-        .select(`
-          id,
-          total_amount,
-          payment_method,
-          created_at,
-          sale_items (
-            price,
-            items (name)
-          )
-        `)
-        .gte('created_at', `${date}T00:00:00`)
-        .lt('created_at', `${date}T23:59:59`)
-        .order('created_at', { ascending: true })
+): Promise<{ id: string, filePath: string }[]> {
+  // Function disabled - Banking Module will replace Daily Reports
+  console.warn('DailyReportPDF generation disabled - Banking Module will replace Daily Reports')
+  updateProgress(97, 'Daily Report PDFs deaktiviert (Banking Module Migration)')
+  return []
 
-      const { data: expensesData } = await supabase
-        .from('expenses')
-        .select('id, amount, description, payment_method, created_at')
-        .eq('payment_date', date)
-        .order('created_at', { ascending: true })
-      
-      // Transform data for PDF component
-      const transactions = [
-        ...(salesData || []).map(sale => ({
-          id: sale.id,
-          type: 'sale' as const,
-          time: sale.created_at ? sale.created_at.split('T')[1].substring(0, 5) : '12:00',
-          description: sale.sale_items?.map(item => item.items?.name).join(', ') || 'Verkauf',
-          amount: sale.total_amount,
-          payment_method: sale.payment_method,
-          running_balance: 0 // Will be calculated by PDF component
-        })),
-        ...(expensesData || []).map(expense => ({
-          id: expense.id,
-          type: 'expense' as const,
-          time: expense.created_at ? expense.created_at.split('T')[1].substring(0, 5) : '12:00',
-          description: expense.description,
-          amount: -expense.amount,
-          payment_method: expense.payment_method,
-          running_balance: 0 // Will be calculated by PDF component
-        }))
-      ].sort((a, b) => a.time.localeCompare(b.time))
-      
-      console.log(`🔍 Generating Daily Report PDF for ${date}...`)
-      
-      try {
-        // Import PDF libraries dynamically
-        const { pdf } = await import('@react-pdf/renderer')
-        const { DailyReportPDF } = await import('@/shared/components/pdf/DailyReportPDF')
-        const { createElement } = await import('react')
-        
-        // Generate PDF blob
-        const pdfDocument = createElement(DailyReportPDF, {
-          summary,
-          transactions,
-          date
-        })
-        
-        const pdfBlob = await pdf(pdfDocument).toBlob()
-        
-        console.log(`🔍 Daily Report PDF generated, size: ${pdfBlob.size} bytes`)
-        
-        // Upload to Supabase Storage
-        const fileName = `daily_report_${date}.pdf`
-        const filePath = `documents/daily_reports/${fileName}`
-        
-        await uploadPDFToStorage(pdfBlob, filePath, fileName)
-        
-        // Create document record in database
-        await createDocumentRecord({
-          type: 'daily_report',
-          reference_type: 'report',
-          reference_id: summary.id,
-          file_name: fileName,
-          file_path: filePath,
-          file_size: pdfBlob.size,
-          mime_type: 'application/pdf',
-          document_date: date,
-          user_id: targetUserId,
-          notes: 'Import: Daily Report automatisch generiert'
-        })
-        
-        generatedPDFs++
-        
-      } catch (pdfError) {
-        console.error(`❌ Daily Report PDF Error für ${date}:`, pdfError)
-        // Continue with next date
-      }
-      
-    } catch (error) {
-      console.error(`❌ Daily Report PDF Generation Fehler für ${date}:`, error)
-      // Continue with next date
-    }
-  }
-  
-  return generatedPDFs
+  /* LEGACY CODE - Banking Module will replace Daily Reports
+  ... alle Daily Report Generation Logic auskommentiert ...
+  */
 }
 
 // =================================

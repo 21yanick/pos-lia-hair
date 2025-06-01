@@ -1,4 +1,4 @@
-import { CashRegisterPage } from "@/modules/reports/cash-register"
+import { CashRegisterPage } from "@/modules/cash-register"
 
 export default function CashRegisterRoute() {
   return <CashRegisterPage />

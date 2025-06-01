@@ -6,16 +6,13 @@ import { usePathname } from "next/navigation"
 import {
   BarChart4,
   ShoppingCart,
-  FileText,
   Package,
   FileIcon,
-  FolderClosed,
   LogOut,
   Menu,
   X,
   BookOpen,
   Settings,
-  Lock,
 } from "lucide-react"
 import { cn } from "@/shared/utils"
 import { Button } from "@/shared/components/ui/button"
@@ -24,10 +21,7 @@ import { supabase } from "@/shared/lib/supabase/client"
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart4 },
   { name: "Verkauf", href: "/pos", icon: ShoppingCart },
-  { name: "Tagesabschluss", href: "/reports/daily", icon: FileText },
-  { name: "Kassenbuch", href: "/reports/cash-register", icon: BookOpen },
-  { name: "Dokumente", href: "/documents", icon: FolderClosed },
-  { name: "Monatsabschluss", href: "/monthly-closure", icon: Lock },
+  { name: "Kassenbuch", href: "/cash-register", icon: BookOpen },
   { name: "Produkte", href: "/products", icon: Package },
   { name: "Ausgaben", href: "/expenses", icon: FileIcon },
   { name: "Einstellungen", href: "/settings", icon: Settings },
