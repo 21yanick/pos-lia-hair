@@ -14,6 +14,7 @@ import { useBankingData } from './hooks/useBankingData'
 import { CashTransferDialog } from './components/CashTransferDialog'
 import { BankImportDialog } from './components/BankImportDialog'
 import { ProviderImportDialog } from './components/ProviderImportDialog'
+import { OwnerTransactionDialog } from './components/OwnerTransactionDialog'
 import { supabase } from '@/shared/lib/supabase/client'
 
 export function BankingPage() {
@@ -36,6 +37,12 @@ export function BankingPage() {
   // Provider Import Dialog state
   const [providerImportOpen, setProviderImportOpen] = useState(false)
 
+  // Owner Transaction Dialog state
+  const [ownerTransactionDialog, setOwnerTransactionDialog] = useState<{
+    isOpen: boolean
+    transactionType: 'deposit' | 'expense' | 'withdrawal'
+  }>({ isOpen: false, transactionType: 'deposit' })
+
   // Real data from Banking API
   const {
     unmatchedSales,
@@ -49,6 +56,7 @@ export function BankingPage() {
     handleBankMatch,
     refetchData,
     bankAccounts,
+    ownerBalance,
     handleProviderImportSuccess
   } = useBankingData()
 
@@ -148,6 +156,20 @@ export function BankingPage() {
     console.log('Banking data refreshed after provider import')
   }
 
+  // Owner Transaction handlers
+  const openOwnerTransactionDialog = (transactionType: 'deposit' | 'expense' | 'withdrawal') => {
+    setOwnerTransactionDialog({ isOpen: true, transactionType })
+  }
+
+  const closeOwnerTransactionDialog = () => {
+    setOwnerTransactionDialog({ isOpen: false, transactionType: 'deposit' })
+  }
+
+  const handleOwnerTransactionSuccess = () => {
+    // Refresh banking data to show new owner transactions in Tab 2 (if bank_transfer)
+    refetchData()
+  }
+
   // Get current user ID from auth
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
@@ -171,7 +193,8 @@ export function BankingPage() {
         </div>
         
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-2">
+          {/* Cash Transfer Buttons */}
           <Button
             onClick={() => openCashTransferDialog('to_bank')}
             variant="outline"
@@ -187,6 +210,22 @@ export function BankingPage() {
           >
             <ArrowDownToLine className="h-4 w-4" />
             Geld von Bank abheben
+          </Button>
+          
+          {/* Owner Transaction Buttons */}
+          <Button 
+            onClick={() => openOwnerTransactionDialog('deposit')}
+            variant="outline" 
+            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            💰 Geld ins Geschäft einzahlen
+          </Button>
+          <Button 
+            onClick={() => openOwnerTransactionDialog('withdrawal')}
+            variant="outline" 
+            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
+            💸 Geld aus Geschäft entnehmen
           </Button>
         </div>
       </div>
@@ -228,6 +267,64 @@ export function BankingPage() {
             {raiffeisenAccount?.last_statement_date && (
               <p className="text-xs text-muted-foreground mt-1">
                 Last Import: {new Date(raiffeisenAccount.last_statement_date).toLocaleDateString()}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Owner Balance Card */}
+        <Card>
+          <CardContent className="p-6">
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mb-2" />
+            ) : (
+              <div className={`text-3xl font-bold ${
+                ownerBalance && ownerBalance.net_balance > 0 
+                  ? 'text-primary' 
+                  : ownerBalance && ownerBalance.net_balance < 0 
+                    ? 'text-destructive'
+                    : 'text-muted-foreground'
+              }`}>
+                {ownerBalance ? 
+                  `${ownerBalance.net_balance > 0 ? '+' : ''}${ownerBalance.net_balance.toFixed(2)}` : 
+                  '0.00'
+                } CHF
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground flex items-center mt-2">
+              <Building2 className="h-4 w-4 mr-1" />
+              Owner Darlehen
+            </p>
+            {ownerBalance && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {ownerBalance.net_balance > 0 
+                  ? 'Business schuldet Owner' 
+                  : ownerBalance.net_balance < 0 
+                    ? 'Owner schuldet Business'
+                    : 'Ausgeglichen'
+                }
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Stats Card */}
+        <Card>
+          <CardContent className="p-6">
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mb-2" />
+            ) : (
+              <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                {stats ? stats.unmatchedBankTransactions + stats.unmatchedSales : 0}
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground flex items-center mt-2">
+              <AlertCircle className="h-4 w-4 mr-1" />
+              Offene Abgleiche
+            </p>
+            {stats && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.unmatchedSales} Sales, {stats.unmatchedBankTransactions} Bank
               </p>
             )}
           </CardContent>
@@ -629,6 +726,14 @@ export function BankingPage() {
           onSuccess={handleProviderImportSuccessLocal}
         />
       )}
+
+      {/* Owner Transaction Dialog */}
+      <OwnerTransactionDialog
+        isOpen={ownerTransactionDialog.isOpen}
+        transactionType={ownerTransactionDialog.transactionType}
+        onClose={closeOwnerTransactionDialog}
+        onSuccess={handleOwnerTransactionSuccess}
+      />
     </div>
   )
 }

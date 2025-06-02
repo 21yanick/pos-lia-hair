@@ -199,7 +199,7 @@ export type ProviderReportUpdate = {
 // TRANSACTION MATCHING
 // =====================================================
 
-export type MatchedType = 'sale' | 'expense' | 'provider_batch' | 'cash_movement'
+export type MatchedType = 'sale' | 'expense' | 'provider_batch' | 'cash_movement' | 'owner_transaction'
 export type MatchType = 'automatic' | 'manual' | 'suggested'
 
 export type TransactionMatchRow = {
@@ -278,6 +278,68 @@ export type CashMovementWithBanking = {
 export type MovementType = 'cash_operation' | 'bank_transfer'
 
 // =====================================================
+// OWNER TRANSACTIONS
+// =====================================================
+
+export type OwnerTransactionType = 'deposit' | 'expense' | 'withdrawal'
+export type OwnerPaymentMethod = 'bank_transfer' | 'private_card' | 'private_cash'
+
+export type OwnerTransactionRow = {
+  id: string
+  transaction_type: OwnerTransactionType
+  amount: number
+  description: string
+  transaction_date: string
+  payment_method: OwnerPaymentMethod
+  related_expense_id: string | null
+  related_bank_transaction_id: string | null
+  banking_status: SimpleBankingStatus
+  user_id: string
+  created_at: string
+  updated_at: string
+  notes: string | null
+}
+
+export type OwnerTransactionInsert = {
+  id?: string
+  transaction_type: OwnerTransactionType
+  amount: number
+  description: string
+  transaction_date: string
+  payment_method: OwnerPaymentMethod
+  related_expense_id?: string | null
+  related_bank_transaction_id?: string | null
+  banking_status?: SimpleBankingStatus
+  user_id: string
+  created_at?: string
+  updated_at?: string
+  notes?: string | null
+}
+
+export type OwnerTransactionUpdate = {
+  id?: string
+  transaction_type?: OwnerTransactionType
+  amount?: number
+  description?: string
+  transaction_date?: string
+  payment_method?: OwnerPaymentMethod
+  related_expense_id?: string | null
+  related_bank_transaction_id?: string | null
+  banking_status?: SimpleBankingStatus
+  user_id?: string
+  created_at?: string
+  updated_at?: string
+  notes?: string | null
+}
+
+export interface OwnerBalance {
+  total_deposits: number
+  total_expenses: number
+  total_withdrawals: number
+  net_balance: number // Positive = Business owes Owner
+}
+
+// =====================================================
 // UI COMPONENT TYPES
 // =====================================================
 
@@ -319,7 +381,7 @@ export type UnmatchedBankTransaction = {
 
 export type AvailableForBankMatching = {
   id: string
-  item_type: 'sale' | 'expense' | 'cash_movement'
+  item_type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction'
   date: string
   amount: number
   description: string

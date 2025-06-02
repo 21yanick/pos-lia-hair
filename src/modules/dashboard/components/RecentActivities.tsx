@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Badge } from "@/shared/components/ui/badge"
 import { Wallet, CreditCard, Receipt, TrendingDown, ShoppingCart } from "lucide-react"
+import { EXPENSE_CATEGORIES, type ExpenseCategory } from "@/shared/types/expenses"
 
 export type ActivityItem = {
   id: string
@@ -115,7 +116,8 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
     if (activity.type === 'sale') {
       return 'Verkauf'
     } else {
-      return activity.category || 'Ausgabe'
+      // Map English category to German label
+      return activity.category ? EXPENSE_CATEGORIES[activity.category as ExpenseCategory] || activity.category : 'Ausgabe'
     }
   }
 

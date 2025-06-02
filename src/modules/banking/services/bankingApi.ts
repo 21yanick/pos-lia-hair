@@ -249,7 +249,7 @@ export async function createProviderMatch(saleId: string, providerReportId: stri
 // Create Bank Match (Tab 2: Bank Transaction ↔ Items)
 export async function createBankMatch(
   bankTransactionId: string, 
-  matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement', id: string, amount: number }>
+  matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction', id: string, amount: number }>
 ) {
   try {
     // Create transaction matches
@@ -279,10 +279,13 @@ export async function createBankMatch(
     // Update matched items status
     for (const item of matchedItems) {
       const table = item.type === 'sale' ? 'sales' : 
-                   item.type === 'expense' ? 'expenses' : 'cash_movements'
+                   item.type === 'expense' ? 'expenses' : 
+                   item.type === 'owner_transaction' ? 'owner_transactions' : 'cash_movements'
       
       const updateData = item.type === 'sale' 
         ? { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' as any }
+        : item.type === 'owner_transaction'
+        ? { related_bank_transaction_id: bankTransactionId, banking_status: 'matched' as any }
         : { bank_transaction_id: bankTransactionId, banking_status: 'matched' as any }
 
       const { error } = await supabase

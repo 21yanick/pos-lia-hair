@@ -22,6 +22,8 @@ import {
   type BankingStats,
   type BankAccount
 } from '../services/bankingApi'
+import { getOwnerBalance, type OwnerBalance } from '../services/ownerTransactionsApi'
+import { supabase } from '@/shared/lib/supabase/client'
 
 // =====================================================
 // HOOK INTERFACE
@@ -39,6 +41,9 @@ export interface UseBankingDataReturn {
   // Bank Accounts
   bankAccounts: BankAccount[] | null
   
+  // Owner Balance
+  ownerBalance: OwnerBalance | null
+  
   // Stats
   stats: BankingStats | null
   
@@ -48,7 +53,7 @@ export interface UseBankingDataReturn {
   
   // Actions
   handleProviderMatch: (saleId: string, providerReportId: string) => Promise<boolean>
-  handleBankMatch: (bankTransactionId: string, matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement', id: string, amount: number }>) => Promise<boolean>
+  handleBankMatch: (bankTransactionId: string, matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction', id: string, amount: number }>) => Promise<boolean>
   refetchData: () => Promise<void>
   
   // Provider Import Actions
@@ -71,6 +76,9 @@ export function useBankingData(): UseBankingDataReturn {
   // Bank accounts
   const [bankAccounts, setBankAccounts] = useState<BankAccount[] | null>(null)
   
+  // Owner Balance
+  const [ownerBalance, setOwnerBalance] = useState<OwnerBalance | null>(null)
+  
   // Stats and UI state
   const [stats, setStats] = useState<BankingStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -85,6 +93,10 @@ export function useBankingData(): UseBankingDataReturn {
       setIsLoading(true)
       setError(null)
 
+      // Get current user ID for Owner Balance
+      const { data: { session } } = await supabase.auth.getSession()
+      const userId = session?.user?.id
+
       // Fetch all data in parallel for performance
       const [
         salesResult,
@@ -92,14 +104,16 @@ export function useBankingData(): UseBankingDataReturn {
         bankResult,
         matchingResult,
         statsResult,
-        accountsResult
+        accountsResult,
+        ownerBalanceResult
       ] = await Promise.all([
         getUnmatchedSalesForProvider(),
         getUnmatchedProviderReports(),
         getUnmatchedBankTransactions(),
         getAvailableForBankMatching(),
         getBankingStats(),
-        getBankAccounts()
+        getBankAccounts(),
+        userId ? getOwnerBalance(userId) : Promise.resolve({ data: null, error: null })
       ])
 
       // Check for errors and update state with proper type guards
@@ -121,6 +135,9 @@ export function useBankingData(): UseBankingDataReturn {
       if (accountsResult.error) {
         throw new Error(`Accounts: ${accountsResult.error.message || 'Unknown error'}`)
       }
+      if (ownerBalanceResult.error) {
+        console.warn('Owner Balance fetch failed:', ownerBalanceResult.error) // Non-critical, just warn
+      }
 
       // Update state with proper null checks and type casting
       if (salesResult.data && !salesResult.error) {
@@ -140,6 +157,9 @@ export function useBankingData(): UseBankingDataReturn {
       }
       if (accountsResult.data && !accountsResult.error) {
         setBankAccounts(accountsResult.data as BankAccount[])
+      }
+      if (ownerBalanceResult.data && !ownerBalanceResult.error) {
+        setOwnerBalance(ownerBalanceResult.data)
       }
 
     } catch (err) {
@@ -260,6 +280,9 @@ export function useBankingData(): UseBankingDataReturn {
     
     // Bank Accounts
     bankAccounts,
+    
+    // Owner Balance
+    ownerBalance,
     
     // Stats
     stats,
