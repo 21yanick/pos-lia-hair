@@ -188,14 +188,6 @@ export function BankingPage() {
             <ArrowDownToLine className="h-4 w-4" />
             Geld von Bank abheben
           </Button>
-          <Button
-            onClick={openBankImportDialog}
-            variant="default"
-            className="flex items-center gap-2"
-          >
-            <Upload className="h-4 w-4" />
-            Bank Import
-          </Button>
         </div>
       </div>
 
@@ -217,46 +209,27 @@ export function BankingPage() {
         </Alert>
       )}
 
-      {/* Status Overview */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Bank Balance Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Bank Balance Card */}
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             {isLoading ? (
-              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="h-8 w-24 mb-2" />
             ) : (
-              <div className="text-2xl font-bold">{stats?.unmatchedSales || 0}</div>
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                {raiffeisenAccount ? `${raiffeisenAccount.current_balance.toFixed(2)}` : '0.00'} CHF
+              </div>
             )}
-            <p className="text-sm text-muted-foreground">Unmatched Sales</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            {isLoading ? (
-              <Skeleton className="h-8 w-16 mb-2" />
-            ) : (
-              <div className="text-2xl font-bold">{stats?.unmatchedProviderReports || 0}</div>
+            <p className="text-sm text-muted-foreground flex items-center mt-2">
+              <CreditCard className="h-4 w-4 mr-1" />
+              Raiffeisen Bank Balance
+            </p>
+            {raiffeisenAccount?.last_statement_date && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Last Import: {new Date(raiffeisenAccount.last_statement_date).toLocaleDateString()}
+              </p>
             )}
-            <p className="text-sm text-muted-foreground">Unmatched Settlements</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            {isLoading ? (
-              <Skeleton className="h-8 w-16 mb-2" />
-            ) : (
-              <div className="text-2xl font-bold">{stats?.unmatchedExpenses || 0}</div>
-            )}
-            <p className="text-sm text-muted-foreground">Unmatched Expenses</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            {isLoading ? (
-              <Skeleton className="h-8 w-16 mb-2" />
-            ) : (
-              <div className="text-2xl font-bold">{stats?.unmatchedBankTransactions || 0}</div>
-            )}
-            <p className="text-sm text-muted-foreground">Unmatched Bank</p>
           </CardContent>
         </Card>
       </div>
@@ -427,25 +400,36 @@ export function BankingPage() {
         {/* Tab 2: Bank Reconciliation */}
         <TabsContent value="bank" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Bank Transactions ↔ Expenses & Provider Batches</h2>
-            <Button 
-              onClick={handleBankMatchClick}
-              disabled={!selectedBank || selectedItems.length === 0 || isMatching}
-            >
-              {isMatching ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <ArrowRightLeft className="h-4 w-4 mr-2" />
-              )}
-              {isMatching ? 'Matching...' : `Match Selected (${selectedItems.length})`}
-            </Button>
+            <h2 className="text-xl font-semibold">Bank-Transaktionen ↔ Alle Geschäftsvorfälle</h2>
+            <div className="flex gap-2">
+              <Button 
+                onClick={openBankImportDialog}
+                variant="outline"
+                className="flex items-center gap-2"
+                disabled={!raiffeisenAccount}
+              >
+                <Upload className="h-4 w-4" />
+                Bank-Daten importieren
+              </Button>
+              <Button 
+                onClick={handleBankMatchClick}
+                disabled={!selectedBank || selectedItems.length === 0 || isMatching}
+              >
+                {isMatching ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
+                )}
+                {isMatching ? 'Verknüpfen...' : `Auswahl verknüpfen (${selectedItems.length})`}
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             {/* Left: Bank Transactions */}
             <Card>
               <CardHeader>
-                <CardTitle>Bank Transactions</CardTitle>
+                <CardTitle>Bank-Transaktionen</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -502,13 +486,13 @@ export function BankingPage() {
             {/* Right: Expenses & Provider Batches */}
             <Card>
               <CardHeader>
-                <CardTitle>Expenses & Provider Batches</CardTitle>
+                <CardTitle>Ausgaben & Abgeglichene Verkäufe</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">Select</TableHead>
+                      <TableHead className="w-12">Auswahl</TableHead>
                       <TableHead>Datum</TableHead>
                       <TableHead>Betrag</TableHead>
                       <TableHead>Beschreibung</TableHead>
@@ -552,7 +536,54 @@ export function BankingPage() {
                           <TableCell className={item.amount > 0 ? 'text-success' : 'text-destructive'}>
                             {item.amount > 0 ? '+' : ''}{item.amount.toFixed(2)} CHF
                           </TableCell>
-                          <TableCell>{item.description}</TableCell>
+                          <TableCell>
+                          <div className="flex items-start gap-2 flex-wrap">
+                            {/* Provider Badge with strong theme colors */}
+                            {(item.description.toLowerCase().includes('sumup') || 
+                              item.description.includes('sumup net') ||
+                              item.description.includes('SUMUP PAYMENTS')) && (
+                              <Badge 
+                                variant="secondary" 
+                                style={{ backgroundColor: '#2563eb', color: 'white', border: 'none' }}
+                                className="font-semibold shadow-sm hover:opacity-90"
+                              >
+                                SumUp
+                              </Badge>
+                            )}
+                            {(item.description.toLowerCase().includes('twint') || 
+                              item.description.includes('TWINT Acquiring') ||
+                              item.description.includes('Gutschrift TWINT')) && (
+                              <Badge 
+                                variant="secondary" 
+                                style={{ backgroundColor: '#d97706', color: 'white', border: 'none' }}
+                                className="font-semibold shadow-sm hover:opacity-90"
+                              >
+                                TWINT
+                              </Badge>
+                            )}
+                            {item.item_type === 'cash_movement' && (
+                              <Badge 
+                                variant="secondary" 
+                                style={{ backgroundColor: '#16a34a', color: 'white', border: 'none' }}
+                                className="font-semibold shadow-sm hover:opacity-90"
+                              >
+                                Cash
+                              </Badge>
+                            )}
+                            {item.item_type === 'expense' && (
+                              <Badge 
+                                variant="destructive" 
+                                style={{ backgroundColor: '#dc2626', color: 'white', border: 'none' }}
+                                className="font-semibold shadow-sm hover:opacity-90"
+                              >
+                                Ausgabe
+                              </Badge>
+                            )}
+                            <div className="text-sm leading-relaxed">
+                              {item.description.replace(/\(sumup net\)|\(twint\)/gi, '').trim()}
+                            </div>
+                          </div>
+                        </TableCell>
                           <TableCell>
                             <Badge variant="outline">
                               {item.item_type === 'sale' ? 'Sale' : 
