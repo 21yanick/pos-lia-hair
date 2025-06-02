@@ -303,3 +303,309 @@ Um Änderungen am Datenbankschema vorzunehmen:
 3. SQL im Supabase Studio oder direkt auf der Datenbank ausführen
 
 Die Migrations-Dateien dienen auch als Dokumentation für Schemaänderungen und erleichtern die Reproduzierbarkeit der Entwicklungsumgebung.
+
+## 10. Production Deployment (Self-Hosted)
+
+### 10.1 Überblick
+
+Supabase kann kostenlos auf einem eigenen VPS selbst gehostet werden. Dies bietet:
+
+- **Kostenvorteile**: Nur VPS-Kosten (ca. 10-30€/Monat) statt Supabase Cloud Pricing
+- **Volle Kontrolle**: Keine Limits wie bei Supabase Cloud
+- **DSGVO-Konformität**: Daten bleiben auf deutschem/europäischem Server
+- **Skalierbarkeit**: Selbstbestimmte Ressourcenzuteilung
+
+### 10.2 Server-Vorbereitung
+
+#### VPS-Anforderungen
+- **Minimum**: 2 CPU, 4GB RAM, 40GB SSD
+- **Empfohlen**: 4 CPU, 8GB RAM, 80GB SSD
+- **Provider**: Hetzner, DigitalOcean, Linode
+
+#### Docker Installation
+```bash
+# System aktualisieren
+sudo apt update && sudo apt upgrade -y
+
+# Docker installieren
+sudo apt install docker.io docker-compose -y
+
+# Docker-Service starten
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# Benutzer zur Docker-Gruppe hinzufügen
+sudo usermod -aG docker $USER
+```
+
+### 10.3 Supabase Production Setup
+
+#### Repository Setup
+```bash
+# Supabase Repository klonen
+git clone https://github.com/supabase/supabase.git /opt/supabase
+cd /opt/supabase/docker
+
+# Backup der Original-Konfiguration
+cp .env.example .env.backup
+```
+
+#### Sichere Umgebungsvariablen (.env)
+```env
+# ⚠️ WICHTIG: Alle Standard-Passwörter MÜSSEN geändert werden!
+
+# Database
+POSTGRES_PASSWORD=ihr_sehr_sicheres_db_passwort_2024!
+POSTGRES_DB=postgres
+
+# JWT Secret (mindestens 32 Zeichen)
+JWT_SECRET=ihr-super-sicherer-jwt-token-mindestens-32-zeichen-lang-2024
+
+# Site URL (Ihre Domain)
+SITE_URL=https://ihre-domain.de
+ADDITIONAL_REDIRECT_URLS=https://ihre-domain.de/auth/callback
+
+# Dashboard Schutz
+DASHBOARD_USERNAME=admin
+DASHBOARD_PASSWORD=sehr_sicheres_dashboard_passwort_2024!
+
+# SMTP Konfiguration (empfohlen: AWS SES oder TransMail)
+SMTP_HOST=smtp.ihre-domain.de
+SMTP_PORT=587
+SMTP_USER=noreply@ihre-domain.de
+SMTP_PASS=smtp_passwort
+SMTP_SENDER_NAME="Ihr Firmenname"
+
+# Optional: S3-kompatible Storage
+# GLOBAL_S3_BUCKET=ihr-storage-bucket
+# STORAGE_S3_ENDPOINT=https://s3.eu-central-1.amazonaws.com
+# STORAGE_S3_ACCESS_KEY_ID=ihr_access_key
+# STORAGE_S3_SECRET_ACCESS_KEY=ihr_secret_key
+```
+
+#### Datenpersistenz konfigurieren
+```bash
+# Volumes-Verzeichnis erstellen
+sudo mkdir -p /opt/supabase/volumes/db/data
+sudo chown -R 999:999 /opt/supabase/volumes/db/data
+
+# In docker-compose.yml sicherstellen:
+# volumes:
+#   - ./volumes/db/data:/var/lib/postgresql/data
+```
+
+### 10.4 Reverse Proxy mit Nginx
+
+#### Nginx Installation
+```bash
+sudo apt install nginx certbot python3-certbot-nginx -y
+```
+
+#### Nginx Konfiguration
+```nginx
+# /etc/nginx/sites-available/supabase
+server {
+    listen 80;
+    server_name api.ihre-domain.de;
+    
+    # SSL-Redirect
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name api.ihre-domain.de;
+    
+    # SSL-Zertifikat (wird von certbot automatisch hinzugefügt)
+    
+    # Supabase API
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket Support für Realtime
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+    
+    # Dashboard (optional, nur für Admin-Zugang)
+    location /dashboard {
+        proxy_pass http://localhost:8000/dashboard;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        
+        # Zusätzlicher IP-Schutz (optional)
+        # allow 192.168.1.0/24;  # Ihre IP-Range
+        # deny all;
+    }
+}
+```
+
+#### SSL-Zertifikat einrichten
+```bash
+# Site aktivieren
+sudo ln -s /etc/nginx/sites-available/supabase /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+# Let's Encrypt SSL-Zertifikat
+sudo certbot --nginx -d api.ihre-domain.de
+```
+
+### 10.5 Deployment
+
+#### Supabase starten
+```bash
+cd /opt/supabase/docker
+
+# Container starten
+sudo docker-compose up -d
+
+# Status überprüfen
+sudo docker-compose ps
+sudo docker-compose logs -f
+```
+
+#### Gesundheitscheck
+```bash
+# API testen
+curl https://api.ihre-domain.de/rest/v1/
+
+# Dashboard (mit Basic Auth)
+curl -u admin:ihr_passwort https://api.ihre-domain.de/dashboard
+```
+
+### 10.6 Backup-Strategie
+
+#### Automatisches Datenbank-Backup
+```bash
+# Backup-Script erstellen: /opt/scripts/backup-supabase.sh
+#!/bin/bash
+BACKUP_DIR="/opt/backups/supabase"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+mkdir -p $BACKUP_DIR
+
+# Datenbank-Backup
+docker exec supabase-db pg_dumpall -U postgres > $BACKUP_DIR/db_backup_$DATE.sql
+
+# Volumes-Backup (optional)
+tar -czf $BACKUP_DIR/volumes_backup_$DATE.tar.gz /opt/supabase/volumes/
+
+# Alte Backups löschen (älter als 7 Tage)
+find $BACKUP_DIR -name "*.sql" -mtime +7 -delete
+find $BACKUP_DIR -name "*.tar.gz" -mtime +7 -delete
+```
+
+#### Cron-Job für automatische Backups
+```bash
+# Crontab bearbeiten
+sudo crontab -e
+
+# Täglich um 2:00 Uhr
+0 2 * * * /opt/scripts/backup-supabase.sh
+```
+
+### 10.7 Monitoring und Logging
+
+#### Container-Logs überwachen
+```bash
+# Alle Logs
+sudo docker-compose logs -f
+
+# Spezifische Services
+sudo docker-compose logs -f supabase-db
+sudo docker-compose logs -f supabase-kong
+```
+
+#### Systemd Service (optional)
+```bash
+# /etc/systemd/system/supabase.service
+[Unit]
+Description=Supabase Stack
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/supabase/docker
+ExecStart=/usr/bin/docker-compose up -d
+ExecStop=/usr/bin/docker-compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 10.8 Updates
+
+#### Supabase Updates
+```bash
+cd /opt/supabase
+git pull origin master
+
+cd docker
+sudo docker-compose pull
+sudo docker-compose up -d
+```
+
+### 10.9 Sicherheit
+
+#### Firewall konfigurieren
+```bash
+# UFW aktivieren
+sudo ufw enable
+
+# Nur notwendige Ports öffnen
+sudo ufw allow ssh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# Supabase-Ports nur lokal
+sudo ufw deny 8000
+sudo ufw deny 5432
+```
+
+#### Regelmäßige Sicherheitsupdates
+```bash
+# Automatische Updates aktivieren
+sudo apt install unattended-upgrades -y
+sudo dpkg-reconfigure unattended-upgrades
+```
+
+### 10.10 NextJS App Konfiguration
+
+#### Production Environment Variables
+```env
+# .env.production
+NEXT_PUBLIC_SUPABASE_URL=https://api.ihre-domain.de
+NEXT_PUBLIC_SUPABASE_ANON_KEY=ihr_anon_key_aus_supabase_dashboard
+SUPABASE_SERVICE_ROLE_KEY=ihr_service_role_key_aus_dashboard
+```
+
+### 10.11 Kosten-Vergleich
+
+| Option | Monatliche Kosten | Vorteile |
+|--------|------------------|----------|
+| **Supabase Cloud** | Ab $25 + Pay-per-Use | Managed, Support, Auto-Backups |
+| **Self-Hosted VPS** | €10-30 (VPS-Kosten) | Volle Kontrolle, keine Limits, DSGVO |
+
+### 10.12 Troubleshooting Production
+
+#### Häufige Probleme
+- **502 Bad Gateway**: Supabase-Container prüfen (`docker-compose ps`)
+- **SSL-Probleme**: Zertifikat erneuern (`certbot renew`)
+- **DB-Verbindung**: Logs prüfen (`docker-compose logs supabase-db`)
+
+#### Notfall-Recovery
+```bash
+# Container neustarten
+sudo docker-compose restart
+
+# Aus Backup wiederherstellen
+cat /opt/backups/supabase/db_backup_DATUM.sql | sudo docker exec -i supabase-db psql -U postgres
+```

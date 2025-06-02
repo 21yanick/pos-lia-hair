@@ -18,6 +18,7 @@ yarn-error.log*
 
 # env files
 .env*
+/docs/twint_sumup_banking_examples/
 
 # vercel
 .vercel
