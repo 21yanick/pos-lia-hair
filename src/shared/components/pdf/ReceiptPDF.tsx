@@ -150,7 +150,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items }) => {
         <View style={styles.section}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
             <Text style={styles.infoLabel}>Belegnummer:</Text>
-            <Text style={styles.info}>{sale.id}</Text>
+            <Text style={styles.info}>{sale.receipt_number || sale.id}</Text>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
             <Text style={styles.infoLabel}>Datum:</Text>

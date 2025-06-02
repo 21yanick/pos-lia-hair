@@ -238,8 +238,8 @@ export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
           <Text style={styles.sectionTitle}>Dokument-Informationen</Text>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Expense-ID:</Text>
-            <Text style={styles.detailValue}>{expense.id}</Text>
+            <Text style={styles.detailLabel}>Belegnummer:</Text>
+            <Text style={styles.detailValue}>{expense.receipt_number || expense.id}</Text>
           </View>
           
           <View style={styles.detailRow}>
