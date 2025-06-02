@@ -13,6 +13,7 @@ import {
   X,
   BookOpen,
   Settings,
+  CreditCard,
 } from "lucide-react"
 import { cn } from "@/shared/utils"
 import { Button } from "@/shared/components/ui/button"
@@ -21,6 +22,7 @@ import { supabase } from "@/shared/lib/supabase/client"
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart4 },
   { name: "Verkauf", href: "/pos", icon: ShoppingCart },
+  { name: "Banking", href: "/banking", icon: CreditCard },
   { name: "Kassenbuch", href: "/cash-register", icon: BookOpen },
   { name: "Produkte", href: "/products", icon: Package },
   { name: "Ausgaben", href: "/expenses", icon: FileIcon },

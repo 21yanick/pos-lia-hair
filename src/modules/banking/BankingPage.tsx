@@ -1,0 +1,603 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table"
+import { Checkbox } from "@/shared/components/ui/checkbox"
+import { Alert, AlertDescription } from "@/shared/components/ui/alert"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { CreditCard, Building2, ArrowRightLeft, CheckCircle2, AlertCircle, Loader2, ArrowUpToLine, ArrowDownToLine, Upload } from "lucide-react"
+import { useBankingData } from './hooks/useBankingData'
+import { CashTransferDialog } from './components/CashTransferDialog'
+import { BankImportDialog } from './components/BankImportDialog'
+import { ProviderImportDialog } from './components/ProviderImportDialog'
+import { supabase } from '@/shared/lib/supabase/client'
+
+export function BankingPage() {
+  // Selection state for click-to-connect
+  const [selectedSale, setSelectedSale] = useState<string | null>(null)
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
+  const [selectedBank, setSelectedBank] = useState<string | null>(null)
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const [isMatching, setIsMatching] = useState(false)
+
+  // Cash Transfer Dialog state
+  const [cashTransferDialog, setCashTransferDialog] = useState<{
+    isOpen: boolean
+    direction: 'to_bank' | 'from_bank'
+  }>({ isOpen: false, direction: 'to_bank' })
+
+  // Bank Import Dialog state
+  const [bankImportOpen, setBankImportOpen] = useState(false)
+
+  // Provider Import Dialog state
+  const [providerImportOpen, setProviderImportOpen] = useState(false)
+
+  // Real data from Banking API
+  const {
+    unmatchedSales,
+    unmatchedProviderReports,
+    unmatchedBankTransactions,
+    availableForMatching,
+    stats,
+    isLoading,
+    error,
+    handleProviderMatch,
+    handleBankMatch,
+    refetchData,
+    bankAccounts,
+    handleProviderImportSuccess
+  } = useBankingData()
+
+  // Get first bank account (Raiffeisen)
+  const raiffeisenAccount = bankAccounts?.[0]
+
+  // Provider matching (Tab 1)
+  const handleProviderMatchClick = async () => {
+    if (!selectedSale || !selectedProvider) return
+    
+    setIsMatching(true)
+    const success = await handleProviderMatch(selectedSale, selectedProvider)
+    
+    if (success) {
+      setSelectedSale(null)
+      setSelectedProvider(null)
+    }
+    setIsMatching(false)
+  }
+
+  // Bank matching (Tab 2)
+  const handleBankMatchClick = async () => {
+    if (!selectedBank || selectedItems.length === 0) return
+    
+    setIsMatching(true)
+    
+    // Find selected items with their data
+    const matchedItems = selectedItems.map(itemId => {
+      const item = availableForMatching.find(i => i.id === itemId)
+      if (!item) throw new Error(`Item ${itemId} not found`)
+      
+      return {
+        type: item.item_type,
+        id: item.id,
+        amount: Math.abs(item.amount)
+      }
+    })
+    
+    const success = await handleBankMatch(selectedBank, matchedItems)
+    
+    if (success) {
+      setSelectedBank(null)
+      setSelectedItems([])
+    }
+    setIsMatching(false)
+  }
+
+  // Multi-select for Tab 2
+  const handleItemSelect = (itemId: string) => {
+    setSelectedItems(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    )
+  }
+
+  // Cash Transfer handlers
+  const openCashTransferDialog = (direction: 'to_bank' | 'from_bank') => {
+    setCashTransferDialog({ isOpen: true, direction })
+  }
+
+  const closeCashTransferDialog = () => {
+    setCashTransferDialog({ isOpen: false, direction: 'to_bank' })
+  }
+
+  const handleCashTransferSuccess = () => {
+    // Refresh banking data to show new cash movement in Tab 2
+    refetchData()
+  }
+
+  // Bank Import handlers
+  const openBankImportDialog = () => {
+    setBankImportOpen(true)
+  }
+
+  const closeBankImportDialog = () => {
+    setBankImportOpen(false)
+  }
+
+  const handleBankImportSuccess = () => {
+    // Refresh banking data to show new bank transactions in Tab 2
+    refetchData()
+  }
+
+  // Provider Import handlers
+  const openProviderImportDialog = () => {
+    setProviderImportOpen(true)
+  }
+
+  const closeProviderImportDialog = () => {
+    setProviderImportOpen(false)
+  }
+
+  const handleProviderImportSuccessLocal = async () => {
+    // Refresh banking data to show new provider reports in Tab 1
+    await handleProviderImportSuccess()
+    console.log('Banking data refreshed after provider import')
+  }
+
+  // Get current user ID from auth
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setCurrentUserId(session?.user?.id || null)
+    }
+    getUser()
+  }, [])
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Banking</h1>
+          <p className="text-muted-foreground">
+            Einfacher 2-Tab Abgleich: Provider-Gebühren + Bank-Transaktionen
+          </p>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <Button
+            onClick={() => openCashTransferDialog('to_bank')}
+            variant="outline"
+            className="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <ArrowUpToLine className="h-4 w-4" />
+            Geld in Bank einzahlen
+          </Button>
+          <Button
+            onClick={() => openCashTransferDialog('from_bank')}
+            variant="outline" 
+            className="flex items-center gap-2 text-green-600 border-green-600 hover:bg-green-600 hover:text-white dark:text-green-400 dark:border-green-400 dark:hover:bg-green-400 dark:hover:text-black"
+          >
+            <ArrowDownToLine className="h-4 w-4" />
+            Geld von Bank abheben
+          </Button>
+          <Button
+            onClick={openBankImportDialog}
+            variant="default"
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Bank Import
+          </Button>
+        </div>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2"
+              onClick={refetchData}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Status Overview */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 mb-2" />
+            ) : (
+              <div className="text-2xl font-bold">{stats?.unmatchedSales || 0}</div>
+            )}
+            <p className="text-sm text-muted-foreground">Unmatched Sales</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 mb-2" />
+            ) : (
+              <div className="text-2xl font-bold">{stats?.unmatchedProviderReports || 0}</div>
+            )}
+            <p className="text-sm text-muted-foreground">Unmatched Settlements</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 mb-2" />
+            ) : (
+              <div className="text-2xl font-bold">{stats?.unmatchedExpenses || 0}</div>
+            )}
+            <p className="text-sm text-muted-foreground">Unmatched Expenses</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 mb-2" />
+            ) : (
+              <div className="text-2xl font-bold">{stats?.unmatchedBankTransactions || 0}</div>
+            )}
+            <p className="text-sm text-muted-foreground">Unmatched Bank</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Two-Tab System */}
+      <Tabs defaultValue="provider" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="provider">
+            <CreditCard className="h-4 w-4 mr-2" />
+            Provider-Gebühren
+          </TabsTrigger>
+          <TabsTrigger value="bank">
+            <Building2 className="h-4 w-4 mr-2" />
+            Bank-Abgleich
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab 1: Provider Settlements */}
+        <TabsContent value="provider" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">POS Sales ↔ Provider Settlements</h2>
+            <div className="flex gap-2">
+              <Button 
+                onClick={openProviderImportDialog}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Import TWINT/SumUp
+              </Button>
+              <Button 
+                onClick={handleProviderMatchClick}
+                disabled={!selectedSale || !selectedProvider || isMatching}
+              >
+                {isMatching ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
+                )}
+                {isMatching ? 'Matching...' : 'Match Selected'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left: POS Sales */}
+            <Card>
+              <CardHeader>
+                <CardTitle>POS Sales (Brutto)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Datum</TableHead>
+                      <TableHead>Betrag</TableHead>
+                      <TableHead>Kunde</TableHead>
+                      <TableHead>Methode</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      // Loading skeleton
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : unmatchedSales.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                          No unmatched sales found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      unmatchedSales.map((sale) => (
+                        <TableRow 
+                          key={sale.id}
+                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${
+                            selectedSale === sale.id ? 'bg-accent border-l-4 border-primary' : 'hover:bg-muted/30'
+                          }`}
+                          onClick={() => setSelectedSale(sale.id)}
+                        >
+                          <TableCell>{new Date(sale.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>{sale.total_amount.toFixed(2)} CHF</TableCell>
+                          <TableCell>{sale.customer_name || 'Walk-in'}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{sale.payment_display}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Right: Provider Settlements */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Provider Settlements (Netto + Gebühren)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Datum</TableHead>
+                      <TableHead>Provider</TableHead>
+                      <TableHead>Brutto</TableHead>
+                      <TableHead>Gebühren</TableHead>
+                      <TableHead>Netto</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      // Loading skeleton
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : unmatchedProviderReports.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          No unmatched provider reports found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      unmatchedProviderReports.map((report) => (
+                        <TableRow 
+                          key={report.id}
+                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${
+                            selectedProvider === report.id ? 'bg-accent border-l-4 border-primary' : 'hover:bg-muted/30'
+                          }`}
+                          onClick={() => setSelectedProvider(report.id)}
+                        >
+                          <TableCell>{new Date(report.transaction_date).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Badge variant={report.provider === 'twint' ? 'default' : 'secondary'}>
+                              {report.provider_display}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{report.gross_amount.toFixed(2)}</TableCell>
+                          <TableCell>{report.fees.toFixed(2)}</TableCell>
+                          <TableCell>{report.net_amount.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Pending</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Tab 2: Bank Reconciliation */}
+        <TabsContent value="bank" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Bank Transactions ↔ Expenses & Provider Batches</h2>
+            <Button 
+              onClick={handleBankMatchClick}
+              disabled={!selectedBank || selectedItems.length === 0 || isMatching}
+            >
+              {isMatching ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <ArrowRightLeft className="h-4 w-4 mr-2" />
+              )}
+              {isMatching ? 'Matching...' : `Match Selected (${selectedItems.length})`}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left: Bank Transactions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Bank Transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Datum</TableHead>
+                      <TableHead>Betrag</TableHead>
+                      <TableHead>Beschreibung</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      // Loading skeleton
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : unmatchedBankTransactions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                          No unmatched bank transactions found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      unmatchedBankTransactions.map((transaction) => (
+                        <TableRow 
+                          key={transaction.id}
+                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${
+                            selectedBank === transaction.id ? 'bg-accent border-l-4 border-primary' : 'hover:bg-muted/30'
+                          }`}
+                          onClick={() => setSelectedBank(transaction.id)}
+                        >
+                          <TableCell>{new Date(transaction.transaction_date).toLocaleDateString()}</TableCell>
+                          <TableCell className={transaction.amount > 0 ? 'text-success' : 'text-destructive'}>
+                            {transaction.direction_display} {transaction.amount_abs.toFixed(2)} CHF
+                          </TableCell>
+                          <TableCell>{transaction.description}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Pending</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Right: Expenses & Provider Batches */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Expenses & Provider Batches</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">Select</TableHead>
+                      <TableHead>Datum</TableHead>
+                      <TableHead>Betrag</TableHead>
+                      <TableHead>Beschreibung</TableHead>
+                      <TableHead>Typ</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      // Loading skeleton
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : availableForMatching.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          No items available for bank matching
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      availableForMatching.map((item) => (
+                        <TableRow 
+                          key={item.id}
+                          className={`transition-colors ${
+                            selectedItems.includes(item.id) ? 'bg-accent/50' : 'hover:bg-muted/30'
+                          }`}
+                        >
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedItems.includes(item.id)}
+                              onCheckedChange={() => handleItemSelect(item.id)}
+                              aria-label={`Select ${item.item_type} ${item.description}`}
+                            />
+                          </TableCell>
+                          <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
+                          <TableCell className={item.amount > 0 ? 'text-success' : 'text-destructive'}>
+                            {item.amount > 0 ? '+' : ''}{item.amount.toFixed(2)} CHF
+                          </TableCell>
+                          <TableCell>{item.description}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {item.item_type === 'sale' ? 'Sale' : 
+                               item.item_type === 'expense' ? 'Expense' : 'Cash'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Cash Transfer Dialog */}
+      <CashTransferDialog
+        isOpen={cashTransferDialog.isOpen}
+        direction={cashTransferDialog.direction}
+        onClose={closeCashTransferDialog}
+        onSuccess={handleCashTransferSuccess}
+      />
+
+      {/* Bank Import Dialog */}
+      {raiffeisenAccount && currentUserId && (
+        <BankImportDialog
+          isOpen={bankImportOpen}
+          bankAccountId={raiffeisenAccount.id}
+          userId={currentUserId}
+          onClose={closeBankImportDialog}
+          onSuccess={handleBankImportSuccess}
+        />
+      )}
+
+      {/* Provider Import Dialog */}
+      {currentUserId && (
+        <ProviderImportDialog
+          isOpen={providerImportOpen}
+          userId={currentUserId}
+          onClose={closeProviderImportDialog}
+          onSuccess={handleProviderImportSuccessLocal}
+        />
+      )}
+    </div>
+  )
+}

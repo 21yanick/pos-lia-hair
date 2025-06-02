@@ -19,6 +19,9 @@ export type Database = {
           reference_id: string | null
           user_id: string
           created_at: string | null
+          bank_transaction_id: string | null
+          banking_status: 'unmatched' | 'matched'
+          movement_type: 'cash_operation' | 'bank_transfer'
         }
         Insert: {
           id?: string
@@ -29,6 +32,9 @@ export type Database = {
           reference_id?: string | null
           user_id: string
           created_at?: string | null
+          bank_transaction_id?: string | null
+          banking_status?: 'unmatched' | 'matched'
+          movement_type?: 'cash_operation' | 'bank_transfer'
         }
         Update: {
           id?: string
@@ -39,6 +45,9 @@ export type Database = {
           reference_id?: string | null
           user_id?: string
           created_at?: string | null
+          bank_transaction_id?: string | null
+          banking_status?: 'unmatched' | 'matched'
+          movement_type?: 'cash_operation' | 'bank_transfer'
         }
         Relationships: [
           {
@@ -197,6 +206,8 @@ export type Database = {
           notes: string | null
           user_id: string
           created_at: string | null
+          bank_transaction_id: string | null
+          banking_status: 'unmatched' | 'matched'
         }
         Insert: {
           id?: string
@@ -210,6 +221,8 @@ export type Database = {
           notes?: string | null
           user_id: string
           created_at?: string | null
+          bank_transaction_id?: string | null
+          banking_status?: 'unmatched' | 'matched'
         }
         Update: {
           id?: string
@@ -223,6 +236,8 @@ export type Database = {
           notes?: string | null
           user_id?: string
           created_at?: string | null
+          bank_transaction_id?: string | null
+          banking_status?: 'unmatched' | 'matched'
         }
         Relationships: [
           {
@@ -319,6 +334,10 @@ export type Database = {
           settlement_status: 'pending' | 'settled' | 'failed' | 'weekend_delay' | 'charged_back' | null
           settlement_date: string | null
           provider_reference_id: string | null
+          // New Banking System fields
+          provider_report_id: string | null
+          bank_transaction_id: string | null
+          banking_status: 'unmatched' | 'provider_matched' | 'bank_matched' | 'fully_matched'
         }
         Insert: {
           id?: string
@@ -335,6 +354,10 @@ export type Database = {
           settlement_status?: 'pending' | 'settled' | 'failed' | 'weekend_delay' | 'charged_back' | null
           settlement_date?: string | null
           provider_reference_id?: string | null
+          // New Banking System fields
+          provider_report_id?: string | null
+          bank_transaction_id?: string | null
+          banking_status?: 'unmatched' | 'provider_matched' | 'bank_matched' | 'fully_matched'
         }
         Update: {
           id?: string
@@ -351,6 +374,10 @@ export type Database = {
           settlement_status?: 'pending' | 'settled' | 'failed' | 'weekend_delay' | 'charged_back' | null
           settlement_date?: string | null
           provider_reference_id?: string | null
+          // New Banking System fields
+          provider_report_id?: string | null
+          bank_transaction_id?: string | null
+          banking_status?: 'unmatched' | 'provider_matched' | 'bank_matched' | 'fully_matched'
         }
         Relationships: [
           {
@@ -434,6 +461,272 @@ export type Database = {
           {
             foreignKeyName: "monthly_summaries_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      bank_accounts: {
+        Row: {
+          id: string
+          name: string
+          bank_name: string
+          iban: string | null
+          account_number: string | null
+          current_balance: number
+          last_statement_date: string | null
+          is_active: boolean
+          user_id: string
+          created_at: string
+          updated_at: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          bank_name: string
+          iban?: string | null
+          account_number?: string | null
+          current_balance?: number
+          last_statement_date?: string | null
+          is_active?: boolean
+          user_id: string
+          created_at?: string
+          updated_at?: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          bank_name?: string
+          iban?: string | null
+          account_number?: string | null
+          current_balance?: number
+          last_statement_date?: string | null
+          is_active?: boolean
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      bank_transactions: {
+        Row: {
+          id: string
+          bank_account_id: string
+          transaction_date: string
+          booking_date: string | null
+          amount: number
+          description: string
+          reference: string | null
+          transaction_code: string | null
+          import_batch_id: string | null
+          import_filename: string | null
+          import_date: string
+          raw_data: Json | null
+          status: 'unmatched' | 'matched' | 'ignored'
+          user_id: string
+          created_at: string
+          updated_at: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          bank_account_id: string
+          transaction_date: string
+          booking_date?: string | null
+          amount: number
+          description: string
+          reference?: string | null
+          transaction_code?: string | null
+          import_batch_id?: string | null
+          import_filename?: string | null
+          import_date?: string
+          raw_data?: Json | null
+          status?: 'unmatched' | 'matched' | 'ignored'
+          user_id: string
+          created_at?: string
+          updated_at?: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          bank_account_id?: string
+          transaction_date?: string
+          booking_date?: string | null
+          amount?: number
+          description?: string
+          reference?: string | null
+          transaction_code?: string | null
+          import_batch_id?: string | null
+          import_filename?: string | null
+          import_date?: string
+          raw_data?: Json | null
+          status?: 'unmatched' | 'matched' | 'ignored'
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      provider_reports: {
+        Row: {
+          id: string
+          provider: 'twint' | 'sumup'
+          transaction_date: string
+          settlement_date: string | null
+          gross_amount: number
+          fees: number
+          net_amount: number
+          provider_transaction_id: string | null
+          provider_reference: string | null
+          payment_method: string | null
+          currency: string
+          import_filename: string
+          import_date: string
+          raw_data: Json | null
+          sale_id: string | null
+          status: 'unmatched' | 'matched' | 'discrepancy'
+          user_id: string
+          created_at: string
+          updated_at: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          provider: 'twint' | 'sumup'
+          transaction_date: string
+          settlement_date?: string | null
+          gross_amount: number
+          fees?: number
+          net_amount: number
+          provider_transaction_id?: string | null
+          provider_reference?: string | null
+          payment_method?: string | null
+          currency?: string
+          import_filename: string
+          import_date?: string
+          raw_data?: Json | null
+          sale_id?: string | null
+          status?: 'unmatched' | 'matched' | 'discrepancy'
+          user_id: string
+          created_at?: string
+          updated_at?: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          provider?: 'twint' | 'sumup'
+          transaction_date?: string
+          settlement_date?: string | null
+          gross_amount?: number
+          fees?: number
+          net_amount?: number
+          provider_transaction_id?: string | null
+          provider_reference?: string | null
+          payment_method?: string | null
+          currency?: string
+          import_filename?: string
+          import_date?: string
+          raw_data?: Json | null
+          sale_id?: string | null
+          status?: 'unmatched' | 'matched' | 'discrepancy'
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_reports_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      transaction_matches: {
+        Row: {
+          id: string
+          bank_transaction_id: string
+          matched_type: 'sale' | 'expense' | 'provider_batch' | 'cash_movement'
+          matched_id: string
+          matched_amount: number
+          match_confidence: number
+          match_type: 'automatic' | 'manual' | 'suggested'
+          matched_by: string | null
+          matched_at: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          bank_transaction_id: string
+          matched_type: 'sale' | 'expense' | 'provider_batch' | 'cash_movement'
+          matched_id: string
+          matched_amount: number
+          match_confidence?: number
+          match_type?: 'automatic' | 'manual' | 'suggested'
+          matched_by?: string | null
+          matched_at?: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          bank_transaction_id?: string
+          matched_type?: 'sale' | 'expense' | 'provider_batch' | 'cash_movement'
+          matched_id?: string
+          matched_amount?: number
+          match_confidence?: number
+          match_type?: 'automatic' | 'manual' | 'suggested'
+          matched_by?: string | null
+          matched_at?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_matches_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_matches_matched_by_fkey"
+            columns: ["matched_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
