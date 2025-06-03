@@ -5,16 +5,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/components/ui/input'
 import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
+import { Checkbox } from '@/shared/components/ui/checkbox'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { 
   Search, 
   Filter, 
-  Download, 
   FileText, 
   Banknote,
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Info
 } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 import { useUnifiedTransactions } from '../hooks/useUnifiedTransactions'
@@ -27,6 +29,7 @@ import {
 import { formatCurrency } from '@/shared/utils/index'
 import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
 import { DateRangePicker } from './DateRangePicker'
+import { BulkOperationsPanel } from './BulkOperationsPanel'
 import { usePdfActions } from '../hooks/usePdfActions'
 
 // Multi-Filter State Interface
@@ -186,6 +189,92 @@ const TransactionTypeBadge = ({ typeCode }: {
   )
 }
 
+// Business Status Icon Component - Context-aware Status
+const BusinessStatusIcon = ({ transaction }: { transaction: UnifiedTransaction }) => {
+  const getBusinessStatus = () => {
+    const { transaction_type, status, banking_status } = transaction
+    
+    // Business-Context Status Logic
+    switch (transaction_type) {
+      case 'sale':
+        if (status === 'completed' && banking_status === 'provider_matched') {
+          return {
+            icon: <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />,
+            tooltip: 'Verkauf abgeschlossen & abgeglichen'
+          }
+        }
+        if (status === 'completed' && banking_status === 'unmatched') {
+          return {
+            icon: <Clock className="w-4 h-4 text-amber-500 mx-auto" />,
+            tooltip: 'Verkauf abgeschlossen, noch nicht abgeglichen'
+          }
+        }
+        break
+        
+      case 'expense':
+        if (status === 'completed' && banking_status === 'matched') {
+          return {
+            icon: <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />,
+            tooltip: 'Ausgabe bezahlt & abgeglichen'
+          }
+        }
+        if (status === 'completed' && banking_status === 'unmatched') {
+          return {
+            icon: <Clock className="w-4 h-4 text-amber-500 mx-auto" />,
+            tooltip: 'Ausgabe bezahlt, noch nicht abgeglichen'
+          }
+        }
+        break
+        
+      case 'bank_transaction':
+        if (banking_status === 'matched') {
+          return {
+            icon: <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />,
+            tooltip: 'Bank-Transaktion zugeordnet'
+          }
+        }
+        if (banking_status === 'unmatched') {
+          return {
+            icon: <AlertCircle className="w-4 h-4 text-blue-500 mx-auto" />,
+            tooltip: 'Bank-Transaktion noch nicht zugeordnet'
+          }
+        }
+        break
+        
+      case 'cash_movement':
+        if (status === 'completed') {
+          return {
+            icon: <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />,
+            tooltip: 'Kassenbewegung abgeschlossen'
+          }
+        }
+        break
+    }
+    
+    // Fallback für cancelled/andere
+    if (status === 'cancelled') {
+      return {
+        icon: <XCircle className="w-4 h-4 text-red-400 mx-auto" />,
+        tooltip: 'Storniert'
+      }
+    }
+    
+    // Default fallback
+    return {
+      icon: <Clock className="w-4 h-4 text-gray-400 mx-auto" />,
+      tooltip: `Status: ${status}`
+    }
+  }
+  
+  const statusConfig = getBusinessStatus()
+  
+  return (
+    <div title={statusConfig.tooltip}>
+      {statusConfig.icon}
+    </div>
+  )
+}
+
 // PDF Status Icon Component mit echten PDF Actions
 const PdfStatusIcon = ({ 
   transaction, 
@@ -273,11 +362,19 @@ const PdfStatusIcon = ({
 const TransactionsTable = ({ 
   transactions, 
   onTransactionClick,
-  onPdfAction 
+  onPdfAction,
+  selectedTransactions,
+  onTransactionSelect,
+  onSelectAll,
+  onClearSelection
 }: { 
   transactions: UnifiedTransaction[]
   onTransactionClick: (transaction: UnifiedTransaction) => void
   onPdfAction?: (transaction: UnifiedTransaction) => Promise<void>
+  selectedTransactions: string[]
+  onTransactionSelect: (transactionId: string) => void
+  onSelectAll: () => void
+  onClearSelection: () => void
 }) => {
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -285,42 +382,131 @@ const TransactionsTable = ({
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
+              <th className="text-center p-3 font-medium w-12">
+                <Checkbox
+                  checked={transactions.length > 0 && selectedTransactions.length === transactions.length}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      onSelectAll()
+                    } else {
+                      onClearSelection()
+                    }
+                  }}
+                  aria-label="Alle auswählen"
+                />
+              </th>
               <th className="text-left p-3 font-medium">Zeit</th>
               <th className="text-left p-3 font-medium">Typ</th>
               <th className="text-left p-3 font-medium">Beleg-Nr.</th>
               <th className="text-left p-3 font-medium">Beschreibung</th>
               <th className="text-right p-3 font-medium">Betrag</th>
               <th className="text-center p-3 font-medium">PDF</th>
-              <th className="text-center p-3 font-medium">Status</th>
+              <th className="text-center p-3 font-medium">
+                <div className="flex items-center justify-center gap-1">
+                  Status
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground">
+                        <Info className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="end">
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-sm">Status-Bedeutungen</h4>
+                        
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-muted-foreground">Verkäufe (VK):</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <CheckCircle2 className="w-3 h-3 text-green-600" />
+                            <span>Verkauf abgeschlossen & abgeglichen</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <Clock className="w-3 h-3 text-amber-500" />
+                            <span>Verkauf abgeschlossen, noch nicht abgeglichen</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-muted-foreground">Ausgaben (AG):</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <CheckCircle2 className="w-3 h-3 text-green-600" />
+                            <span>Ausgabe bezahlt & abgeglichen</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <Clock className="w-3 h-3 text-amber-500" />
+                            <span>Ausgabe bezahlt, noch nicht abgeglichen</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-muted-foreground">Bank-Transaktionen (BT):</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <CheckCircle2 className="w-3 h-3 text-green-600" />
+                            <span>Bank-Transaktion zugeordnet</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <AlertCircle className="w-3 h-3 text-blue-500" />
+                            <span>Bank-Transaktion noch nicht zugeordnet</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-muted-foreground">Kassenbewegungen (CM):</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <CheckCircle2 className="w-3 h-3 text-green-600" />
+                            <span>Kassenbewegung abgeschlossen</span>
+                          </div>
+                        </div>
+
+                        <div className="border-t pt-2">
+                          <div className="flex items-center gap-2 text-xs">
+                            <XCircle className="w-3 h-3 text-red-400" />
+                            <span>Storniert (alle Typen)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((tx) => (
               <tr 
                 key={tx.id} 
-                className="border-t hover:bg-muted/25 cursor-pointer transition-colors"
-                onClick={() => onTransactionClick(tx)}
+                className={`border-t hover:bg-muted/25 transition-colors ${
+                  selectedTransactions.includes(tx.id) ? 'bg-accent/30' : ''
+                }`}
               >
-                <td className="p-3">
+                <td className="p-3 text-center">
+                  <Checkbox
+                    checked={selectedTransactions.includes(tx.id)}
+                    onCheckedChange={() => onTransactionSelect(tx.id)}
+                    aria-label={`Select ${tx.receipt_number}`}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </td>
+                <td className="p-3 cursor-pointer" onClick={() => onTransactionClick(tx)}>
                   <div className="text-sm">
                     <div className="font-medium">{formatTimeForDisplay(tx.transaction_date)}</div>
                     <div className="text-muted-foreground">{formatDateForDisplay(tx.transaction_date)}</div>
                   </div>
                 </td>
-                <td className="p-3">
+                <td className="p-3 cursor-pointer" onClick={() => onTransactionClick(tx)}>
                   <TransactionTypeBadge 
                     typeCode={tx.type_code} 
                   />
                 </td>
-                <td className="p-3">
+                <td className="p-3 cursor-pointer" onClick={() => onTransactionClick(tx)}>
                   <span className="font-mono text-sm">{tx.receipt_number}</span>
                 </td>
-                <td className="p-3">
+                <td className="p-3 cursor-pointer" onClick={() => onTransactionClick(tx)}>
                   <div className="max-w-xs truncate text-sm">
                     {tx.description}
                   </div>
                 </td>
-                <td className="p-3 text-right">
+                <td className="p-3 text-right cursor-pointer" onClick={() => onTransactionClick(tx)}>
                   <span className={`font-medium ${
                     tx.amount >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
@@ -333,14 +519,8 @@ const TransactionsTable = ({
                     onPdfAction={onPdfAction}
                   />
                 </td>
-                <td className="p-3 text-center">
-                  {tx.status === 'completed' ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />
-                  ) : tx.status === 'cancelled' ? (
-                    <XCircle className="w-4 h-4 text-red-400 mx-auto" />
-                  ) : (
-                    <Clock className="w-4 h-4 text-yellow-500 mx-auto" />
-                  )}
+                <td className="p-3 text-center cursor-pointer" onClick={() => onTransactionClick(tx)}>
+                  <BusinessStatusIcon transaction={tx} />
                 </td>
               </tr>
             ))}
@@ -448,6 +628,9 @@ export default function TransactionCenterPage() {
     statusFilters: []
   })
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
+  // Multi-Select State für Bulk Operations
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([])
 
   // Helper function to convert DateRange to search query
   const dateRangeToQuery = (range?: DateRange): Partial<TransactionSearchQuery> => {
@@ -566,6 +749,36 @@ export default function TransactionCenterPage() {
     await loadAllTransactions()
   }
 
+  // Multi-Select Handlers (Pattern aus BankingPage)
+  const handleTransactionSelect = (transactionId: string) => {
+    setSelectedTransactions(prev => 
+      prev.includes(transactionId) 
+        ? prev.filter(id => id !== transactionId)
+        : [...prev, transactionId]
+    )
+  }
+
+  const handleSelectAll = () => {
+    setSelectedTransactions(transactions.map(tx => tx.id))
+  }
+
+  const handleClearSelection = () => {
+    setSelectedTransactions([])
+  }
+
+  // Get selected transaction objects
+  const getSelectedTransactions = () => {
+    return transactions.filter(tx => selectedTransactions.includes(tx.id))
+  }
+
+  // Bulk Operations Complete Handler
+  const handleBulkComplete = async () => {
+    // Refresh data after bulk operations
+    await loadAllTransactions()
+    // Clear selection after operation
+    setSelectedTransactions([])
+  }
+
   // Transaction Click Handler
   const handleTransactionClick = (transaction: UnifiedTransaction) => {
     console.log('Transaction Details:', transaction)
@@ -605,7 +818,7 @@ export default function TransactionCenterPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Transaction Center</h1>
+          <h1 className="text-3xl font-bold">Transaktions Center</h1>
           <p className="text-muted-foreground">
             Übersicht und Verwaltung aller Transaktionen
           </p>
@@ -614,10 +827,6 @@ export default function TransactionCenterPage() {
           <Button variant="outline" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             Erweiterte Filter
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
           </Button>
         </div>
       </div>
@@ -666,6 +875,15 @@ export default function TransactionCenterPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Bulk Operations Panel - nur anzeigen wenn Transaktionen ausgewählt sind */}
+      {selectedTransactions.length > 0 && (
+        <BulkOperationsPanel
+          selectedTransactions={getSelectedTransactions()}
+          onClearSelection={handleClearSelection}
+          onBulkComplete={handleBulkComplete}
+        />
+      )}
 
       {/* Error Display */}
       {(error || pdfError) && (
@@ -717,6 +935,10 @@ export default function TransactionCenterPage() {
               transactions={transactions} 
               onTransactionClick={handleTransactionClick}
               onPdfAction={handlePdfActionWithFeedback}
+              selectedTransactions={selectedTransactions}
+              onTransactionSelect={handleTransactionSelect}
+              onSelectAll={handleSelectAll}
+              onClearSelection={handleClearSelection}
             />
           </CardContent>
         </Card>

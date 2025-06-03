@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/shared/components/ui/card"
 import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table"
 import { Input } from "@/shared/components/ui/input"
 import { ArrowDownRight, Download, Search, Calendar, Loader2, RefreshCw, ArrowUpRight, ReceiptIcon, ChevronLeft, ChevronRight } from "lucide-react"
@@ -28,6 +29,7 @@ export default function CashRegisterPage() {
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [currentMonth, setCurrentMonth] = useState<Date>(getTodaySwiss())
+  const [typeFilter, setTypeFilter] = useState<'all' | 'cash_in' | 'cash_out'>('all')
   const [summary, setSummary] = useState({
     monthlyIncome: 0,
     monthlyExpense: 0
@@ -39,7 +41,7 @@ export default function CashRegisterPage() {
   const monthFormatted = useMemo(() => format(currentMonth, "yyyy-MM", { locale: de }), [currentMonth])
   
   
-  // Type für Cash Register Entries (basierend auf cash_movements)
+  // Type für Cash Register Entries (erweitert mit sales data)
   type CashEntry = {
     id: string
     type: 'cash_in' | 'cash_out'
@@ -47,6 +49,11 @@ export default function CashRegisterPage() {
     description: string
     date: string
     created_at: string | null
+    movement_number: string | null
+    reference_type: string | null
+    reference_id: string | null
+    sale_receipt_number?: string | null
+    sale_customer_name?: string | null
   }
 
   // Daten laden für den aktuellen Monat
@@ -63,17 +70,20 @@ export default function CashRegisterPage() {
         // Cash movements zu CashEntry konvertieren
         const allEntries: CashEntry[] = []
         if (movementsResult.success) {
-          console.log(`🏦 Kassenbuch Debug für ${monthStart.toISOString().split('T')[0]} bis ${monthEnd.toISOString().split('T')[0]}:`, movementsResult.movements.length, 'Bewegungen gefunden')
           movementsResult.movements.forEach(movement => {
             if (movement.created_at) {
-              console.log(`  - ${movement.type}: CHF ${movement.amount} - ${movement.description} (${movement.created_at})`)
               allEntries.push({
                 id: movement.id,
                 type: movement.type,
                 amount: movement.amount,
                 description: movement.description,
                 date: movement.created_at.split('T')[0],
-                created_at: movement.created_at
+                created_at: movement.created_at,
+                movement_number: movement.movement_number,
+                reference_type: movement.reference_type,
+                reference_id: movement.reference_id,
+                sale_receipt_number: movement.sale_receipt_number,
+                sale_customer_name: movement.sale_customer_name
               })
             }
           })
@@ -195,6 +205,56 @@ export default function CashRegisterPage() {
   const isCurrentMonth = currentMonth.getMonth() === getTodaySwiss().getMonth() && 
                          currentMonth.getFullYear() === getTodaySwiss().getFullYear()
 
+  // Helper functions for better display
+  const getDisplayNumber = (entry: CashEntry) => {
+    if (entry.reference_type === 'sale' && entry.sale_receipt_number) {
+      return entry.sale_receipt_number // VK2025000038
+    }
+    return entry.movement_number || entry.id.substring(0, 8) // CM2025000010 or fallback
+  }
+
+  const getDisplayDescription = (entry: CashEntry) => {
+    if (entry.reference_type === 'sale' && entry.sale_receipt_number) {
+      return 'Barverkauf (POS)'
+    }
+    return entry.description
+  }
+
+  const getDescriptionBadge = (entry: CashEntry) => {
+    if (entry.reference_type === 'sale') return 'POS-Verkauf'
+    if (entry.reference_type === 'expense') return 'Ausgabe'
+    if (entry.reference_type === 'owner_transaction') return 'Owner'
+    if (entry.reference_type === 'adjustment') return 'Korrektur'
+    return 'Sonstige'
+  }
+
+  // Filtering logic
+  const getFilteredEntries = () => {
+    let filtered = entries
+
+    // Type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(entry => entry.type === typeFilter)
+    }
+
+    // Search filter (improved)
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
+      filtered = filtered.filter(entry => 
+        // Search in VK number
+        (entry.sale_receipt_number && entry.sale_receipt_number.toLowerCase().includes(searchLower)) ||
+        // Search in CM number  
+        (entry.movement_number && entry.movement_number.toLowerCase().includes(searchLower)) ||
+        // Search in description
+        entry.description.toLowerCase().includes(searchLower) ||
+        // Search in customer name
+        (entry.sale_customer_name && entry.sale_customer_name.toLowerCase().includes(searchLower))
+      )
+    }
+
+    return filtered
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -278,9 +338,9 @@ export default function CashRegisterPage() {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
-                <ArrowUpRight size={24} className="text-success mb-1" />
+                <ArrowUpRight size={24} className="text-chart-3 mb-1" />
                 <span className="text-sm text-muted-foreground">Einnahmen</span>
-                <span className="text-xl font-bold text-success">
+                <span className="text-xl font-bold text-chart-3">
                   CHF {summary.monthlyIncome.toFixed(2)}
                 </span>
               </div>
@@ -306,7 +366,7 @@ export default function CashRegisterPage() {
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
               <Input 
-                placeholder="Suche nach Beschreibung..." 
+                placeholder="VK2025000038, CM2025000010 oder Beschreibung..." 
                 className="pl-10" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -314,6 +374,37 @@ export default function CashRegisterPage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {/* Type Filter */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={typeFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTypeFilter('all')}
+                  className="text-xs"
+                >
+                  Alle
+                </Button>
+                <Button
+                  variant={typeFilter === 'cash_in' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTypeFilter('cash_in')}
+                  className="text-xs"
+                >
+                  Einnahmen
+                </Button>
+                <Button
+                  variant={typeFilter === 'cash_out' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTypeFilter('cash_out')}
+                  className="text-xs"
+                >
+                  Ausgaben
+                </Button>
+              </div>
+
+              {/* Trennlinie */}
+              <div className="h-6 w-px bg-border" />
+
               {/* Month Navigation */}
               <div className="flex items-center gap-1">
                 <Button 
@@ -375,7 +466,9 @@ export default function CashRegisterPage() {
                   <TableRow className="bg-muted/50">
                     <TableHead className="text-muted-foreground font-medium">Datum</TableHead>
                     <TableHead className="text-muted-foreground font-medium">Zeit</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Beleg-Nr.</TableHead>
                     <TableHead className="text-muted-foreground font-medium">Beschreibung</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Kategorie</TableHead>
                     <TableHead className="text-muted-foreground font-medium">Typ</TableHead>
                     <TableHead className="text-right text-muted-foreground font-medium">Betrag</TableHead>
                     <TableHead className="text-right text-muted-foreground font-medium">Laufender Saldo</TableHead>
@@ -384,7 +477,7 @@ export default function CashRegisterPage() {
                 <TableBody>
                   {/* Einträge werden nach Erstellungsdatum absteigend angezeigt (neueste zuerst) */}
                   {(() => {
-                    const filteredEntries = entries.filter(entry => searchTerm === "" || entry.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                    const filteredEntries = getFilteredEntries()
                     
                     // Für laufenden Saldo: Startpunkt berechnen
                     // (Aktueller Saldo minus alle Bewegungen dieses Monats)
@@ -421,13 +514,30 @@ export default function CashRegisterPage() {
                         >
                           <TableCell className="text-foreground">{formatDate(entry.date)}</TableCell>
                           <TableCell className="text-foreground">{formatTime(entry.created_at)}</TableCell>
-                          <TableCell className="text-foreground font-medium">{entry.description}</TableCell>
+                          <TableCell className="font-mono text-sm">
+                            <span className={`font-semibold ${
+                              entry.reference_type === 'sale' ? 'text-primary' : 'text-muted-foreground'
+                            }`}>
+                              {getDisplayNumber(entry)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-foreground font-medium">
+                            {getDisplayDescription(entry)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={entry.reference_type === 'sale' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {getDescriptionBadge(entry)}
+                            </Badge>
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center">
                               {entry.type === "cash_in" ? (
-                                <div className="flex items-center bg-success/10 px-2 py-1 rounded-full text-sm">
-                                  <ArrowUpRight className="mr-1 text-success" size={14} />
-                                  <span className="text-success">Einnahme</span>
+                                <div className="flex items-center bg-chart-3/10 px-2 py-1 rounded-full text-sm">
+                                  <ArrowUpRight className="mr-1 text-chart-3" size={14} />
+                                  <span className="text-chart-3">Einnahme</span>
                                 </div>
                               ) : (
                                 <div className="flex items-center bg-destructive/10 px-2 py-1 rounded-full text-sm">
@@ -438,7 +548,7 @@ export default function CashRegisterPage() {
                             </div>
                           </TableCell>
                           <TableCell
-                            className={`text-right font-medium ${entry.type === "cash_in" ? "text-success" : "text-destructive"}`}
+                            className={`text-right font-medium ${entry.type === "cash_in" ? "text-chart-3" : "text-destructive"}`}
                           >
                             {entry.type === "cash_in" ? "+" : "-"} CHF {entry.amount.toFixed(2)}
                           </TableCell>
@@ -450,13 +560,23 @@ export default function CashRegisterPage() {
                     })
                   })()}
 
-                  {!loading && entries.length === 0 && (
+                  {!loading && getFilteredEntries().length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                         <div className="flex flex-col items-center space-y-2">
                           <ReceiptIcon size={32} className="text-muted-foreground" />
-                          <span>Keine Einträge gefunden.</span>
-                          <span className="text-sm text-muted-foreground">Verwenden Sie POS und Ausgaben für neue Einträge</span>
+                          <span>
+                            {entries.length === 0 
+                              ? 'Keine Kassenbewegungen für diesen Monat gefunden.'
+                              : 'Keine Einträge entsprechen den aktuellen Filtern.'
+                            }
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {entries.length === 0
+                              ? 'Verwenden Sie POS und Ausgaben für neue Einträge'
+                              : 'Versuchen Sie andere Suchbegriffe oder Filter'
+                            }
+                          </span>
                         </div>
                       </TableCell>
                     </TableRow>

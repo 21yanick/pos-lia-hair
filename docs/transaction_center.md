@@ -9,9 +9,11 @@ Das Transaction Center ist ein **Document Management und Overview Hub**, das ein
 ### ✅ Implementierte Features
 - ✅ **Zentrale Übersicht** über alle 179 Transaktionen (Sales, Expenses, Banking, Cash Movements)
 - ✅ **Smart Search** mit Receipt Number & Description Pattern Recognition
-- ✅ **Quick Filters** für häufige Abfragen (Heute, Diese Woche, Typ-Filter)
-- ✅ **Custom Date Range** Picker für beliebige Zeiträume
-- ✅ **PDF Status** Anzeige und Management
+- ✅ **Kombinierbare Quick Filters** für häufige Abfragen (Multi-Select System)
+- ✅ **Custom Date Range** Picker für beliebige Zeiträume (Swiss Calendar)
+- ✅ **PDF Status** Anzeige und Management (Business-aware Logic)
+- ✅ **Bulk Operations** (Multi-Select, ZIP Download, CSV Export)
+- ✅ **Enhanced Status System** (Business-Context Logic + Info Button)
 - ✅ **Performance optimiert** mit Database Views und Indexes
 
 ### Abgrenzung
@@ -65,17 +67,20 @@ MB2025001        - Monatsberichte (Monthly Reports)
 │ │ [🔍] VK2025000076 oder "Haarschnitt" [Suchen] [Reset]  │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │                                                             │
-│ ✅ Quick Filters                                            │
-│ [Heute] [Diese Woche] [Dieser Monat] [Nur Verkäufe] [...] │
-│ [Mit PDF] [Ohne PDF] [Unabgeglichen] [Custom Zeitraum ▼]  │
+│ ✅ Kombinierbare Quick Filters                             │
+│ [Heute] [Diese Woche] [Dieser Monat] | [Verkäufe] [Ausgaben] │
+│ | [Mit PDF] [Ohne PDF] [Unabgeglichen] [Custom Zeitraum ▼] │
 │                                                             │
-│ ✅ Alle Transaktionen (179 gefunden)         [Filter] [Export]│
+│ ✅ Alle Transaktionen (179 gefunden)           [Filter]    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Zeit  | Typ | Beleg-Nr.    | Beschreibung     | Betrag | 📄 │ │
-│ │ 21:04 | VK  | VK2025000076 | Haarschnitt Damen| 65.00  | ✅ │ │
-│ │ 20:19 | CM  | CM2025000028 | Owner Entnahme   |-153.00 | ❌ │ │
-│ │ 12:44 | BT  | BT2025000086 | TWINT Gutschrift | 362.23 | ❌ │ │
+│ │ ☐ | Zeit  | Typ | Beleg-Nr.    | Beschreibung | Betrag | 📄 | Status [ℹ️] │
+│ │ ☑ | 21:04 | VK  | VK2025000076 | Haarschnitt  | 65.00  | ✅ | 🕐          │
+│ │ ☑ | 20:19 | CM  | CM2025000028 | Owner Entnahme|-153.00| ❌ | ✅          │
+│ │ ☐ | 12:44 | BT  | BT2025000086 | TWINT Gutschr.| 362.23| ❌ | 🔵          │
 │ └─────────────────────────────────────────────────────────┘ │
+│                                                             │
+│ 📦 Bulk Operations (2 selected)                            │
+│ [📦 ZIP Download (1)] [📄 CSV Export (2)] [🔄 PDFs erstellen] │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -92,7 +97,7 @@ MB2025001        - Monatsberichte (Monthly Reports)
 | **Beschreibung** | Transaction Description | "Haarschnitt Damen", "Owner Entnahme" |
 | **Betrag** | Amount (CHF, farbkodiert) | CHF 65.00 (grün), CHF -153.00 (rot) |
 | **📄** | PDF Status (Business-aware) | ✅ verfügbar, ⚠️ fehlt, ➖ nicht nötig, 🔄 generiert |
-| **🔄** | Transaction Status | ✅ completed, 🟡 pending/unmatched, ❌ cancelled |
+| **🔄** | Transaction Status | ✅ abgeglichen, 🕐 pending, 🔵 Bank unmatched, ❌ storniert [ℹ️] |
 
 ### 🔍 Enhanced Search & Filter Features (LIVE)
 - ✅ **Receipt Number Search**: `VK2025000076`, `AG2025`, `CM2025`, `BT2025`
@@ -170,6 +175,49 @@ interface SearchQuery {
 - `"Verkäufe" + "Ohne PDF"` = VK ohne PDF finden  
 - `"Diese Woche" + "Verkäufe" + "Mit PDF"` = Vollständige Kombination
 
+### 📦 **NEW**: Bulk Operations System
+```
+✅ Multi-Select mit Checkboxes:
+- Header "Alle auswählen" für komplette Auswahl
+- Einzelne Transaktionen via Checkbox
+- Visual Selection Feedback (bg-accent/30)
+- Smart Bulk Counter (X Total, Y mit PDF, Z ohne PDF)
+
+✅ Bulk Operations Panel (erscheint bei Selection):
+- ZIP Download (nur aktiv wenn PDFs verfügbar)
+- CSV Export (Swiss format, ; delimiter, deutsche Labels)
+- PDF Regeneration (für fehlende PDFs)
+- Auto-Clear nach erfolgreicher Operation
+
+✅ Professional UX:
+- Loading States mit Progress Indicators
+- Error Handling mit User Feedback
+- Smart Button Enable/Disable Logic
+- Clean Header (redundanter Export Button entfernt)
+- Business-Context Status System mit Info Button
+```
+
+### 🎨 **NEW**: Enhanced Status System
+```
+✅ Business-Context Status Logic:
+- VK (Sales): ✅ abgeglichen & 🕐 noch nicht abgeglichen
+- AG (Expenses): ✅ bezahlt & abgeglichen & 🕐 bezahlt, nicht abgeglichen  
+- BT (Bank): ✅ zugeordnet & 🔵 noch nicht zugeordnet
+- CM (Cash): ✅ abgeschlossen
+- Alle: ❌ storniert
+
+✅ Status Info Button [ℹ️]:
+- Klickbarer Info-Button in Status-Spalten-Header
+- Detaillierte Popover-Erklärung aller Status-Varianten
+- Gruppiert nach Transaction-Typ mit visuellen Icons
+- Kompakte, benutzerfreundliche Darstellung
+
+✅ Enhanced Tooltips:
+- Hover-Tooltips für alle Status-Icons
+- Context-aware Beschreibungen
+- Deutsche Business-Sprache
+```
+
 ### Advanced Filter Panel
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -198,9 +246,9 @@ interface SearchQuery {
 
 ---
 
-## Bulk Operations
+## ✅ Bulk Operations (IMPLEMENTED)
 
-### Interface
+### Live Interface
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 🎯 Bulk Operations (5 selected)                            │
@@ -227,12 +275,14 @@ interface SearchQuery {
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Features
-- **ZIP Download**: Mehrere PDFs als ZIP-Archiv
-- **PDF Regeneration**: Fehlende PDFs nachträglich erstellen
-- **CSV Export**: Transaction-Daten für Excel/Buchhaltung
-- **Excel Report**: Formatierte Übersicht mit Styling
-- **Print List**: Browser-optimierte Druckliste
+### ✅ Implemented Features
+- ✅ **ZIP Download**: Mehrere PDFs als ZIP-Archiv (JSZip integration)
+- ✅ **PDF Regeneration**: Fehlende PDFs nachträglich erstellen (placeholder)
+- ✅ **CSV Export**: Swiss format (;-delimiter, deutsche Labels, Metadaten)
+- ✅ **Smart Statistics**: Live counters (X Total, Y mit PDF, Z ohne PDF)
+- ✅ **Error Handling**: User feedback & loading states
+- [ ] **Excel Report**: Formatierte Übersicht mit Styling (future)
+- [ ] **Print List**: Browser-optimierte Druckliste (future)
 
 ---
 
@@ -261,25 +311,28 @@ interface SearchQuery {
 
 ---
 
-## Implementation Plan
+## ✅ Implementation Status
 
-### Phase 1: Basic Transaction Center
-- [ ] **Unified Transactions View** - Alle Transaction-Typen in einer Tabelle
-- [ ] **Basic Search** - Receipt Number und Description Search
-- [ ] **Simple Filters** - Datum, Typ, PDF Status
-- [ ] **Individual Actions** - View, Download PDF, Regenerate
+### ✅ Phase 1: Basic Transaction Center COMPLETED
+- ✅ **Unified Transactions View** - Alle Transaction-Typen in einer Tabelle
+- ✅ **Smart Search** - Receipt Number und Description Search mit Pattern Recognition
+- ✅ **Kombinierbare Filters** - Datum, Typ, PDF Status (Multi-Select)
+- ✅ **Individual Actions** - View, Download PDF, Regenerate
+- ✅ **Swiss Enhancements** - Deutsche Sprache, dd.mm.yyyy, CHF
 
-### Phase 2: Bulk Operations  
-- [ ] **Multi-Select** - Checkbox-System für Bulk-Auswahl
-- [ ] **ZIP Downloads** - Mehrere PDFs als ZIP
-- [ ] **CSV Export** - Gefilterte Daten exportieren
-- [ ] **PDF Regeneration** - Bulk-PDF-Erstellung
+### ✅ Phase 2: Bulk Operations COMPLETED
+- ✅ **Multi-Select** - Professional Checkbox-System für Bulk-Auswahl
+- ✅ **ZIP Downloads** - Mehrere PDFs als ZIP (JSZip integration)
+- ✅ **CSV Export** - Swiss format für Buchhaltung (;-delimiter, Metadaten)
+- ✅ **PDF Regeneration** - Bulk-PDF-Erstellung (placeholder implementation)
+- ✅ **Smart UX** - Loading states, error handling, auto-clear
 
-### Phase 3: Advanced Features
-- [ ] **Advanced Search/Filters** - Amount ranges, Complex queries
+### 🔄 Phase 3: Advanced Features (Future)
+- [ ] **Advanced Filter Panel** - Amount ranges, Complex queries (Button vorhanden)
 - [ ] **Filter Presets** - Gespeicherte Filter-Kombinationen
-- [ ] **Document Management** - Storage-Übersicht, Cleanup
-- [ ] **Performance Optimization** - Virtualized table, Pagination
+- [ ] **Excel Export** - Formatierte Übersicht mit SheetJS
+- [ ] **Transaction Details Modal** - Erweiterte Einzelansicht
+- [ ] **Performance Optimization** - Virtualized table für >1000 Einträge
 
 ---
 

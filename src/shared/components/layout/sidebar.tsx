@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Image from "next/image"
 import {
   BarChart4,
   ShoppingCart,
@@ -42,16 +43,48 @@ export function Sidebar() {
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        {!collapsed && <h1 className="text-xl font-semibold">Coiffeursalon</h1>}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <Menu size={20} /> : <X size={20} />}
-        </Button>
+      <div className="flex items-center justify-between p-4 border-b border-border h-20 relative">
+        {!collapsed ? (
+          <>
+            <div className="flex items-center">
+              <Image
+                src="/logo_clean.svg"
+                alt="Lia Hair Logo"
+                width={120}
+                height={60}
+                className="mr-2"
+                priority
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label="Collapse sidebar"
+            >
+              <X size={20} />
+            </Button>
+          </>
+        ) : (
+          <div className="w-full flex flex-col items-center">
+            <Image
+              src="/logo_clean.svg"
+              alt="Lia Hair Logo"
+              width={48}
+              height={48}
+              className="mb-2"
+              priority
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label="Expand sidebar"
+            >
+              <Menu size={20} />
+            </Button>
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto">

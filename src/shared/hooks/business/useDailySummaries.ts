@@ -442,6 +442,7 @@ export function useDailySummaries() {
       const startUTC = new Date(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate()).toISOString()
       const endUTC = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59).toISOString()
 
+      // Get cash movements with sales data for type='sale'
       const { data, error } = await supabase
         .from('cash_movements')
         .select('*')
@@ -454,7 +455,36 @@ export function useDailySummaries() {
         throw error
       }
 
-      return { success: true, movements: data || [] }
+      // Enrich with sales data where reference_type = 'sale'
+      const enrichedData = await Promise.all(
+        (data || []).map(async (movement) => {
+          if (movement.reference_type === 'sale' && movement.reference_id) {
+            try {
+              const { data: saleData, error: saleError } = await supabase
+                .from('sales')
+                .select('receipt_number')
+                .eq('id', movement.reference_id)
+                .single()
+              
+              if (saleError) {
+                console.error(`Failed to fetch sale data for ${movement.reference_id}:`, saleError)
+              }
+              
+              return {
+                ...movement,
+                sale_receipt_number: saleData?.receipt_number || null,
+                sale_customer_name: null
+              }
+            } catch (err) {
+              console.error(`Error enriching movement ${movement.movement_number}:`, err)
+              return movement
+            }
+          }
+          return movement
+        })
+      )
+
+      return { success: true, movements: enrichedData || [] }
     } catch (err: any) {
       console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
       setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')

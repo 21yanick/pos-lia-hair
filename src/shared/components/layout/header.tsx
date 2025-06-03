@@ -43,16 +43,20 @@ export function Header() {
         return "Dashboard"
       case "pos":
         return "Verkauf"
-      case "reports":
-        return "Abschlüsse"
+      case "cash-register":
+        return "Kassenbuch"
       case "products":
         return "Produkte"
       case "expenses":
         return "Ausgaben"
-      case "documents":
-        return "Dokumente"
+      case "transactions":
+        return "Transaktionen"
       case "transactions":
         return "Dokumente"
+      case "banking":
+        return "Banking"
+      case "settings":
+        return "Einstellungen"
       default:
         return "Coiffeursalon POS"
     }
