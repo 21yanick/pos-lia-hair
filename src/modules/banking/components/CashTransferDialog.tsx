@@ -135,7 +135,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
               </>
             ) : (
               <>
-                <ArrowDownToLine className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <ArrowDownToLine className="h-5 w-5 text-chart-3" />
                 Geld von Bank abheben
               </>
             )}

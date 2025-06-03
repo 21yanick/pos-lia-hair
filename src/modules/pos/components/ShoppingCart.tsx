@@ -26,16 +26,14 @@ export function ShoppingCart({
   const cartTotal = cart?.reduce((sum, item) => sum + item.total, 0) || 0
 
   return (
-    <div className="w-full md:w-1/3 flex flex-col h-full bg-gradient-to-br from-muted/50 to-background rounded-2xl border border-border shadow-sm backdrop-blur-sm">
+    <div className="w-full md:w-1/3 flex flex-col h-full border rounded-lg">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5 rounded-t-2xl">
-        <h2 className="text-xl font-bold flex items-center text-foreground">
-          <div className="mr-3 p-2 bg-primary/10 rounded-xl">
-            <ShoppingBag className="text-primary" size={20} />
-          </div>
+      <div className="p-4 border-b">
+        <h2 className="text-lg font-semibold flex items-center">
+          <ShoppingBag className="mr-2" size={18} />
           Warenkorb
           {cart && cart.length > 0 && (
-            <Badge className="ml-3 bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1">
+            <Badge className="ml-2" variant="secondary">
               {cart.length}
             </Badge>
           )}
@@ -45,81 +43,75 @@ export function ShoppingCart({
       {/* Das URSPRÜNGLICHE Layout: flex-1 + overflow-y-auto */}
       <div className="flex-1 overflow-y-auto p-4">
         {!cart || cart.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
-            <div className="p-4 bg-muted rounded-full mb-4">
-              <ShoppingBag className="text-muted-foreground" size={32} />
-            </div>
-            <p className="text-lg font-medium mb-2">Der Warenkorb ist leer</p>
-            <p className="text-sm text-muted-foreground">Wählen Sie Artikel aus der Produktauswahl</p>
+          <div className="text-center py-12 text-muted-foreground">
+            <ShoppingBag className="mx-auto mb-3" size={24} />
+            <p className="font-medium mb-1">Warenkorb ist leer</p>
+            <p className="text-sm">Artikel hinzufügen</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {cart && cart.map((item, index) => (
               <div 
                 key={item.id} 
-                className="group bg-background/60 backdrop-blur-sm border border-border rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:bg-background/80"
+                className="border rounded-lg p-3"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 mr-3">
-                    <div className="font-semibold text-foreground text-sm leading-tight mb-1">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="font-medium text-sm mb-1">
                       {item.name}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs px-2 py-1 bg-muted/80">
+                      <span className="text-xs text-muted-foreground">
                         CHF {item.price.toFixed(2)}
-                      </Badge>
+                      </span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 hover:bg-primary/10 hover:text-primary rounded-md"
-                        title="Preis bearbeiten"
+                        className="h-5 w-5"
                         onClick={() => onEditPrice(item)}
                         disabled={loading}
                       >
-                        <Pencil size={12} />
+                        <Pencil size={10} />
                       </Button>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold text-foreground text-base">
-                      CHF {item.total.toFixed(2)}
-                    </div>
+                  <div className="text-sm font-semibold">
+                    CHF {item.total.toFixed(2)}
                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center bg-muted rounded-lg p-1">
+                  <div className="flex items-center">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="h-7 w-7 rounded-md hover:bg-background hover:shadow-sm"
+                      className="h-6 w-6"
                       onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
                       disabled={loading}
                     >
-                      <Minus size={14} />
+                      <Minus size={12} />
                     </Button>
-                    <span className="mx-3 font-semibold text-foreground min-w-[20px] text-center">
+                    <span className="mx-3 text-sm font-medium min-w-[20px] text-center">
                       {item.quantity}
                     </span>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="h-7 w-7 rounded-md hover:bg-background hover:shadow-sm"
+                      className="h-6 w-6"
                       onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
                       disabled={loading}
                     >
-                      <Plus size={14} />
+                      <Plus size={12} />
                     </Button>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive rounded-lg"
-                    title="Artikel entfernen"
+                    className="h-6 w-6 text-destructive"
                     onClick={() => onDeleteItem(item.id)}
                     disabled={loading}
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={12} />
                   </Button>
                 </div>
               </div>

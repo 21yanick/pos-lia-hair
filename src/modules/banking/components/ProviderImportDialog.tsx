@@ -234,20 +234,20 @@ export function ProviderImportDialog({
         />
         
         <div className="flex flex-col items-center space-y-4">
-          <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-full">
-            <FileSpreadsheet className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <div className="p-4 bg-primary/10 rounded-full">
+            <FileSpreadsheet className="h-8 w-8 text-primary dark:text-blue-400" />
           </div>
           
           <div>
-            <h3 className="text-lg font-medium">Upload Provider CSV</h3>
+            <h3 className="text-lg font-medium">Provider CSV hochladen</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Drag and drop your TWINT or SumUp CSV file here, or click to browse
+              TWINT oder SumUp CSV Datei hier ablegen oder zum Durchsuchen klicken
             </p>
           </div>
           
           <Button variant="outline">
             <Upload className="h-4 w-4 mr-2" />
-            Select CSV File
+            CSV Datei auswählen
           </Button>
         </div>
       </div>
@@ -257,7 +257,7 @@ export function ProviderImportDialog({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <FileSpreadsheet className="h-5 w-5 text-green-600" />
+              <FileSpreadsheet className="h-5 w-5 text-chart-3" />
               <div className="flex-1">
                 <p className="font-medium">{state.file.name}</p>
                 <p className="text-sm text-muted-foreground">
@@ -273,40 +273,13 @@ export function ProviderImportDialog({
                 ) : (
                   <ArrowRight className="h-4 w-4 mr-2" />
                 )}
-                {state.loading ? 'Processing...' : 'Preview'}
+                {state.loading ? 'Verarbeitung...' : 'Vorschau'}
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Supported Formats */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Supported Formats</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
-              <span className="text-white text-xs font-bold">T</span>
-            </div>
-            <div>
-              <p className="font-medium">TWINT Transaction Reports</p>
-              <p className="text-sm text-muted-foreground">Semicolon-separated CSV with German headers</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center">
-              <span className="text-white text-xs font-bold">S</span>
-            </div>
-            <div>
-              <p className="font-medium">SumUp Transaction Reports</p>
-              <p className="text-sm text-muted-foreground">Comma-separated CSV with transaction details</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 
@@ -328,7 +301,7 @@ export function ProviderImportDialog({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-chart-3">
                   {state.preview.newRecords.length}
                 </div>
                 <div className="text-sm text-muted-foreground">New Records</div>
@@ -346,13 +319,13 @@ export function ProviderImportDialog({
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <div className="font-medium">Total Amount</div>
-                <div className="text-green-600 font-bold">
+                <div className="text-chart-3 font-bold">
                   {state.preview.totalAmount.toFixed(2)} CHF
                 </div>
               </div>
               <div>
                 <div className="font-medium">Total Fees</div>
-                <div className="text-red-600 font-bold">
+                <div className="text-destructive font-bold">
                   {state.preview.totalFees.toFixed(2)} CHF
                 </div>
               </div>
@@ -406,13 +379,13 @@ export function ProviderImportDialog({
                       <TableCell className="font-mono text-xs">
                         {record.provider_transaction_id.substring(0, 12)}...
                       </TableCell>
-                      <TableCell className="text-green-600">
+                      <TableCell className="text-chart-3">
                         {record.gross_amount.toFixed(2)} CHF
                       </TableCell>
-                      <TableCell className="text-red-600">
+                      <TableCell className="text-destructive">
                         {record.fees.toFixed(2)} CHF
                       </TableCell>
-                      <TableCell className="text-blue-600">
+                      <TableCell className="text-primary">
                         {record.net_amount.toFixed(2)} CHF
                       </TableCell>
                     </TableRow>
@@ -464,12 +437,12 @@ export function ProviderImportDialog({
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               {success ? (
-                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
-                  <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <div className="p-3 bg-chart-3/10 dark:bg-green-900 rounded-full">
+                  <CheckCircle className="h-8 w-8 text-chart-3 dark:text-green-400" />
                 </div>
               ) : (
                 <div className="p-3 bg-red-100 dark:bg-red-900 rounded-full">
-                  <FileX className="h-8 w-8 text-red-600 dark:text-red-400" />
+                  <FileX className="h-8 w-8 text-destructive dark:text-red-400" />
                 </div>
               )}
               
@@ -496,13 +469,13 @@ export function ProviderImportDialog({
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-chart-3">
                   {state.result.recordsImported}
                 </div>
                 <div className="text-sm text-muted-foreground">Imported</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-2xl font-bold text-destructive">
                   {state.result.recordsFailed}
                 </div>
                 <div className="text-sm text-muted-foreground">Failed</div>
@@ -515,7 +488,7 @@ export function ProviderImportDialog({
         {state.result.errors && state.result.errors.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base text-red-600">Import Errors</CardTitle>
+              <CardTitle className="text-base text-destructive">Import Errors</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -557,51 +530,51 @@ export function ProviderImportDialog({
             <span>Provider Import - TWINT & SumUp</span>
           </DialogTitle>
           <DialogDescription>
-            Import transaction data from TWINT or SumUp CSV exports to match with POS sales
+            Transaktionsdaten aus TWINT oder SumUp CSV-Exporten importieren und mit POS-Verkäufen abgleichen
           </DialogDescription>
         </DialogHeader>
 
         {/* Step Indicator */}
         <div className="flex items-center space-x-4 mb-6">
           <div className={`flex items-center space-x-2 ${
-            state.step === 'upload' ? 'text-blue-600' : 
-            ['preview', 'confirm'].includes(state.step) ? 'text-green-600' : 'text-gray-400'
+            state.step === 'upload' ? 'text-primary' : 
+            ['preview', 'confirm'].includes(state.step) ? 'text-chart-3' : 'text-muted-foreground'
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              state.step === 'upload' ? 'bg-blue-100 text-blue-600' :
-              ['preview', 'confirm'].includes(state.step) ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+              state.step === 'upload' ? 'bg-primary/10 text-primary' :
+              ['preview', 'confirm'].includes(state.step) ? 'bg-chart-3/10 text-chart-3' : 'bg-muted/50 text-muted-foreground'
             }`}>
               1
             </div>
-            <span className="font-medium">Upload</span>
+            <span className="font-medium">Hochladen</span>
           </div>
           
           <div className="flex-1 h-px bg-gray-200"></div>
           
           <div className={`flex items-center space-x-2 ${
-            state.step === 'preview' ? 'text-blue-600' :
-            state.step === 'confirm' ? 'text-green-600' : 'text-gray-400'
+            state.step === 'preview' ? 'text-primary' :
+            state.step === 'confirm' ? 'text-chart-3' : 'text-muted-foreground'
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              state.step === 'preview' ? 'bg-blue-100 text-blue-600' :
-              state.step === 'confirm' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+              state.step === 'preview' ? 'bg-primary/10 text-primary' :
+              state.step === 'confirm' ? 'bg-chart-3/10 text-chart-3' : 'bg-muted/50 text-muted-foreground'
             }`}>
               2
             </div>
-            <span className="font-medium">Preview</span>
+            <span className="font-medium">Vorschau</span>
           </div>
           
           <div className="flex-1 h-px bg-gray-200"></div>
           
           <div className={`flex items-center space-x-2 ${
-            state.step === 'confirm' ? 'text-green-600' : 'text-gray-400'
+            state.step === 'confirm' ? 'text-chart-3' : 'text-muted-foreground'
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              state.step === 'confirm' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+              state.step === 'confirm' ? 'bg-chart-3/10 text-chart-3' : 'bg-muted/50 text-muted-foreground'
             }`}>
               3
             </div>
-            <span className="font-medium">Confirm</span>
+            <span className="font-medium">Bestätigen</span>
           </div>
         </div>
 

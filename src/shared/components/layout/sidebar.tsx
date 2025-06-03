@@ -14,6 +14,7 @@ import {
   BookOpen,
   Settings,
   CreditCard,
+  FileText,
 } from "lucide-react"
 import { cn } from "@/shared/utils"
 import { Button } from "@/shared/components/ui/button"
@@ -23,6 +24,7 @@ const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart4 },
   { name: "Verkauf", href: "/pos", icon: ShoppingCart },
   { name: "Banking", href: "/banking", icon: CreditCard },
+  { name: "Transaktionen", href: "/transactions", icon: FileText },
   { name: "Kassenbuch", href: "/cash-register", icon: BookOpen },
   { name: "Produkte", href: "/products", icon: Package },
   { name: "Ausgaben", href: "/expenses", icon: FileIcon },

@@ -355,8 +355,8 @@ export function BankImportDialog({
                 Total Einträge
               </div>
             </div>
-            <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-center p-4 bg-chart-3/10 rounded">
+              <div className="text-2xl font-bold text-chart-3">
                 {state.preview?.newEntries || 0}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -424,7 +424,7 @@ export function BankImportDialog({
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             {state.preview?.importable ? (
-              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <CheckCircle className="h-5 w-5 text-chart-3" />
             ) : (
               <FileX className="h-5 w-5 text-destructive" />
             )}
@@ -467,8 +467,8 @@ export function BankImportDialog({
   const renderConfirmStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4">
-          <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+        <div className="mx-auto w-16 h-16 bg-chart-3/10 rounded-full flex items-center justify-center mb-4">
+          <CheckCircle className="h-8 w-8 text-chart-3" />
         </div>
         <h3 className="text-lg font-semibold mb-2">Import erfolgreich!</h3>
         <p className="text-muted-foreground">
@@ -480,7 +480,7 @@ export function BankImportDialog({
       <Card>
         <CardContent className="p-6">
           <div className="text-center space-y-2">
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-3xl font-bold text-chart-3">
               {state.result?.importedCount || 0}
             </div>
             <div className="text-sm text-muted-foreground">

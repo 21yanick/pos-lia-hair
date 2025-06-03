@@ -187,9 +187,6 @@ export function BankingPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Banking</h1>
-          <p className="text-muted-foreground">
-            Einfacher 2-Tab Abgleich: Provider-Gebühren + Bank-Transaktionen
-          </p>
         </div>
         
         {/* Action Buttons */}
@@ -206,7 +203,7 @@ export function BankingPage() {
           <Button
             onClick={() => openCashTransferDialog('from_bank')}
             variant="outline" 
-            className="flex items-center gap-2 text-green-600 border-green-600 hover:bg-green-600 hover:text-white dark:text-green-400 dark:border-green-400 dark:hover:bg-green-400 dark:hover:text-black"
+            className="flex items-center gap-2 text-chart-3 border-chart-3 hover:bg-chart-3 hover:text-background"
           >
             <ArrowDownToLine className="h-4 w-4" />
             Geld von Bank abheben
@@ -256,7 +253,7 @@ export function BankingPage() {
             {isLoading ? (
               <Skeleton className="h-8 w-24 mb-2" />
             ) : (
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-3xl font-bold text-chart-3">
                 {raiffeisenAccount ? `${raiffeisenAccount.current_balance.toFixed(2)}` : '0.00'} CHF
               </div>
             )}
@@ -266,7 +263,7 @@ export function BankingPage() {
             </p>
             {raiffeisenAccount?.last_statement_date && (
               <p className="text-xs text-muted-foreground mt-1">
-                Last Import: {new Date(raiffeisenAccount.last_statement_date).toLocaleDateString()}
+                Letzter Import: {new Date(raiffeisenAccount.last_statement_date).toLocaleDateString()}
               </p>
             )}
           </CardContent>

@@ -20,15 +20,15 @@ interface MonthlyTrendChartProps {
 const chartConfig = {
   revenue: {
     label: "Umsatz",
-    color: "hsl(var(--success))",
+    color: "var(--chart-3)", // Grün aus tweakcn palette
   },
   expenses: {
     label: "Ausgaben", 
-    color: "hsl(var(--destructive))",
+    color: "var(--chart-4)", // Orange aus tweakcn palette
   },
   profit: {
     label: "Gewinn",
-    color: "hsl(var(--primary))",
+    color: "var(--chart-1)", // Primary Purple aus tweakcn palette
   },
 }
 

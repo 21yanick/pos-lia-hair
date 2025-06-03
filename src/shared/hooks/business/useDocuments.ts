@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
-import { generateDocumentDisplayName } from '@/app/(auth)/documents/utils/documentHelpers'
+import { generateDocumentDisplayName } from '@/shared/utils/documentHelpers'
 
 // Typen für Dokumente
 export type Document = Database['public']['Tables']['documents']['Row']

@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -14,169 +10,216 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Tweakcn Base Theme Colors */
+    --background: oklch(0.9777 0.0041 301.4256);
+    --foreground: oklch(0.3651 0.0325 287.0807);
+    --card: oklch(1.0000 0 0);
+    --card-foreground: oklch(0.3651 0.0325 287.0807);
+    --popover: oklch(1.0000 0 0);
+    --popover-foreground: oklch(0.3651 0.0325 287.0807);
+    --primary: oklch(0.6104 0.0767 299.7335);
+    --primary-foreground: oklch(0.9777 0.0041 301.4256);
+    --secondary: oklch(0.8957 0.0265 300.2416);
+    --secondary-foreground: oklch(0.3651 0.0325 287.0807);
+    --muted: oklch(0.8906 0.0139 299.7754);
+    --muted-foreground: oklch(0.5288 0.0375 290.7895);
+    --accent: oklch(0.7889 0.0802 359.9375);
+    --accent-foreground: oklch(0.3394 0.0441 1.7583);
+    --destructive: oklch(0.6332 0.1578 22.6734);
+    --destructive-foreground: oklch(0.9777 0.0041 301.4256);
+    --border: oklch(0.8447 0.0226 300.1421);
+    --input: oklch(0.9329 0.0124 301.2783);
+    --ring: oklch(0.6104 0.0767 299.7335);
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
+    /* Enhanced Business Colors */
     --success: 142.1 76.2% 36.3%;
     --success-foreground: 355.7 100% 97.3%;
-
     --warning: 38 92% 50%;
     --warning-foreground: 48 96% 89%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    /* Tweakcn Enhanced Radius */
+    --radius: 0.35rem;
 
-    --radius: 0.5rem;
+    /* Tweakcn Chart Colors */
+    --chart-1: oklch(0.6104 0.0767 299.7335);
+    --chart-2: oklch(0.7889 0.0802 359.9375);
+    --chart-3: oklch(0.7321 0.0749 169.8670);
+    --chart-4: oklch(0.8540 0.0882 76.8292);
+    --chart-5: oklch(0.7857 0.0645 258.0839);
 
-    /* Chart Colors */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* Tweakcn Sidebar Colors */
+    --sidebar-background: 260.0000 23.0769% 94.9020%;
+    --sidebar-foreground: oklch(0.3651 0.0325 287.0807);
+    --sidebar-primary: oklch(0.6104 0.0767 299.7335);
+    --sidebar-primary-foreground: oklch(0.9777 0.0041 301.4256);
+    --sidebar-accent: oklch(0.7889 0.0802 359.9375);
+    --sidebar-accent-foreground: oklch(0.3394 0.0441 1.7583);
+    --sidebar-border: oklch(0.8719 0.0198 302.1690);
+    --sidebar-ring: oklch(0.6104 0.0767 299.7335);
 
-    /* Sidebar Colors */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Payment Method Colors - OKLCH Harmonized */
+    --payment-cash: oklch(0.7321 0.0749 169.8670); /* Chart-3 Green */
+    --payment-cash-foreground: oklch(0.9777 0.0041 301.4256);
+    --payment-twint: oklch(0.8540 0.0882 76.8292); /* Chart-4 Orange */
+    --payment-twint-foreground: oklch(0.3394 0.0441 1.7583);
+    --payment-sumup: oklch(0.6104 0.0767 299.7335); /* Primary Purple */
+    --payment-sumup-foreground: oklch(0.9777 0.0041 301.4256);
 
-    /* Payment Method Colors */
-    --payment-cash: 142.1 76.2% 36.3%;
-    --payment-cash-foreground: 355.7 100% 97.3%;
-    --payment-twint: 48 92% 50%;
-    --payment-twint-foreground: 48 96% 89%;
-    --payment-sumup: 221.2 83.2% 53.3%;
-    --payment-sumup-foreground: 210 40% 98%;
+    /* Business Categories - OKLCH Harmonized */
+    --category-service: oklch(0.6104 0.0767 299.7335); /* Primary Purple */
+    --category-service-foreground: oklch(0.9777 0.0041 301.4256);
+    --category-service-bg: oklch(0.8957 0.0265 300.2416);
+    --category-product: oklch(0.7321 0.0749 169.8670); /* Chart-3 Green */
+    --category-product-foreground: oklch(0.9777 0.0041 301.4256);
+    --category-product-bg: oklch(0.8906 0.0139 299.7754);
+    --category-favorite: oklch(0.7889 0.0802 359.9375); /* Accent Pink */
+    --category-favorite-foreground: oklch(0.3394 0.0441 1.7583);
 
-    /* Business Categories */
-    --category-service: 221.2 83.2% 53.3%;
-    --category-service-foreground: 210 40% 98%;
-    --category-service-bg: 221.2 83.2% 97%;
-    --category-product: 142.1 76.2% 36.3%;
-    --category-product-foreground: 355.7 100% 97.3%;
-    --category-product-bg: 142.1 76.2% 97%;
-    --category-favorite: 0 84.2% 60.2%;
-    --category-favorite-foreground: 210 40% 98%;
-
-    /* Metrics Colors */
-    --metric-cash: 221.2 83.2% 53.3%;
-    --metric-monthly: 142.1 76.2% 36.3%;
-    --metric-yearly: 271.5 81% 55.9%;
+    /* Metrics Colors - OKLCH Harmonized */
+    --metric-cash: oklch(0.6104 0.0767 299.7335); /* Primary Purple */
+    --metric-monthly: oklch(0.7321 0.0749 169.8670); /* Green */
+    --metric-yearly: oklch(0.7857 0.0645 258.0839); /* Chart-5 Blue */
 
     /* Status Colors (Enhanced) */
     --status-draft: 48 96% 89%;
     --status-draft-foreground: 38 92% 50%;
     --status-corrected: 25 95% 53%;
     --status-corrected-foreground: 25 95% 97%;
+
+    /* Tweakcn Typography & Shadows */
+    --font-sans: Geist, sans-serif;
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: "Fira Code", "Courier New", monospace;
+    --tracking-normal: 0.025em;
+
+    /* Professional Shadow System */
+    --shadow-2xs: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.03);
+    --shadow-xs: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.03);
+    --shadow-sm: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 1px 2px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 1px 2px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-md: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 2px 4px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-lg: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 4px 6px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-xl: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 8px 10px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-2xl: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.15);
+    --sidebar: oklch(0.9554 0.0082 301.3541);
+    --shadow-color: #1a1a1a;
+    --shadow-opacity: 0.06;
+    --shadow-blur: 8px;
+    --shadow-spread: 1.5px;
+    --shadow-offset-x: 1px;
+    --shadow-offset-y: 4px;
+    --letter-spacing: 0.025em;
+    --spacing: 0.25rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Tweakcn Dark Mode Base */
+    --background: oklch(0.2166 0.0215 292.8474);
+    --foreground: oklch(0.9053 0.0245 293.5570);
+    --card: oklch(0.2544 0.0301 292.7315);
+    --card-foreground: oklch(0.9053 0.0245 293.5570);
+    --popover: oklch(0.2544 0.0301 292.7315);
+    --popover-foreground: oklch(0.9053 0.0245 293.5570);
+    --primary: oklch(0.7058 0.0777 302.0489);
+    --primary-foreground: oklch(0.2166 0.0215 292.8474);
+    --secondary: oklch(0.4604 0.0472 295.5578);
+    --secondary-foreground: oklch(0.9053 0.0245 293.5570);
+    --muted: oklch(0.2560 0.0320 294.8380);
+    --muted-foreground: oklch(0.6974 0.0282 300.0614);
+    --accent: oklch(0.3181 0.0321 308.6149);
+    --accent-foreground: oklch(0.8391 0.0692 2.6681);
+    --destructive: oklch(0.6875 0.1420 21.4566);
+    --destructive-foreground: oklch(0.2166 0.0215 292.8474);
+    --border: oklch(0.3063 0.0359 293.3367);
+    --input: oklch(0.2847 0.0346 291.2726);
+    --ring: oklch(0.7058 0.0777 302.0489);
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
+    /* Enhanced Business Colors - Dark Mode */
     --success: 142.1 70.6% 45.3%;
     --success-foreground: 144.9 80.4% 10%;
-
     --warning: 48 96% 89%;
     --warning-foreground: 38 92% 50%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* Tweakcn Chart Colors - Dark Mode */
+    --chart-1: oklch(0.7058 0.0777 302.0489);
+    --chart-2: oklch(0.8391 0.0692 2.6681);
+    --chart-3: oklch(0.7321 0.0749 169.8670);
+    --chart-4: oklch(0.8540 0.0882 76.8292);
+    --chart-5: oklch(0.7857 0.0645 258.0839);
 
-    /* Chart Colors - Dark Mode */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Tweakcn Sidebar Colors - Dark Mode */
+    --sidebar-background: 250.9091 21.5686% 10%;
+    --sidebar-foreground: oklch(0.9053 0.0245 293.5570);
+    --sidebar-primary: oklch(0.7058 0.0777 302.0489);
+    --sidebar-primary-foreground: oklch(0.2166 0.0215 292.8474);
+    --sidebar-accent: oklch(0.3181 0.0321 308.6149);
+    --sidebar-accent-foreground: oklch(0.8391 0.0692 2.6681);
+    --sidebar-border: oklch(0.2847 0.0346 291.2726);
+    --sidebar-ring: oklch(0.7058 0.0777 302.0489);
 
-    /* Sidebar Colors - Dark Mode */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Payment Method Colors - OKLCH Dark Mode */
+    --payment-cash: oklch(0.7321 0.0749 169.8670); /* Chart-3 Green */
+    --payment-cash-foreground: oklch(0.2166 0.0215 292.8474);
+    --payment-twint: oklch(0.8540 0.0882 76.8292); /* Chart-4 Orange */
+    --payment-twint-foreground: oklch(0.2166 0.0215 292.8474);
+    --payment-sumup: oklch(0.7058 0.0777 302.0489); /* Primary Purple Dark */
+    --payment-sumup-foreground: oklch(0.2166 0.0215 292.8474);
 
-    /* Payment Method Colors - Dark Mode */
-    --payment-cash: 142.1 70.6% 45.3%;
-    --payment-cash-foreground: 144.9 80.4% 10%;
-    --payment-twint: 48 96% 89%;
-    --payment-twint-foreground: 38 92% 50%;
-    --payment-sumup: 217.2 91.2% 59.8%;
-    --payment-sumup-foreground: 222.2 47.4% 11.2%;
+    /* Business Categories - OKLCH Dark Mode */
+    --category-service: oklch(0.7058 0.0777 302.0489); /* Primary Purple Dark */
+    --category-service-foreground: oklch(0.2166 0.0215 292.8474);
+    --category-service-bg: oklch(0.4604 0.0472 295.5578);
+    --category-product: oklch(0.7321 0.0749 169.8670); /* Chart-3 Green */
+    --category-product-foreground: oklch(0.2166 0.0215 292.8474);
+    --category-product-bg: oklch(0.2560 0.0320 294.8380);
+    --category-favorite: oklch(0.3181 0.0321 308.6149); /* Accent Dark */
+    --category-favorite-foreground: oklch(0.8391 0.0692 2.6681);
 
-    /* Business Categories - Dark Mode */
-    --category-service: 217.2 91.2% 59.8%;
-    --category-service-foreground: 222.2 47.4% 11.2%;
-    --category-service-bg: 217.2 32.6% 17.5%;
-    --category-product: 142.1 70.6% 45.3%;
-    --category-product-foreground: 144.9 80.4% 10%;
-    --category-product-bg: 217.2 32.6% 17.5%;
-    --category-favorite: 0 62.8% 30.6%;
-    --category-favorite-foreground: 210 40% 98%;
-
-    /* Metrics Colors - Dark Mode */
-    --metric-cash: 217.2 91.2% 59.8%;
-    --metric-monthly: 142.1 70.6% 45.3%;
-    --metric-yearly: 271.5 81% 65.9%;
+    /* Metrics Colors - OKLCH Dark Mode */
+    --metric-cash: oklch(0.7058 0.0777 302.0489); /* Primary Purple Dark */
+    --metric-monthly: oklch(0.7321 0.0749 169.8670); /* Green */
+    --metric-yearly: oklch(0.7857 0.0645 258.0839); /* Chart-5 Blue */
 
     /* Status Colors - Dark Mode */
     --status-draft: 48 96% 89%;
     --status-draft-foreground: 38 92% 50%;
     --status-corrected: 25 95% 63%;
     --status-corrected-foreground: 25 95% 87%;
+    --radius: 0.35rem;
+    --sidebar: oklch(0.1990 0.0220 292.6244);
+    --font-sans: Geist, sans-serif;
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: "Fira Code", "Courier New", monospace;
+    --shadow-color: #1a1a1a;
+    --shadow-opacity: 0.06;
+    --shadow-blur: 8px;
+    --shadow-spread: 1.5px;
+    --shadow-offset-x: 1px;
+    --shadow-offset-y: 4px;
+    --letter-spacing: 0.025em;
+    --spacing: 0.25rem;
+    --shadow-2xs: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.03);
+    --shadow-xs: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.03);
+    --shadow-sm: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 1px 2px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 1px 2px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-md: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 2px 4px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-lg: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 4px 6px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-xl: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.06), 1px 8px 10px 0.5px hsl(0 0% 10.1961% / 0.06);
+    --shadow-2xl: 1px 4px 8px 1.5px hsl(0 0% 10.1961% / 0.15);
+  }
+  .theme {
+    --font-sans: Geist, sans-serif;
+    --font-mono: "Fira Code", "Courier New", monospace;
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --radius: 0.35rem;
+    --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+    --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+    --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+    --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+    --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+  }
+  body {
+    letter-spacing: var(--tracking-normal);
   }
 }
 
@@ -186,6 +229,45 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    letter-spacing: var(--tracking-normal);
   }
 }
 
+/* Animated gradient background */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Card flip animation */
+@keyframes card-flip {
+  0% {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(180deg) scale(0.95);
+    opacity: 0;
+  }
+}
+
+.animate-card-flip {
+  animation: card-flip 0.6s ease-in-out forwards;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+/* Ensure smooth transitions */
+.duration-600 {
+  transition-duration: 600ms;
+}
