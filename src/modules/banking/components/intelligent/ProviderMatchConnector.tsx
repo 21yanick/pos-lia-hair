@@ -104,13 +104,13 @@ export function ProviderMatchConnector({
     }
     
     if (confidence >= 95) {
-      return 'hsl(142 76% 36%)' // Theme green (emerald-600)
+      return 'hsl(var(--success))' // Success color for high confidence
     }
     if (confidence >= 80) {
-      return 'hsl(217 91% 60%)' // Theme blue (blue-500)
+      return 'hsl(var(--chart-1))' // Chart-1 for medium-high confidence
     }
     if (confidence >= 60) {
-      return 'hsl(32 95% 44%)' // Theme amber (amber-500)
+      return 'hsl(var(--chart-2))' // Chart-2 for medium confidence
     }
     return 'hsl(var(--muted-foreground))'
   }

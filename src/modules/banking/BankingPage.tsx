@@ -1,25 +1,20 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Card, CardContent } from "@/shared/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
 import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table"
-import { Checkbox } from "@/shared/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Skeleton } from "@/shared/components/ui/skeleton"
-import { CreditCard, Building2, ArrowRightLeft, CheckCircle2, AlertCircle, Loader2, ArrowUpToLine, ArrowDownToLine, Upload } from "lucide-react"
+import { CreditCard, Building2, AlertCircle, Loader2, ArrowRightLeft, ArrowUpToLine, ArrowDownToLine, Upload } from "lucide-react"
 import { useBankingData } from './hooks/useBankingData'
 import { CashTransferDialog } from './components/CashTransferDialog'
 import { BankImportDialog } from './components/BankImportDialog'
 import { ProviderImportDialog } from './components/ProviderImportDialog'
 import { OwnerTransactionDialog } from './components/OwnerTransactionDialog'
 import { 
-  ProviderAutoMatchButtonV2, 
   EnhancedProviderTables,
-  ProviderSummaryDashboard, 
-  BankMatchSuggestions 
+  EnhancedBankTables
 } from './components/intelligent'
 import { supabase } from '@/shared/lib/supabase/client'
 
@@ -27,8 +22,10 @@ export function BankingPage() {
   // Selection state for click-to-connect
   const [selectedSale, setSelectedSale] = useState<string | null>(null)
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
-  const [selectedBank, setSelectedBank] = useState<string | null>(null)
-  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  
+  // Bank matching state (simplified for EnhancedBankTables)
+  const [selectedBankTransaction, setSelectedBankTransaction] = useState<string | null>(null)
+  const [selectedBankItems, setSelectedBankItems] = useState<string[]>([])
   const [isMatching, setIsMatching] = useState(false)
 
   // Cash Transfer Dialog state
@@ -49,17 +46,14 @@ export function BankingPage() {
     transactionType: 'deposit' | 'expense' | 'withdrawal'
   }>({ isOpen: false, transactionType: 'deposit' })
 
-  // Real data from Banking API
+  // Real data from Banking API  
   const {
     unmatchedSales,
     unmatchedProviderReports,
-    unmatchedBankTransactions,
-    availableForMatching,
     stats,
     isLoading,
     error,
     handleProviderMatch,
-    handleBankMatch,
     refetchData,
     bankAccounts,
     ownerBalance,
@@ -83,40 +77,21 @@ export function BankingPage() {
     setIsMatching(false)
   }
 
-  // Bank matching (Tab 2)
-  const handleBankMatchClick = async () => {
-    if (!selectedBank || selectedItems.length === 0) return
-    
-    setIsMatching(true)
-    
-    // Find selected items with their data
-    const matchedItems = selectedItems.map(itemId => {
-      const item = availableForMatching.find(i => i.id === itemId)
-      if (!item) throw new Error(`Item ${itemId} not found`)
-      
-      return {
-        type: item.item_type,
-        id: item.id,
-        amount: Math.abs(item.amount)
-      }
-    })
-    
-    const success = await handleBankMatch(selectedBank, matchedItems)
-    
-    if (success) {
-      setSelectedBank(null)
-      setSelectedItems([])
-    }
-    setIsMatching(false)
+  // Enhanced Bank Matching Handlers for EnhancedBankTables
+  const handleBankTransactionSelect = (transactionId: string) => {
+    setSelectedBankTransaction(transactionId)
+    setSelectedBankItems([]) // Reset items when bank transaction changes
   }
 
-  // Multi-select for Tab 2
-  const handleItemSelect = (itemId: string) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    )
+  const handleBankItemsSelect = (itemIds: string[]) => {
+    setSelectedBankItems(itemIds)
+  }
+
+  const handleBankMatchComplete = () => {
+    // Reset state after successful match
+    setSelectedBankTransaction(null)
+    setSelectedBankItems([])
+    // EnhancedBankTables handles the actual matching internally
   }
 
   // Cash Transfer handlers
@@ -384,10 +359,10 @@ export function BankingPage() {
           />
         </TabsContent>
 
-        {/* Tab 2: Bank Reconciliation */}
+        {/* Tab 2: Bank Reconciliation - Enhanced 2-Column Design */}
         <TabsContent value="bank" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Bank-Transaktionen ↔ Alle Geschäftsvorfälle</h2>
+            <h2 className="text-xl font-semibold">Bank Settlement & Matching</h2>
             <div className="flex gap-2">
               <Button 
                 onClick={openBankImportDialog}
@@ -398,206 +373,18 @@ export function BankingPage() {
                 <Upload className="h-4 w-4" />
                 Bank-Daten importieren
               </Button>
-              <Button 
-                onClick={handleBankMatchClick}
-                disabled={!selectedBank || selectedItems.length === 0 || isMatching}
-              >
-                {isMatching ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <ArrowRightLeft className="h-4 w-4 mr-2" />
-                )}
-                {isMatching ? 'Verknüpfen...' : `Auswahl verknüpfen (${selectedItems.length})`}
-              </Button>
             </div>
           </div>
 
-          {/* Provider Summary Dashboard */}
-          <ProviderSummaryDashboard className="mb-4" />
 
-          <div className="grid grid-cols-3 gap-6">
-            {/* Left: Bank Transactions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Bank-Transaktionen</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Datum</TableHead>
-                      <TableHead>Betrag</TableHead>
-                      <TableHead>Beschreibung</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      // Loading skeleton
-                      Array.from({ length: 3 }).map((_, i) => (
-                        <TableRow key={i}>
-                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        </TableRow>
-                      ))
-                    ) : unmatchedBankTransactions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                          No unmatched bank transactions found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      unmatchedBankTransactions.map((transaction) => (
-                        <TableRow 
-                          key={transaction.id}
-                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${
-                            selectedBank === transaction.id ? 'bg-accent border-l-4 border-primary' : 'hover:bg-muted/30'
-                          }`}
-                          onClick={() => setSelectedBank(transaction.id)}
-                        >
-                          <TableCell>{new Date(transaction.transaction_date).toLocaleDateString()}</TableCell>
-                          <TableCell className={transaction.amount > 0 ? 'text-success' : 'text-destructive'}>
-                            {transaction.direction_display} {transaction.amount_abs.toFixed(2)} CHF
-                          </TableCell>
-                          <TableCell>{transaction.description}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">Pending</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            {/* Right: Expenses & Provider Batches */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Ausgaben & Abgeglichene Verkäufe</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">Auswahl</TableHead>
-                      <TableHead>Datum</TableHead>
-                      <TableHead>Betrag</TableHead>
-                      <TableHead>Beschreibung</TableHead>
-                      <TableHead>Typ</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      // Loading skeleton
-                      Array.from({ length: 3 }).map((_, i) => (
-                        <TableRow key={i}>
-                          <TableCell><Skeleton className="h-4 w-4" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        </TableRow>
-                      ))
-                    ) : availableForMatching.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          No items available for bank matching
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      availableForMatching.map((item) => (
-                        <TableRow 
-                          key={item.id}
-                          className={`transition-colors ${
-                            selectedItems.includes(item.id) ? 'bg-accent/50' : 'hover:bg-muted/30'
-                          }`}
-                        >
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedItems.includes(item.id)}
-                              onCheckedChange={() => handleItemSelect(item.id)}
-                              aria-label={`Select ${item.item_type} ${item.description}`}
-                            />
-                          </TableCell>
-                          <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
-                          <TableCell className={item.amount > 0 ? 'text-success' : 'text-destructive'}>
-                            {item.amount > 0 ? '+' : ''}{item.amount.toFixed(2)} CHF
-                          </TableCell>
-                          <TableCell>
-                          <div className="flex items-start gap-2 flex-wrap">
-                            {/* Provider Badge with strong theme colors */}
-                            {(item.description.toLowerCase().includes('sumup') || 
-                              item.description.includes('sumup net') ||
-                              item.description.includes('SUMUP PAYMENTS')) && (
-                              <Badge 
-                                variant="secondary" 
-                                style={{ backgroundColor: '#2563eb', color: 'white', border: 'none' }}
-                                className="font-semibold shadow-sm hover:opacity-90"
-                              >
-                                SumUp
-                              </Badge>
-                            )}
-                            {(item.description.toLowerCase().includes('twint') || 
-                              item.description.includes('TWINT Acquiring') ||
-                              item.description.includes('Gutschrift TWINT')) && (
-                              <Badge 
-                                variant="secondary" 
-                                style={{ backgroundColor: '#d97706', color: 'white', border: 'none' }}
-                                className="font-semibold shadow-sm hover:opacity-90"
-                              >
-                                TWINT
-                              </Badge>
-                            )}
-                            {item.item_type === 'cash_movement' && (
-                              <Badge 
-                                variant="secondary" 
-                                style={{ backgroundColor: '#16a34a', color: 'white', border: 'none' }}
-                                className="font-semibold shadow-sm hover:opacity-90"
-                              >
-                                Cash
-                              </Badge>
-                            )}
-                            {item.item_type === 'expense' && (
-                              <Badge 
-                                variant="destructive" 
-                                style={{ backgroundColor: '#dc2626', color: 'white', border: 'none' }}
-                                className="font-semibold shadow-sm hover:opacity-90"
-                              >
-                                Ausgabe
-                              </Badge>
-                            )}
-                            <div className="text-sm leading-relaxed">
-                              {item.description.replace(/\(sumup net\)|\(twint\)/gi, '').trim()}
-                            </div>
-                          </div>
-                        </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {item.item_type === 'sale' ? 'Sale' : 
-                               item.item_type === 'expense' ? 'Expense' : 'Cash'}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            {/* Right: Smart Bank Match Suggestions */}
-            <BankMatchSuggestions 
-              bankTransactionId={selectedBank}
-              onMatchComplete={() => {
-                refetchData()
-                setSelectedBank(null)
-                setSelectedItems([])
-              }}
-            />
-          </div>
+          {/* Enhanced Bank Tables - 2 Column Design with Settlement Detection */}
+          <EnhancedBankTables
+            selectedBankTransaction={selectedBankTransaction}
+            selectedItems={selectedBankItems}
+            onBankTransactionSelect={handleBankTransactionSelect}
+            onItemsSelect={handleBankItemsSelect}
+            onMatchComplete={handleBankMatchComplete}
+          />
         </TabsContent>
       </Tabs>
 
