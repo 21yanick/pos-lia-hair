@@ -71,6 +71,7 @@ export default function LoginPage() {
               width={128}
               height={128}
               className="drop-shadow-lg"
+              style={{ width: 'auto', height: 'auto' }}
               priority
             />
           </div>
@@ -100,6 +101,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-11 transition-all duration-200"
                 placeholder="deine@email.ch"
+                autoComplete="email"
                 required
               />
             </div>
@@ -115,6 +117,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-11 transition-all duration-200"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 required
               />
             </div>

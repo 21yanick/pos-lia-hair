@@ -27,7 +27,6 @@ export function useItems() {
         
         // 1. Auth-Benutzer-Info abrufen
         const { data: authData } = await supabase.auth.getUser()
-        console.log('Auth-Benutzer:', authData?.user)
         
         if (!authData?.user) {
           console.error('Kein authentifizierter Benutzer gefunden')
@@ -36,7 +35,7 @@ export function useItems() {
         }
         
         // 2. Prüfen, ob der Benutzer in der users-Tabelle existiert
-        const { data: userData, error: userError } = await supabase
+        const { error: userError } = await supabase
           .from('users')
           .select('*')
           .eq('id', authData.user.id)
@@ -78,7 +77,6 @@ export function useItems() {
           throw error
         }
         
-        console.log('Geladene Items:', data)
         setItems(data)
       } catch (err: any) {
         console.error('Fehler beim Laden der Items:', err)
@@ -96,19 +94,15 @@ export function useItems() {
     try {
       setLoading(true)
       
-      // Aktuelle Benutzer-ID und Session abrufen
-      const { data: sessionData } = await supabase.auth.getSession()
-      console.log('Aktuelle Session:', sessionData)
-      
-      const { data: userData } = await supabase.auth.getUser()
-      console.log('Aktueller Auth-Benutzer:', userData)
+      // Session und Benutzer-Info für Debugging verfügbar
+      await supabase.auth.getSession()
+      await supabase.auth.getUser()
       
       // Daten für das Einfügen vorbereiten
       const itemData = {
         ...newItem
       }
       
-      console.log('Versuche Item hinzuzufügen:', itemData)
       
       const { data, error } = await supabase
         .from('items')
@@ -121,7 +115,6 @@ export function useItems() {
         throw error
       }
       
-      console.log('Item erfolgreich hinzugefügt:', data)
       
       // Lokales State-Update
       setItems(prev => [...prev, data])
@@ -280,7 +273,6 @@ export function useItems() {
         return { success: false, error: 'Kein eingeloggter Benutzer gefunden' }
       }
       
-      console.log('Synchronisiere Auth-Benutzer mit users-Tabelle:', authUser)
       
       // Prüfen, ob der Benutzer bereits existiert
       const { data: existingUser, error: queryError } = await supabase
@@ -295,7 +287,6 @@ export function useItems() {
       }
       
       if (existingUser) {
-        console.log('Benutzer existiert bereits:', existingUser)
         return { success: true, user: existingUser }
       }
       
@@ -317,7 +308,6 @@ export function useItems() {
         return { success: false, error: insertError.message }
       }
       
-      console.log('Benutzer erfolgreich erstellt:', newUser)
       return { success: true, user: newUser }
     } catch (err: any) {
       console.error('Fehler bei der Benutzer-Synchronisierung:', err)

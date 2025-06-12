@@ -132,7 +132,7 @@ export async function getUnmatchedBankTransactions() {
 // Right Side: Available Items for Bank Matching
 export interface AvailableForBankMatching {
   id: string
-  item_type: 'sale' | 'expense' | 'cash_movement'
+  item_type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction'
   date: string
   amount: number
   description: string
@@ -278,18 +278,27 @@ export async function createBankMatch(
 
     // Update matched items status
     for (const item of matchedItems) {
-      const table = item.type === 'sale' ? 'sales' : 
-                   item.type === 'expense' ? 'expenses' : 
-                   item.type === 'owner_transaction' ? 'owner_transactions' : 'cash_movements'
+      let table: string
+      let updateData: any
       
-      const updateData = item.type === 'sale' 
-        ? { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' as any }
-        : item.type === 'owner_transaction'
-        ? { related_bank_transaction_id: bankTransactionId, banking_status: 'matched' as any }
-        : { bank_transaction_id: bankTransactionId, banking_status: 'matched' as any }
+      if (item.type === 'sale') {
+        table = 'sales'
+        updateData = { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' }
+      } else if (item.type === 'expense') {
+        table = 'expenses'
+        updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
+      } else if (item.type === 'cash_movement') {
+        table = 'cash_movements'
+        updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
+      } else if (item.type === 'owner_transaction') {
+        table = 'owner_transactions'
+        updateData = { related_bank_transaction_id: bankTransactionId, banking_status: 'matched' }
+      } else {
+        continue // Skip unknown types
+      }
 
       const { error } = await supabase
-        .from(table)
+        .from(table as any)
         .update(updateData)
         .eq('id', item.id)
 
@@ -322,6 +331,290 @@ export async function createBankAccount(account: {
     .single()
 
   return { data, error }
+}
+
+// =====================================================
+// INTELLIGENT MATCHING API FUNCTIONS
+// =====================================================
+// New endpoints for smart matching algorithms
+
+import { providerMatchingService } from './providerMatching'
+import { bankMatchingService } from './bankMatching'
+import type {
+  ProviderMatchResult,
+  ProviderAutoMatchResult,
+  BankMatchSuggestion,
+  ProviderSummaryDashboard,
+  ProviderMatchCandidate
+} from './matchingTypes'
+// Import types from banking.ts to avoid conflicts
+import type {
+  UnmatchedSaleForProvider as BankingUnmatchedSaleForProvider,
+  UnmatchedProviderReport as BankingUnmatchedProviderReport,
+  UnmatchedBankTransaction as BankingUnmatchedBankTransaction,
+  AvailableForBankMatching as BankingAvailableForBankMatching
+} from '../types/banking'
+
+// =====================================================
+// PROVIDER MATCHING (Tab 1)
+// =====================================================
+
+export async function getProviderMatchSuggestions(): Promise<{
+  data: ProviderMatchResult | null
+  error: any
+}> {
+  try {
+    // Get current unmatched data
+    const [salesResult, reportsResult] = await Promise.all([
+      getUnmatchedSalesForProvider(),
+      getUnmatchedProviderReports()
+    ])
+
+    if (salesResult.error || reportsResult.error) {
+      throw new Error(`Data fetch failed: ${salesResult.error?.message || reportsResult.error?.message}`)
+    }
+
+    const sales = (salesResult.data as unknown as BankingUnmatchedSaleForProvider[]) || []
+    const reports = (reportsResult.data as unknown as BankingUnmatchedProviderReport[]) || []
+
+    // Run intelligent matching
+    const result = await providerMatchingService.findProviderMatches(sales, reports)
+
+    if (!result.success) {
+      throw new Error(result.error?.message || 'Provider matching failed')
+    }
+
+    return { data: result.data!, error: null }
+
+  } catch (error) {
+    console.error('Error getting provider match suggestions:', error)
+    return { data: null, error }
+  }
+}
+
+export async function executeAutoProviderMatch(
+  candidates?: ProviderMatchCandidate[]
+): Promise<{
+  data: ProviderAutoMatchResult | null
+  error: any
+}> {
+  try {
+    let matchCandidates = candidates
+
+    // If no candidates provided, get fresh suggestions
+    if (!matchCandidates) {
+      const suggestionsResult = await getProviderMatchSuggestions()
+      if (suggestionsResult.error || !suggestionsResult.data) {
+        throw new Error('Failed to get match suggestions')
+      }
+      matchCandidates = suggestionsResult.data.autoMatchable
+    }
+
+    // Execute the auto-matching with actual API calls
+    const processedCandidates: ProviderMatchCandidate[] = []
+    const errors: string[] = []
+    let matchedPairs = 0
+
+    for (const candidate of matchCandidates) {
+      try {
+        // Create the actual provider match
+        const matchResult = await createProviderMatch(
+          candidate.sale.id,
+          candidate.providerReport.id
+        )
+
+        if (matchResult.success) {
+          matchedPairs++
+          processedCandidates.push(candidate)
+        } else {
+          errors.push(`Failed to match Sale ${candidate.sale.id} with Report ${candidate.providerReport.id}`)
+        }
+      } catch (error) {
+        errors.push(`Error matching Sale ${candidate.sale.id}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }
+
+    const result: ProviderAutoMatchResult = {
+      success: errors.length === 0,
+      matchedPairs,
+      errors,
+      processedCandidates
+    }
+
+    return { data: result, error: null }
+
+  } catch (error) {
+    console.error('Error executing auto provider match:', error)
+    return { data: null, error }
+  }
+}
+
+// =====================================================
+// BANK MATCHING (Tab 2)
+// =====================================================
+
+export async function getBankMatchSuggestions(
+  bankTransactionId: string
+): Promise<{
+  data: BankMatchSuggestion | null
+  error: any
+}> {
+  try {
+    // Get the specific bank transaction
+    const { data: bankTransactions, error: bankError } = await supabase
+      .from('unmatched_bank_transactions' as any)
+      .select('*')
+      .eq('id', bankTransactionId)
+      .single()
+
+    if (bankError || !bankTransactions) {
+      throw new Error(`Bank transaction not found: ${bankError?.message}`)
+    }
+
+    // Get available items for matching
+    const availableResult = await getAvailableForBankMatching()
+    if (availableResult.error) {
+      throw new Error(`Failed to get available items: ${availableResult.error.message}`)
+    }
+
+    const availableItems = (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
+
+    // Run intelligent matching
+    const result = await bankMatchingService.findBankMatches(
+      bankTransactions as unknown as BankingUnmatchedBankTransaction,
+      availableItems
+    )
+
+    if (!result.success) {
+      throw new Error(result.error?.message || 'Bank matching failed')
+    }
+
+    return { data: result.data!, error: null }
+
+  } catch (error) {
+    console.error('Error getting bank match suggestions:', error)
+    return { data: null, error }
+  }
+}
+
+export async function getProviderSummaries(): Promise<{
+  data: ProviderSummaryDashboard | null
+  error: any
+}> {
+  try {
+    // Get available items for summary
+    const availableResult = await getAvailableForBankMatching()
+    if (availableResult.error) {
+      throw new Error(`Failed to get available items: ${availableResult.error.message}`)
+    }
+
+    const availableItems = (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
+
+    // Generate provider summary
+    const result = await bankMatchingService.generateProviderSummary(availableItems)
+
+    if (!result.success) {
+      throw new Error(result.error?.message || 'Provider summary generation failed')
+    }
+
+    return { data: result.data!, error: null }
+
+  } catch (error) {
+    console.error('Error getting provider summaries:', error)
+    return { data: null, error }
+  }
+}
+
+// =====================================================
+// ENHANCED BANK MATCH WITH INTELLIGENCE
+// =====================================================
+
+export async function createIntelligentBankMatch(
+  bankTransactionId: string,
+  selectedItemIds: string[],
+  confidence?: number,
+  matchType: 'manual' | 'suggested' = 'suggested'
+) {
+  try {
+    // Get the selected items with their details
+    const availableResult = await getAvailableForBankMatching()
+    if (availableResult.error) {
+      throw new Error(`Failed to get available items: ${availableResult.error.message}`)
+    }
+
+    const availableItems = (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
+    const selectedItems = availableItems.filter(item => selectedItemIds.includes(item.id))
+
+    if (selectedItems.length === 0) {
+      throw new Error('No valid items selected for matching')
+    }
+
+    // Convert to the format expected by createBankMatch
+    const matchedItems = selectedItems.map(item => ({
+      type: item.item_type as 'sale' | 'expense' | 'cash_movement' | 'owner_transaction',
+      id: item.id,
+      amount: item.amount
+    }))
+
+    // Create the matches in transaction_matches table with enhanced metadata
+    const matchInserts = matchedItems.map(item => ({
+      bank_transaction_id: bankTransactionId,
+      matched_type: item.type,
+      matched_id: item.id,
+      matched_amount: item.amount,
+      match_type: matchType,
+      match_confidence: confidence || 100.0
+    }))
+
+    const { error: matchError } = await supabase
+      .from('transaction_matches')
+      .insert(matchInserts)
+
+    if (matchError) throw matchError
+
+    // Update bank transaction status
+    const { error: bankError } = await supabase
+      .from('bank_transactions')
+      .update({ status: 'matched' })
+      .eq('id', bankTransactionId)
+
+    if (bankError) throw bankError
+
+    // Update matched items status  
+    for (const item of matchedItems) {
+      let table: string
+      let updateData: any
+      
+      if (item.type === 'sale') {
+        table = 'sales'
+        updateData = { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' }
+      } else if (item.type === 'expense') {
+        table = 'expenses'
+        updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
+      } else if (item.type === 'cash_movement') {
+        table = 'cash_movements'
+        updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
+      } else if (item.type === 'owner_transaction') {
+        table = 'owner_transactions'
+        updateData = { related_bank_transaction_id: bankTransactionId, banking_status: 'matched' }
+      } else {
+        continue // Skip unknown types
+      }
+
+      const { error } = await supabase
+        .from(table as any)
+        .update(updateData)
+        .eq('id', item.id)
+
+      if (error) throw error
+    }
+
+    return { success: true, error: null }
+
+  } catch (error) {
+    console.error('Error creating intelligent bank match:', error)
+    return { success: false, error }
+  }
 }
 
 // =====================================================

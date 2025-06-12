@@ -20,6 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" suppressHydrationWarning className="h-full">
+      <head>
+        <link rel="preload" href="/Logo_black.png" as="image" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}

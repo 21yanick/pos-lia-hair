@@ -363,6 +363,97 @@ export function useExpenses() {
     }
   }
 
+  // Replace existing expense receipt
+  const replaceExpenseReceipt = async (expenseId: string, newFile: File) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData?.user) {
+        throw new Error('Nicht angemeldet. Bitte melden Sie sich an.')
+      }
+      const userId = userData.user.id
+
+      // Find existing documents for this expense
+      const { data: existingDocs, error: fetchError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('type', 'expense_receipt')
+        .eq('reference_id', expenseId)
+
+      if (fetchError) {
+        throw fetchError
+      }
+
+      // Delete old documents from storage and database
+      if (existingDocs && existingDocs.length > 0) {
+        for (const doc of existingDocs) {
+          if (doc.file_path) {
+            const { error: storageError } = await supabase.storage
+              .from('documents')
+              .remove([doc.file_path])
+            
+            if (storageError) {
+              console.warn('Warnung: Alte Datei konnte nicht gelöscht werden:', storageError.message)
+            }
+          }
+
+          const { error: deleteError } = await supabase
+            .from('documents')
+            .delete()
+            .eq('id', doc.id)
+
+          if (deleteError) {
+            console.warn('Warnung: Alter Dokumenteintrag konnte nicht gelöscht werden:', deleteError.message)
+          }
+        }
+      }
+
+      // Upload new file
+      const fileName = `${expenseId}-${Date.now()}-${newFile.name}`
+      const filePath = `documents/expense-receipts/${fileName}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, newFile)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      // Create new document record
+      const { data: document, error: documentError } = await supabase
+        .from('documents')
+        .insert({
+          type: 'expense_receipt',
+          reference_type: 'expense',
+          reference_id: expenseId,
+          file_name: newFile.name,
+          file_path: filePath,
+          file_size: newFile.size,
+          mime_type: newFile.type,
+          payment_method: null,
+          document_date: new Date().toISOString().split('T')[0],
+          user_id: userId
+        })
+        .select()
+        .single()
+
+      if (documentError) {
+        throw documentError
+      }
+
+      return { success: true, document }
+    } catch (err: any) {
+      console.error('Fehler beim Ersetzen des Belegs:', err)
+      setError(err.message || 'Fehler beim Ersetzen des Belegs')
+      return { success: false, error: err.message }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Generate Placeholder Receipt for Physical Receipts
   const generatePlaceholderReceipt = async (expenseId: string, archiveLocation?: string) => {
     try {
@@ -466,6 +557,7 @@ export function useExpenses() {
     getExpensesByCategory,
     calculateExpenseStats,
     uploadExpenseReceipt,
+    replaceExpenseReceipt,
     generatePlaceholderReceipt,
     EXPENSE_CATEGORIES
   }

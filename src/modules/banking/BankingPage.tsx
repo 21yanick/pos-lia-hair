@@ -15,6 +15,12 @@ import { CashTransferDialog } from './components/CashTransferDialog'
 import { BankImportDialog } from './components/BankImportDialog'
 import { ProviderImportDialog } from './components/ProviderImportDialog'
 import { OwnerTransactionDialog } from './components/OwnerTransactionDialog'
+import { 
+  ProviderAutoMatchButtonV2, 
+  EnhancedProviderTables,
+  ProviderSummaryDashboard, 
+  BankMatchSuggestions 
+} from './components/intelligent'
 import { supabase } from '@/shared/lib/supabase/client'
 
 export function BankingPage() {
@@ -368,127 +374,14 @@ export function BankingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* Left: POS Sales */}
-            <Card>
-              <CardHeader>
-                <CardTitle>POS Sales (Brutto)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Datum</TableHead>
-                      <TableHead>Betrag</TableHead>
-                      <TableHead>Kunde</TableHead>
-                      <TableHead>Methode</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      // Loading skeleton
-                      Array.from({ length: 3 }).map((_, i) => (
-                        <TableRow key={i}>
-                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        </TableRow>
-                      ))
-                    ) : unmatchedSales.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                          No unmatched sales found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      unmatchedSales.map((sale) => (
-                        <TableRow 
-                          key={sale.id}
-                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${
-                            selectedSale === sale.id ? 'bg-accent border-l-4 border-primary' : 'hover:bg-muted/30'
-                          }`}
-                          onClick={() => setSelectedSale(sale.id)}
-                        >
-                          <TableCell>{new Date(sale.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell>{sale.total_amount.toFixed(2)} CHF</TableCell>
-                          <TableCell>{sale.customer_name || 'Walk-in'}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{sale.payment_display}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            {/* Right: Provider Settlements */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Provider Settlements (Netto + Gebühren)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Datum</TableHead>
-                      <TableHead>Provider</TableHead>
-                      <TableHead>Brutto</TableHead>
-                      <TableHead>Gebühren</TableHead>
-                      <TableHead>Netto</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      // Loading skeleton
-                      Array.from({ length: 3 }).map((_, i) => (
-                        <TableRow key={i}>
-                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        </TableRow>
-                      ))
-                    ) : unmatchedProviderReports.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          No unmatched provider reports found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      unmatchedProviderReports.map((report) => (
-                        <TableRow 
-                          key={report.id}
-                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${
-                            selectedProvider === report.id ? 'bg-accent border-l-4 border-primary' : 'hover:bg-muted/30'
-                          }`}
-                          onClick={() => setSelectedProvider(report.id)}
-                        >
-                          <TableCell>{new Date(report.transaction_date).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <Badge variant={report.provider === 'twint' ? 'default' : 'secondary'}>
-                              {report.provider_display}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{report.gross_amount.toFixed(2)}</TableCell>
-                          <TableCell>{report.fees.toFixed(2)}</TableCell>
-                          <TableCell>{report.net_amount.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">Pending</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Enhanced Provider Tables with Intelligent Matching */}
+          <EnhancedProviderTables
+            selectedSale={selectedSale}
+            selectedProvider={selectedProvider}
+            onSaleSelect={setSelectedSale}
+            onProviderSelect={setSelectedProvider}
+            onMatchComplete={refetchData}
+          />
         </TabsContent>
 
         {/* Tab 2: Bank Reconciliation */}
@@ -519,7 +412,10 @@ export function BankingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          {/* Provider Summary Dashboard */}
+          <ProviderSummaryDashboard className="mb-4" />
+
+          <div className="grid grid-cols-3 gap-6">
             {/* Left: Bank Transactions */}
             <Card>
               <CardHeader>
@@ -691,6 +587,16 @@ export function BankingPage() {
                 </Table>
               </CardContent>
             </Card>
+
+            {/* Right: Smart Bank Match Suggestions */}
+            <BankMatchSuggestions 
+              bankTransactionId={selectedBank}
+              onMatchComplete={() => {
+                refetchData()
+                setSelectedBank(null)
+                setSelectedItems([])
+              }}
+            />
           </div>
         </TabsContent>
       </Tabs>

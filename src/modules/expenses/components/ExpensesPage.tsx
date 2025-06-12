@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useExpenses, EXPENSE_CATEGORIES, type ExpenseCategory } from "@/shared/hooks/business/useExpenses"
+import { ExpensePDFActions } from "./ExpensePDFActions"
 import { useToast } from "@/shared/hooks/core/useToast"
 import { format, parseISO } from "date-fns"
 import { de } from "date-fns/locale"
@@ -28,6 +29,7 @@ export function ExpensesPage() {
     calculateExpenseStats,
     getExpensesByCategory,
     uploadExpenseReceipt,
+    replaceExpenseReceipt,
     generatePlaceholderReceipt,
     EXPENSE_CATEGORIES
   } = useExpenses()
@@ -513,7 +515,7 @@ export function ExpensesPage() {
               {filteredExpenses.map((expense) => (
                 <div key={expense.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start">
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex-1">
                       <h3 className="font-medium">{expense.description}</h3>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <Badge variant="outline">
@@ -531,8 +533,14 @@ export function ExpensesPage() {
                         <p className="text-sm text-muted-foreground">Rechnung: {expense.invoice_number}</p>
                       )}
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">CHF {expense.amount.toFixed(2)}</div>
+                    <div className="flex items-center space-x-3">
+                      <ExpensePDFActions 
+                        expense={expense}
+                        onReplace={replaceExpenseReceipt}
+                      />
+                      <div className="text-right">
+                        <div className="text-lg font-bold">CHF {expense.amount.toFixed(2)}</div>
+                      </div>
                     </div>
                   </div>
                 </div>

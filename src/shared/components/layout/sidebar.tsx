@@ -47,14 +47,16 @@ export function Sidebar() {
         {!collapsed ? (
           <>
             <div className="flex items-center">
-              <Image
-                src="/logo_clean.svg"
-                alt="Lia Hair Logo"
-                width={120}
-                height={60}
-                className="mr-2"
-                priority
-              />
+              <div className="w-20 h-10 mr-2">
+                <Image
+                  src="/Logo_black.png"
+                  alt="Lia Hair Logo"
+                  width={96}
+                  height={48}
+                  className="w-full h-full object-contain"
+                  priority
+                />
+              </div>
             </div>
             <Button
               variant="ghost"
@@ -67,14 +69,15 @@ export function Sidebar() {
           </>
         ) : (
           <div className="w-full flex flex-col items-center">
-            <Image
-              src="/logo_clean.svg"
-              alt="Lia Hair Logo"
-              width={48}
-              height={48}
-              className="mb-2"
-              priority
-            />
+            <div className="w-8 h-8 mb-2">
+              <Image
+                src="/Logo_black.png"
+                alt="Lia Hair Logo"
+                width={32}
+                height={32}
+                className="w-full h-full object-contain"
+              />
+            </div>
             <Button
               variant="ghost"
               size="icon"
