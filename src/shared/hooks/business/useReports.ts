@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { formatDateForAPI, getSwissDayRange } from '@/shared/utils/dateUtils'
+import { formatDateForAPI, getSwissDayRange, getFirstDayOfMonth, getLastDayOfMonth } from '@/shared/utils/dateUtils'
 import { useDailySummaries } from '@/shared/hooks/business/useDailySummaries'
 import { useExpenses } from './useExpenses'
 
@@ -112,14 +112,9 @@ export function useReports() {
       setDashboardLoading(true)
       setDashboardError(null)
       
-      console.log('🔍 Loading dashboard stats for date:', today)
-      console.log('🔍 Current Date Object:', new Date())
-      console.log('🔍 Current UTC:', new Date().toISOString())
 
       // Heutige Verkäufe mit korrekter Schweizer Zeitzone abrufen
       const { start, end } = getSwissDayRange(new Date())
-      console.log('🔍 Dashboard UTC Range:', { start, end })
-      
       const { data: sales, error: salesError } = await supabase
         .from('sales')
         .select('*')
@@ -134,11 +129,6 @@ export function useReports() {
         return
       }
       
-      console.log('🔍 Dashboard Sales gefunden:', sales?.length || 0)
-      if (sales && sales.length > 0) {
-        console.log('🔍 Erste Sale created_at:', sales[0].created_at)
-        console.log('🔍 Letzte Sale created_at:', sales[sales.length - 1].created_at)
-      }
 
       // Aktive Produkte zählen
       const { data: items } = await supabase
@@ -149,30 +139,28 @@ export function useReports() {
       const activeProductsCount = items?.length || 0
 
       // Wochenumsatz und Monatsumsatz IMMER berechnen (unabhängig von heutigen Verkäufen)
+      // Verwende getRevenueBreakdown() für korrekte Netto-Berechnung nach Abzug Provider-Gebühren
       const weekStart = new Date()
       weekStart.setDate(weekStart.getDate() - 7)
       const { data: weekSales } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('id, total_amount, payment_method')
         .eq('status', 'completed')
         .gte('created_at', weekStart.toISOString())
 
-      const weekRevenue = weekSales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
-      console.log('📅 Week revenue:', weekRevenue, 'from', weekSales?.length || 0, 'sales since', weekStart.toISOString())
+      const { netRevenue: weekRevenue } = await getRevenueBreakdown(weekSales || [])
 
       const monthStart = new Date()
       monthStart.setDate(monthStart.getDate() - 30)
       const { data: monthSales } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('id, total_amount, payment_method')
         .eq('status', 'completed')
         .gte('created_at', monthStart.toISOString())
 
-      const monthRevenue = monthSales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
-      console.log('📅 Month revenue:', monthRevenue, 'from', monthSales?.length || 0, 'sales since', monthStart.toISOString())
+      const { netRevenue: monthRevenue } = await getRevenueBreakdown(monthSales || [])
 
       if (!sales || sales.length === 0) {
-        console.log('ℹ️ No sales found for today, but showing week/month data')
         
         // Fallback: Zeige die letzten 5 Transaktionen aus der Woche
         const { data: recentSales } = await supabase
@@ -213,10 +201,7 @@ export function useReports() {
 
       // Nur abgeschlossene Verkäufe für die Berechnungen verwenden
       const completedSales = sales.filter(s => s.status === 'completed')
-      console.log('✅ Completed sales found:', completedSales.length)
-      
       if (completedSales.length === 0) {
-        console.log('ℹ️ No completed sales found for today')
         // Erweiterte Dashboard-Daten laden auch bei no completed sales
         const enhancedDashboardData = await loadEnhancedDashboardData()
 
@@ -235,9 +220,8 @@ export function useReports() {
         return
       }
       
-      // Gesamtumsatz heute berechnen
-      const todayRevenue = completedSales.reduce((sum, s) => sum + s.total_amount, 0)
-      console.log('💰 Today revenue calculated:', todayRevenue)
+      // Gesamtumsatz heute berechnen (KORRIGIERT: Brutto-Umsatz als Hauptzahl)
+      const { grossRevenue: todayRevenue, totalProviderFees: todayFees } = await getRevenueBreakdown(completedSales)
 
       // Nach Zahlungsmethode aufteilen
       const cashTotal = completedSales
@@ -312,6 +296,39 @@ export function useReports() {
     }
   }
 
+  // Berechnet Revenue-Kennzahlen (Brutto, Netto, Fees) für eine Liste von Sales
+  // REPARIERT: Verwendet zuverlässige Standard-Fees statt fehlerhafter provider_reports
+  const getRevenueBreakdown = async (sales: any[]) => {
+    if (!sales || sales.length === 0) {
+      return { netRevenue: 0, totalProviderFees: 0, grossRevenue: 0 }
+    }
+
+    // Standard Provider-Gebührensätze (zuverlässig für Development & Dashboard)
+    const STANDARD_FEES = {
+      cash: 0,       // Keine Gebühren bei Bargeld
+      twint: 0.013,  // 1.3% (offizieller Twint-Satz)
+      sumup: 0.015   // 1.5% (offizieller SumUp-Satz)
+    }
+
+    let netRevenue = 0
+    let totalProviderFees = 0
+    let grossRevenue = 0
+    
+    for (const sale of sales) {
+      grossRevenue += sale.total_amount
+      
+      // Berechne Provider-Fees basierend auf Payment-Method
+      const feeRate = STANDARD_FEES[sale.payment_method as keyof typeof STANDARD_FEES] || 0
+      const estimatedFees = sale.total_amount * feeRate
+      
+      netRevenue += sale.total_amount - estimatedFees
+      totalProviderFees += estimatedFees
+      
+    }
+    
+    return { netRevenue, totalProviderFees, grossRevenue }
+  }
+
   // Erweiterte Dashboard-Daten laden
   const loadEnhancedDashboardData = async () => {
     try {
@@ -366,13 +383,16 @@ export function useReports() {
       
       for (let i = 11; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-        const startDate = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0]
-        const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0]
+        // KORRIGIERT: Swiss-aware month boundaries
+        const firstDay = getFirstDayOfMonth(date)
+        const lastDay = getLastDayOfMonth(date)
+        const startDate = formatDateForAPI(firstDay)
+        const endDate = formatDateForAPI(lastDay)
         
-        // Sales für den Monat
+        // Sales für den Monat (mit payment_method für Provider-Gebühren)
         const { data: sales } = await supabase
           .from('sales')
-          .select('total_amount')
+          .select('id, total_amount, payment_method')
           .eq('status', 'completed')
           .gte('created_at', startDate + 'T00:00:00')
           .lte('created_at', endDate + 'T23:59:59')
@@ -384,15 +404,16 @@ export function useReports() {
           .gte('payment_date', startDate)
           .lte('payment_date', endDate)
         
-        const revenue = sales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
+        // Revenue-Breakdown berechnen (Brutto, Netto, Fees)
+        const { grossRevenue, netRevenue, totalProviderFees } = await getRevenueBreakdown(sales || [])
         const expenseTotal = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0
-        const profit = revenue - expenseTotal
+        const profit = netRevenue - expenseTotal
         
         months.push({
           month: startDate,
-          revenue,
+          revenue: grossRevenue,  // Chart zeigt Brutto-Umsätze
           expenses: expenseTotal,
-          profit,
+          profit,  // Profit bleibt Netto minus Expenses
           monthName: date.toLocaleDateString('de-CH', { month: 'short' })
         })
       }
@@ -408,16 +429,21 @@ export function useReports() {
   const getThisMonthData = async () => {
     try {
       const now = new Date()
-      const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+      // KORRIGIERT: Verwende Swiss-aware date utilities statt naive JavaScript Date
+      const firstDay = getFirstDayOfMonth(now)
+      const lastDay = getLastDayOfMonth(now)
+      const startDate = formatDateForAPI(firstDay)
+      const endDate = formatDateForAPI(lastDay)
       
-      // Sales
+      
+      // Sales (mit payment_method für Provider-Gebühren)
       const { data: sales } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('id, total_amount, payment_method')
         .eq('status', 'completed')
         .gte('created_at', startDate + 'T00:00:00')
         .lte('created_at', endDate + 'T23:59:59')
+      
       
       // Expenses
       const { data: expenses } = await supabase
@@ -426,17 +452,24 @@ export function useReports() {
         .gte('payment_date', startDate)
         .lte('payment_date', endDate)
       
-      const revenue = sales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
+      
+      // Revenue-Breakdown berechnen (Brutto, Netto, Fees)
+      const { netRevenue, totalProviderFees, grossRevenue } = await getRevenueBreakdown(sales || [])
       const expenseTotal = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0
       
-      return {
-        revenue,
+      
+      const result = {
+        revenue: grossRevenue,  // Dashboard zeigt Brutto-Umsatz als Hauptzahl
         expenses: expenseTotal,
-        profit: revenue - expenseTotal
+        profit: netRevenue - expenseTotal,  // Gewinn = Netto-Revenue minus Expenses
+        grossRevenue,
+        providerFees: totalProviderFees
       }
+      
+      return result
     } catch (error) {
       console.error('Fehler beim Laden der Monatsdaten:', error)
-      return { revenue: 0, expenses: 0, profit: 0 }
+      return { revenue: 0, expenses: 0, profit: 0, grossRevenue: 0, providerFees: 0 }
     }
   }
 
@@ -448,23 +481,24 @@ export function useReports() {
       const prev30Start = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       const prev30End = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
-      // Letzte 30 Tage
+      // Letzte 30 Tage (mit payment_method für Provider-Gebühren)
       const { data: recentSales } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('id, total_amount, payment_method')
         .eq('status', 'completed')
         .gte('created_at', last30Start + 'T00:00:00')
       
-      // Vorherige 30 Tage
+      // Vorherige 30 Tage (mit payment_method für Provider-Gebühren)
       const { data: prevSales } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('id, total_amount, payment_method')
         .eq('status', 'completed')
         .gte('created_at', prev30Start + 'T00:00:00')
         .lte('created_at', prev30End + 'T23:59:59')
       
-      const recentRevenue = recentSales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
-      const prevRevenue = prevSales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
+      // Brutto-Umsätze berechnen (für 30-Tage Trend)
+      const { grossRevenue: recentRevenue } = await getRevenueBreakdown(recentSales || [])
+      const { grossRevenue: prevRevenue } = await getRevenueBreakdown(prevSales || [])
       
       let trend: 'up' | 'down' | 'stable' = 'stable'
       let percentage = 0
@@ -490,12 +524,14 @@ export function useReports() {
   const getYearTotalData = async () => {
     try {
       const now = new Date()
-      const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
+      // KORRIGIERT: Swiss-aware year start
+      const yearStartDate = new Date(now.getFullYear(), 0, 1) // 1. Januar
+      const yearStart = formatDateForAPI(yearStartDate)
       
-      // Sales
+      // Sales (mit payment_method für Provider-Gebühren)
       const { data: sales } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('id, total_amount, payment_method')
         .eq('status', 'completed')
         .gte('created_at', yearStart + 'T00:00:00')
       
@@ -505,17 +541,20 @@ export function useReports() {
         .select('amount')
         .gte('payment_date', yearStart)
       
-      const revenue = sales?.reduce((sum, s) => sum + s.total_amount, 0) || 0
+      // Revenue-Breakdown berechnen (Brutto, Netto, Fees)
+      const { netRevenue, totalProviderFees, grossRevenue } = await getRevenueBreakdown(sales || [])
       const expenseTotal = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0
       
       return {
-        revenue,
+        revenue: grossRevenue,  // Dashboard zeigt Brutto-Umsatz als Hauptzahl
         expenses: expenseTotal,
-        profit: revenue - expenseTotal
+        profit: netRevenue - expenseTotal,  // Gewinn = Netto-Revenue minus Expenses
+        grossRevenue,
+        providerFees: totalProviderFees
       }
     } catch (error) {
       console.error('Fehler beim Laden der Jahresdaten:', error)
-      return { revenue: 0, expenses: 0, profit: 0 }
+      return { revenue: 0, expenses: 0, profit: 0, grossRevenue: 0, providerFees: 0 }
     }
   }
 

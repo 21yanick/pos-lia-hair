@@ -249,6 +249,8 @@ export function useDailySummaries() {
       }
 
       // Verkäufe nach Zahlungsart summieren
+      // HINWEIS: Zeigt Bruttoumsätze (Schweizer Buchhaltungsstandard)
+      // Provider-Gebühren werden in Analytics (useReports.ts) abgezogen
       let salesCash = 0
       let salesTwint = 0
       let salesSumup = 0
@@ -258,9 +260,9 @@ export function useDailySummaries() {
           if (sale.payment_method === 'cash') {
             salesCash += sale.total_amount
           } else if (sale.payment_method === 'twint') {
-            salesTwint += sale.total_amount
+            salesTwint += sale.total_amount // Bruttobetrag (was Kunde bezahlt hat)
           } else if (sale.payment_method === 'sumup') {
-            salesSumup += sale.total_amount
+            salesSumup += sale.total_amount // Bruttobetrag (was Kunde bezahlt hat)
           }
         })
       }

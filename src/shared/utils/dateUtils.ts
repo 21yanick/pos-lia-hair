@@ -110,12 +110,6 @@ export function getSwissDayRange(swissDate: Date): { start: string, end: string 
   const startUTC = new Date(startISO)
   const endUTC = new Date(endISO)
   
-  console.log('🕐 getSwissDayRange Debug:')
-  console.log('Input Swiss Date:', swissDate)
-  console.log('Date String:', dateStr)
-  console.log('Swiss Offset:', offsetString)
-  console.log('Start Swiss:', startISO, '→ UTC:', startUTC.toISOString())
-  console.log('End Swiss:', endISO, '→ UTC:', endUTC.toISOString())
   
   return {
     start: startUTC.toISOString(),

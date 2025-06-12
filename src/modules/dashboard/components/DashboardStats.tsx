@@ -9,6 +9,8 @@ export type DashboardStatsData = {
     revenue: number
     expenses: number
     profit: number
+    grossRevenue?: number
+    providerFees?: number
   }
   last30Days: {
     revenue: number
@@ -19,6 +21,8 @@ export type DashboardStatsData = {
     revenue: number
     expenses: number
     profit: number
+    grossRevenue?: number
+    providerFees?: number
   }
 }
 
@@ -81,10 +85,22 @@ export function DashboardStats({ data, loading = false }: DashboardStatsProps) {
           <Calendar className="h-4 w-4 text-metric-monthly" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">CHF {data.thisMonth.profit.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">
-            Umsatz: {data.thisMonth.revenue.toFixed(0)} | Ausgaben: {data.thisMonth.expenses.toFixed(0)}
-          </p>
+          <div className="text-2xl font-bold text-green-600">CHF {data.thisMonth.profit.toFixed(2)}</div>
+          {data.thisMonth.grossRevenue && data.thisMonth.providerFees ? (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Netto-Umsatz: CHF {data.thisMonth.revenue.toFixed(0)} | Ausgaben: CHF {data.thisMonth.expenses.toFixed(0)}
+              </p>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                <div>Brutto-Umsatz: CHF {data.thisMonth.grossRevenue.toFixed(0)}</div>
+                <div className="text-orange-600">Provider-Gebühren: CHF {data.thisMonth.providerFees.toFixed(2)}</div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Umsatz: {data.thisMonth.revenue.toFixed(0)} | Ausgaben: {data.thisMonth.expenses.toFixed(0)}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -111,10 +127,22 @@ export function DashboardStats({ data, loading = false }: DashboardStatsProps) {
           <TrendingUp className="h-4 w-4 text-metric-yearly" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">CHF {data.yearTotal.profit.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">
-            Umsatz: {(data.yearTotal.revenue / 1000).toFixed(1)}k | Ausgaben: {(data.yearTotal.expenses / 1000).toFixed(1)}k
-          </p>
+          <div className="text-2xl font-bold text-blue-600">CHF {data.yearTotal.profit.toFixed(2)}</div>
+          {data.yearTotal.grossRevenue && data.yearTotal.providerFees ? (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Netto: {(data.yearTotal.revenue / 1000).toFixed(1)}k | Ausgaben: {(data.yearTotal.expenses / 1000).toFixed(1)}k
+              </p>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                <div>Brutto: CHF {(data.yearTotal.grossRevenue / 1000).toFixed(1)}k</div>
+                <div className="text-orange-600">Gebühren: CHF {data.yearTotal.providerFees.toFixed(0)}</div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Umsatz: {(data.yearTotal.revenue / 1000).toFixed(1)}k | Ausgaben: {(data.yearTotal.expenses / 1000).toFixed(1)}k
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
