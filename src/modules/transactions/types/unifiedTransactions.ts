@@ -38,6 +38,12 @@ export interface UnifiedTransaction {
   time_only: string        // HH:MM
   description_lower: string // für Search
   receipt_number_lower: string // für Search
+  
+  // Provider Fees Integration (NEW)
+  provider_fee?: number | null
+  net_amount?: number | null
+  provider_report_id?: string | null
+  has_real_provider_fees?: boolean
 }
 
 // Search & Filter Interface
@@ -78,16 +84,19 @@ export interface TransactionSearchQuery {
 
 // Quick Filter Presets
 export type QuickFilterPreset = 
-  | 'today'           // Heute
-  | 'this_week'       // Diese Woche  
-  | 'this_month'      // Dieser Monat
-  | 'last_month'      // Letzter Monat
-  | 'with_pdf'        // Nur mit PDF
-  | 'without_pdf'     // Nur ohne PDF
-  | 'sales_only'      // Nur Verkäufe
-  | 'expenses_only'   // Nur Ausgaben
-  | 'cash_only'       // Nur Bargeld
-  | 'unmatched_only'  // Nur unabgeglichen
+  | 'today'                   // Heute
+  | 'this_week'               // Diese Woche  
+  | 'this_month'              // Dieser Monat
+  | 'last_month'              // Letzter Monat
+  | 'with_pdf'                // Nur mit PDF
+  | 'without_pdf'             // Nur ohne PDF
+  | 'sales_only'              // Nur Verkäufe
+  | 'expenses_only'           // Nur Ausgaben
+  | 'cash_movements_only'     // Nur Kassenbewegungen
+  | 'bank_transactions_only'  // Nur Bank Transaktionen
+  | 'cash_only'               // Nur Bargeld
+  | 'unmatched_only'          // Nur unabgeglichen
+  | 'matched_only'            // Nur zugeordnet
 
 // Sort Options
 export interface TransactionSort {

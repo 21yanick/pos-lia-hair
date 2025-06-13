@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
 import { Separator } from "@/shared/components/ui/separator"
+import { useSystemStats } from "@/shared/hooks/business/useSystemStats"
 import { 
   ArrowLeft,
   Upload, 
@@ -15,11 +16,14 @@ import {
   FileSpreadsheet,
   Database,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  RefreshCw
 } from "lucide-react"
 
 export function ImportCenter() {
   const [activeTab, setActiveTab] = useState<'upload' | 'json-import' | 'csv-import'>('upload')
+  const { stats, loading: statsLoading, error: statsError, refetch: refetchStats } = useSystemStats()
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -145,35 +149,70 @@ export function ImportCenter() {
           {/* Current System Status */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Database className="h-5 w-5" />
-                <span>Aktueller System-Status</span>
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2">
+                  <Database className="h-5 w-5" />
+                  <span>Aktueller System-Status</span>
+                  {statsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refetchStats}
+                  disabled={statsLoading}
+                  className="flex items-center space-x-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${statsLoading ? 'animate-spin' : ''}`} />
+                  <span>Aktualisieren</span>
+                </Button>
+              </div>
               <CardDescription>
                 Übersicht über vorhandene Daten vor dem Import
               </CardDescription>
+              {statsError && (
+                <div className="text-sm text-destructive flex items-center space-x-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Fehler beim Laden der Statistiken: {statsError}</span>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Benutzer</p>
-                  <p className="text-2xl font-bold text-primary">2</p>
-                  <p className="text-xs text-muted-foreground">System + Admin</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {statsLoading ? '...' : stats.usersCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.usersCount === 0 ? 'Keine Benutzer' : 'Registrierte Benutzer'}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Produkte</p>
-                  <p className="text-2xl font-bold text-success">10</p>
-                  <p className="text-xs text-muted-foreground">Shared Catalog</p>
+                  <p className={`text-2xl font-bold ${stats.productsCount > 0 ? 'text-success' : 'text-muted-foreground'}`}>
+                    {statsLoading ? '...' : stats.productsCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.productsCount === 0 ? 'Bereit für Import' : 'Im Katalog'}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Verkäufe</p>
-                  <p className="text-2xl font-bold text-muted-foreground">0</p>
-                  <p className="text-xs text-muted-foreground">Bereit für Import</p>
+                  <p className={`text-2xl font-bold ${stats.salesCount > 0 ? 'text-success' : 'text-muted-foreground'}`}>
+                    {statsLoading ? '...' : stats.salesCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.salesCount === 0 ? 'Bereit für Import' : 'Transaktionen'}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Ausgaben</p>
-                  <p className="text-2xl font-bold text-muted-foreground">0</p>
-                  <p className="text-xs text-muted-foreground">Bereit für Import</p>
+                  <p className={`text-2xl font-bold ${stats.expensesCount > 0 ? 'text-success' : 'text-muted-foreground'}`}>
+                    {statsLoading ? '...' : stats.expensesCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.expensesCount === 0 ? 'Bereit für Import' : 'Erfasste Ausgaben'}
+                  </p>
                 </div>
               </div>
             </CardContent>
