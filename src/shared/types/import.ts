@@ -25,6 +25,9 @@ export interface ImportState {
 
 export interface ImportResults {
   itemsImported: number
+  usersImported: number
+  ownerTransactionsImported: number
+  bankAccountsImported: number
   salesImported: number
   expensesImported: number
   cashMovementsGenerated: number
@@ -105,6 +108,9 @@ export const DEFAULT_CONFIG: ImportConfig = {
 
 export interface ImportDataContainer {
   items?: ItemImport[]
+  users?: any[]
+  owner_transactions?: any[]
+  bank_accounts?: any[]
   sales?: SaleImport[]
   expenses?: ExpenseImport[]
 }

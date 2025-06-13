@@ -14,6 +14,9 @@ import { DEFAULT_CONFIG as CONFIG, SYSTEM_USER_ID as SYSTEM_ID } from '@/shared/
 import { validateImportData } from '@/shared/services/importValidation'
 import { 
   importItems,
+  importUsers,
+  importOwnerTransactions,
+  importBankAccounts,
   importSales, 
   importExpenses,
   generateCashMovements,
@@ -91,6 +94,9 @@ export function useImport() {
           currentPhase: 'Validierung erfolgreich (Dry-Run)',
           results: {
             itemsImported: data.items?.length || 0,
+            usersImported: data.users?.length || 0,
+            ownerTransactionsImported: data.owner_transactions?.length || 0,
+            bankAccountsImported: data.bank_accounts?.length || 0,
             salesImported: data.sales?.length || 0,
             expensesImported: data.expenses?.length || 0,
             cashMovementsGenerated: 0,
@@ -103,10 +109,26 @@ export function useImport() {
         return
       }
 
-      // Phase 2: Business Data Import (Items)
+      // Phase 2: Business Data Import (Items, Users, Owner Transactions, Bank Accounts)
       let itemsImported = 0
+      let usersImported = 0
+      let ownerTransactionsImported = 0
+      let bankAccountsImported = 0
+      
       if (data.items && data.items.length > 0) {
         itemsImported = await importItems(data.items, updateProgress)
+      }
+      
+      if (data.users && data.users.length > 0) {
+        usersImported = await importUsers(data.users, updateProgress)
+      }
+      
+      if (data.owner_transactions && data.owner_transactions.length > 0) {
+        ownerTransactionsImported = await importOwnerTransactions(data.owner_transactions, fullConfig.targetUserId, updateProgress)
+      }
+      
+      if (data.bank_accounts && data.bank_accounts.length > 0) {
+        bankAccountsImported = await importBankAccounts(data.bank_accounts, fullConfig.targetUserId, updateProgress)
       }
 
       // Phase 3: User Data Import (Sales & Expenses)
@@ -181,6 +203,9 @@ export function useImport() {
         currentPhase: 'Abgeschlossen',
         results: {
           itemsImported,
+          usersImported,
+          ownerTransactionsImported,
+          bankAccountsImported,
           salesImported,
           expensesImported,
           cashMovementsGenerated,

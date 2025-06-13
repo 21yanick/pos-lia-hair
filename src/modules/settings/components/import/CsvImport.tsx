@@ -13,7 +13,6 @@ import {
   AlertCircle,
   Loader2,
   Download,
-  FileDown,
   Zap
 } from "lucide-react"
 
@@ -25,7 +24,6 @@ import { CsvDataPreview } from './CsvDataPreview'
 
 import type {
   CsvImportState,
-  ParsedCsvData,
   CsvImportType,
   CsvMappingConfig
 } from '@/shared/types/csvImport'
@@ -236,11 +234,11 @@ export function CsvImport() {
         ]
       },
       sales: {
-        headers: ['Datum', 'Zeit', 'Gesamtbetrag', 'Zahlungsmethode', 'Service', 'Service_Preis', 'Notizen'],
+        headers: ['Datum', 'Zeit', 'Gesamtbetrag', 'Zahlungsmethode', 'Items', 'Notizen'],
         rows: [
-          ['2024-01-15', '14:30', '65.00', 'cash', 'Haarschnitt Damen', '65.00', 'Stammkunde'],
-          ['2024-01-15', '15:45', '45.00', 'twint', 'Haarschnitt Herren', '45.00', ''],
-          ['2024-01-16', '10:15', '25.00', 'sumup', 'Föhnen', '25.00', '']
+          ['2024-01-15', '14:30', '85.00', 'cash', 'Haarschnitt Damen:60.00;Styling:25.00', 'Multi-Item Sale'],
+          ['2024-01-15', '15:45', '45.00', 'twint', 'Haarschnitt Herren:45.00', 'Single-Item Sale'],
+          ['2024-01-16', '10:15', '70.00', 'sumup', 'Föhnen:25.00;Haarprodukt:45.00', 'Styling + Produkt']
         ]
       },
       expenses: {
@@ -249,6 +247,30 @@ export function CsvImport() {
           ['2024-01-01', '1200.00', 'Miete Januar', 'rent', 'bank', 'Immobilien AG', 'RE-2024-001'],
           ['2024-01-05', '150.00', 'Haarprodukte', 'supplies', 'cash', 'Beauty Store', ''],
           ['2024-01-10', '80.00', 'Strom', 'utilities', 'bank', 'EWZ', 'EWZ-456789']
+        ]
+      },
+      users: {
+        headers: ['Name', 'Benutzername', 'E-Mail', 'Rolle', 'Aktiv'],
+        rows: [
+          ['Maria Müller', 'maria.mueller', 'maria@salon.ch', 'staff', 'true'],
+          ['Thomas Weber', 'thomas.weber', 'thomas@salon.ch', 'staff', 'true'],
+          ['Lisa Admin', 'lisa.admin', 'lisa@salon.ch', 'admin', 'true']
+        ]
+      },
+      owner_transactions: {
+        headers: ['Transaktionstyp', 'Betrag', 'Beschreibung', 'Datum', 'Zahlungsmethode', 'Notizen'],
+        rows: [
+          ['deposit', '10000.00', 'Eigenkapital Einlage', '2024-01-01', 'bank_transfer', 'Startkapital für Salon'],
+          ['expense', '5000.00', 'Ausrüstung Anschaffung', '2024-01-15', 'private_card', 'Friseurstühle und Equipment'],
+          ['withdrawal', '1500.00', 'Privatentnahme', '2024-01-31', 'bank_transfer', 'Monatliche Entnahme']
+        ]
+      },
+      bank_accounts: {
+        headers: ['Kontoname', 'Bankname', 'IBAN', 'Kontonummer', 'Aktueller Saldo', 'Aktiv', 'Notizen'],
+        rows: [
+          ['Geschäftskonto UBS', 'UBS AG', 'CH93 0076 2011 6238 5295 7', '123456789', '15000.00', 'true', 'Hauptgeschäftskonto'],
+          ['Sparkonto ZKB', 'Zürcher Kantonalbank', 'CH54 0070 0110 0023 2456 1', '987654321', '25000.00', 'true', 'Rücklagen'],
+          ['Postfinance Konto', 'PostFinance AG', 'CH17 0900 0000 3012 3456 7', 'PF-789123', '5000.00', 'false', 'Inaktives Konto']
         ]
       }
     }
@@ -303,6 +325,30 @@ export function CsvImport() {
                 <div>
                   <p className="font-medium">Ausgaben</p>
                   <p className="text-xs text-muted-foreground">Kosten und Rechnungen</p>
+                </div>
+              </div>
+            </SelectItem>
+            <SelectItem value="users">
+              <div className="flex items-center space-x-2">
+                <div>
+                  <p className="font-medium">Benutzer</p>
+                  <p className="text-xs text-muted-foreground">Mitarbeiter und Administratoren</p>
+                </div>
+              </div>
+            </SelectItem>
+            <SelectItem value="owner_transactions">
+              <div className="flex items-center space-x-2">
+                <div>
+                  <p className="font-medium">Inhabertransaktionen</p>
+                  <p className="text-xs text-muted-foreground">Eigenkapital, Entnahmen, etc.</p>
+                </div>
+              </div>
+            </SelectItem>
+            <SelectItem value="bank_accounts">
+              <div className="flex items-center space-x-2">
+                <div>
+                  <p className="font-medium">Bankkonten</p>
+                  <p className="text-xs text-muted-foreground">Geschäfts- und Privatkonten</p>
                 </div>
               </div>
             </SelectItem>
@@ -423,6 +469,9 @@ export function CsvImport() {
               <p><strong>CSV Import erfolgreich!</strong></p>
               <div className="text-sm space-y-1">
                 <p>• {importState.results.itemsImported} Produkte importiert</p>
+                <p>• {importState.results.usersImported} Benutzer importiert</p>
+                <p>• {importState.results.ownerTransactionsImported} Inhabertransaktionen importiert</p>
+                <p>• {importState.results.bankAccountsImported} Bankkonten importiert</p>
                 <p>• {importState.results.salesImported} Verkäufe importiert</p>
                 <p>• {importState.results.expensesImported} Ausgaben importiert</p>
                 <p>• {importState.results.cashMovementsGenerated} Kassenbuch-Einträge generiert</p>

@@ -25,7 +25,7 @@ export interface ParsedCsvData {
 // Column Mapping Types
 // =================================
 
-export type CsvImportType = 'items' | 'sales' | 'expenses'
+export type CsvImportType = 'items' | 'sales' | 'expenses' | 'users' | 'owner_transactions' | 'bank_accounts'
 
 // Field definitions for each import type
 export interface ItemFieldMapping {
@@ -42,8 +42,7 @@ export interface SaleFieldMapping {
   total_amount: string
   payment_method: string
   status?: string
-  item_name: string // For single-item sales
-  item_price: string // For single-item sales
+  items: string // Multi-item format: "Name:Price;Name2:Price2"
   notes?: string
 }
 
@@ -58,7 +57,34 @@ export interface ExpenseFieldMapping {
   notes?: string
 }
 
-export type FieldMapping = ItemFieldMapping | SaleFieldMapping | ExpenseFieldMapping
+export interface UserFieldMapping {
+  name: string
+  username: string
+  email: string
+  role: string
+  active?: string
+}
+
+export interface OwnerTransactionFieldMapping {
+  transaction_type: string
+  amount: string
+  description: string
+  transaction_date: string
+  payment_method: string
+  notes?: string
+}
+
+export interface BankAccountFieldMapping {
+  name: string
+  bank_name: string
+  iban?: string
+  account_number?: string
+  current_balance?: string
+  is_active?: string
+  notes?: string
+}
+
+export type FieldMapping = ItemFieldMapping | SaleFieldMapping | ExpenseFieldMapping | UserFieldMapping | OwnerTransactionFieldMapping | BankAccountFieldMapping
 
 // =================================
 // Column Mapping Configuration
@@ -92,6 +118,9 @@ export interface CsvImportState {
     items?: ItemImport[]
     sales?: SaleImport[]
     expenses?: ExpenseImport[]
+    users?: any[]
+    owner_transactions?: any[]
+    bank_accounts?: any[]
   } | null
   errors: string[]
   progress: number
@@ -193,20 +222,12 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       example: 'cash'
     },
     {
-      key: 'item_name',
-      label: 'Service/Produkt',
+      key: 'items',
+      label: 'Items',
       required: true,
       type: 'string',
-      description: 'Name des verkauften Items',
-      example: 'Haarschnitt Damen'
-    },
-    {
-      key: 'item_price',
-      label: 'Item Preis',
-      required: true,
-      type: 'number',
-      description: 'Preis des Items (muss gleich Gesamtbetrag sein)',
-      example: '65.00'
+      description: 'Items im Format: "Name:Preis;Name2:Preis2" (Semikolon-getrennt)',
+      example: 'Haarschnitt Damen:60.00;Styling:25.00'
     },
     {
       key: 'notes',
@@ -283,6 +304,161 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'string',
       description: 'Zusätzliche Bemerkungen',
       example: 'Monatliche Miete'
+    }
+  ],
+  users: [
+    {
+      key: 'name',
+      label: 'Name',
+      required: true,
+      type: 'string',
+      description: 'Vollständiger Name des Benutzers',
+      example: 'Maria Müller'
+    },
+    {
+      key: 'username',
+      label: 'Benutzername',
+      required: true,
+      type: 'string',
+      description: 'Eindeutiger Benutzername',
+      example: 'maria.mueller'
+    },
+    {
+      key: 'email',
+      label: 'E-Mail',
+      required: true,
+      type: 'string',
+      description: 'E-Mail Adresse',
+      example: 'maria@salon.ch'
+    },
+    {
+      key: 'role',
+      label: 'Rolle',
+      required: true,
+      type: 'enum',
+      enumValues: ['admin', 'staff'],
+      description: 'Benutzerrolle',
+      example: 'staff'
+    },
+    {
+      key: 'active',
+      label: 'Aktiv',
+      required: false,
+      type: 'enum',
+      enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
+      description: 'Aktiv/Inaktiv Status',
+      example: 'true'
+    }
+  ],
+  owner_transactions: [
+    {
+      key: 'transaction_type',
+      label: 'Transaktionstyp',
+      required: true,
+      type: 'enum',
+      enumValues: ['deposit', 'expense', 'withdrawal'],
+      description: 'Art der Transaktion',
+      example: 'deposit'
+    },
+    {
+      key: 'amount',
+      label: 'Betrag',
+      required: true,
+      type: 'number',
+      description: 'Transaktionsbetrag in CHF',
+      example: '2000.00'
+    },
+    {
+      key: 'description',
+      label: 'Beschreibung',
+      required: true,
+      type: 'string',
+      description: 'Beschreibung der Transaktion',
+      example: 'Eigenkapital Einlage'
+    },
+    {
+      key: 'transaction_date',
+      label: 'Datum',
+      required: true,
+      type: 'date',
+      description: 'Transaktionsdatum (YYYY-MM-DD)',
+      example: '2024-01-15'
+    },
+    {
+      key: 'payment_method',
+      label: 'Zahlungsmethode',
+      required: true,
+      type: 'enum',
+      enumValues: ['bank_transfer', 'private_card', 'private_cash'],
+      description: 'Art der Zahlung',
+      example: 'bank_transfer'
+    },
+    {
+      key: 'notes',
+      label: 'Notizen',
+      required: false,
+      type: 'string',
+      description: 'Zusätzliche Bemerkungen',
+      example: 'Startkapital für Salon'
+    }
+  ],
+  bank_accounts: [
+    {
+      key: 'name',
+      label: 'Kontoname',
+      required: true,
+      type: 'string',
+      description: 'Name/Bezeichnung des Kontos',
+      example: 'Geschäftskonto UBS'
+    },
+    {
+      key: 'bank_name',
+      label: 'Bankname',
+      required: true,
+      type: 'string',
+      description: 'Name der Bank',
+      example: 'UBS AG'
+    },
+    {
+      key: 'iban',
+      label: 'IBAN',
+      required: false,
+      type: 'string',
+      description: 'IBAN Nummer',
+      example: 'CH93 0076 2011 6238 5295 7'
+    },
+    {
+      key: 'account_number',
+      label: 'Kontonummer',
+      required: false,
+      type: 'string',
+      description: 'Interne Kontonummer',
+      example: '123456789'
+    },
+    {
+      key: 'current_balance',
+      label: 'Aktueller Saldo',
+      required: false,
+      type: 'number',
+      description: 'Startguthaben in CHF',
+      example: '5000.00'
+    },
+    {
+      key: 'is_active',
+      label: 'Aktiv',
+      required: false,
+      type: 'enum',
+      enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
+      description: 'Konto aktiv/inaktiv',
+      example: 'true'
+    },
+    {
+      key: 'notes',
+      label: 'Notizen',
+      required: false,
+      type: 'string',
+      description: 'Zusätzliche Bemerkungen',
+      example: 'Hauptgeschäftskonto'
     }
   ]
 }

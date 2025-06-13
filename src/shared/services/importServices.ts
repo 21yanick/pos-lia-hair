@@ -48,6 +48,126 @@ export async function importItems(
 }
 
 // =================================
+// User Import Services
+// =================================
+
+export async function importUsers(
+  users: any[], 
+  updateProgress: ProgressCallback
+): Promise<number> {
+  updateProgress(10, 'Importiere Benutzer...')
+  
+  // Check for existing users to prevent duplicates
+  const existingUsers = await supabase
+    .from('users')
+    .select('email, username')
+  
+  const existingEmails = new Set(existingUsers.data?.map(user => user.email.toLowerCase()) || [])
+  const existingUsernames = new Set(existingUsers.data?.map(user => user.username.toLowerCase()) || [])
+  
+  // Filter out users that already exist
+  const newUsers = users.filter(user => 
+    !existingEmails.has(user.email.toLowerCase()) && 
+    !existingUsernames.has(user.username.toLowerCase())
+  )
+  
+  if (newUsers.length === 0) {
+    return 0 // No new users to import
+  }
+  
+  const { data, error } = await supabase
+    .from('users')
+    .insert(newUsers)
+    .select()
+
+  if (error) {
+    throw new Error(`Users Import Fehler: ${error.message}`)
+  }
+
+  return data?.length || 0
+}
+
+// =================================
+// Owner Transaction Import Services
+// =================================
+
+export async function importOwnerTransactions(
+  ownerTransactions: any[], 
+  userId: string,
+  updateProgress: ProgressCallback
+): Promise<number> {
+  updateProgress(10, 'Importiere Inhabertransaktionen...')
+  
+  // Add user_id to all transactions
+  const transactionsWithUserId = ownerTransactions.map(transaction => ({
+    ...transaction,
+    user_id: userId
+  }))
+  
+  const { data, error } = await supabase
+    .from('owner_transactions')
+    .insert(transactionsWithUserId)
+    .select()
+
+  if (error) {
+    throw new Error(`Owner Transactions Import Fehler: ${error.message}`)
+  }
+
+  return data?.length || 0
+}
+
+// =================================
+// Bank Account Import Services
+// =================================
+
+export async function importBankAccounts(
+  bankAccounts: any[], 
+  userId: string,
+  updateProgress: ProgressCallback
+): Promise<number> {
+  updateProgress(10, 'Importiere Bankkonten...')
+  
+  // Check for existing bank accounts to prevent duplicates (by name and IBAN)
+  const existingAccounts = await supabase
+    .from('bank_accounts')
+    .select('name, iban')
+    .eq('user_id', userId)
+  
+  const existingNames = new Set(existingAccounts.data?.map(account => account.name.toLowerCase()) || [])
+  const existingIbans = new Set(existingAccounts.data?.filter(account => account.iban).map(account => account.iban) || [])
+  
+  // Filter out accounts that already exist
+  const newAccounts = bankAccounts.filter(account => {
+    const nameExists = existingNames.has(account.name.toLowerCase())
+    const ibanExists = account.iban && existingIbans.has(account.iban)
+    return !nameExists && !ibanExists
+  })
+  
+  if (newAccounts.length === 0) {
+    return 0 // No new accounts to import
+  }
+  
+  // Add user_id and timestamps to all accounts
+  const accountsWithUserId = newAccounts.map(account => ({
+    ...account,
+    user_id: userId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }))
+  
+  const { data, error } = await supabase
+    .from('bank_accounts')
+    .insert(accountsWithUserId)
+    .select()
+
+  if (error) {
+    throw new Error(`Bank Accounts Import Fehler: ${error.message}`)
+  }
+
+  return data?.length || 0
+}
+
+// =================================
 // Helper Functions
 // =================================
 
