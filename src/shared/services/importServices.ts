@@ -168,6 +168,54 @@ export async function importBankAccounts(
 }
 
 // =================================
+// Supplier Import Services
+// =================================
+
+export async function importSuppliers(
+  suppliers: any[], 
+  userId: string,
+  updateProgress: ProgressCallback
+): Promise<number> {
+  updateProgress(10, 'Importiere Lieferanten...')
+  
+  // Check for existing suppliers to prevent duplicates (by name)
+  const existingSuppliers = await supabase
+    .from('suppliers')
+    .select('name')
+    .eq('user_id', userId)
+  
+  const existingNames = new Set(existingSuppliers.data?.map(supplier => supplier.name.toLowerCase()) || [])
+  
+  // Filter out suppliers that already exist
+  const newSuppliers = suppliers.filter(supplier => 
+    !existingNames.has(supplier.name.toLowerCase())
+  )
+  
+  if (newSuppliers.length === 0) {
+    return 0 // No new suppliers to import
+  }
+  
+  // Add user_id and timestamps to all suppliers
+  const suppliersWithUserId = newSuppliers.map(supplier => ({
+    ...supplier,
+    user_id: userId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }))
+  
+  const { data, error } = await supabase
+    .from('suppliers')
+    .insert(suppliersWithUserId)
+    .select()
+
+  if (error) {
+    throw new Error(`Suppliers Import Fehler: ${error.message}`)
+  }
+
+  return data?.length || 0
+}
+
+// =================================
 // Helper Functions
 // =================================
 

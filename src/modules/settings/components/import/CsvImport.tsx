@@ -272,6 +272,14 @@ export function CsvImport() {
           ['Sparkonto ZKB', 'Zürcher Kantonalbank', 'CH54 0070 0110 0023 2456 1', '987654321', '25000.00', 'true', 'Rücklagen'],
           ['Postfinance Konto', 'PostFinance AG', 'CH17 0900 0000 3012 3456 7', 'PF-789123', '5000.00', 'false', 'Inaktives Konto']
         ]
+      },
+      suppliers: {
+        headers: ['Name', 'Kategorie', 'E-Mail', 'Telefon', 'Website', 'Adresse', 'Stadt', 'PLZ', 'Land', 'IBAN', 'UID', 'Aktiv', 'Notizen'],
+        rows: [
+          ['NewFlag AG', 'beauty_supplies', 'info@newflag.ch', '+41 44 123 45 67', 'https://newflag.ch', 'Beauty Street 123', 'Zürich', '8001', 'CH', 'CH93 0076 2011 6238 5295 7', 'CHE-123.456.789', 'true', 'Hauptlieferant für Haarprodukte'],
+          ['Immobilien Müller', 'real_estate', 'info@immobilien-mueller.ch', '+41 44 987 65 43', '', 'Bahnhofstrasse 45', 'Zürich', '8001', 'CH', '', '', 'true', 'Vermieter Salon Räumlichkeiten'],
+          ['Coop Genossenschaft', 'retail', '', '', 'https://coop.ch', '', '', '', 'CH', '', '', 'true', 'Büromaterial und Reinigungsmittel']
+        ]
       }
     }
     
@@ -349,6 +357,14 @@ export function CsvImport() {
                 <div>
                   <p className="font-medium">Bankkonten</p>
                   <p className="text-xs text-muted-foreground">Geschäfts- und Privatkonten</p>
+                </div>
+              </div>
+            </SelectItem>
+            <SelectItem value="suppliers">
+              <div className="flex items-center space-x-2">
+                <div>
+                  <p className="font-medium">Lieferanten</p>
+                  <p className="text-xs text-muted-foreground">Supplier Master Data</p>
                 </div>
               </div>
             </SelectItem>

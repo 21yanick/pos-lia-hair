@@ -25,7 +25,7 @@ export interface ParsedCsvData {
 // Column Mapping Types
 // =================================
 
-export type CsvImportType = 'items' | 'sales' | 'expenses' | 'users' | 'owner_transactions' | 'bank_accounts'
+export type CsvImportType = 'items' | 'sales' | 'expenses' | 'users' | 'owner_transactions' | 'bank_accounts' | 'suppliers'
 
 // Field definitions for each import type
 export interface ItemFieldMapping {
@@ -84,7 +84,23 @@ export interface BankAccountFieldMapping {
   notes?: string
 }
 
-export type FieldMapping = ItemFieldMapping | SaleFieldMapping | ExpenseFieldMapping | UserFieldMapping | OwnerTransactionFieldMapping | BankAccountFieldMapping
+export interface SupplierFieldMapping {
+  name: string
+  category: string
+  contact_email?: string
+  contact_phone?: string
+  website?: string
+  address_line1?: string
+  city?: string
+  postal_code?: string
+  country?: string
+  iban?: string
+  vat_number?: string
+  is_active?: string
+  notes?: string
+}
+
+export type FieldMapping = ItemFieldMapping | SaleFieldMapping | ExpenseFieldMapping | UserFieldMapping | OwnerTransactionFieldMapping | BankAccountFieldMapping | SupplierFieldMapping
 
 // =================================
 // Column Mapping Configuration
@@ -459,6 +475,114 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'string',
       description: 'Zusätzliche Bemerkungen',
       example: 'Hauptgeschäftskonto'
+    }
+  ],
+  suppliers: [
+    {
+      key: 'name',
+      label: 'Lieferantenname',
+      required: true,
+      type: 'string',
+      description: 'Name des Lieferanten',
+      example: 'Migros'
+    },
+    {
+      key: 'category',
+      label: 'Kategorie',
+      required: true,
+      type: 'enum',
+      enumValues: ['beauty_supplies', 'equipment', 'utilities', 'rent', 'insurance', 'professional_services', 'retail', 'online_marketplace', 'real_estate', 'other'],
+      description: 'Lieferantenkategorie',
+      example: 'beauty_supplies'
+    },
+    {
+      key: 'contact_email',
+      label: 'E-Mail',
+      required: false,
+      type: 'string',
+      description: 'Kontakt E-Mail Adresse',
+      example: 'info@migros.ch'
+    },
+    {
+      key: 'contact_phone',
+      label: 'Telefon',
+      required: false,
+      type: 'string',
+      description: 'Kontakt Telefonnummer',
+      example: '+41 44 123 45 67'
+    },
+    {
+      key: 'website',
+      label: 'Website',
+      required: false,
+      type: 'string',
+      description: 'Website URL',
+      example: 'https://www.migros.ch'
+    },
+    {
+      key: 'address_line1',
+      label: 'Adresse',
+      required: false,
+      type: 'string',
+      description: 'Strassenadresse',
+      example: 'Limmatstrasse 152'
+    },
+    {
+      key: 'city',
+      label: 'Stadt',
+      required: false,
+      type: 'string',
+      description: 'Stadt/Ort',
+      example: 'Zürich'
+    },
+    {
+      key: 'postal_code',
+      label: 'PLZ',
+      required: false,
+      type: 'string',
+      description: 'Postleitzahl',
+      example: '8005'
+    },
+    {
+      key: 'country',
+      label: 'Land',
+      required: false,
+      type: 'string',
+      description: 'Land (Default: CH)',
+      example: 'CH'
+    },
+    {
+      key: 'iban',
+      label: 'IBAN',
+      required: false,
+      type: 'string',
+      description: 'IBAN Nummer für Zahlungen',
+      example: 'CH93 0076 2011 6238 5295 7'
+    },
+    {
+      key: 'vat_number',
+      label: 'MwSt-Nummer',
+      required: false,
+      type: 'string',
+      description: 'Mehrwertsteuernummer',
+      example: 'CHE-123.456.789'
+    },
+    {
+      key: 'is_active',
+      label: 'Aktiv',
+      required: false,
+      type: 'enum',
+      enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
+      description: 'Lieferant aktiv/inaktiv',
+      example: 'true'
+    },
+    {
+      key: 'notes',
+      label: 'Notizen',
+      required: false,
+      type: 'string',
+      description: 'Zusätzliche Bemerkungen',
+      example: 'Hauptlieferant für Kosmetik'
     }
   ]
 }

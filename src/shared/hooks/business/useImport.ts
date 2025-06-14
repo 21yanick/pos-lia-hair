@@ -17,6 +17,7 @@ import {
   importUsers,
   importOwnerTransactions,
   importBankAccounts,
+  importSuppliers,
   importSales, 
   importExpenses,
   generateCashMovements,
@@ -97,6 +98,7 @@ export function useImport() {
             usersImported: data.users?.length || 0,
             ownerTransactionsImported: data.owner_transactions?.length || 0,
             bankAccountsImported: data.bank_accounts?.length || 0,
+            suppliersImported: data.suppliers?.length || 0,
             salesImported: data.sales?.length || 0,
             expensesImported: data.expenses?.length || 0,
             cashMovementsGenerated: 0,
@@ -114,6 +116,7 @@ export function useImport() {
       let usersImported = 0
       let ownerTransactionsImported = 0
       let bankAccountsImported = 0
+      let suppliersImported = 0
       
       if (data.items && data.items.length > 0) {
         itemsImported = await importItems(data.items, updateProgress)
@@ -129,6 +132,10 @@ export function useImport() {
       
       if (data.bank_accounts && data.bank_accounts.length > 0) {
         bankAccountsImported = await importBankAccounts(data.bank_accounts, fullConfig.targetUserId, updateProgress)
+      }
+      
+      if (data.suppliers && data.suppliers.length > 0) {
+        suppliersImported = await importSuppliers(data.suppliers, fullConfig.targetUserId, updateProgress)
       }
 
       // Phase 3: User Data Import (Sales & Expenses)
@@ -206,6 +213,7 @@ export function useImport() {
           usersImported,
           ownerTransactionsImported,
           bankAccountsImported,
+          suppliersImported,
           salesImported,
           expensesImported,
           cashMovementsGenerated,

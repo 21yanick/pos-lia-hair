@@ -28,6 +28,7 @@ export interface ImportResults {
   usersImported: number
   ownerTransactionsImported: number
   bankAccountsImported: number
+  suppliersImported: number
   salesImported: number
   expensesImported: number
   cashMovementsGenerated: number
@@ -111,6 +112,7 @@ export interface ImportDataContainer {
   users?: any[]
   owner_transactions?: any[]
   bank_accounts?: any[]
+  suppliers?: any[]
   sales?: SaleImport[]
   expenses?: ExpenseImport[]
 }

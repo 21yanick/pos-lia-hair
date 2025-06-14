@@ -37,6 +37,7 @@ export class CsvToJsonTransformer {
     users?: any[]
     owner_transactions?: any[]
     bank_accounts?: any[]
+    suppliers?: any[]
   } {
     
     if (!mappingConfig.isValid) {
@@ -61,6 +62,9 @@ export class CsvToJsonTransformer {
       
       case 'bank_accounts':
         return { bank_accounts: this.transformBankAccounts(csvData, mappingConfig) }
+      
+      case 'suppliers':
+        return { suppliers: this.transformSuppliers(csvData, mappingConfig) }
       
       default:
         throw new Error(`Unsupported import type: ${mappingConfig.importType}`)
@@ -158,6 +162,9 @@ export class CsvToJsonTransformer {
     
     for (const row of csvData.rows) {
       try {
+        // Get supplier name and normalize it for consistent matching
+        const supplierName = this.getOptionalString(row, 'supplier_name', mappingConfig)
+        
         const expense: ExpenseImport = {
           date: this.getRequiredDate(row, 'date', mappingConfig),
           amount: this.getRequiredNumber(row, 'amount', mappingConfig),
@@ -170,7 +177,7 @@ export class CsvToJsonTransformer {
           payment_method: this.normalizeExpensePaymentMethod(
             this.getRequiredEnum(row, 'payment_method', mappingConfig, ['bank', 'cash', 'überweisung', 'bar'])
           ) as 'bank' | 'cash',
-          supplier_name: this.getOptionalString(row, 'supplier_name', mappingConfig) || undefined,
+          supplier_name: supplierName ? this.normalizeSupplierName(supplierName) : undefined,
           invoice_number: this.getOptionalString(row, 'invoice_number', mappingConfig) || undefined,
           notes: this.getOptionalString(row, 'notes', mappingConfig) || undefined
         }
@@ -306,6 +313,68 @@ export class CsvToJsonTransformer {
     }
     
     return bankAccounts
+  }
+
+  /**
+   * Transform CSV rows to Supplier format
+   * @param csvData Parsed CSV data
+   * @param mappingConfig Mapping configuration
+   * @returns Array of Supplier objects
+   */
+  private static transformSuppliers(
+    csvData: ParsedCsvData,
+    mappingConfig: CsvMappingConfig
+  ): any[] {
+    
+    const suppliers: any[] = []
+    
+    for (const row of csvData.rows) {
+      try {
+        const supplier = {
+          name: this.getRequiredString(row, 'name', mappingConfig),
+          category: this.getRequiredEnum(row, 'category', mappingConfig, [
+            'beauty_supplies', 'equipment', 'utilities', 'rent', 'insurance', 
+            'professional_services', 'retail', 'online_marketplace', 'real_estate', 'other'
+          ]) as string,
+          contact_email: this.getOptionalString(row, 'contact_email', mappingConfig) || undefined,
+          contact_phone: this.getOptionalString(row, 'contact_phone', mappingConfig) || undefined,
+          website: this.getOptionalString(row, 'website', mappingConfig) || undefined,
+          address_line1: this.getOptionalString(row, 'address_line1', mappingConfig) || undefined,
+          city: this.getOptionalString(row, 'city', mappingConfig) || undefined,
+          postal_code: this.getOptionalString(row, 'postal_code', mappingConfig) || undefined,
+          country: this.getOptionalString(row, 'country', mappingConfig) || 'CH',
+          iban: this.getOptionalString(row, 'iban', mappingConfig) || undefined,
+          vat_number: this.getOptionalString(row, 'vat_number', mappingConfig) || undefined,
+          is_active: this.getOptionalBoolean(row, 'is_active', mappingConfig) ?? true,
+          notes: this.getOptionalString(row, 'notes', mappingConfig) || undefined
+        }
+        
+        // Validate email format if provided
+        if (supplier.contact_email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          if (!emailRegex.test(supplier.contact_email)) {
+            throw new Error(`Invalid email format: ${supplier.contact_email}`)
+          }
+        }
+        
+        // Validate IBAN format if provided
+        if (supplier.iban && supplier.iban.length > 0) {
+          const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9\s]{4,32}$/
+          const cleanIban = supplier.iban.replace(/\s/g, '').toUpperCase()
+          if (!ibanRegex.test(cleanIban)) {
+            throw new Error(`Invalid IBAN format: ${supplier.iban}`)
+          }
+          supplier.iban = cleanIban
+        }
+        
+        suppliers.push(supplier)
+        
+      } catch (error) {
+        throw new Error(`Row ${csvData.rows.indexOf(row) + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }
+    
+    return suppliers
   }
 
   // =================================
@@ -591,6 +660,16 @@ export class CsvToJsonTransformer {
     
     return categoryMap[normalized] || normalized
   }
+
+  private static normalizeSupplierName(value: string): string {
+    if (!value) return ''
+    
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s]/g, '') // Remove special characters except letters, numbers, spaces
+  }
 }
 
 // =================================
@@ -604,7 +683,7 @@ export class CsvToJsonTransformer {
  * @returns Validation result
  */
 export function validateTransformedData(
-  data: { items?: ItemImport[], sales?: SaleImport[], expenses?: ExpenseImport[], users?: any[], owner_transactions?: any[], bank_accounts?: any[] },
+  data: { items?: ItemImport[], sales?: SaleImport[], expenses?: ExpenseImport[], users?: any[], owner_transactions?: any[], bank_accounts?: any[], suppliers?: any[] },
   importType: CsvImportType
 ): CsvValidationResult {
   
@@ -674,6 +753,17 @@ export function validateTransformedData(
         errors.push(...bankAccountValidation.errors)
         warnings.push(...bankAccountValidation.warnings)
         validRows = totalRows - bankAccountValidation.errorCount
+      }
+      break
+    
+    case 'suppliers':
+      if (data.suppliers) {
+        totalRows = data.suppliers.length
+        const supplierValidation = validateSuppliers(data.suppliers)
+        errors.push(...supplierValidation.errors)
+        warnings.push(...supplierValidation.warnings)
+        validRows = totalRows - supplierValidation.errorCount
+        duplicateNames = supplierValidation.duplicateNames
       }
       break
   }
@@ -873,4 +963,45 @@ function validateBankAccounts(bankAccounts: any[]) {
   })
   
   return { errors, warnings, errorCount }
+}
+
+function validateSuppliers(suppliers: any[]) {
+  const errors: string[] = []
+  const warnings: string[] = []
+  let errorCount = 0
+  
+  // Check for duplicate names
+  const names = suppliers.map(supplier => supplier.name.toLowerCase())
+  const duplicateNames = names.filter((name, index) => names.indexOf(name) !== index)
+  
+  if (duplicateNames.length > 0) {
+    errors.push(`Duplicate supplier names found: ${[...new Set(duplicateNames)].join(', ')}`)
+  }
+  
+  suppliers.forEach((supplier, index) => {
+    if (supplier.name.length < 2) {
+      errors.push(`Row ${index + 1}: Supplier name must be at least 2 characters`)
+      errorCount++
+    }
+    
+    // Email validation if provided
+    if (supplier.contact_email && supplier.contact_email.length > 0) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(supplier.contact_email)) {
+        errors.push(`Row ${index + 1}: Invalid email format`)
+        errorCount++
+      }
+    }
+    
+    // IBAN validation if provided  
+    if (supplier.iban && supplier.iban.length > 0) {
+      const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9\s]{4,32}$/
+      if (!ibanRegex.test(supplier.iban.replace(/\s/g, '').toUpperCase())) {
+        errors.push(`Row ${index + 1}: Invalid IBAN format`)
+        errorCount++
+      }
+    }
+  })
+  
+  return { errors, warnings, errorCount, duplicateNames: [...new Set(duplicateNames)] }
 }
