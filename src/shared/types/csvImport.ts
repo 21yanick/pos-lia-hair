@@ -91,6 +91,7 @@ export interface SupplierFieldMapping {
   contact_phone?: string
   website?: string
   address_line1?: string
+  address_line2?: string
   city?: string
   postal_code?: string
   country?: string
@@ -526,6 +527,14 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'string',
       description: 'Strassenadresse',
       example: 'Limmatstrasse 152'
+    },
+    {
+      key: 'address_line2',
+      label: 'Adresszusatz',
+      required: false,
+      type: 'string',
+      description: 'Zusätzliche Adressinformationen',
+      example: '3. Stock, c/o Schmidt'
     },
     {
       key: 'city',

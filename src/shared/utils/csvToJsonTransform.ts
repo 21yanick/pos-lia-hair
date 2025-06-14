@@ -340,6 +340,7 @@ export class CsvToJsonTransformer {
           contact_phone: this.getOptionalString(row, 'contact_phone', mappingConfig) || undefined,
           website: this.getOptionalString(row, 'website', mappingConfig) || undefined,
           address_line1: this.getOptionalString(row, 'address_line1', mappingConfig) || undefined,
+          address_line2: this.getOptionalString(row, 'address_line2', mappingConfig) || undefined,
           city: this.getOptionalString(row, 'city', mappingConfig) || undefined,
           postal_code: this.getOptionalString(row, 'postal_code', mappingConfig) || undefined,
           country: this.getOptionalString(row, 'country', mappingConfig) || 'CH',

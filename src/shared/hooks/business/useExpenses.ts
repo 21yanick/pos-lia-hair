@@ -5,6 +5,7 @@ import { supabase } from '@/shared/lib/supabase/client'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
 import type { 
   Expense, 
+  ExpenseWithSupplier,
   ExpenseInsert, 
   ExpenseUpdate, 
   ExpenseCategory 
@@ -18,7 +19,7 @@ export { EXPENSE_CATEGORIES }
 export function useExpenses() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [expenses, setExpenses] = useState<ExpenseWithSupplier[]>([])
   const [currentExpense, setCurrentExpense] = useState<Expense | null>(null)
   const { createExpenseCashMovement, reverseCashMovement } = useCashMovements()
 
@@ -103,7 +104,18 @@ export function useExpenses() {
 
       let query = supabase
         .from('expenses')
-        .select('*')
+        .select(`
+          *,
+          suppliers (
+            id,
+            name,
+            category,
+            contact_email,
+            contact_phone,
+            website,
+            is_active
+          )
+        `)
         .order('payment_date', { ascending: false })
 
       if (limit) {
@@ -117,8 +129,14 @@ export function useExpenses() {
         throw error
       }
 
-      setExpenses(data || [])
-      return { success: true, expenses: data }
+      // Transform data to include supplier relation
+      const expensesWithSupplier = (data || []).map(expense => ({
+        ...expense,
+        supplier: expense.suppliers || null
+      }))
+      
+      setExpenses(expensesWithSupplier)
+      return { success: true, expenses: expensesWithSupplier }
     } catch (err: any) {
       console.error('Fehler beim Laden der Ausgaben:', err)
       setError(err.message || 'Fehler beim Laden der Daten')
@@ -136,7 +154,18 @@ export function useExpenses() {
 
       const { data, error } = await supabase
         .from('expenses')
-        .select('*')
+        .select(`
+          *,
+          suppliers (
+            id,
+            name,
+            category,
+            contact_email,
+            contact_phone,
+            website,
+            is_active
+          )
+        `)
         .gte('payment_date', startDate)
         .lte('payment_date', endDate)
         .order('payment_date', { ascending: false })
@@ -146,8 +175,14 @@ export function useExpenses() {
         throw error
       }
 
-      setExpenses(data || [])
-      return { success: true, expenses: data }
+      // Transform data to include supplier relation
+      const expensesWithSupplier = (data || []).map(expense => ({
+        ...expense,
+        supplier: expense.suppliers || null
+      }))
+      
+      setExpenses(expensesWithSupplier)
+      return { success: true, expenses: expensesWithSupplier }
     } catch (err: any) {
       console.error('Fehler beim Laden der Ausgaben:', err)
       setError(err.message || 'Fehler beim Laden der Daten')

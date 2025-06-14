@@ -8,8 +8,24 @@ export type ExpenseInsert = Omit<Database['public']['Tables']['expenses']['Inser
 export type ExpenseUpdate = Partial<Omit<Database['public']['Tables']['expenses']['Update'], 'id' | 'created_at'>> & { id: string }
 
 // Enhanced expense with supplier data
-export interface ExpenseWithSupplier extends Expense {
+export interface ExpenseWithSupplier {
+  id: string
+  amount: number
+  description: string
+  category: string
+  payment_method: string
+  payment_date: string
+  supplier_name: string | null
+  invoice_number: string | null
+  notes: string | null
+  user_id: string
+  created_at: string
+  bank_transaction_id: string | null
+  banking_status: string | null
+  receipt_number: string | null
+  supplier_id: string | null
   supplier?: Supplier | null
+  suppliers?: Supplier | null // For Supabase join
 }
 
 // Kategorien für bessere UI-Darstellung

@@ -42,9 +42,46 @@ export function SettingsPage() {
               <p className="text-sm text-muted-foreground">
                 • Ausgaben-Historie
               </p>
+              <p className="text-sm text-muted-foreground">
+                • Lieferanten & Partner
+              </p>
               <Button asChild className="w-full mt-4">
                 <Link href="/settings/import">
                   Import-Center öffnen
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Lieferanten-Verwaltung */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-primary" />
+              <CardTitle>Lieferanten</CardTitle>
+            </div>
+            <CardDescription>
+              Verwalten Sie Ihre Lieferanten und Geschäftspartner
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                • Lieferanten erstellen & bearbeiten
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • Kategorien & Kontaktdaten
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • Ausgaben-Verknüpfung
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • CSV Import & Export
+              </p>
+              <Button asChild className="w-full mt-4">
+                <Link href="/settings/suppliers">
+                  Lieferanten verwalten
                 </Link>
               </Button>
             </div>

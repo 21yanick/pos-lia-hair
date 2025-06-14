@@ -274,11 +274,11 @@ export function CsvImport() {
         ]
       },
       suppliers: {
-        headers: ['Name', 'Kategorie', 'E-Mail', 'Telefon', 'Website', 'Adresse', 'Stadt', 'PLZ', 'Land', 'IBAN', 'UID', 'Aktiv', 'Notizen'],
+        headers: ['Name', 'Kategorie', 'E-Mail', 'Telefon', 'Website', 'Adresse', 'Adresszusatz', 'Stadt', 'PLZ', 'Land', 'IBAN', 'UID', 'Aktiv', 'Notizen'],
         rows: [
-          ['NewFlag AG', 'beauty_supplies', 'info@newflag.ch', '+41 44 123 45 67', 'https://newflag.ch', 'Beauty Street 123', 'Zürich', '8001', 'CH', 'CH93 0076 2011 6238 5295 7', 'CHE-123.456.789', 'true', 'Hauptlieferant für Haarprodukte'],
-          ['Immobilien Müller', 'real_estate', 'info@immobilien-mueller.ch', '+41 44 987 65 43', '', 'Bahnhofstrasse 45', 'Zürich', '8001', 'CH', '', '', 'true', 'Vermieter Salon Räumlichkeiten'],
-          ['Coop Genossenschaft', 'retail', '', '', 'https://coop.ch', '', '', '', 'CH', '', '', 'true', 'Büromaterial und Reinigungsmittel']
+          ['NewFlag AG', 'beauty_supplies', 'info@newflag.ch', '+41 44 123 45 67', 'https://newflag.ch', 'Beauty Street 123', '3. Stock', 'Zürich', '8001', 'CH', 'CH93 0076 2011 6238 5295 7', 'CHE-123.456.789', 'true', 'Hauptlieferant für Haarprodukte'],
+          ['Immobilien Müller', 'real_estate', 'info@immobilien-mueller.ch', '+41 44 987 65 43', '', 'Bahnhofstrasse 45', '', 'Zürich', '8001', 'CH', '', '', 'true', 'Vermieter Salon Räumlichkeiten'],
+          ['Coop Genossenschaft', 'retail', '', '', 'https://coop.ch', '', '', '', '', 'CH', '', '', 'true', 'Büromaterial und Reinigungsmittel']
         ]
       }
     }

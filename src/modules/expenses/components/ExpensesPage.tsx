@@ -17,6 +17,10 @@ import { Badge } from "@/shared/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
 import { Plus, Upload, Download, Search, Filter, Calendar } from "lucide-react"
 import { supabase } from "@/shared/lib/supabase/client"
+import { SupplierAutocomplete } from '@/shared/components/supplier/SupplierAutocomplete'
+import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import type { Supplier } from '@/shared/types/suppliers'
 
 export function ExpensesPage() {
   const {
@@ -41,13 +45,18 @@ export function ExpensesPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [receiptType, setReceiptType] = useState<'upload' | 'physical'>('upload')
   const [archiveLocation, setArchiveLocation] = useState('')
+  
+  // Supplier State
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
+  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false)
+  const [newSupplierName, setNewSupplierName] = useState('')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
     category: '' as ExpenseCategory | '',
     payment_method: '' as 'bank' | 'cash' | '',
     payment_date: new Date().toISOString().split('T')[0],
-    supplier_name: '',
     invoice_number: '',
     notes: ''
   })
@@ -60,6 +69,17 @@ export function ExpensesPage() {
   // Lade Ausgaben beim Start
   useEffect(() => {
     loadExpenses() // Lädt alle Ausgaben statt nur aktueller Monat
+  }, [])
+  
+  // Load current user ID for supplier creation
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: userData } = await supabase.auth.getUser()
+      if (userData?.user) {
+        setCurrentUserId(userData.user.id)
+      }
+    }
+    getCurrentUser()
   }, [])
   
   // Fehlerbehandlung
@@ -76,10 +96,10 @@ export function ExpensesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.amount || !formData.description || !formData.category || !formData.payment_method) {
+    if (!formData.amount || !formData.description || !formData.category || !formData.payment_method || !selectedSupplier) {
       toast({
         title: "Fehler",
-        description: "Bitte füllen Sie alle Pflichtfelder aus.",
+        description: "Bitte füllen Sie alle Pflichtfelder aus (inkl. Lieferant).",
         variant: "destructive"
       })
       return
@@ -112,7 +132,8 @@ export function ExpensesPage() {
       category: formData.category as ExpenseCategory,
       payment_method: formData.payment_method as 'bank' | 'cash',
       payment_date: formData.payment_date,
-      supplier_name: formData.supplier_name || null,
+      supplier_id: selectedSupplier?.id || null,
+      supplier_name: selectedSupplier?.name || null, // Keep for backward compatibility
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
       user_id: userData.user.id
@@ -157,14 +178,29 @@ export function ExpensesPage() {
         category: '',
         payment_method: '',
         payment_date: new Date().toISOString().split('T')[0],
-        supplier_name: '',
         invoice_number: '',
         notes: ''
       })
+      setSelectedSupplier(null)
       setSelectedFile(null)
       setReceiptType('upload')
       setArchiveLocation('')
     }
+  }
+  
+  // Supplier Handler Functions
+  const handleSupplierSelect = (supplier: Supplier | null) => {
+    setSelectedSupplier(supplier)
+  }
+  
+  const handleSupplierCreateNew = (name: string) => {
+    setNewSupplierName(name)
+    setIsSupplierDialogOpen(true)
+  }
+  
+  const handleSupplierCreated = (supplier: Supplier) => {
+    setSelectedSupplier(supplier)
+    setNewSupplierName('')
   }
   
   // Gefilterte Ausgaben
@@ -277,12 +313,12 @@ export function ExpensesPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="supplier_name">Lieferant/Firma</Label>
-                  <Input
-                    id="supplier_name"
-                    value={formData.supplier_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
-                    placeholder="z.B. Muster GmbH"
+                  <Label htmlFor="supplier">Lieferant/Firma *</Label>
+                  <SupplierAutocomplete
+                    value={selectedSupplier}
+                    onSelect={handleSupplierSelect}
+                    onCreateNew={handleSupplierCreateNew}
+                    placeholder="Lieferant auswählen oder neu erstellen..."
                   />
                 </div>
                 
@@ -526,8 +562,23 @@ export function ExpensesPage() {
                         </Badge>
                         <span>{format(parseISO(expense.payment_date), 'dd.MM.yyyy', { locale: de })}</span>
                       </div>
-                      {expense.supplier_name && (
-                        <p className="text-sm text-muted-foreground">{expense.supplier_name}</p>
+                      {/* Supplier Display - prioritize supplier relation over supplier_name */}
+                      {expense.supplier ? (
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <span>Lieferant:</span>
+                          <Badge variant="outline" className="text-xs">
+                            {expense.supplier.name}
+                          </Badge>
+                          {expense.supplier.category && (
+                            <span className="text-xs opacity-60">
+                              ({SUPPLIER_CATEGORIES[expense.supplier.category as keyof typeof SUPPLIER_CATEGORIES] || expense.supplier.category})
+                            </span>
+                          )}
+                        </div>
+                      ) : expense.supplier_name && (
+                        <p className="text-sm text-muted-foreground">
+                          <span>Lieferant:</span> {expense.supplier_name}
+                        </p>
                       )}
                       {expense.invoice_number && (
                         <p className="text-sm text-muted-foreground">Rechnung: {expense.invoice_number}</p>
@@ -549,6 +600,17 @@ export function ExpensesPage() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Supplier Create Dialog */}
+      {currentUserId && (
+        <SupplierCreateDialog
+          open={isSupplierDialogOpen}
+          onOpenChange={setIsSupplierDialogOpen}
+          onSuccess={handleSupplierCreated}
+          initialName={newSupplierName}
+          userId={currentUserId}
+        />
+      )}
     </div>
   )
 }
