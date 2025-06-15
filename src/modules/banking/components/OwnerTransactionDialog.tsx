@@ -19,6 +19,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Loader2, AlertCircle, DollarSign, CreditCard, Banknote } from 'lucide-react'
 import { createOwnerTransaction, type OwnerTransactionInsert } from '../services/ownerTransactionsApi'
 import { supabase } from '@/shared/lib/supabase/client'
+import { getTodaySwissString } from '@/shared/utils/dateUtils'
 
 // =====================================================
 // COMPONENT INTERFACE
@@ -114,7 +115,7 @@ export function OwnerTransactionDialog({
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [transactionDate, setTransactionDate] = useState(() => 
-    new Date().toISOString().split('T')[0] // Today's date
+    getTodaySwissString() // Today's date in Swiss timezone
   )
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'private_card' | 'private_cash'>('bank_transfer')
   const [notes, setNotes] = useState('')
@@ -138,7 +139,7 @@ export function OwnerTransactionDialog({
     if (!isOpen) {
       setAmount('')
       setDescription('')
-      setTransactionDate(new Date().toISOString().split('T')[0])
+      setTransactionDate(getTodaySwissString())
       setPaymentMethod('bank_transfer')
       setNotes('')
       setError(null)

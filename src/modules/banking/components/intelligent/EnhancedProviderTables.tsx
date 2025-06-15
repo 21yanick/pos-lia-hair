@@ -13,6 +13,7 @@ import { useBankingData } from '../../hooks/useBankingData'
 import { getProviderMatchSuggestions, executeAutoProviderMatch } from '../../services/bankingApi'
 import type { ProviderMatchCandidate } from '../../services/matchingTypes'
 import { ProviderMatchConnector } from './ProviderMatchConnector'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 
 interface EnhancedProviderTablesProps {
   selectedSale: string | null
@@ -316,7 +317,7 @@ export function EnhancedProviderTables({
                             )}
                           </TableCell>
                         )}
-                        <TableCell>{new Date(sale.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDateForDisplay(sale.created_at)}</TableCell>
                         <TableCell>{sale.total_amount.toFixed(2)} CHF</TableCell>
                         <TableCell>{sale.customer_name || 'Walk-in'}</TableCell>
                         <TableCell>
@@ -405,7 +406,7 @@ export function EnhancedProviderTables({
                             )}
                           </TableCell>
                         )}
-                        <TableCell>{new Date(report.transaction_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDateForDisplay(report.transaction_date)}</TableCell>
                         <TableCell>
                           <Badge variant={report.provider === 'twint' ? 'default' : 'secondary'}>
                             {report.provider_display}

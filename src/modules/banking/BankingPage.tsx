@@ -6,16 +6,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui
 import { Button } from "@/shared/components/ui/button"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Skeleton } from "@/shared/components/ui/skeleton"
-import { CreditCard, Building2, AlertCircle, Loader2, ArrowRightLeft, ArrowUpToLine, ArrowDownToLine, Upload } from "lucide-react"
+import { CreditCard, Building2, AlertCircle, Loader2, ArrowRightLeft, ArrowUpToLine, ArrowDownToLine, Upload, FileBarChart } from "lucide-react"
 import { useBankingData } from './hooks/useBankingData'
 import { CashTransferDialog } from './components/CashTransferDialog'
 import { BankImportDialog } from './components/BankImportDialog'
 import { ProviderImportDialog } from './components/ProviderImportDialog'
 import { OwnerTransactionDialog } from './components/OwnerTransactionDialog'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { 
   EnhancedProviderTables,
   EnhancedBankTables
 } from './components/intelligent'
+import { ReconciliationReportTab } from './components/ReconciliationReportTab'
 import { supabase } from '@/shared/lib/supabase/client'
 
 export function BankingPage() {
@@ -244,7 +246,7 @@ export function BankingPage() {
             </p>
             {raiffeisenAccount?.last_statement_date && (
               <p className="text-xs text-muted-foreground mt-1">
-                Letzter Import: {new Date(raiffeisenAccount.last_statement_date).toLocaleDateString()}
+                Letzter Import: {formatDateForDisplay(raiffeisenAccount.last_statement_date)}
               </p>
             )}
           </CardContent>
@@ -309,9 +311,9 @@ export function BankingPage() {
         </Card>
       </div>
 
-      {/* Two-Tab System */}
+      {/* Three-Tab System */}
       <Tabs defaultValue="provider" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="provider">
             <CreditCard className="h-4 w-4 mr-2" />
             Provider-Gebühren
@@ -319,6 +321,10 @@ export function BankingPage() {
           <TabsTrigger value="bank">
             <Building2 className="h-4 w-4 mr-2" />
             Bank-Abgleich
+          </TabsTrigger>
+          <TabsTrigger value="report">
+            <FileBarChart className="h-4 w-4 mr-2" />
+            Abgleich-Bericht
           </TabsTrigger>
         </TabsList>
 
@@ -385,6 +391,11 @@ export function BankingPage() {
             onItemsSelect={handleBankItemsSelect}
             onMatchComplete={handleBankMatchComplete}
           />
+        </TabsContent>
+
+        {/* Tab 3: Reconciliation Report */}
+        <TabsContent value="report" className="space-y-4">
+          <ReconciliationReportTab />
         </TabsContent>
       </Tabs>
 

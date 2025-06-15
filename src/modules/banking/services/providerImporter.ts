@@ -11,6 +11,7 @@ import {
   parseSumUpCsv,
   validateProviderRecord
 } from './providerParsers'
+import { formatDateForAPI } from '@/shared/utils/dateUtils'
 
 import type {
   ProviderImportPreview,
@@ -181,7 +182,7 @@ async function checkProviderDuplicates(
         .select('id')
         .eq('provider', record.provider)
         .eq('provider_transaction_id', record.provider_transaction_id)
-        .eq('transaction_date', record.transaction_date.toISOString().split('T')[0])
+        .eq('transaction_date', formatDateForAPI(record.transaction_date))
         .eq('gross_amount', record.gross_amount)
         .limit(1)
       
@@ -226,8 +227,8 @@ async function createProviderImportSession(
     new_records: preview.newRecords.length,
     duplicate_records: preview.duplicateRecords.length,
     error_records: preview.invalidRecords.length,
-    date_range_from: preview.dateRange.from.toISOString().split('T')[0],
-    date_range_to: preview.dateRange.to.toISOString().split('T')[0],
+    date_range_from: formatDateForAPI(preview.dateRange.from),
+    date_range_to: formatDateForAPI(preview.dateRange.to),
     status: 'pending',
     imported_by: userId,
     notes: `Provider: ${preview.detectedFormat}, Records: ${preview.newRecords.length} new, ${preview.duplicateRecords.length} duplicates`
@@ -264,8 +265,8 @@ async function executeProviderImport(
       // Prepare provider_reports data
       const providerReports = batch.map(record => ({
         provider: record.provider,
-        transaction_date: record.transaction_date.toISOString().split('T')[0],
-        settlement_date: record.settlement_date.toISOString().split('T')[0],
+        transaction_date: formatDateForAPI(record.transaction_date),
+        settlement_date: formatDateForAPI(record.settlement_date),
         gross_amount: record.gross_amount,
         fees: record.fees,
         net_amount: record.net_amount,

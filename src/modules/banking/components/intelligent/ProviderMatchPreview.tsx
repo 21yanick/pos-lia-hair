@@ -25,6 +25,7 @@ import {
   TrendingUp
 } from "lucide-react"
 import type { ProviderMatchCandidate } from '../../services/matchingTypes'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 
 interface ProviderMatchPreviewProps {
   isOpen: boolean
@@ -55,9 +56,7 @@ export function ProviderMatchPreview({
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-CH')
-  }
+  // Use dateUtils formatDateForDisplay for consistent formatting
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 95) return 'bg-green-100 text-green-800 border-green-200'
@@ -198,7 +197,7 @@ export function ProviderMatchPreview({
                           {formatAmount(candidate.sale.total_amount)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {formatDate(candidate.sale.created_at)} • {candidate.sale.payment_display}
+                          {formatDateForDisplay(candidate.sale.created_at)} • {candidate.sale.payment_display}
                         </div>
                       </div>
 
@@ -214,7 +213,7 @@ export function ProviderMatchPreview({
                           {formatAmount(candidate.providerReport.gross_amount)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {formatDate(candidate.providerReport.transaction_date)} • {candidate.providerReport.provider_display}
+                          {formatDateForDisplay(candidate.providerReport.transaction_date)} • {candidate.providerReport.provider_display}
                         </div>
                       </div>
                     </div>

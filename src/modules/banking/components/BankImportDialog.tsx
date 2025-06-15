@@ -24,6 +24,7 @@ import {
 
 import { previewCAMTFile, importCAMTFile } from '../services/camtImporter'
 import type { ImportPreviewData, ImportExecutionResult } from '../types/banking'
+import { formatDateForAPI } from '@/shared/utils/dateUtils'
 
 type ImportStep = 'upload' | 'preview' | 'confirm'
 
@@ -153,8 +154,8 @@ export function BankImportDialog({
         periodOverlap: result.preview.duplicateCheck.periodOverlap,
         importable: result.preview.importable,
         statementPeriod: {
-          from: result.preview.statement.fromDateTime.toISOString().split('T')[0],
-          to: result.preview.statement.toDateTime.toISOString().split('T')[0]
+          from: formatDateForAPI(result.preview.statement.fromDateTime),
+          to: formatDateForAPI(result.preview.statement.toDateTime)
         }
       }
 

@@ -1,3 +1,6 @@
+// Import transaction types
+import type { TransactionItem } from './transactions'
+
 // Monthly Reports & Statistics Types
 export type MonthlyStatsData = {
   salesTotal: number
@@ -30,18 +33,7 @@ export type ExportData = {
   total: number
 }
 
-// Monthly summary related types
-export interface MonthlySummary {
-  id: string
-  year: number
-  month: number
-  sales_total: number
-  expenses_total: number
-  status: 'draft' | 'closed'
-  created_at: string
-  closed_at?: string
-  notes?: string
-}
+// Legacy MonthlySummary moved to docs/legacy_modules_backup/
 
 // Re-export transaction types for convenience
-export type { TransactionItem } from './transactions'
+export type { TransactionItem }

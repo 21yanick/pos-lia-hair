@@ -12,6 +12,7 @@ import {
   BankImportSessionInsert
 } from '../types/camt'
 import { supabase } from '@/shared/lib/supabase/client'
+import { formatDateForAPI } from '@/shared/utils/dateUtils'
 
 // =====================================================
 // DUPLICATE DETECTION
@@ -38,8 +39,8 @@ export async function checkCAMTDuplicates(
     // 2. PERIOD-LEVEL CHECK: Do we have transactions in this date range?
     const { data: periodCheck } = await supabase
       .rpc('check_period_overlap' as any, {
-        p_from_date: statement.fromDateTime.toISOString().split('T')[0],
-        p_to_date: statement.toDateTime.toISOString().split('T')[0],
+        p_from_date: formatDateForAPI(statement.fromDateTime),
+        p_to_date: formatDateForAPI(statement.toDateTime),
         p_bank_account_id: bankAccountId
       })
     
@@ -141,8 +142,8 @@ function mapCAMTEntryToBankTransaction(
   
   return {
     bank_account_id: bankAccountId,
-    transaction_date: entry.bookingDate.toISOString().split('T')[0],
-    booking_date: entry.valueDate.toISOString().split('T')[0],
+    transaction_date: formatDateForAPI(entry.bookingDate),
+    booking_date: formatDateForAPI(entry.valueDate),
     amount: signedAmount,
     description: entry.description,
     reference: entry.accountServiceReference,
@@ -202,8 +203,8 @@ export async function executeCAMTImport(
       new_entries: duplicateCheck.newEntries.length,
       duplicate_entries: duplicateCheck.duplicateEntries.length,
       error_entries: duplicateCheck.errorEntries.length,
-      statement_from_date: document.statement.fromDateTime.toISOString().split('T')[0],
-      statement_to_date: document.statement.toDateTime.toISOString().split('T')[0],
+      statement_from_date: formatDateForAPI(document.statement.fromDateTime),
+      statement_to_date: formatDateForAPI(document.statement.toDateTime),
       status: 'completed',
       imported_by: userId,
       notes: `CAMT.053 import: ${document.statement.statementId}`
@@ -237,8 +238,8 @@ export async function executeCAMTImport(
         new_entries: 0,
         duplicate_entries: 0,
         error_entries: document.statement.entries.length,
-        statement_from_date: document.statement.fromDateTime.toISOString().split('T')[0],
-        statement_to_date: document.statement.toDateTime.toISOString().split('T')[0],
+        statement_from_date: formatDateForAPI(document.statement.fromDateTime),
+        statement_to_date: formatDateForAPI(document.statement.toDateTime),
         status: 'failed',
         imported_by: userId,
         notes: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`

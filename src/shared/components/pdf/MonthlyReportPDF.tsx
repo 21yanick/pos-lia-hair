@@ -3,12 +3,14 @@
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import type { MonthlyStatsData } from '@/shared/types/monthly'
-import type { TransactionItem } from '@/shared/types/transactions'
+import type { BusinessSettings } from '@/shared/types/businessSettings'
+import type { ReconciliationData } from '@/shared/services/reconciliationService'
 
 export type MonthlyReportPDFProps = {
   stats: MonthlyStatsData
-  transactions: TransactionItem[]
   selectedMonth: string
+  businessSettings?: BusinessSettings | null
+  reconciliationData?: ReconciliationData | null
 }
 
 // Hilfsfunktion: Formatiertes Datum für Anzeige
@@ -24,332 +26,172 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 40,
+    padding: 30,
     fontFamily: 'Helvetica',
+    fontSize: 12,
   },
   
-  // Header Section
-  headerContainer: {
+  // Header
+  header: {
     flexDirection: 'row',
-    marginBottom: 40,
-    paddingBottom: 25,
-    borderBottom: '2 solid #D1D5DB',
-    alignItems: 'flex-start',
-  },
-  logoSection: {
-    width: '25%',
-    paddingRight: 15,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    objectFit: 'contain',
+    marginBottom: 30,
+    paddingBottom: 20,
+    borderBottom: '1 solid #000000',
   },
   companyInfo: {
-    width: '45%',
-    paddingRight: 15,
+    flex: 1,
   },
   companyName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 8,
+    marginBottom: 5,
   },
   companyAddress: {
     fontSize: 11,
-    color: '#6B7280',
-    lineHeight: 1.5,
+    lineHeight: 1.3,
   },
   reportInfo: {
-    width: '30%',
     alignItems: 'flex-end',
   },
   title: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 6,
+    fontSize: 13,
   },
 
-  // Content Sections
+  // Sections
   section: {
-    marginBottom: 24,
-    backgroundColor: '#F9FAFB',
-    padding: 16,
-    borderRadius: 6,
-    border: '1 solid #E5E7EB',
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#1F2937',
+    marginBottom: 10,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  salesSectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#059669',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  expensesSectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#DC2626',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   
-  // Table-like layout
+  // Data rows
   dataRow: {
     flexDirection: 'row',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 2,
-    borderRadius: 3,
-  },
-  dataRowAlt: {
-    flexDirection: 'row',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#F8FAFC',
-    marginBottom: 2,
-    borderRadius: 3,
+    paddingVertical: 4,
   },
   label: {
-    fontSize: 11,
-    width: 140,
-    color: '#374151',
+    fontSize: 12,
+    width: 120,
   },
   value: {
-    fontSize: 11,
-    color: '#1F2937',
+    fontSize: 12,
     flex: 1,
   },
   
-  // Total sections
-  totalSection: {
-    backgroundColor: '#EFF6FF',
-    padding: 12,
-    borderRadius: 6,
-    marginTop: 8,
-    border: '1 solid #DBEAFE',
-  },
-  salesTotalSection: {
-    backgroundColor: '#ECFDF5',
-    padding: 12,
-    borderRadius: 6,
-    marginTop: 8,
-    border: '1 solid #D1FAE5',
-  },
-  expensesTotalSection: {
-    backgroundColor: '#FEF2F2',
-    padding: 12,
-    borderRadius: 6,
-    marginTop: 8,
-    border: '1 solid #FECACA',
-  },
+  // Totals
   totalRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    paddingVertical: 6,
+    marginTop: 10,
+    borderTop: '1 solid #000000',
   },
   totalLabel: {
     fontSize: 13,
     fontWeight: 'bold',
-    width: 140,
-    color: '#1E40AF',
+    width: 120,
   },
   totalValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
-    color: '#1E40AF',
-    flex: 1,
-  },
-  salesTotal: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#059669',
-    flex: 1,
-  },
-  expensesTotal: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#DC2626',
     flex: 1,
   },
   
-  // Statistics section
-  statsGrid: {
+  // Tables
+  table: {
+    marginTop: 10,
+    border: '1 solid #000000',
+  },
+  tableHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  statBox: {
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    borderRadius: 6,
-    width: '48%',
-    border: '1 solid #E5E7EB',
-  },
-  statLabel: {
-    fontSize: 10,
-    color: '#6B7280',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1F2937',
-  },
-  
-  // Transactions Table
-  transactionTable: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  transactionHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F5F5F5',
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderBottom: '1 solid #E5E7EB',
+    paddingHorizontal: 5,
+    borderBottom: '1 solid #000000',
   },
-  transactionRow: {
+  tableRow: {
     flexDirection: 'row',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderBottom: '0.5 solid #F3F4F6',
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+    borderBottom: '0.5 solid #CCCCCC',
   },
-  transactionRowAlt: {
+  tableRowAlt: {
     flexDirection: 'row',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB',
-    borderBottom: '0.5 solid #F3F4F6',
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+    backgroundColor: '#FAFAFA',
+    borderBottom: '0.5 solid #CCCCCC',
   },
   
-  // Transaction columns
-  transactionDate: {
+  // Table columns
+  colSmall: {
     fontSize: 10,
-    width: 80,
-    color: '#374151',
+    width: 70,
+    paddingRight: 8,
   },
-  transactionType: {
+  colMedium: {
     fontSize: 10,
-    width: 100,
-    color: '#374151',
+    width: 90,
+    paddingRight: 8,
   },
-  transactionAmount: {
+  colLarge: {
     fontSize: 10,
-    width: 80,
-    color: '#1F2937',
-    textAlign: 'right',
+    flex: 1,
+    paddingRight: 8,
   },
-  transactionPositive: {
-    fontSize: 10,
-    color: '#059669',
-    width: 80,
-    textAlign: 'right',
-  },
-  transactionNegative: {
-    fontSize: 10,
-    color: '#DC2626',
-    width: 80,
+  colRight: {
     textAlign: 'right',
   },
   
-  // Header columns
-  headerDateColumn: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    width: 80,
-    color: '#1F2937',
-  },
-  headerTypeColumn: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    width: 100,
-    color: '#1F2937',
-  },
-  headerAmountColumn: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    width: 80,
-    color: '#1F2937',
-    textAlign: 'right',
-  },
   
-  transactionNote: {
+  // Item details styling
+  itemDetails: {
+    paddingLeft: 20,
+    paddingVertical: 4,
+    backgroundColor: '#FAFAFA',
+  },
+  itemDetail: {
     fontSize: 9,
     color: '#6B7280',
-    marginTop: 8,
-    paddingHorizontal: 12,
-    fontStyle: 'italic',
-  },
-  
-  // Footer
-  footer: {
-    marginTop: 'auto',
-    paddingTop: 20,
-    borderTop: '1 solid #E5E7EB',
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 9,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 1.4,
+    paddingVertical: 1,
   },
 })
 
 export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({ 
   stats, 
-  transactions, 
-  selectedMonth 
+  selectedMonth,
+  businessSettings,
+  reconciliationData
 }) => {
-  // Transaktionen sortieren (neueste zuerst) und limitieren
-  const sortedTransactions = (transactions || [])
-    .filter(t => t && t.date) // Nur gültige Transaktionen
-    .sort((a, b) => {
-      try {
-        const dateA = new Date(a.date).getTime()
-        const dateB = new Date(b.date).getTime()
-        return dateB - dateA
-      } catch (e) {
-        return 0
-      }
-    })
-    .slice(0, 20)
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Professional Header */}
-        <View style={styles.headerContainer}>
-          <View style={styles.logoSection}>
-            {/* Logo temporarily disabled for PDF stability */}
-            <View style={styles.logo} />
-          </View>
-          
+        {/* Header */}
+        <View style={styles.header}>
           <View style={styles.companyInfo}>
-            <Text style={styles.companyName}>Lia Hair by Zilfije Rupp</Text>
+            <Text style={styles.companyName}>
+              {businessSettings?.company_name || 'Lia Hair by Zilfije Rupp'}
+            </Text>
             <Text style={styles.companyAddress}>
-              Römerstrasse 6{'\n'}
-              4512 Bellach{'\n'}
-              hello@lia-hair.ch
+              {businessSettings ? (
+                [
+                  businessSettings.company_address,
+                  businessSettings.company_postal_code && businessSettings.company_city 
+                    ? `${businessSettings.company_postal_code} ${businessSettings.company_city}`
+                    : businessSettings.company_city,
+                  businessSettings.company_email
+                ].filter(Boolean).join('\n')
+              ) : (
+                'Römerstrasse 6\n4512 Bellach\nhello@lia-hair.ch'
+              )}
             </Text>
           </View>
           
@@ -361,14 +203,14 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
 
         {/* Sales Revenue */}
         <View style={styles.section}>
-          <Text style={styles.salesSectionTitle}>Salon-Umsätze</Text>
+          <Text style={styles.sectionTitle}>Umsätze</Text>
           
           <View style={styles.dataRow}>
             <Text style={styles.label}>Bar:</Text>
             <Text style={styles.value}>CHF {(stats.salesCash || 0).toFixed(2)}</Text>
           </View>
           
-          <View style={styles.dataRowAlt}>
+          <View style={styles.dataRow}>
             <Text style={styles.label}>TWINT:</Text>
             <Text style={styles.value}>CHF {(stats.salesTwint || 0).toFixed(2)}</Text>
           </View>
@@ -378,117 +220,223 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
             <Text style={styles.value}>CHF {(stats.salesSumup || 0).toFixed(2)}</Text>
           </View>
           
-          <View style={styles.salesTotalSection}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>GESAMTUMSATZ:</Text>
-              <Text style={styles.salesTotal}>CHF {(stats.salesTotal || 0).toFixed(2)}</Text>
-            </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>GESAMTUMSATZ:</Text>
+            <Text style={styles.totalValue}>CHF {(stats.salesTotal || 0).toFixed(2)}</Text>
           </View>
         </View>
 
         {/* Expenses */}
         <View style={styles.section}>
-          <Text style={styles.expensesSectionTitle}>Ausgaben</Text>
+          <Text style={styles.sectionTitle}>Ausgaben</Text>
           
           <View style={styles.dataRow}>
             <Text style={styles.label}>Bar:</Text>
             <Text style={styles.value}>CHF {(stats.expensesCash || 0).toFixed(2)}</Text>
           </View>
           
-          <View style={styles.dataRowAlt}>
+          <View style={styles.dataRow}>
             <Text style={styles.label}>Bank:</Text>
             <Text style={styles.value}>CHF {(stats.expensesBank || 0).toFixed(2)}</Text>
           </View>
           
-          <View style={styles.expensesTotalSection}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>GESAMTAUSGABEN:</Text>
-              <Text style={styles.expensesTotal}>CHF {(stats.expensesTotal || 0).toFixed(2)}</Text>
-            </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>GESAMTAUSGABEN:</Text>
+            <Text style={styles.totalValue}>CHF {(stats.expensesTotal || 0).toFixed(2)}</Text>
           </View>
         </View>
 
-        {/* Statistics */}
+        {/* Net Result */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kennzahlen</Text>
+          <Text style={styles.sectionTitle}>Ergebnis</Text>
           
-          <View style={styles.statsGrid}>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Umsatztage</Text>
-              <Text style={styles.statValue}>{stats.transactionDays || 0}/{stats.daysInMonth || 30}</Text>
-            </View>
-            
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Ø Tagesumsatz</Text>
-              <Text style={styles.statValue}>CHF {(stats.avgDailyRevenue || 0).toFixed(0)}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.totalSection}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>NETTO-ERGEBNIS:</Text>
-              <Text style={(stats.salesTotal || 0) - (stats.expensesTotal || 0) >= 0 ? styles.salesTotal : styles.expensesTotal}>
-                CHF {((stats.salesTotal || 0) - (stats.expensesTotal || 0)).toFixed(2)}
-              </Text>
-            </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>NETTO-ERGEBNIS:</Text>
+            <Text style={styles.totalValue}>
+              CHF {((stats.salesTotal || 0) - (stats.expensesTotal || 0)).toFixed(2)}
+            </Text>
           </View>
         </View>
 
-        {/* Transaction History */}
-        {sortedTransactions.length > 0 && (
+        {/* Reconciliation Summary */}
+        {reconciliationData && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Transaktions-Historie ({sortedTransactions.length})</Text>
+            <Text style={styles.sectionTitle}>Abgleich-Status</Text>
             
-            <View style={styles.transactionTable}>
-              <View style={styles.transactionHeader}>
-                <Text style={styles.headerDateColumn}>Datum</Text>
-                <Text style={styles.headerTypeColumn}>Typ</Text>
-                <Text style={styles.headerAmountColumn}>Betrag</Text>
-              </View>
-              
-              {sortedTransactions.map((transaction, index) => {
-                // Robust date parsing
-                let date = 'N/A'
-                try {
-                  if (transaction.date) {
-                    const dateStr = transaction.time ? `${transaction.date} ${transaction.time}` : transaction.date
-                    date = new Date(dateStr).toLocaleDateString('de-CH')
-                  }
-                } catch (e) {
-                  date = transaction.date || 'N/A'
-                }
-                
-                const isRevenue = transaction.type === 'sale'
-                const type = isRevenue ? 'Verkauf' : (transaction.type === 'expense' ? 'Ausgabe' : 'Andere')
-                const amountStyle = isRevenue ? styles.transactionPositive : styles.transactionNegative
-                const amount = Math.abs(transaction.amount || 0)
-                const sign = (transaction.amount || 0) >= 0 ? '+' : '-'
-                
-                return (
-                  <View key={transaction.id || index} style={index % 2 === 0 ? styles.transactionRow : styles.transactionRowAlt}>
-                    <Text style={styles.transactionDate}>{date}</Text>
-                    <Text style={styles.transactionType}>{type} ({transaction.method || 'unknown'})</Text>
-                    <Text style={amountStyle}>CHF {sign}{amount.toFixed(2)}</Text>
-                  </View>
-                )
-              })}
+            <View style={styles.dataRow}>
+              <Text style={styles.label}>Provider-Abgleich:</Text>
+              <Text style={styles.value}>
+                {reconciliationData.providerReconciliation.summary.matchingRate}% 
+                ({reconciliationData.providerReconciliation.summary.matchedSales} von {reconciliationData.providerReconciliation.summary.totalSales})
+              </Text>
             </View>
             
-            {transactions.length > 20 && (
-              <Text style={styles.transactionNote}>
-                ... und {transactions.length - 20} weitere Transaktionen
+            <View style={styles.dataRow}>
+              <Text style={styles.label}>Bank-Abgleich:</Text>
+              <Text style={styles.value}>
+                {reconciliationData.bankReconciliation.summary.matchingRate}% 
+                ({reconciliationData.bankReconciliation.summary.matchedTransactions} von {reconciliationData.bankReconciliation.summary.totalBankTransactions})
               </Text>
-            )}
+            </View>
+            
+            <View style={styles.dataRow}>
+              <Text style={styles.label}>Offene Positionen:</Text>
+              <Text style={styles.value}>
+                {reconciliationData.providerReconciliation.summary.unmatchedSales + 
+                 reconciliationData.bankReconciliation.summary.unmatchedTransactions}
+              </Text>
+            </View>
           </View>
         )}
 
-        {/* Professional Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Lia Hair by Zilfije Rupp - Monatsabschluss {formatMonthYear(selectedMonth)}{'\n'}
-            Erstellt am: {new Date().toLocaleDateString('de-CH')} um {new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })}
-          </Text>
+        {/* Provider Matches Table */}
+        {reconciliationData?.providerReconciliation?.matches && reconciliationData.providerReconciliation.matches.length > 0 && (
+          <View style={styles.section} break>
+            <Text style={styles.sectionTitle}>Provider-Abgleiche</Text>
+            
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.colMedium]}>Beleg</Text>
+                <Text style={[styles.colSmall, styles.colRight]}>Betrag</Text>
+                <Text style={[styles.colMedium]}>Datum</Text>
+                <Text style={[styles.colSmall]}>Provider</Text>
+                <Text style={[styles.colSmall, styles.colRight]}>Netto</Text>
+              </View>
+              
+              {reconciliationData.providerReconciliation.matches.map((match, index) => (
+                <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                  <Text style={[styles.colMedium]}>{match.sale.receiptNumber}</Text>
+                  <Text style={[styles.colSmall, styles.colRight]}>{match.sale.amount.toFixed(2)}</Text>
+                  <Text style={[styles.colMedium]}>{match.sale.date}</Text>
+                  <Text style={[styles.colSmall]}>{match.provider.provider.toUpperCase()}</Text>
+                  <Text style={[styles.colSmall, styles.colRight]}>{match.provider.netAmount.toFixed(2)}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Bank Matches Table */}
+        {reconciliationData?.bankReconciliation?.matches && reconciliationData.bankReconciliation.matches.length > 0 && (
+          <View style={styles.section} break>
+            <Text style={styles.sectionTitle}>Bank-Abgleiche</Text>
+            
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.colSmall, styles.colRight]}>Betrag</Text>
+                <Text style={[styles.colMedium]}>Datum</Text>
+                <Text style={[styles.colLarge]}>Beschreibung</Text>
+                <Text style={[styles.colSmall]}>Positionen</Text>
+              </View>
+              
+              {(() => {
+                // Performance: Sort once with optimized date parsing
+                const sortedMatches = reconciliationData.bankReconciliation.matches
+                  .slice() // Shallow copy to avoid mutation
+                  .sort((a, b) => {
+                    // Optimized: Direct date string comparison (faster than parsing)
+                    // Swiss date format DD.MM.YYYY can be compared as strings after transformation
+                    const dateA = a.bankTransaction.date.split('.').reverse().join('-')
+                    const dateB = b.bankTransaction.date.split('.').reverse().join('-')
+                    return dateA.localeCompare(dateB)
+                  })
+                  
+                return sortedMatches.map((match, index) => {
+                  // Beträge analysieren: Bank vs. Positionen
+                  const itemsTotal = match.matchedItems.reduce((sum, item) => sum + item.amount, 0)
+                  const bankAmount = match.bankTransaction.amount
+                  const hasDiscrepancy = Math.abs(bankAmount - itemsTotal) > 0.01
+                  const isMultipleItems = match.matchedItems.length > 1
+                  
+                  return (
+                  <View key={index}>
+                    <View style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                      <Text style={[styles.colSmall, styles.colRight]}>
+                        {hasDiscrepancy && isMultipleItems ? (
+                          `Bank: ${bankAmount.toFixed(2)}\nPositionen: ${itemsTotal.toFixed(2)}`
+                        ) : (
+                          bankAmount.toFixed(2)
+                        )}
+                      </Text>
+                      <Text style={[styles.colMedium]}>{match.bankTransaction.date}</Text>
+                      <Text style={[styles.colLarge]}>{match.bankTransaction.description}</Text>
+                      <Text style={[styles.colSmall]}>{match.matchedItems.length}x</Text>
+                    </View>
+                  
+                  {/* Positions-Details */}
+                  <View style={styles.itemDetails}>
+                    {match.matchedItems.map((item, itemIndex) => (
+                      <Text key={itemIndex} style={styles.itemDetail}>
+                        • {item.description} {item.settlementDate ? `(${item.settlementDate})` : `(${item.amount.toFixed(2)} CHF)`}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+                )
+                })
+              })()}
+            </View>
+          </View>
+        )}
+
+        {/* Kassenbuch Overview */}
+        <View style={styles.section} break>
+          <Text style={styles.sectionTitle}>Kassenbuch</Text>
+          
+          <View style={styles.dataRow}>
+            <Text style={styles.label}>Anfangsbestand:</Text>
+            <Text style={styles.value}>CHF 0.00</Text>
+          </View>
+          
+          <View style={styles.dataRow}>
+            <Text style={styles.label}>Einnahmen (Bar):</Text>
+            <Text style={styles.value}>CHF {(stats.salesCash || 0).toFixed(2)}</Text>
+          </View>
+          
+          <View style={styles.dataRow}>
+            <Text style={styles.label}>Ausgaben (Bar):</Text>
+            <Text style={styles.value}>CHF -{(stats.expensesCash || 0).toFixed(2)}</Text>
+          </View>
+          
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>KASSENENDBESTAND:</Text>
+            <Text style={styles.totalValue}>
+              CHF {((stats.salesCash || 0) - (stats.expensesCash || 0)).toFixed(2)}
+            </Text>
+          </View>
         </View>
+
+
+        {/* Detailliertes Kassenbuch */}
+        {reconciliationData?.cashMovements && reconciliationData.cashMovements.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Detailliertes Kassenbuch</Text>
+            
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.colMedium]}>Datum</Text>
+                <Text style={[styles.colMedium]}>Beleg</Text>
+                <Text style={[styles.colLarge]}>Beschreibung</Text>
+                <Text style={[styles.colSmall, styles.colRight]}>Betrag</Text>
+              </View>
+              
+              {reconciliationData.cashMovements
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .map((movement, index) => (
+                  <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                    <Text style={[styles.colMedium]}>{movement.date}</Text>
+                    <Text style={[styles.colMedium]}>{movement.receiptNumber || '-'}</Text>
+                    <Text style={[styles.colLarge]}>{movement.description}</Text>
+                    <Text style={[styles.colSmall, styles.colRight]}>
+                      {movement.type === 'cash_in' ? '+' : '-'}{movement.amount.toFixed(2)}
+                    </Text>
+                  </View>
+                ))
+              }
+            </View>
+          </View>
+        )}
+
       </Page>
     </Document>
   )

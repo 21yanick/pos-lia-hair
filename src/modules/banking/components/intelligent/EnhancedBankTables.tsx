@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { useBankingData } from '../../hooks/useBankingData'
 import { BankSettlementConnector } from './BankSettlementConnector'
+import { formatDateForDisplay, formatDateForAPI } from '@/shared/utils/dateUtils'
 
 interface SettlementGroup {
   provider: 'twint' | 'sumup' | 'cash' | 'owner' | 'expenses'
@@ -289,8 +290,8 @@ export function EnhancedBankTables({
       details: {
         amountDifference: Math.abs(bankTransaction.amount - item.amount),
         daysDifference,
-        bankDate: bankDate.toISOString(),
-        itemDate: itemDate.toISOString()
+        bankDate: formatDateForAPI(bankDate),
+        itemDate: formatDateForAPI(itemDate)
       }
     }
   }
@@ -437,7 +438,7 @@ export function EnhancedBankTables({
                       }`}
                       onClick={() => onBankTransactionSelect(transaction.id)}
                     >
-                      <TableCell>{new Date(transaction.transaction_date).toLocaleDateString()}</TableCell>
+                      <TableCell>{formatDateForDisplay(transaction.transaction_date)}</TableCell>
                       <TableCell className={transaction.amount > 0 ? 'text-success' : 'text-destructive'}>
                         {transaction.direction_display} {transaction.amount_abs.toFixed(2)} CHF
                       </TableCell>
@@ -523,7 +524,7 @@ export function EnhancedBankTables({
                             </div>
                           </div>
                           <Badge variant="outline" className="text-xs">
-                            {new Date(item.date).toLocaleDateString()}
+                            {formatDateForDisplay(item.date)}
                           </Badge>
                         </div>
                       ))}

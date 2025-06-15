@@ -50,6 +50,45 @@ export function formatDateForDisplay(date: Date | string): string {
 }
 
 /**
+ * Parst deutsches Datumsformat (DD.MM.YYYY) zu Date object
+ * Gegenstück zu formatDateForDisplay()
+ */
+// Cache für häufig geparste Daten (Session-basiert)
+const parseDateCache = new Map<string, Date>()
+
+export function parseDateFromDisplay(germanDateString: string): Date {
+  // Cache-Lookup zuerst (O(1) Zugriff)
+  const cached = parseDateCache.get(germanDateString)
+  if (cached) {
+    return new Date(cached.getTime()) // Return copy to avoid mutation
+  }
+  
+  // Format: "15.01.2025" → Date object
+  const parts = germanDateString.trim().split('.')
+  if (parts.length !== 3) {
+    console.warn('Invalid German date format:', germanDateString)
+    return new Date() // Fallback zu heute
+  }
+  
+  const day = parseInt(parts[0], 10)
+  const month = parseInt(parts[1], 10) - 1 // JavaScript months are 0-based
+  const year = parseInt(parts[2], 10)
+  
+  // Validierung
+  if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900) {
+    console.warn('Invalid date components:', { day, month: month + 1, year })
+    return new Date() // Fallback zu heute
+  }
+  
+  const result = new Date(year, month, day)
+  
+  // Cache das Ergebnis für zukünftige Verwendung
+  parseDateCache.set(germanDateString, result)
+  
+  return result
+}
+
+/**
  * Formatiert Datum und Zeit für Anzeige in Schweizer Zeit
  */
 export function formatDateTimeForDisplay(date: Date | string): string {

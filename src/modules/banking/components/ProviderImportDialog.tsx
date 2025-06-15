@@ -27,6 +27,7 @@ import {
 
 import { previewProviderFile, importProviderFile } from '../services/providerImporter'
 import type { ProviderImportPreview, ProviderImportResult } from '../types/provider'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 
 type ImportStep = 'upload' | 'preview' | 'confirm'
 
@@ -332,7 +333,7 @@ export function ProviderImportDialog({
               <div>
                 <div className="font-medium">Date Range</div>
                 <div className="text-muted-foreground">
-                  {state.preview.dateRange.from.toLocaleDateString()} - {state.preview.dateRange.to.toLocaleDateString()}
+                  {formatDateForDisplay(state.preview.dateRange.from)} - {formatDateForDisplay(state.preview.dateRange.to)}
                 </div>
               </div>
             </div>
@@ -374,7 +375,7 @@ export function ProviderImportDialog({
                   {state.preview.newRecords.slice(0, 5).map((record, index) => (
                     <TableRow key={index}>
                       <TableCell>
-                        {record.transaction_date.toLocaleDateString()}
+                        {formatDateForDisplay(record.transaction_date)}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
                         {record.provider_transaction_id.substring(0, 12)}...
