@@ -1,11 +1,13 @@
 import React from 'react'
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { Expense } from '@/shared/types/expenses'
+import type { BusinessSettings } from '@/shared/types/businessSettings'
 
 interface PlaceholderReceiptPDFProps {
   expense: Expense
   archiveLocation?: string
   createdBy?: string
+  businessSettings?: BusinessSettings | null
 }
 
 // PDF-Styles für Platzhalter-Belege
@@ -123,6 +125,18 @@ const styles = StyleSheet.create({
     color: '#c62828',
     textAlign: 'center',
   },
+  logo: {
+    width: 50,
+    height: 50,
+    objectFit: 'contain',
+    marginBottom: 15,
+    alignSelf: 'center',
+  },
+  headerWithLogo: {
+    marginBottom: 30,
+    textAlign: 'center',
+    alignItems: 'center',
+  },
 })
 
 const formatDate = (dateString: string) => {
@@ -162,13 +176,19 @@ const paymentMethodLabels: Record<string, string> = {
 export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({ 
   expense, 
   archiveLocation = "Physisches Archiv",
-  createdBy = "System"
+  createdBy = "System",
+  businessSettings
 }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={businessSettings?.logo_url && businessSettings?.pdf_show_logo ? styles.headerWithLogo : styles.header}>
+          {/* Logo */}
+          {businessSettings?.logo_url && businessSettings?.pdf_show_logo && (
+            <Image src={businessSettings.logo_url} style={styles.logo} />
+          )}
+          
           <Text style={styles.title}>BELEG-PLATZHALTER</Text>
           <Text style={styles.subtitle}>Physischer Original-Beleg archiviert</Text>
         </View>
@@ -270,7 +290,7 @@ export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
             Automatisch generierter Beleg-Platzhalter
           </Text>
           <Text style={styles.footerText}>
-            POS-LIA-HAIR System • {new Date().toLocaleDateString('de-DE')}
+            {businessSettings?.company_name ? `${businessSettings.company_name} System` : 'POS-LIA-HAIR System'} • {new Date().toLocaleDateString('de-DE')}
           </Text>
         </View>
       </Page>

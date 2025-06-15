@@ -110,8 +110,10 @@ export function SettingsPage() {
               <p className="text-sm text-muted-foreground">
                 • Preiseinstellungen
               </p>
-              <Button variant="outline" className="w-full mt-4" disabled>
-                Bald verfügbar
+              <Button asChild className="w-full mt-4">
+                <Link href="/settings/business">
+                  Geschäft konfigurieren
+                </Link>
               </Button>
             </div>
           </CardContent>

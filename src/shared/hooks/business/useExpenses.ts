@@ -518,11 +518,16 @@ export function useExpenses() {
       const { PlaceholderReceiptPDF } = await import('@/shared/components/pdf/PlaceholderReceiptPDF')
       const { pdf } = await import('@react-pdf/renderer')
       
+      // Business Settings laden
+      const { getBusinessSettings } = await import('@/shared/services/businessSettingsService')
+      const businessSettings = await getBusinessSettings()
+      
       // Generate PDF
       const pdfComponent = React.createElement(PlaceholderReceiptPDF, { 
         expense, 
         archiveLocation: archiveLocation || 'Physisches Archiv',
-        createdBy: userData.user.email || 'System'
+        createdBy: userData.user.email || 'System',
+        businessSettings
       }) as any
       
       const blob = await pdf(pdfComponent).toBlob()

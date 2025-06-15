@@ -142,8 +142,12 @@ export function useSales() {
       const { ReceiptPDF } = await import('@/shared/components/pdf/ReceiptPDF')
       const { pdf } = await import('@react-pdf/renderer')
       
+      // Business Settings laden
+      const { getBusinessSettings } = await import('@/shared/services/businessSettingsService')
+      const businessSettings = await getBusinessSettings()
+      
       // PDF erstellen  
-      const pdfComponent = React.createElement(ReceiptPDF, { sale, items }) as any
+      const pdfComponent = React.createElement(ReceiptPDF, { sale, items, businessSettings }) as any
       const blob = await pdf(pdfComponent).toBlob()
       const fileName = `quittung-${sale.id}.pdf`
       const file = new File([blob], fileName, { type: 'application/pdf' })
