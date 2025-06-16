@@ -16,9 +16,9 @@ export function LogoUploadSection() {
 
   // File validation
   const validateFile = (file: File): string | null => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
+    const allowedTypes = ['image/jpeg', 'image/png']
     if (!allowedTypes.includes(file.type)) {
-      return 'Nur JPEG, PNG, WebP und SVG Dateien sind erlaubt'
+      return 'Nur JPEG und PNG Dateien sind erlaubt'
     }
     
     if (file.size > 5 * 1024 * 1024) {
@@ -164,7 +164,7 @@ export function LogoUploadSection() {
             {hasLogo ? 'Logo ersetzen' : 'Logo hochladen'}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Laden Sie Ihr Firmen-Logo hoch (JPEG, PNG, WebP, SVG • max. 5MB)
+            Laden Sie Ihr Firmen-Logo hoch (JPEG, PNG • max. 5MB)
           </p>
         </div>
 
@@ -213,7 +213,7 @@ export function LogoUploadSection() {
                     }
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    JPEG, PNG, WebP, SVG • Maximal 5MB
+                    JPEG, PNG • Maximal 5MB
                   </p>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export function LogoUploadSection() {
           {/* Hidden File Input */}
           <Input
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/svg+xml"
+            accept="image/jpeg,image/png"
             onChange={handleFileInputChange}
             disabled={uploading}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -256,7 +256,7 @@ export function LogoUploadSection() {
       <div className="p-4 border border-input rounded-lg bg-muted/50">
         <h4 className="font-medium mb-2">Anforderungen:</h4>
         <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• Unterstützte Formate: JPEG, PNG, WebP, SVG</li>
+          <li>• Unterstützte Formate: JPEG, PNG</li>
           <li>• Maximale Dateigröße: 5MB</li>
           <li>• Empfohlene Auflösung: 200x200px oder höher</li>
           <li>• Quadratisches Format wird empfohlen</li>

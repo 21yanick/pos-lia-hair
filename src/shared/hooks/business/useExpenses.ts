@@ -519,15 +519,21 @@ export function useExpenses() {
       const { pdf } = await import('@react-pdf/renderer')
       
       // Business Settings laden
-      const { getBusinessSettings } = await import('@/shared/services/businessSettingsService')
+      const { getBusinessSettings, resolveLogoUrl } = await import('@/shared/services/businessSettingsService')
       const businessSettings = await getBusinessSettings()
+      
+      // Logo URL für PDF-Kontext auflösen (Development: localhost -> Docker-interne URL)
+      const resolvedBusinessSettings = businessSettings ? {
+        ...businessSettings,
+        logo_url: resolveLogoUrl(businessSettings.logo_url)
+      } : null
       
       // Generate PDF
       const pdfComponent = React.createElement(PlaceholderReceiptPDF, { 
         expense, 
         archiveLocation: archiveLocation || 'Physisches Archiv',
         createdBy: userData.user.email || 'System',
-        businessSettings
+        businessSettings: resolvedBusinessSettings
       }) as any
       
       const blob = await pdf(pdfComponent).toBlob()

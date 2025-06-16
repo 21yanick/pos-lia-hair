@@ -70,9 +70,9 @@ export async function uploadLogo(file: File): Promise<{
     if (!user) throw new Error('Not authenticated')
 
     // File validation
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
+    const allowedTypes = ['image/jpeg', 'image/png']
     if (!allowedTypes.includes(file.type)) {
-      throw new Error('Only JPEG, PNG, WebP and SVG files are allowed')
+      throw new Error('Only JPEG and PNG files are allowed')
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB
@@ -163,4 +163,26 @@ export function validateBusinessSettings(settings: BusinessSettingsFormData): {
     isValid: Object.keys(errors).length === 0,
     errors
   }
+}
+
+// =================================
+// Logo URL Resolution
+// =================================
+
+/**
+ * Resolves logo URLs for different environments
+ * In development: Converts localhost URLs to Docker-internal URLs for server-side PDF generation
+ * In production: Returns original URL unchanged
+ */
+export function resolveLogoUrl(logoUrl: string | undefined): string | undefined {
+  if (!logoUrl) return undefined
+  
+  // Only resolve URLs in development environment and server-side context
+  if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
+    // Convert localhost Supabase URLs to Docker-internal URLs (Kong API Gateway)
+    return logoUrl.replace('localhost:8000', 'supabase-kong:8000')
+  }
+  
+  // Return original URL in production or client-side contexts
+  return logoUrl
 }

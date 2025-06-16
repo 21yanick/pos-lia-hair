@@ -48,7 +48,7 @@ export async function exportMonthlyPDF(
     // Dynamischer Import für PDF-Komponente und Services
     const { MonthlyReportPDF } = await import('@/shared/components/pdf/MonthlyReportPDF')
     const { getReconciliationData } = await import('@/shared/services/reconciliationService')
-    const { getBusinessSettings } = await import('@/shared/services/businessSettingsService')
+    const { getBusinessSettings, resolveLogoUrl } = await import('@/shared/services/businessSettingsService')
     
     // Parallel loading von Business Settings und Reconciliation Data
     const [businessSettings, reconciliationData] = await Promise.all([
@@ -62,10 +62,16 @@ export async function exportMonthlyPDF(
       })
     ])
     
+    // Logo URL für PDF-Kontext auflösen (Development: localhost -> Docker-interne URL)
+    const resolvedBusinessSettings = businessSettings ? {
+      ...businessSettings,
+      logo_url: resolveLogoUrl(businessSettings.logo_url)
+    } : null
+    
     const pdfComponent = React.createElement(MonthlyReportPDF, {
       stats,
       selectedMonth,
-      businessSettings,
+      businessSettings: resolvedBusinessSettings,
       reconciliationData
     })
     
