@@ -22,6 +22,7 @@ export interface BusinessSettings {
   tax_rate: number
   pdf_show_logo: boolean
   pdf_show_company_details: boolean
+  custom_expense_categories?: Record<string, string>
   
   // Timestamps
   created_at: string
@@ -44,6 +45,7 @@ export interface BusinessSettingsFormData {
   tax_rate: number
   pdf_show_logo: boolean
   pdf_show_company_details: boolean
+  custom_expense_categories?: Record<string, string>
 }
 
 export const DEFAULT_BUSINESS_SETTINGS: Partial<BusinessSettings> = {
@@ -51,4 +53,5 @@ export const DEFAULT_BUSINESS_SETTINGS: Partial<BusinessSettings> = {
   tax_rate: 7.7,
   pdf_show_logo: true,
   pdf_show_company_details: true,
+  custom_expense_categories: {},
 }

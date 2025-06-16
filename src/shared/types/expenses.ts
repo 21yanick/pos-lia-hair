@@ -28,8 +28,8 @@ export interface ExpenseWithSupplier {
   suppliers?: Supplier | null // For Supabase join
 }
 
-// Kategorien für bessere UI-Darstellung
-export const EXPENSE_CATEGORIES = {
+// Default-Kategorien (immer verfügbar)
+export const DEFAULT_EXPENSE_CATEGORIES = {
   rent: 'Miete',
   supplies: 'Einkauf/Material',
   salary: 'Lohn',
@@ -38,4 +38,8 @@ export const EXPENSE_CATEGORIES = {
   other: 'Sonstiges'
 } as const
 
-export type ExpenseCategory = keyof typeof EXPENSE_CATEGORIES
+// Expense Category ist jetzt string (dynamisch)
+export type ExpenseCategory = string
+
+// Backward compatibility
+export const EXPENSE_CATEGORIES = DEFAULT_EXPENSE_CATEGORIES

@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { Badge } from '@/shared/components/ui/badge'
-import { Building2, ImageIcon } from 'lucide-react'
+import { Building2, ImageIcon, Tag } from 'lucide-react'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
 import { CompanyInfoForm } from './CompanyInfoForm'
 import { LogoUploadSection } from './LogoUploadSection'
+import { ExpenseCategoriesForm } from './ExpenseCategoriesForm'
 
 export function BusinessSettingsPage() {
   const { settings, loading, isConfigured } = useBusinessSettings()
@@ -46,7 +47,7 @@ export function BusinessSettingsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="company" className="flex items-center space-x-2">
             <Building2 className="h-4 w-4" />
             <span>Firmendaten</span>
@@ -54,6 +55,10 @@ export function BusinessSettingsPage() {
           <TabsTrigger value="logo" className="flex items-center space-x-2">
             <ImageIcon className="h-4 w-4" />
             <span>Logo</span>
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="flex items-center space-x-2">
+            <Tag className="h-4 w-4" />
+            <span>Kategorien</span>
           </TabsTrigger>
         </TabsList>
 
@@ -85,6 +90,13 @@ export function BusinessSettingsPage() {
               <LogoUploadSection />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Categories Tab */}
+        <TabsContent value="categories">
+          <div className="space-y-6">
+            <ExpenseCategoriesForm />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

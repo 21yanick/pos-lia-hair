@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useExpenses, EXPENSE_CATEGORIES, type ExpenseCategory } from "@/shared/hooks/business/useExpenses"
+import { useExpenses, type ExpenseCategory } from "@/shared/hooks/business/useExpenses"
+import { useExpenseCategories } from "@/shared/hooks/business/useExpenseCategories"
 import { ExpensePDFActions } from "./ExpensePDFActions"
 import { useToast } from "@/shared/hooks/core/useToast"
 import { format, parseISO } from "date-fns"
@@ -34,9 +35,10 @@ export function ExpensesPage() {
     getExpensesByCategory,
     uploadExpenseReceipt,
     replaceExpenseReceipt,
-    generatePlaceholderReceipt,
-    EXPENSE_CATEGORIES
+    generatePlaceholderReceipt
   } = useExpenses()
+  
+  const { categories: EXPENSE_CATEGORIES } = useExpenseCategories()
   
   const { toast } = useToast()
   
