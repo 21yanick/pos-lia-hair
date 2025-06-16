@@ -115,6 +115,15 @@ export function ExpensesPage() {
       })
       return
     }
+
+    if (receiptType === 'physical' && !archiveLocation.trim()) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie den Archiv-Standort für den physischen Beleg an.",
+        variant: "destructive"
+      })
+      return
+    }
     
     // Get current user
     const { data: userData } = await supabase.auth.getUser()
@@ -416,12 +425,13 @@ export function ExpensesPage() {
                 {/* Archive Location - nur wenn Physical gewählt */}
                 {receiptType === 'physical' && (
                   <div className="space-y-2">
-                    <Label htmlFor="archive-location">Archiv-Standort (optional)</Label>
+                    <Label htmlFor="archive-location">Archiv-Standort *</Label>
                     <Input
                       id="archive-location"
                       value={archiveLocation}
                       onChange={(e) => setArchiveLocation(e.target.value)}
                       placeholder="z.B. Ordner 2025-A, Aktenschrank 3, etc."
+                      required
                     />
                     <p className="text-xs text-muted-foreground">
                       📁 Es wird automatisch ein Platzhalter-PDF erstellt mit Verweis auf den physischen Beleg.
