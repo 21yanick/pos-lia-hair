@@ -77,14 +77,13 @@ export function usePdfActions() {
             sale_items (
               id,
               item_id,
-              quantity,
-              unit_price,
-              total_price,
+              price,
+              notes,
               items (
                 id,
                 name,
-                category,
-                price
+                type,
+                default_price
               )
             )
           `)
@@ -96,13 +95,14 @@ export function usePdfActions() {
         }
 
         // Cart Items für PDF vorbereiten
-        const cartItems = saleData.sale_items?.map(item => ({
+        const cartItems = saleData.sale_items?.map((item: any) => ({
           id: item.item_id,
           name: item.items?.name || 'Unbekanntes Produkt',
-          category: item.items?.category || 'Sonstiges',
-          price: item.unit_price,
-          quantity: item.quantity,
-          total: item.total_price
+          category: item.items?.type === 'service' ? 'Dienstleistung' : 
+                    item.items?.type === 'product' ? 'Produkt' : 'Sonstiges',
+          price: item.price,
+          quantity: 1, // Default: 1 Stück pro sale_item Eintrag
+          total: item.price
         })) || []
 
         // Receipt PDF generieren

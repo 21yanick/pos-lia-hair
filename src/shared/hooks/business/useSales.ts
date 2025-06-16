@@ -349,6 +349,7 @@ export function useSales() {
     sales,
     currentSale,
     createSale,
+    createReceiptPDF,
     loadTodaySales,
     getSalesForDateRange,
     loadSalesForDateRange,

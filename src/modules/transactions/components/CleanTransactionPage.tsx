@@ -922,6 +922,7 @@ export default function CleanTransactionPage() {
                           transaction={transaction}
                           onPdfAction={async (tx) => {
                             await pdfActions.handlePdfAction(tx)
+                            await loadAllTransactions() // UI nach PDF-Generierung aktualisieren
                           }}
                         />
                       </td>
