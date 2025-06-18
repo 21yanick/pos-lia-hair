@@ -3,13 +3,11 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { Building2, ImageIcon, Tag, Smartphone } from 'lucide-react'
+import { Building2, ImageIcon, Smartphone } from 'lucide-react'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
 import { CompanyInfoForm } from './CompanyInfoForm'
 import { LogoUploadSection } from './LogoUploadSection'
 import { AppLogoUploadSection } from './AppLogoUploadSection'
-import { ExpenseCategoriesForm } from './ExpenseCategoriesForm'
-import { SupplierCategoriesForm } from './SupplierCategoriesForm'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 
 export function BusinessSettingsPage() {
@@ -31,8 +29,8 @@ export function BusinessSettingsPage() {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header with Navigation */}
       <SettingsHeader
-        title="Geschäfts-Einstellungen"
-        description="Konfigurieren Sie Ihre Firmendaten für PDFs und Belege"
+        title="Firma"
+        description="Firmendaten, Logos und Design-Einstellungen"
         badge={{
           text: isConfigured ? "Konfiguriert" : "Nicht konfiguriert",
           variant: isConfigured ? "default" : "secondary"
@@ -41,7 +39,7 @@ export function BusinessSettingsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="company" className="flex items-center space-x-2">
             <Building2 className="h-4 w-4" />
             <span>Firmendaten</span>
@@ -53,10 +51,6 @@ export function BusinessSettingsPage() {
           <TabsTrigger value="app-logos" className="flex items-center space-x-2">
             <Smartphone className="h-4 w-4" />
             <span>App-Logos</span>
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="flex items-center space-x-2">
-            <Tag className="h-4 w-4" />
-            <span>Kategorien</span>
           </TabsTrigger>
         </TabsList>
 
@@ -93,14 +87,6 @@ export function BusinessSettingsPage() {
         {/* App Logos Tab */}
         <TabsContent value="app-logos">
           <AppLogoUploadSection />
-        </TabsContent>
-
-        {/* Categories Tab */}
-        <TabsContent value="categories">
-          <div className="space-y-6">
-            <ExpenseCategoriesForm />
-            <SupplierCategoriesForm />
-          </div>
         </TabsContent>
       </Tabs>
     </div>

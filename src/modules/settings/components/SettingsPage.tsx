@@ -7,7 +7,7 @@ import {
   Upload, 
   Settings as SettingsIcon, 
   Users, 
-  Database
+  Wrench
 } from "lucide-react"
 import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
@@ -62,34 +62,65 @@ export function SettingsPage() {
           </CardContent>
         </Card>
         
-        {/* Lieferanten-Verwaltung */}
+        {/* Verwaltung */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-primary" />
-              <CardTitle>Lieferanten</CardTitle>
+              <Wrench className="h-5 w-5 text-amber-600" />
+              <CardTitle>Verwaltung</CardTitle>
             </div>
             <CardDescription>
-              Verwalten Sie Ihre Lieferanten und Geschäftspartner
+              Kategorien, Lieferanten und operative Einstellungen
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                • Lieferanten erstellen & bearbeiten
+                • Ausgaben-Kategorien
               </p>
               <p className="text-sm text-muted-foreground">
-                • Kategorien & Kontaktdaten
+                • Lieferanten verwalten
               </p>
               <p className="text-sm text-muted-foreground">
-                • Ausgaben-Verknüpfung
+                • Lieferanten-Kategorien
               </p>
               <p className="text-sm text-muted-foreground">
                 • CSV Import & Export
               </p>
               <Button asChild className="w-full mt-4">
-                <Link href={getOrgUrl("/settings/suppliers")}>
-                  Lieferanten verwalten
+                <Link href={getOrgUrl("/settings/management")}>
+                  Verwaltung öffnen
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mein Profil */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-primary" />
+              <CardTitle>Mein Profil</CardTitle>
+            </div>
+            <CardDescription>
+              Persönliche Informationen und Sicherheitseinstellungen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                • Name & E-Mail bearbeiten
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • Passwort ändern
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • Sicherheitseinstellungen
+              </p>
+              <Button asChild className="w-full mt-4">
+                <Link href={getOrgUrl("/settings/profile")}>
+                  Profil bearbeiten
                 </Link>
               </Button>
             </div>
@@ -101,89 +132,32 @@ export function SettingsPage() {
           <CardHeader>
             <div className="flex items-center space-x-2">
               <SettingsIcon className="h-5 w-5 text-metric-yearly" />
-              <CardTitle>Geschäft</CardTitle>
+              <CardTitle>Firma</CardTitle>
             </div>
             <CardDescription>
-              Grundeinstellungen für Ihr Geschäft
+              Firmendaten und App-Design
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                • Geschäftsinformationen
+                • Firmendaten & Kontakt
               </p>
               <p className="text-sm text-muted-foreground">
-                • Öffnungszeiten
+                • PDF-Logo & App-Logos
               </p>
               <p className="text-sm text-muted-foreground">
-                • Preiseinstellungen
+                • Währung & Steuersatz
               </p>
               <Button asChild className="w-full mt-4">
                 <Link href={getOrgUrl("/settings/business")}>
-                  Geschäft konfigurieren
+                  Firma konfigurieren
                 </Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Benutzer-Verwaltung */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-warning" />
-              <CardTitle>Benutzer</CardTitle>
-            </div>
-            <CardDescription>
-              Benutzer-Accounts und Berechtigungen verwalten
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                • Benutzer hinzufügen/entfernen
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Rollen & Berechtigungen
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Login-Einstellungen
-              </p>
-              <Button variant="outline" className="w-full mt-4" disabled>
-                Bald verfügbar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* System-Info */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <div className="flex items-center space-x-2">
-              <Database className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>System</CardTitle>
-            </div>
-            <CardDescription>
-              System-Informationen und Wartung
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                • Datenbankstatus
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Performance-Statistiken
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Wartungs-Tools
-              </p>
-              <Button variant="outline" className="w-full mt-4" disabled>
-                Bald verfügbar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
       </div>
     </div>

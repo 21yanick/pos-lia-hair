@@ -18,7 +18,11 @@ import Link from 'next/link'
 import { useOrganization } from "@/shared/contexts/OrganizationContext"
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 
-export function SuppliersPage() {
+interface SuppliersPageProps {
+  hideHeader?: boolean
+}
+
+export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
   const { toast } = useToast()
   const { currentOrganization } = useOrganization()
   
@@ -111,29 +115,50 @@ export function SuppliersPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className={hideHeader ? "space-y-6" : "container mx-auto p-6 space-y-6"}>
       {/* Header with Navigation */}
-      <SettingsHeader
-        title="Lieferanten"
-        description="Verwalten Sie Ihre Lieferanten und Geschäftspartner"
-        actions={
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" asChild>
-              <Link href={getOrgUrl("/settings/import")}>
-                <Upload className="h-4 w-4 mr-2" />
-                CSV Import
-              </Link>
-            </Button>
-            
-            {currentUserId && (
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Neuer Lieferant
+      {!hideHeader && (
+        <SettingsHeader
+          title="Lieferanten"
+          description="Verwalten Sie Ihre Lieferanten und Geschäftspartner"
+          actions={
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" asChild>
+                <Link href={getOrgUrl("/settings/import")}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  CSV Import
+                </Link>
               </Button>
-            )}
-          </div>
-        }
-      />
+              
+              {currentUserId && (
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Neuer Lieferant
+                </Button>
+              )}
+            </div>
+          }
+        />
+      )}
+
+      {/* Inline Actions (when header is hidden) */}
+      {hideHeader && (
+        <div className="flex justify-end items-center space-x-2 mb-4">
+          <Button variant="outline" asChild>
+            <Link href={getOrgUrl("/settings/import")}>
+              <Upload className="h-4 w-4 mr-2" />
+              CSV Import
+            </Link>
+          </Button>
+          
+          {currentUserId && (
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Neuer Lieferant
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">

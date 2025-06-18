@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, Settings, LogOut, Building2, User, Globe, Bell } from 'lucide-react'
+import { ChevronDown, Settings, LogOut, Building2, User } from 'lucide-react'
 import { cn } from '@/shared/utils'
 import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
@@ -165,12 +165,15 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
         <DropdownMenuSeparator />
 
         {/* Quick Actions */}
-        <DropdownMenuItem disabled className="flex items-center space-x-2 opacity-50">
-          <User className="h-4 w-4" />
-          <span>Profil bearbeiten</span>
-          <Badge variant="secondary" className="ml-auto text-xs">
-            Bald
-          </Badge>
+        <DropdownMenuItem asChild>
+          <Link 
+            href={currentOrganization ? `/org/${currentOrganization.slug}/settings/profile` : "/settings/profile"}
+            className="flex items-center space-x-2 cursor-pointer"
+            onClick={() => setIsOpen(false)}
+          >
+            <User className="h-4 w-4" />
+            <span>Profil bearbeiten</span>
+          </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
@@ -182,22 +185,6 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
             <Settings className="h-4 w-4" />
             <span>Einstellungen</span>
           </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem disabled className="flex items-center space-x-2 opacity-50">
-          <Bell className="h-4 w-4" />
-          <span>Benachrichtigungen</span>
-          <Badge variant="secondary" className="ml-auto text-xs">
-            Bald
-          </Badge>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem disabled className="flex items-center space-x-2 opacity-50">
-          <Globe className="h-4 w-4" />
-          <span>Sprache</span>
-          <Badge variant="secondary" className="ml-auto text-xs">
-            Bald
-          </Badge>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
