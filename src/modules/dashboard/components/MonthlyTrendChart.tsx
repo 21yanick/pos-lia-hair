@@ -1,8 +1,10 @@
 "use client"
 
+import { Suspense, lazy } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/shared/components/ui/chart"
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Line, ComposedChart, LineChart } from "recharts"
+
+// Create a single lazy-loaded chart component
+const LazyChart = lazy(() => import("./LazyMonthlyChart"))
 
 export type MonthlyData = {
   month: string
@@ -32,6 +34,10 @@ const chartConfig = {
   },
 }
 
+function ChartLoadingFallback() {
+  return <div className="h-[250px] w-full animate-pulse bg-muted rounded" />
+}
+
 export function MonthlyTrendChart({ data, loading = false }: MonthlyTrendChartProps) {
   if (loading) {
     return (
@@ -40,7 +46,7 @@ export function MonthlyTrendChart({ data, loading = false }: MonthlyTrendChartPr
           <CardTitle>Jahresverlauf</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[250px] w-full animate-pulse bg-muted rounded" />
+          <ChartLoadingFallback />
         </CardContent>
       </Card>
     )
@@ -67,52 +73,9 @@ export function MonthlyTrendChart({ data, loading = false }: MonthlyTrendChartPr
         <CardTitle>Jahresverlauf - Umsatz vs. Ausgaben</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <XAxis 
-              dataKey="monthName" 
-              tick={{ fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis 
-              tick={{ fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(value) => `${Math.round(value / 1000)}k`}
-            />
-            <ChartTooltip 
-              content={
-                <ChartTooltipContent 
-                  formatter={(value, name) => [
-                    `CHF ${Number(value).toFixed(2)}`,
-                    chartConfig[name as keyof typeof chartConfig]?.label || name
-                  ]}
-                />
-              }
-            />
-            <Bar 
-              dataKey="revenue" 
-              fill="var(--color-revenue)" 
-              radius={[2, 2, 0, 0]}
-              name="revenue"
-            />
-            <Bar 
-              dataKey="expenses" 
-              fill="var(--color-expenses)" 
-              radius={[2, 2, 0, 0]}
-              name="expenses"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="profit" 
-              stroke="var(--color-profit)" 
-              strokeWidth={3}
-              dot={{ fill: "var(--color-profit)", strokeWidth: 2, r: 4 }}
-              name="profit"
-            />
-          </ComposedChart>
-        </ChartContainer>
+        <Suspense fallback={<ChartLoadingFallback />}>
+          <LazyChart data={data} config={chartConfig} />
+        </Suspense>
       </CardContent>
     </Card>
   )

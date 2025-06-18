@@ -1,12 +1,11 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+// ✅ GDPR-COMPLIANT: Local Inter Variable Font hosting
 import { ThemeProvider } from "@/shared/components/theme-provider"
 import { OrganizationProvider } from "@/shared/contexts/OrganizationContext"
 import { Toaster } from "@/shared/components/ui/sonner"
+import { inter } from "@/shared/styles/fonts"
 import "./globals.css"
-
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Coiffeursalon POS System",
@@ -24,7 +23,7 @@ export default function RootLayout({
       <head>
         <link rel="preload" href="/Logo_black.png" as="image" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <OrganizationProvider>
             {children}

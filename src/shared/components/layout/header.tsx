@@ -150,7 +150,6 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profil</DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={currentOrganization ? `/org/${currentOrganization.slug}/settings` : "/settings"}>
                 Einstellungen

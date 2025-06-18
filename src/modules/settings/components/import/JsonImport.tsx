@@ -76,13 +76,12 @@ export function JsonImport() {
   const handleImport = async (validateOnly = false) => {
     if (!jsonData) return
 
-    // Use the actual Admin User ID from the database
-    const currentUserId = 'dd1329e7-5439-43ad-989b-0b8f5714824b' // LIA Hair Admin
-
+    // ✅ SECURITY FIX: Let useImport hook handle authentication
+    // Uses authenticated user.id and currentOrganization.id automatically
     await processImport(jsonData, {
       validateOnly,
-      targetUserId: currentUserId,
       useSystemUserForSummaries: true
+      // targetUserId automatically set by useImport hook
     })
   }
 

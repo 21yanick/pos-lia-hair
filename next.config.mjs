@@ -20,7 +20,17 @@ const nextConfig = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+    // ✅ PERFORMANCE: Built-in Next.js optimizations
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-icons',
+      'recharts'
+    ],
   },
+  // ✅ PERFORMANCE: Enable built-in bundle optimization
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: false,
 }
 
 mergeConfig(nextConfig, userConfig)

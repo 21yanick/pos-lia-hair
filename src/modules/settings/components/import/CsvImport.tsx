@@ -178,13 +178,12 @@ export function CsvImport() {
     setCsvState(prev => ({ ...prev, status: 'importing', progress: 80 }))
     
     try {
-      // Use existing import hook with transformed data
-      const currentUserId = 'dd1329e7-5439-43ad-989b-0b8f5714824b' // LIA Hair Admin
-      
+      // ✅ SECURITY FIX: Let useImport hook handle authentication
+      // Uses authenticated user.id and currentOrganization.id automatically
       await processImport(csvState.transformedData, {
         validateOnly: false,
-        targetUserId: currentUserId,
         useSystemUserForSummaries: true
+        // targetUserId automatically set by useImport hook
       })
       
       setCsvState(prev => ({ ...prev, status: 'success', progress: 100 }))
@@ -228,57 +227,68 @@ export function CsvImport() {
       items: {
         headers: ['Name', 'Preis', 'Typ', 'Favorit', 'Aktiv'],
         rows: [
-          ['Haarschnitt Damen', '65.00', 'service', 'true', 'true'],
-          ['Haarschnitt Herren', '45.00', 'service', 'true', 'true'],
-          ['Föhnen', '25.00', 'service', 'false', 'true']
+          ['Haarschnitt Damen (Waschen+Schneiden+Föhnen)', '65.00', 'service', 'true', 'true'],
+          ['Haarschnitt Herren (klassisch)', '45.00', 'service', 'true', 'true'],
+          ['Shampoo Kerastase 250ml', '32.50', 'product', 'false', 'true'],
+          ['Coloration (Aufpreis je nach Länge)', '85.00', 'service', 'true', 'true'],
+          ['Haargummi Professional', '4.90', 'product', 'false', 'false']
         ]
       },
       sales: {
-        headers: ['Datum', 'Zeit', 'Gesamtbetrag', 'Zahlungsmethode', 'Items', 'Notizen'],
+        headers: ['Datum', 'Zeit', 'Gesamtbetrag', 'Zahlungsmethode', 'Items', 'Notizen', 'Status', 'Bruttobetrag', 'Anbietergebühr', 'Nettobetrag', 'Abrechnungsstatus'],
         rows: [
-          ['2024-01-15', '14:30', '85.00', 'cash', 'Haarschnitt Damen:60.00;Styling:25.00', 'Multi-Item Sale'],
-          ['2024-01-15', '15:45', '45.00', 'twint', 'Haarschnitt Herren:45.00', 'Single-Item Sale'],
-          ['2024-01-16', '10:15', '70.00', 'sumup', 'Föhnen:25.00;Haarprodukt:45.00', 'Styling + Produkt']
+          ['2024-01-15', '14:30', '65.00', 'cash', 'Haarschnitt Damen (Waschen+Schneiden+Föhnen):65.00', 'Bar bezahlt - keine Gebühren', 'completed', '65.00', '0.00', '65.00', 'pending'],
+          ['2024-01-15', '15:45', '45.00', 'twint', 'Haarschnitt Herren (klassisch):45.00', 'TWINT - 3% Gebühr, T+2 Settlement', 'completed', '45.00', '1.35', '43.65', 'settled'],
+          ['2024-01-16', '10:15', '97.50', 'sumup', 'Coloration (Aufpreis je nach Länge):85.00;Shampoo Kerastase 250ml:32.50', 'SumUp - 2.75% + 0.25 CHF', 'completed', '97.50', '2.93', '94.57', 'weekend_delay'],
+          ['2024-01-17', '11:20', '32.50', 'cash', 'Shampoo Kerastase 250ml:32.50', 'Nur Produktverkauf', 'completed', '32.50', '0.00', '32.50', 'pending']
         ]
       },
       expenses: {
-        headers: ['Datum', 'Betrag', 'Beschreibung', 'Kategorie', 'Zahlungsmethode', 'Lieferant', 'Rechnungsnummer'],
+        headers: ['Betrag', 'Beschreibung', 'Kategorie', 'Zahlungsmethode', 'Zahlungsdatum', 'Lieferant', 'Rechnungsnummer', 'Notizen', 'Banking-Status'],
         rows: [
-          ['2024-01-01', '1200.00', 'Miete Januar', 'rent', 'bank', 'Immobilien AG', 'RE-2024-001'],
-          ['2024-01-05', '150.00', 'Haarprodukte', 'supplies', 'cash', 'Beauty Store', ''],
-          ['2024-01-10', '80.00', 'Strom', 'utilities', 'bank', 'EWZ', 'EWZ-456789']
+          ['2200.00', 'Miete Salon Januar 2024', 'rent', 'bank', '2024-01-05', 'Immobilien Zürich AG', 'RENT-2024-001', 'Monatliche Miete Räumlichkeiten Bahnhofstrasse', 'matched'],
+          ['287.40', 'Haarprodukte Kerastase + L\'Oréal', 'supplies', 'cash', '2024-01-08', 'Beauty Professional GmbH', 'BP-24-0156', 'Shampoo, Conditioner, Styling-Produkte', 'unmatched'],
+          ['156.80', 'Strom + Heizung Dezember', 'utilities', 'bank', '2024-01-15', 'EWZ Zürich', 'EWZ-2024-001234', 'Energiekosten Dezember 2023', 'matched'],
+          ['45.60', 'Reinigungsmittel + Handtücher', 'supplies', 'cash', '2024-01-12', 'Coop Bau+Hobby', '', 'Barzahlung Coop - keine Rechnung', 'unmatched'],
+          ['890.00', 'Marketing Facebook Ads Januar', 'marketing', 'bank', '2024-01-31', 'Meta Platforms Ireland', 'META-INV-456789', 'Social Media Werbung Januar', 'matched']
         ]
       },
       users: {
         headers: ['Name', 'Benutzername', 'E-Mail', 'Rolle', 'Aktiv'],
         rows: [
-          ['Maria Müller', 'maria.mueller', 'maria@salon.ch', 'staff', 'true'],
-          ['Thomas Weber', 'thomas.weber', 'thomas@salon.ch', 'staff', 'true'],
-          ['Lisa Admin', 'lisa.admin', 'lisa@salon.ch', 'admin', 'true']
+          ['Lia Schmid (Inhaberin)', 'lia.schmid', 'lia@coiffure-lia.ch', 'admin', 'true'],
+          ['Maria Friseurin', 'maria.stylist', 'maria@coiffure-lia.ch', 'staff', 'true'],
+          ['Anna Lehrling', 'anna.apprentice', 'anna@coiffure-lia.ch', 'staff', 'true'],
+          ['Sarah Ex-Mitarbeiterin', 'sarah.former', 'sarah@gmail.com', 'staff', 'false']
         ]
       },
       owner_transactions: {
-        headers: ['Transaktionstyp', 'Betrag', 'Beschreibung', 'Datum', 'Zahlungsmethode', 'Notizen'],
+        headers: ['Transaktionstyp', 'Betrag', 'Beschreibung', 'Transaktionsdatum', 'Zahlungsmethode', 'Banking-Status', 'Notizen'],
         rows: [
-          ['deposit', '10000.00', 'Eigenkapital Einlage', '2024-01-01', 'bank_transfer', 'Startkapital für Salon'],
-          ['expense', '5000.00', 'Ausrüstung Anschaffung', '2024-01-15', 'private_card', 'Friseurstühle und Equipment'],
-          ['withdrawal', '1500.00', 'Privatentnahme', '2024-01-31', 'bank_transfer', 'Monatliche Entnahme']
+          ['deposit', '25000.00', 'Startkapital Salonöffnung', '2024-01-01', 'bank_transfer', 'matched', 'Eigenkapital für Geschäftseröffnung Januar 2024'],
+          ['expense', '8950.00', 'Renovierung + Ausrüstung', '2024-01-15', 'private_card', 'matched', 'Friseurstühle, Waschbecken, Spiegel - Privatkarte Lia'],
+          ['expense', '2340.50', 'Erstausstattung Produkte', '2024-01-20', 'private_cash', 'unmatched', 'Startbestand Haarprodukte - bar bezahlt'],
+          ['withdrawal', '3500.00', 'Privatentnahme Januar', '2024-01-31', 'bank_transfer', 'matched', 'Lohn/Entnahme Inhaberin Januar'],
+          ['deposit', '1200.00', 'Zusatzkapital Frühjahr', '2024-04-01', 'bank_transfer', 'matched', 'Zusätzliche Einlage für Sommersaison-Vorbereitung']
         ]
       },
       bank_accounts: {
-        headers: ['Kontoname', 'Bankname', 'IBAN', 'Kontonummer', 'Aktueller Saldo', 'Aktiv', 'Notizen'],
+        headers: ['Kontoname', 'Bankname', 'IBAN', 'Kontonummer', 'Aktueller Saldo', 'Letztes Kontodatum', 'Aktiv', 'Notizen'],
         rows: [
-          ['Geschäftskonto UBS', 'UBS AG', 'CH93 0076 2011 6238 5295 7', '123456789', '15000.00', 'true', 'Hauptgeschäftskonto'],
-          ['Sparkonto ZKB', 'Zürcher Kantonalbank', 'CH54 0070 0110 0023 2456 1', '987654321', '25000.00', 'true', 'Rücklagen'],
-          ['Postfinance Konto', 'PostFinance AG', 'CH17 0900 0000 3012 3456 7', 'PF-789123', '5000.00', 'false', 'Inaktives Konto']
+          ['Geschäftskonto Coiffure Lia', 'UBS Switzerland AG', 'CH93 0024 5245 1234 5678 9', 'UBS-240001234', '18756.45', '2024-01-31', 'true', 'Hauptgeschäftskonto für tägl. Umsätze + Ausgaben'],
+          ['Sparkonto Rücklagen', 'Zürcher Kantonalbank', 'CH54 0070 0110 0023 2456 1', 'ZKB-110234561', '35200.00', '2024-01-31', 'true', 'Steuern, Investitionen, Notreserve'],
+          ['Privatkonto Lia Schmid', 'PostFinance AG', 'CH17 0900 0000 3012 3456 7', 'PF-30123456', '12450.80', '2024-01-31', 'true', 'Privatkonto für Owner Transactions + Entnahmen'],
+          ['Altes Konto (geschlossen)', 'Credit Suisse (historisch)', 'CH45 0483 5012 3456 7800 0', 'CS-50123456', '0.00', '2023-06-30', 'false', 'Geschlossen vor Salonöffnung - nur für historische Daten']
         ]
       },
       suppliers: {
-        headers: ['Name', 'Kategorie', 'E-Mail', 'Telefon', 'Website', 'Adresse', 'Adresszusatz', 'Stadt', 'PLZ', 'Land', 'IBAN', 'UID', 'Aktiv', 'Notizen'],
+        headers: ['Name', 'Normalisierter Name', 'Kategorie', 'Kontakt E-Mail', 'Kontakt Telefon', 'Website', 'Adresse Zeile 1', 'Adresse Zeile 2', 'PLZ', 'Stadt', 'Land', 'IBAN', 'MwSt-Nummer', 'Aktiv', 'Notizen'],
         rows: [
-          ['NewFlag AG', 'beauty_supplies', 'info@newflag.ch', '+41 44 123 45 67', 'https://newflag.ch', 'Beauty Street 123', '3. Stock', 'Zürich', '8001', 'CH', 'CH93 0076 2011 6238 5295 7', 'CHE-123.456.789', 'true', 'Hauptlieferant für Haarprodukte'],
-          ['Immobilien Müller', 'real_estate', 'info@immobilien-mueller.ch', '+41 44 987 65 43', '', 'Bahnhofstrasse 45', '', 'Zürich', '8001', 'CH', '', '', 'true', 'Vermieter Salon Räumlichkeiten'],
-          ['Coop Genossenschaft', 'retail', '', '', 'https://coop.ch', '', '', '', '', 'CH', '', '', 'true', 'Büromaterial und Reinigungsmittel']
+          ['Beauty Professional Schweiz GmbH', 'beauty-professional-schweiz-gmbh', 'beauty_supplies', 'orders@beautypro.ch', '+41 44 567 89 12', 'https://beautypro.ch', 'Industriestrasse 45', 'Gebäude C, 2. Stock', '8050', 'Zürich', 'CH', 'CH12 0070 0114 8012 3456 7', 'CHE-234.567.890', 'true', 'Kerastase, L\'Oréal Professional - Hauptlieferant'],
+          ['Immobilien Bahnhof AG', 'immobilien-bahnhof-ag', 'real_estate', 'vermietung@bahnhof-properties.ch', '+41 44 321 65 43', 'https://bahnhof-properties.ch', 'Bahnhofstrasse 87', 'Büro 205', '8001', 'Zürich', 'CH', 'CH54 0024 5245 7890 1234 5', 'CHE-345.678.901', 'true', 'Vermieter Salon Räumlichkeiten - Mietvertrag bis 2026'],
+          ['EWZ Elektrizitätswerk Zürich', 'ewz-elektrizitaetswerk-zuerich', 'utilities', 'kundendienst@ewz.ch', '+41 58 319 41 11', 'https://ewz.ch', 'Tramstrasse 35', '', '8050', 'Zürich', 'CH', '', 'CHE-109.240.709', 'true', 'Strom + Heizung - monatliche Abrechnung'],
+          ['Coop Bau+Hobby', 'coop-bau-hobby', 'retail', '', '+41 848 888 444', 'https://bauundhobby.ch', 'Härdlistrasse 15', 'Einkaufszentrum', '8005', 'Zürich', 'CH', '', '', 'true', 'Reinigungsmittel, Handtücher - Barzahlung meist'],
+          ['Swisscom (Schweiz) AG', 'swisscom-schweiz-ag', 'services', 'business@swisscom.com', '+41 800 800 800', 'https://swisscom.ch', 'Alte Tiefenaustrasse 6', '', '3048', 'Worblaufen', 'CH', 'CH95 0023 5235 8940 4000 1', 'CHE-107.418.778', 'true', 'Internet, Telefon, Mobile - Business Paket']
         ]
       }
     }

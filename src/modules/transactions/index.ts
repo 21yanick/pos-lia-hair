@@ -11,11 +11,16 @@
  * - Performance optimized hooks
  */
 
-// Main components
-export * from './components'
+// Main components - specific exports instead of wildcard
+export { default as CleanTransactionPage } from './components/CleanTransactionPage'
+export { default as TransactionCenterPage } from './components/TransactionCenterPage'
+export { BulkOperationsPanel } from './components/BulkOperationsPanel'
+export { DateRangePicker } from './components/DateRangePicker'
 
-// Hooks
-export * from './hooks'
+// Hooks - specific exports instead of wildcard
+export { useTransactionCenter } from './hooks/useTransactionCenter'
+export { useUnifiedTransactions } from './hooks/useUnifiedTransactions'
+export { usePdfActions } from './hooks/usePdfActions'
 
 // Services (keep existing)
 // export { SwissComplianceEngine } from './services/swissComplianceEngine' // Removed over-engineering
