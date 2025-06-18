@@ -5,11 +5,15 @@ import { supabase } from '@/shared/lib/supabase/client'
 import { useDocuments } from '@/shared/hooks/business/useDocuments'
 import { useSales } from '@/shared/hooks/business/useSales'
 import { useExpenses } from '@/shared/hooks/business/useExpenses'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import type { UnifiedTransaction } from '../types/unifiedTransactions'
 
 export function usePdfActions() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
 
   const { getStorageUrl } = useDocuments()
   const { createReceiptPDF } = useSales()
@@ -21,15 +25,21 @@ export function usePdfActions() {
       setLoading(true)
       setError(null)
 
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       if (!transaction.document_id) {
         throw new Error('Keine Dokument-ID gefunden')
       }
 
-      // Dokument-Details laden
+      // Dokument-Details laden mit ORGANIZATION SECURITY
       const { data: docData, error: docError } = await supabase
         .from('documents')
         .select('file_path, file_name, type')
         .eq('id', transaction.document_id)
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .single()
 
       if (docError) {
@@ -60,7 +70,7 @@ export function usePdfActions() {
     } finally {
       setLoading(false)
     }
-  }, [getStorageUrl])
+  }, [getStorageUrl, currentOrganization])
 
   // Fehlendes PDF generieren
   const generatePdf = useCallback(async (transaction: UnifiedTransaction): Promise<{ success: boolean; error?: string }> => {
@@ -68,8 +78,13 @@ export function usePdfActions() {
       setLoading(true)
       setError(null)
 
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       if (transaction.transaction_type === 'sale') {
-        // Sale Details laden für Receipt PDF
+        // Sale Details laden für Receipt PDF mit ORGANIZATION SECURITY
         const { data: saleData, error: saleError } = await supabase
           .from('sales')
           .select(`
@@ -88,6 +103,7 @@ export function usePdfActions() {
             )
           `)
           .eq('id', transaction.id)
+          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
           .single()
 
         if (saleError) {
@@ -126,7 +142,7 @@ export function usePdfActions() {
     } finally {
       setLoading(false)
     }
-  }, [createReceiptPDF, generatePlaceholderReceipt])
+  }, [createReceiptPDF, generatePlaceholderReceipt, currentOrganization])
 
   // PDF-Aktion basierend auf Status ausführen
   const handlePdfAction = useCallback(async (transaction: UnifiedTransaction): Promise<{ success: boolean; error?: string }> => {
@@ -148,6 +164,11 @@ export function usePdfActions() {
       setLoading(true)
       setError(null)
 
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       if (!transaction.document_id) {
         throw new Error('Keine Dokument-ID gefunden')
       }
@@ -156,6 +177,7 @@ export function usePdfActions() {
         .from('documents')
         .select('file_path, file_name')
         .eq('id', transaction.document_id)
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .single()
 
       if (docError || !docData?.file_path) {
@@ -187,13 +209,18 @@ export function usePdfActions() {
     } finally {
       setLoading(false)
     }
-  }, [getStorageUrl])
+  }, [getStorageUrl, currentOrganization])
 
   // Bulk PDF Download (ZIP-Archiv)
   const downloadMultiplePdfs = useCallback(async (transactions: UnifiedTransaction[]): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true)
       setError(null)
+
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
 
       // Nur Transaktionen mit verfügbaren PDFs
       const availableTransactions = transactions.filter(tx => tx.pdf_status === 'available' && tx.document_id)
@@ -206,13 +233,14 @@ export function usePdfActions() {
       const JSZip = (await import('jszip')).default
       const zip = new JSZip()
 
-      // PDFs zu ZIP hinzufügen
+      // PDFs zu ZIP hinzufügen mit ORGANIZATION SECURITY
       for (const transaction of availableTransactions) {
         try {
           const { data: docData } = await supabase
             .from('documents')
             .select('file_path, file_name')
             .eq('id', transaction.document_id!)
+            .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
             .single()
 
           if (docData?.file_path) {
@@ -253,7 +281,7 @@ export function usePdfActions() {
     } finally {
       setLoading(false)
     }
-  }, [getStorageUrl])
+  }, [getStorageUrl, currentOrganization])
 
   return {
     // State

@@ -4,7 +4,7 @@ import { CreditCard, Loader2, Minus, Pencil, Plus, Trash2, ShoppingBag, Zap } fr
 import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
 import { Separator } from "@/shared/components/ui/separator"
-import type { CartItem } from "../hooks/useSales"
+import type { CartItem } from "@/shared/hooks/business/useSales"
 
 interface ShoppingCartProps {
   cart: CartItem[]

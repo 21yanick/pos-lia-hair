@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { usePOSState } from './usePOSState'
-import { useSales } from './useSales'
+import { usePOSState } from '@/shared/hooks/business/usePOSState'
+import { useSales } from '@/shared/hooks/business/useSales'
 import { useItems } from '@/shared/hooks/business/useItems'
 import type { Item } from '@/shared/hooks/business/useItems'
-import type { CartItem, CreateSaleData } from './useSales'
+import type { CartItem, CreateSaleData } from '@/shared/hooks/business/useSales'
 
 // Warenkorb-Logik Hook
 function useCart() {

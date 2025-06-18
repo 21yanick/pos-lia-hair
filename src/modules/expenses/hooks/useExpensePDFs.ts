@@ -2,7 +2,13 @@
 
 import { useState, useCallback } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import type { DocumentWithDetails } from '@/shared/hooks/business/useDocuments'
+
+// 🛡️ SECURITY FIXED: useExpensePDFs Hook - Multi-Tenant Organization Security
+// ✅ FIXED: All documents queries now organization-scoped
+// ✅ FIXED: All documents deletes now organization-scoped  
+// ✅ FIXED: Security guards prevent cross-tenant data access
 
 export type ExpensePDF = DocumentWithDetails & {
   expenseId: string
@@ -12,6 +18,17 @@ export function useExpensePDFs() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pdfsCache, setPdfsCache] = useState<Record<string, ExpensePDF[]>>({})
+  
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
+
+  // 🛡️ SECURITY GUARD - Consistent across all functions
+  const securityGuard = () => {
+    if (!currentOrganization) {
+      throw new Error('Keine Organization ausgewählt. Multi-Tenant Sicherheit verletzt.')
+    }
+    return currentOrganization.id
+  }
 
   const getStorageUrl = async (filePath: string) => {
     try {
@@ -42,11 +59,15 @@ export function useExpensePDFs() {
       setLoading(true)
       setError(null)
 
+      // 🔒 SECURITY: Organization required (CRITICAL FIX)
+      const organizationId = securityGuard()
+
       const { data: documents, error: documentsError } = await supabase
         .from('documents')
         .select('*')
         .eq('type', 'expense_receipt')
         .eq('reference_id', expenseId)
+        .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped (CRITICAL FIX)
         .order('created_at', { ascending: false })
 
       if (documentsError) {
@@ -78,7 +99,7 @@ export function useExpensePDFs() {
     } finally {
       setLoading(false)
     }
-  }, [pdfsCache])
+  }, [pdfsCache, currentOrganization])
 
   const getExpensePDFsFromCache = useCallback((expenseId: string): ExpensePDF[] => {
     return pdfsCache[expenseId] || []
@@ -106,10 +127,14 @@ export function useExpensePDFs() {
       setLoading(true)
       setError(null)
 
+      // 🔒 SECURITY: Organization required (CRITICAL FIX)
+      const organizationId = securityGuard()
+
       const { data: docData, error: fetchError } = await supabase
         .from('documents')
         .select('file_path')
         .eq('id', documentId)
+        .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped (CRITICAL FIX)
         .single()
 
       if (fetchError) {
@@ -130,6 +155,7 @@ export function useExpensePDFs() {
         .from('documents')
         .delete()
         .eq('id', documentId)
+        .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped delete (CRITICAL FIX)
 
       if (dbError) {
         throw dbError
@@ -145,7 +171,7 @@ export function useExpensePDFs() {
     } finally {
       setLoading(false)
     }
-  }, [invalidateCache])
+  }, [invalidateCache, currentOrganization])
 
   return {
     loading,

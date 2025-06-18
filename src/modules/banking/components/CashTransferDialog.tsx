@@ -9,7 +9,8 @@ import { Textarea } from "@/shared/components/ui/textarea"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, ArrowUpToLine, ArrowDownToLine, AlertCircle } from "lucide-react"
 import { supabase } from "@/shared/lib/supabase/client"
-import { useDailySummaries } from "@/shared/hooks/business/useDailySummaries"
+import { useCashBalance } from "@/shared/hooks/business/useCashBalance"
+import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
 interface CashTransferDialogProps {
   isOpen: boolean
@@ -27,7 +28,10 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
   const [loadingBalance, setLoadingBalance] = useState(false)
 
   // Use the same cash balance logic as Cash Register
-  const { getCurrentCashBalance } = useDailySummaries()
+  const { getCurrentCashBalance } = useCashBalance()
+  
+  // 🔒 Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
 
   const isToBank = direction === 'to_bank'
 
@@ -82,16 +86,22 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
     setError(null)
 
     try {
+      // 🔒 Security: Organization & User required
+      if (!currentOrganization) {
+        throw new Error("Keine Organization ausgewählt. Bitte wählen Sie eine Organization.")
+      }
+
       // Get current user
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Nicht angemeldet")
 
-      // Call the database function to create bank transfer cash movement
+      // ✅ FIXED: Call the database function with organization_id for Multi-Tenant security
       const { data, error: dbError } = await supabase.rpc('create_bank_transfer_cash_movement', {
         p_user_id: user.id,
         p_amount: numAmount,
         p_description: description.trim(),
-        p_direction: direction
+        p_direction: direction,
+        p_organization_id: currentOrganization.id // 🔒 CRITICAL FIX: Organization security
       })
 
       if (dbError) throw dbError

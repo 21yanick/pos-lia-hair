@@ -295,6 +295,7 @@ export type OwnerTransactionRow = {
   related_bank_transaction_id: string | null
   banking_status: SimpleBankingStatus
   user_id: string
+  organization_id: string | null // ✅ ADDED: Multi-Tenant support
   created_at: string
   updated_at: string
   notes: string | null
@@ -311,6 +312,7 @@ export type OwnerTransactionInsert = {
   related_bank_transaction_id?: string | null
   banking_status?: SimpleBankingStatus
   user_id: string
+  organization_id: string // ✅ ADDED: Multi-Tenant support (required for new records)
   created_at?: string
   updated_at?: string
   notes?: string | null
@@ -327,6 +329,7 @@ export type OwnerTransactionUpdate = {
   related_bank_transaction_id?: string | null
   banking_status?: SimpleBankingStatus
   user_id?: string
+  organization_id?: string // ✅ ADDED: Multi-Tenant support (optional for updates)
   created_at?: string
   updated_at?: string
   notes?: string | null

@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/shared/components/theme-provider"
+import { OrganizationProvider } from "@/shared/contexts/OrganizationContext"
 import { Toaster } from "@/shared/components/ui/sonner"
 import "./globals.css"
 
@@ -25,8 +26,10 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-          <Toaster />
+          <OrganizationProvider>
+            {children}
+            <Toaster />
+          </OrganizationProvider>
         </ThemeProvider>
       </body>
     </html>

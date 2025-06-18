@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog"
-import type { CartItem } from "../hooks/useSales"
+import type { CartItem } from "@/shared/hooks/business/useSales"
 
 interface EditPriceDialogProps {
   isOpen: boolean

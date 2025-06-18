@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import { formatDateForAPI, getSwissDayRange, getFirstDayOfMonth, getLastDayOfMonth } from '@/shared/utils/dateUtils'
-import { useDailySummaries } from '@/shared/hooks/business/useDailySummaries'
+import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
 import { useExpenses } from './useExpenses'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 
 // Type für die vereinfachten Transaktionsdaten im Dashboard
 export type DashboardTransaction = {
@@ -98,8 +99,11 @@ export function useReports() {
   const [dashboardLoading, setDashboardLoading] = useState(true)
   const [dashboardError, setDashboardError] = useState<string | null>(null)
 
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
+
   // Hooks für erweiterte Funktionalitäten
-  const dailySummariesHook = useDailySummaries()
+  const cashBalanceHook = useCashBalance()
   const expensesHook = useExpenses()
 
   // WICHTIG: Verwende das gleiche Datum wie alle anderen Systeme
@@ -112,12 +116,17 @@ export function useReports() {
       setDashboardLoading(true)
       setDashboardError(null)
       
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
 
-      // Heutige Verkäufe mit korrekter Schweizer Zeitzone abrufen
+      // Heutige Verkäufe mit korrekter Schweizer Zeitzone abrufen mit ORGANIZATION SECURITY
       const { start, end } = getSwissDayRange(new Date())
       const { data: sales, error: salesError } = await supabase
         .from('sales')
         .select('*')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('created_at', start)
         .lte('created_at', end)
         .order('created_at', { ascending: false })
@@ -130,11 +139,12 @@ export function useReports() {
       }
       
 
-      // Aktive Produkte zählen
+      // Aktive Produkte zählen mit ORGANIZATION SECURITY
       const { data: items } = await supabase
         .from('items')
         .select('id')
         .eq('active', true)
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
 
       const activeProductsCount = items?.length || 0
 
@@ -146,6 +156,7 @@ export function useReports() {
         .from('sales')
         .select('id, total_amount, payment_method')
         .eq('status', 'completed')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('created_at', weekStart.toISOString())
 
       const { netRevenue: weekRevenue } = await getRevenueBreakdown(weekSales || [])
@@ -156,17 +167,19 @@ export function useReports() {
         .from('sales')
         .select('id, total_amount, payment_method')
         .eq('status', 'completed')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('created_at', monthStart.toISOString())
 
       const { netRevenue: monthRevenue } = await getRevenueBreakdown(monthSales || [])
 
       if (!sales || sales.length === 0) {
         
-        // Fallback: Zeige die letzten 5 Transaktionen aus der Woche
+        // Fallback: Zeige die letzten 5 Transaktionen aus der Woche mit ORGANIZATION SECURITY
         const { data: recentSales } = await supabase
           .from('sales')
           .select('*')
           .eq('status', 'completed')
+          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
           .gte('created_at', weekStart.toISOString())
           .order('created_at', { ascending: false })
           .limit(5)
@@ -333,7 +346,7 @@ export function useReports() {
   const loadEnhancedDashboardData = async () => {
     try {
       // 1. Cash Balance abrufen
-      const { success: cashSuccess, balance: cashBalance } = await dailySummariesHook.getCurrentCashBalance()
+      const { success: cashSuccess, balance: cashBalance } = await cashBalanceHook.getCurrentCashBalance()
       
       // 2. Monatsdaten für die letzten 12 Monate abrufen
       const monthlyTrendData = await loadMonthlyTrendData()
@@ -378,6 +391,11 @@ export function useReports() {
   // Monatsdaten für Chart
   const loadMonthlyTrendData = async (): Promise<MonthlyData[]> => {
     try {
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt für Monthly Trend Data.')
+      }
+
       const months = []
       const now = new Date()
       
@@ -389,18 +407,20 @@ export function useReports() {
         const startDate = formatDateForAPI(firstDay)
         const endDate = formatDateForAPI(lastDay)
         
-        // Sales für den Monat (mit payment_method für Provider-Gebühren)
+        // Sales für den Monat (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
         const { data: sales } = await supabase
           .from('sales')
           .select('id, total_amount, payment_method')
           .eq('status', 'completed')
+          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
           .gte('created_at', startDate + 'T00:00:00')
           .lte('created_at', endDate + 'T23:59:59')
         
-        // Expenses für den Monat
+        // Expenses für den Monat mit ORGANIZATION SECURITY
         const { data: expenses } = await supabase
           .from('expenses')
           .select('amount')
+          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
           .gte('payment_date', startDate)
           .lte('payment_date', endDate)
         
@@ -428,6 +448,11 @@ export function useReports() {
   // Dieser Monat Daten
   const getThisMonthData = async () => {
     try {
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt für This Month Data.')
+      }
+
       const now = new Date()
       // KORRIGIERT: Verwende Swiss-aware date utilities statt naive JavaScript Date
       const firstDay = getFirstDayOfMonth(now)
@@ -436,19 +461,21 @@ export function useReports() {
       const endDate = formatDateForAPI(lastDay)
       
       
-      // Sales (mit payment_method für Provider-Gebühren)
+      // Sales (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
       const { data: sales } = await supabase
         .from('sales')
         .select('id, total_amount, payment_method')
         .eq('status', 'completed')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('created_at', startDate + 'T00:00:00')
         .lte('created_at', endDate + 'T23:59:59')
       
       
-      // Expenses
+      // Expenses mit ORGANIZATION SECURITY
       const { data: expenses } = await supabase
         .from('expenses')
         .select('amount')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('payment_date', startDate)
         .lte('payment_date', endDate)
       
@@ -476,23 +503,30 @@ export function useReports() {
   // Letzte 30 Tage Trend
   const getLast30DaysTrend = async () => {
     try {
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt für Last 30 Days Trend.')
+      }
+
       const now = new Date()
       const last30Start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       const prev30Start = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       const prev30End = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
-      // Letzte 30 Tage (mit payment_method für Provider-Gebühren)
+      // Letzte 30 Tage (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
       const { data: recentSales } = await supabase
         .from('sales')
         .select('id, total_amount, payment_method')
         .eq('status', 'completed')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('created_at', last30Start + 'T00:00:00')
       
-      // Vorherige 30 Tage (mit payment_method für Provider-Gebühren)
+      // Vorherige 30 Tage (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
       const { data: prevSales } = await supabase
         .from('sales')
         .select('id, total_amount, payment_method')
         .eq('status', 'completed')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('created_at', prev30Start + 'T00:00:00')
         .lte('created_at', prev30End + 'T23:59:59')
       
@@ -523,22 +557,29 @@ export function useReports() {
   // Jahres-Total
   const getYearTotalData = async () => {
     try {
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt für Year Total Data.')
+      }
+
       const now = new Date()
       // KORRIGIERT: Swiss-aware year start
       const yearStartDate = new Date(now.getFullYear(), 0, 1) // 1. Januar
       const yearStart = formatDateForAPI(yearStartDate)
       
-      // Sales (mit payment_method für Provider-Gebühren)
+      // Sales (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
       const { data: sales } = await supabase
         .from('sales')
         .select('id, total_amount, payment_method')
         .eq('status', 'completed')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('created_at', yearStart + 'T00:00:00')
       
-      // Expenses
+      // Expenses mit ORGANIZATION SECURITY
       const { data: expenses } = await supabase
         .from('expenses')
         .select('amount')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .gte('payment_date', yearStart)
       
       // Revenue-Breakdown berechnen (Brutto, Netto, Fees)
@@ -561,13 +602,19 @@ export function useReports() {
   // Recent Activities
   const getRecentActivities = async (): Promise<ActivityItem[]> => {
     try {
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt für Recent Activities.')
+      }
+
       const activities: ActivityItem[] = []
       
-      // Letzte 10 Sales
+      // Letzte 10 Sales mit ORGANIZATION SECURITY
       const { data: sales, error: salesError } = await supabase
         .from('sales')
         .select('*')
         .eq('status', 'completed')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .order('created_at', { ascending: false })
         .limit(10)
 
@@ -575,10 +622,11 @@ export function useReports() {
         console.error('Error loading sales for activities:', salesError)
       }
       
-      // Letzte 10 Expenses
+      // Letzte 10 Expenses mit ORGANIZATION SECURITY
       const { data: expenses, error: expensesError } = await supabase
         .from('expenses')
         .select('*')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .order('created_at', { ascending: false })
         .limit(10)
 
@@ -664,15 +712,17 @@ export function useReports() {
     }
   }
 
-  // Statistiken beim ersten Laden abrufen
+  // Statistiken beim ersten Laden abrufen und bei Organization-Wechsel
   useEffect(() => {
-    loadDashboardStats()
-  }, [])
+    if (currentOrganization) {
+      loadDashboardStats()
+    }
+  }, [currentOrganization]) // 🔒 SECURITY: Refetch when organization changes
 
-  // Daily summaries destructuring ohne Konflikte
-  const { loading: dailyLoading, error: dailyError, ...dailyFunctions } = dailySummariesHook
+  // Cash balance destructuring ohne Konflikte
+  const { loading: cashLoading, error: cashError, ...cashFunctions } = cashBalanceHook
 
-  // Öffentliche API: Dashboard-Funktionen + Daily Summaries
+  // Öffentliche API: Dashboard-Funktionen + Cash Balance
   return {
     // Dashboard-spezifische Daten
     dashboardStats,
@@ -680,9 +730,9 @@ export function useReports() {
     error: dashboardError,
     refreshDashboard: loadDashboardStats,
     
-    // Daily Summaries Funktionen (delegiert, ohne Konflikte)
-    ...dailyFunctions,
-    dailyLoading,
-    dailyError,
+    // Cash Balance Funktionen (delegiert, ohne Konflikte)
+    ...cashFunctions,
+    cashLoading,
+    cashError,
   }
 }

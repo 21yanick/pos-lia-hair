@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import type { 
   UnifiedTransaction, 
   TransactionSearchQuery, 
@@ -33,6 +34,9 @@ export function useUnifiedTransactions() {
     totalAmount: 0,
     amountByType: { sale: 0, expense: 0, cash_movement: 0, bank_transaction: 0 }
   })
+  
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
 
   // Quick Filter Presets zu SearchQuery konvertieren
   const getQuickFilterQuery = useCallback((preset: QuickFilterPreset): Partial<TransactionSearchQuery> => {
@@ -88,10 +92,16 @@ export function useUnifiedTransactions() {
       setLoading(true)
       setError(null)
 
-      // Base Query auf unified_transactions_view
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
+
+      // Base Query auf unified_transactions_view mit ORGANIZATION SECURITY
       let dbQuery = supabase
         .from('unified_transactions_view')
         .select('*')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
 
       // Receipt Number Search (höchste Priorität)
       if (query.receiptNumber) {
@@ -199,7 +209,7 @@ export function useUnifiedTransactions() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [currentOrganization])
 
   // Business Logic: PDF Status berechnen
   const calculatePdfStatus = useCallback((tx: any): { status: PdfStatus, requirement: PdfRequirement } => {
@@ -318,6 +328,11 @@ export function useUnifiedTransactions() {
     try {
       setLoading(true)
       
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+      
       // Je nach Type aus der entsprechenden Tabelle laden
       let tableName = ''
       switch (transactionType) {
@@ -332,6 +347,7 @@ export function useUnifiedTransactions() {
         .from(tableName)
         .select('*')
         .eq('id', transactionId)
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .single()
 
       if (error) throw error
@@ -343,7 +359,7 @@ export function useUnifiedTransactions() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [currentOrganization])
 
   return {
     // State

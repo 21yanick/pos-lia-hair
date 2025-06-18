@@ -42,7 +42,7 @@ export default function LoginPage() {
         setIsSuccess(true)
         // Warte kurz für die Animation
         setTimeout(() => {
-          router.push("/dashboard")
+          router.push("/org/lia-hair/dashboard")
           router.refresh()
         }, 600)
       }

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/shared/components/ui/input"
 import { ArrowDownRight, Download, Search, Calendar, Loader2, RefreshCw, ArrowUpRight, ReceiptIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { useToast } from "@/shared/hooks/core/useToast"
-import { useDailySummaries } from "@/shared/hooks/business/useDailySummaries"
+import { useCashBalance } from "@/shared/hooks/business/useCashBalance"
 import { format } from "date-fns"
 import { de } from "date-fns/locale"
 import { formatDateForAPI, getTodaySwiss } from "@/shared/utils/dateUtils"
@@ -21,7 +21,7 @@ export default function CashRegisterPage() {
     error, 
     getCurrentCashBalance,
     getCashMovementsForMonth
-  } = useDailySummaries()
+  } = useCashBalance()
 
   // State für Cash Register Page
   const [entries, setEntries] = useState<CashEntry[]>([])

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
 import { generateDocumentDisplayName } from '@/shared/utils/documentHelpers'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 
 // Typen für Dokumente
 export type Document = Database['public']['Tables']['documents']['Row']
@@ -55,6 +56,9 @@ export function useDocuments() {
     }
   })
 
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
+
   // Hilfsfunktion für Storage URL (GEFIXT: Kein doppeltes documents/ Prefix)
   const getStorageUrl = async (filePath: string) => {
     try {
@@ -88,12 +92,18 @@ export function useDocuments() {
       setLoading(true)
       setError(null)
 
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
+
       // Storage Bucket Check entfernt - der Bucket existiert bereits
 
-      // 1. Dokumente abrufen
+      // 1. Dokumente abrufen mit ORGANIZATION SECURITY
       let documentsQuery = supabase
         .from('documents')
         .select('*')
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .order('created_at', { ascending: false })
 
       // Filter nach Dokumenttyp
@@ -129,22 +139,24 @@ export function useDocuments() {
 
           try {
             if (doc.type === 'expense_receipt' && doc.reference_id) {
-              // Betrag aus expenses Tabelle laden
+              // Betrag aus expenses Tabelle laden mit ORGANIZATION SECURITY
               const { data: expenseData } = await supabase
                 .from('expenses')
                 .select('amount')
                 .eq('id', doc.reference_id)
+                .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
                 .single()
               
               if (expenseData) {
                 amount = expenseData.amount
               }
             } else if (doc.type === 'receipt' && doc.reference_id) {
-              // Betrag aus sales Tabelle laden
+              // Betrag aus sales Tabelle laden mit ORGANIZATION SECURITY
               const { data: saleData } = await supabase
                 .from('sales')
                 .select('total_amount, status')
                 .eq('id', doc.reference_id)
+                .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
                 .single()
               
               if (saleData) {
@@ -152,11 +164,12 @@ export function useDocuments() {
                 status = saleData.status
               }
             } else if (doc.type === 'daily_report' && doc.reference_id) {
-              // Status aus daily_summaries Tabelle laden
+              // Status aus daily_summaries Tabelle laden mit ORGANIZATION SECURITY
               const { data: summaryData } = await supabase
                 .from('daily_summaries')
                 .select('status, sales_total')
                 .eq('id', doc.reference_id)
+                .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
                 .single()
               
               if (summaryData) {
@@ -241,6 +254,11 @@ export function useDocuments() {
       setLoading(true)
       setError(null)
 
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       const fileName = customName || `${type}_${Date.now()}_${file.name}`
       const filePath = `${type}/${fileName}`
 
@@ -265,7 +283,8 @@ export function useDocuments() {
         file_path: filePath,
         document_date: new Date().toISOString().split('T')[0],
         payment_method: null,
-        user_id: user.user.id
+        user_id: user.user.id,
+        organization_id: currentOrganization.id // 🔒 SECURITY: Organization-scoped
       }
 
       const { error: dbError } = await supabase
@@ -292,11 +311,17 @@ export function useDocuments() {
       setLoading(true)
       setError(null)
 
-      // Dokumentdaten abrufen, um den Dateipfad zu erhalten
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
+      // Dokumentdaten abrufen, um den Dateipfad zu erhalten mit ORGANIZATION SECURITY
       const { data: docData, error: fetchError } = await supabase
         .from('documents')
         .select('file_path')
         .eq('id', documentId)
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .single()
 
       if (fetchError) {
@@ -314,11 +339,12 @@ export function useDocuments() {
         }
       }
 
-      // Datenbankeintrag löschen
+      // Datenbankeintrag löschen mit ORGANIZATION SECURITY
       const { error: dbError } = await supabase
         .from('documents')
         .delete()
         .eq('id', documentId)
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
 
       if (dbError) {
         throw new Error(`Datenbank-Fehler: ${dbError.message}`)
@@ -344,6 +370,11 @@ export function useDocuments() {
       setLoading(true)
       setError(null)
 
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       // Hier würde die PDF-Generierung stattfinden
       // Für jetzt erstellen wir nur einen Datenbankeintrag
       const { data: user } = await supabase.auth.getUser()
@@ -360,7 +391,8 @@ export function useDocuments() {
         file_path: filePath,
         document_date: new Date().toISOString().split('T')[0],
         payment_method: data.payment_method || null,
-        user_id: user.user.id
+        user_id: user.user.id,
+        organization_id: currentOrganization.id // 🔒 SECURITY: Organization-scoped
       }
 
       const { error: dbError } = await supabase

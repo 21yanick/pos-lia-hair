@@ -25,6 +25,7 @@ import {
 import { previewCAMTFile, importCAMTFile } from '../services/camtImporter'
 import type { ImportPreviewData, ImportExecutionResult } from '../types/banking'
 import { formatDateForAPI } from '@/shared/utils/dateUtils'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 
 type ImportStep = 'upload' | 'preview' | 'confirm'
 
@@ -53,6 +54,9 @@ export function BankImportDialog({
   onSuccess 
 }: BankImportDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // 🔒 Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
   
   const [state, setState] = useState<ImportState>({
     step: 'upload',
@@ -182,8 +186,19 @@ export function BankImportDialog({
     setState(prev => ({ ...prev, loading: true, error: null }))
 
     try {
+      // 🔒 Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
+
       const xmlContent = await state.file.text()
-      const result = await importCAMTFile(xmlContent, state.file.name, bankAccountId, userId)
+      const result = await importCAMTFile(
+        xmlContent, 
+        state.file.name, 
+        bankAccountId, 
+        userId,
+        currentOrganization.id // ✅ CRITICAL FIX: Organization security
+      )
 
       if (result.success && result.importResult) {
         setState(prev => ({

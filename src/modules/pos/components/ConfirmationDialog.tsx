@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog"
 import { useToast } from "@/shared/hooks/core/useToast"
-import type { PaymentMethod, TransactionResult } from "../hooks/usePOSState"
+import type { PaymentMethod, TransactionResult } from "@/shared/hooks/business/usePOSState"
 
 interface ConfirmationDialogProps {
   isOpen: boolean

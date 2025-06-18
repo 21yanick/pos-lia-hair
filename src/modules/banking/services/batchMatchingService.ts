@@ -48,7 +48,9 @@ export interface BatchMatchResult {
 // BATCH MATCHING ALGORITHM
 // =====================================================
 
-export async function findBatchMatchCandidates(): Promise<BatchMatchCandidate[]> {
+export async function findBatchMatchCandidates(
+  organizationId: string  // ✅ CRITICAL FIX: Multi-Tenant organization security
+): Promise<BatchMatchCandidate[]> {
   try {
     console.log('🔍 Starting batch matching analysis...')
     
@@ -57,6 +59,7 @@ export async function findBatchMatchCandidates(): Promise<BatchMatchCandidate[]>
       .from('bank_transactions')
       .select('id, amount, description, transaction_date')
       .eq('status', 'unmatched')
+      .eq('organization_id', organizationId)  // ✅ CRITICAL FIX: Organization filter
       .order('transaction_date')
     
     if (bankError) throw bankError
@@ -72,6 +75,7 @@ export async function findBatchMatchCandidates(): Promise<BatchMatchCandidate[]>
         sales!inner(id)
       `)
       .eq('status', 'matched')
+      .eq('organization_id', organizationId)  // ✅ CRITICAL FIX: Organization filter
       .order('settlement_date')
     
     if (providerError) throw providerError
@@ -344,11 +348,13 @@ export async function executeBatchMatches(
 // PUBLIC API
 // =====================================================
 
-export async function runAutomaticBatchMatching(): Promise<BatchMatchResult> {
+export async function runAutomaticBatchMatching(
+  organizationId: string  // ✅ CRITICAL FIX: Multi-Tenant organization parameter
+): Promise<BatchMatchResult> {
   console.log('🤖 Starting automatic batch matching...')
   
   // Find candidates
-  const candidates = await findBatchMatchCandidates()
+  const candidates = await findBatchMatchCandidates(organizationId)  // ✅ Pass organization
   
   if (candidates.length === 0) {
     console.log('ℹ️ No batch match candidates found')

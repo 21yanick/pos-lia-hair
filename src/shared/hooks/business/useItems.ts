@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 
 // Type für das Item, wie es aus der Datenbank kommt
 export type Item = Database['public']['Tables']['items']['Row']
@@ -17,6 +18,7 @@ export function useItems() {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { currentOrganization } = useOrganization()
 
   // Laden aller Items mit automatischer Synchronisierung bei Bedarf
   useEffect(() => {
@@ -65,11 +67,16 @@ export function useItems() {
           }
         }
         
-        // 4. Items laden, auch wenn Synchronisierung fehlschlägt
-        // (damit wir zumindest die Fehlermeldung korrekt anzeigen können)
+        // 4. Items laden (Multi-Tenant: nur für aktuelle Organization)
+        if (!currentOrganization) {
+          setError('Keine Organization ausgewählt.')
+          return
+        }
+
         const { data, error } = await supabase
           .from('items')
           .select('*')
+          .eq('organization_id', currentOrganization.id) // 🔒 Multi-Tenant Security
           .order('name')
         
         if (error) {
@@ -87,20 +94,22 @@ export function useItems() {
     }
 
     loadItemsWithRetry()
-  }, [])
+  }, [currentOrganization]) // Reload when organization changes
 
-  // Item hinzufügen
+  // Item hinzufügen (Multi-Tenant)
   const addItem = async (newItem: ItemInsert) => {
     try {
       setLoading(true)
       
-      // Session und Benutzer-Info für Debugging verfügbar
-      await supabase.auth.getSession()
-      await supabase.auth.getUser()
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
       
-      // Daten für das Einfügen vorbereiten
+      // Daten für das Einfügen vorbereiten (mit organization_id)
       const itemData = {
-        ...newItem
+        ...newItem,
+        organization_id: currentOrganization.id // 🔒 Multi-Tenant Security
       }
       
       
@@ -137,12 +146,17 @@ export function useItems() {
     }
   }
 
-  // Item aktualisieren
+  // Item aktualisieren (Multi-Tenant)
   const updateItem = async (updatedItem: ItemUpdate) => {
     const { id, ...rest } = updatedItem
     
     try {
       setLoading(true)
+      
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
       
       // Daten für die Aktualisierung vorbereiten
       const itemData = {
@@ -153,6 +167,7 @@ export function useItems() {
         .from('items')
         .update(itemData)
         .eq('id', id)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Items
         .select('*')
         .single()
       
@@ -173,10 +188,15 @@ export function useItems() {
     }
   }
 
-  // Toggle Favoriten-Status
+  // Toggle Favoriten-Status (Multi-Tenant)
   const toggleFavorite = async (id: string, currentValue: boolean) => {
     try {
       setLoading(true)
+      
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
       
       const { data, error } = await supabase
         .from('items')
@@ -184,6 +204,7 @@ export function useItems() {
           is_favorite: !currentValue
         })
         .eq('id', id)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Items
         .select('*')
         .single()
       
@@ -204,10 +225,15 @@ export function useItems() {
     }
   }
 
-  // Toggle Aktiv-Status
+  // Toggle Aktiv-Status (Multi-Tenant)
   const toggleActive = async (id: string, currentValue: boolean) => {
     try {
       setLoading(true)
+      
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
       
       const { data, error } = await supabase
         .from('items')
@@ -215,6 +241,7 @@ export function useItems() {
           active: !currentValue
         })
         .eq('id', id)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Items
         .select('*')
         .single()
       
@@ -235,15 +262,21 @@ export function useItems() {
     }
   }
 
-  // Item löschen
+  // Item löschen (Multi-Tenant)
   const deleteItem = async (id: string) => {
     try {
       setLoading(true)
+      
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
       
       const { error } = await supabase
         .from('items')
         .delete()
         .eq('id', id)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Items
       
       if (error) {
         throw error

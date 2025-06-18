@@ -20,8 +20,13 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react"
+import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
 export function ImportCenter() {
+  const { currentOrganization } = useOrganization()
+  
+  // 🔗 Helper: Organization-aware URL builder
+  const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
   const [activeTab, setActiveTab] = useState<'upload' | 'json-import' | 'csv-import'>('upload')
   const { stats, loading: statsLoading, error: statsError, refetch: refetchStats } = useSystemStats()
 
@@ -31,7 +36,7 @@ export function ImportCenter() {
       {/* Header */}
       <div className="flex items-center space-x-4">
         <Button variant="outline" size="sm" asChild>
-          <Link href="/settings">
+          <Link href={getOrgUrl("/settings")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Zurück zu Einstellungen
           </Link>

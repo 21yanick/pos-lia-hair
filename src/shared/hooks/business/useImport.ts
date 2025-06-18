@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from 'react'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 
 // Import Types
 import type { 
@@ -38,6 +39,9 @@ export function useImport() {
     errors: []
   })
 
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization, user } = useOrganization()
+
   const updateProgress = useCallback((progress: number, phase: string) => {
     setState(prev => ({
       ...prev,
@@ -55,18 +59,47 @@ export function useImport() {
     }))
   }, [])
 
-  // Main Import Function
+  // Main Import Function (Multi-Tenant)
   const processImport = useCallback(async (
     data: ImportDataContainer,
     config: Partial<ImportConfig> = {}
   ) => {
-    const fullConfig = { ...CONFIG, ...config }
+    // 🔒 CRITICAL SECURITY: Organization required
+    if (!currentOrganization) {
+      setState({
+        status: 'error',
+        progress: 0,
+        currentPhase: 'Fehler: Keine Organization ausgewählt',
+        results: null,
+        errors: ['Keine Organization ausgewählt. Import abgebrochen.']
+      })
+      return
+    }
+
+    if (!user) {
+      setState({
+        status: 'error',
+        progress: 0,
+        currentPhase: 'Fehler: Nicht angemeldet',
+        results: null,
+        errors: ['Nicht angemeldet. Import abgebrochen.']
+      })
+      return
+    }
+
+    // Multi-Tenant Config: Use authenticated user and organization
+    const fullConfig = { 
+      ...CONFIG, 
+      ...config,
+      targetUserId: user.id, // 🔒 Use authenticated user instead of hardcoded
+      organizationId: currentOrganization.id // 🔒 SECURITY: Organization-scoped
+    }
     const startTime = Date.now()
 
     setState({
       status: 'processing',
       progress: 0,
-      currentPhase: 'Initialisierung...',
+      currentPhase: 'Initialisierung (Multi-Tenant)...',
       results: null,
       errors: []
     })
@@ -234,7 +267,7 @@ export function useImport() {
         errors: [errorMessage]
       })
     }
-  }, [updateProgress])
+  }, [updateProgress, currentOrganization, user])
 
   const resetState = useCallback(() => {
     setState({

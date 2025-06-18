@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/shared/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
 import { Badge } from "@/shared/components/ui/badge"
 import { useItems } from "@/shared/hooks/business/useItems"
-import type { ProductTab } from "../hooks/usePOSState"
+import type { ProductTab } from "@/shared/hooks/business/usePOSState"
 import type { Item } from "@/shared/hooks/business/useItems"
 
 interface ProductGridProps {

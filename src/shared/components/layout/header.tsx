@@ -14,11 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu"
-import { supabase } from "@/shared/lib/supabase/client"
+import { useAuth } from "@/shared/hooks/auth/useAuth"
+import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
 export function Header() {
   const pathname = usePathname()
-  const [user] = useState({ name: "Admin User", role: "admin" })
+  const { user, signOut, userRole } = useAuth()
+  const { currentOrganization } = useOrganization()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -35,9 +37,14 @@ export function Header() {
     setTheme(isDarkMode ? 'light' : 'dark')
   }
 
-  // Get page title based on pathname
+  // Get page title based on pathname (organization-aware)
   const getPageTitle = () => {
-    const path = pathname?.split("/")[1] || ""
+    // Handle organization routes: /org/[slug]/page
+    const pathParts = pathname?.split("/") || []
+    const path = pathParts.length >= 4 && pathParts[1] === "org" 
+      ? pathParts[3] // For /org/slug/dashboard -> "dashboard"
+      : pathParts[1] // For legacy routes
+
     switch (path) {
       case "dashboard":
         return "Dashboard"
@@ -51,14 +58,25 @@ export function Header() {
         return "Ausgaben"
       case "transactions":
         return "Transaktionen"
-      case "transactions":
-        return "Dokumente"
       case "banking":
         return "Banking"
       case "settings":
-        return "Einstellungen"
+        // Check for settings sub-pages
+        const subPath = pathParts[pathParts.length - 1]
+        switch (subPath) {
+          case "business":
+            return "Geschäfts-Einstellungen"
+          case "import":
+            return "Import Center"
+          case "suppliers":
+            return "Lieferanten"
+          default:
+            return "Einstellungen"
+        }
+      case "organizations":
+        return "Organisation wählen"
       default:
-        return "Coiffeursalon POS"
+        return currentOrganization?.display_name || currentOrganization?.name || "POS System"
     }
   }
 
@@ -110,25 +128,39 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center space-x-2">
               <User size={20} />
-              <span className="hidden md:inline-block">{user.name}</span>
+              <span className="hidden md:inline-block">
+                {user?.name || user?.email || "User"}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Mein Konto</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {user?.name || "User"}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {userRole && `${userRole.charAt(0).toUpperCase() + userRole.slice(1)}`}
+                </p>
+                {currentOrganization && (
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {currentOrganization.name}
+                  </p>
+                )}
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profil</DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/settings">Einstellungen</Link>
+              <Link href={currentOrganization ? `/org/${currentOrganization.slug}/settings` : "/settings"}>
+                Einstellungen
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-destructive"
-              onClick={async () => {
-                const { error } = await supabase.auth.signOut()
-                if (!error) {
-                  // Force refresh to apply the redirect in middleware
-                  window.location.href = "/login"
-                }
+              onClick={() => {
+                signOut() // Uses enhanced auth hook with organization context clearing
               }}
             >
               Abmelden

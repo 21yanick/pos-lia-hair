@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { CartItem } from './useSales'
+import type { CartItem } from '@/shared/hooks/business/useSales'
 
 // Typen für Zahlungsmethoden
 export type PaymentMethod = 'cash' | 'twint' | 'sumup'

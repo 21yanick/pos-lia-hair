@@ -19,22 +19,33 @@ import {
 } from "lucide-react"
 import { cn } from "@/shared/utils"
 import { Button } from "@/shared/components/ui/button"
-import { supabase } from "@/shared/lib/supabase/client"
+import { useAuth } from "@/shared/hooks/auth/useAuth"
+import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
-const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: BarChart4 },
-  { name: "Verkauf", href: "/pos", icon: ShoppingCart },
-  { name: "Banking", href: "/banking", icon: CreditCard },
-  { name: "Transaktionen", href: "/transactions", icon: FileText },
-  { name: "Kassenbuch", href: "/cash-register", icon: BookOpen },
-  { name: "Produkte", href: "/products", icon: Package },
-  { name: "Ausgaben", href: "/expenses", icon: FileIcon },
-  { name: "Einstellungen", href: "/settings", icon: Settings },
+const navItemsTemplate = [
+  { name: "Dashboard", path: "/dashboard", icon: BarChart4 },
+  { name: "Verkauf", path: "/pos", icon: ShoppingCart },
+  { name: "Banking", path: "/banking", icon: CreditCard },
+  { name: "Transaktionen", path: "/transactions", icon: FileText },
+  { name: "Kassenbuch", path: "/cash-register", icon: BookOpen },
+  { name: "Produkte", path: "/products", icon: Package },
+  { name: "Ausgaben", path: "/expenses", icon: FileIcon },
+  { name: "Einstellungen", path: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const { signOut } = useAuth()
+  const { currentOrganization } = useOrganization()
+
+  // Create organization-aware navigation items
+  const navItems = navItemsTemplate.map(item => ({
+    ...item,
+    href: currentOrganization 
+      ? `/org/${currentOrganization.slug}${item.path}`
+      : item.path // Fallback for organization-less routes
+  }))
 
   return (
     <div
@@ -93,7 +104,10 @@ export function Sidebar() {
       <nav className="flex-1 py-4 overflow-y-auto">
         <ul className="space-y-1 px-2">
           {navItems.map((item) => {
-            const isActive = pathname?.startsWith(item.href) || false
+            // Enhanced active state detection for organization routes
+            const isActive = pathname?.includes(item.path) || 
+                            pathname?.startsWith(item.href) || 
+                            false
             const Icon = item.icon
 
             return (
@@ -122,12 +136,8 @@ export function Sidebar() {
             "w-full flex items-center text-destructive hover:bg-destructive/10 hover:text-destructive",
             collapsed && "justify-center",
           )}
-          onClick={async () => {
-            const { error } = await supabase.auth.signOut()
-            if (!error) {
-              // Force refresh to apply the redirect in middleware
-              window.location.href = "/login"
-            }
+          onClick={() => {
+            signOut() // Uses enhanced auth hook with organization context clearing
           }}
         >
           <LogOut size={20} className={cn("flex-shrink-0", collapsed ? "" : "mr-2")} />

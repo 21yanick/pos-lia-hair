@@ -15,8 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog"
-import type { PaymentMethod } from "../hooks/usePOSState"
-import type { CartItem, CreateSaleData } from "../hooks/useSales"
+import type { PaymentMethod } from "@/shared/hooks/business/usePOSState"
+import type { CartItem, CreateSaleData } from "@/shared/hooks/business/useSales"
 
 interface PaymentDialogProps {
   isOpen: boolean

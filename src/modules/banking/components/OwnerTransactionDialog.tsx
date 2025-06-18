@@ -20,6 +20,7 @@ import { Loader2, AlertCircle, DollarSign, CreditCard, Banknote } from 'lucide-r
 import { createOwnerTransaction, type OwnerTransactionInsert } from '../services/ownerTransactionsApi'
 import { supabase } from '@/shared/lib/supabase/client'
 import { getTodaySwissString } from '@/shared/utils/dateUtils'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 
 // =====================================================
 // COMPONENT INTERFACE
@@ -125,6 +126,9 @@ export function OwnerTransactionDialog({
   const [error, setError] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   
+  // 🔒 Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
+  
   // Get current user
   useEffect(() => {
     const getUser = async () => {
@@ -166,6 +170,12 @@ export function OwnerTransactionDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // 🔒 Security: Organization & User required
+    if (!currentOrganization) {
+      setError('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      return
+    }
+    
     if (!userId) {
       setError('User not authenticated')
       return
@@ -186,6 +196,7 @@ export function OwnerTransactionDialog({
     setError(null)
     
     try {
+      // ✅ FIXED: Include organization_id for Multi-Tenant security
       const transactionData: OwnerTransactionInsert = {
         transaction_type: transactionType,
         amount: numericAmount,
@@ -193,6 +204,7 @@ export function OwnerTransactionDialog({
         transaction_date: transactionDate,
         payment_method: paymentMethod,
         user_id: userId,
+        organization_id: currentOrganization.id, // 🔒 CRITICAL FIX: Organization security
         notes: notes.trim() || null
       }
       

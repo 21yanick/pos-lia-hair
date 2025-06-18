@@ -15,9 +15,14 @@ import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import { supabase } from "@/shared/lib/supabase/client"
 import type { Supplier, SupplierCategory } from '@/shared/types/suppliers'
 import Link from 'next/link'
+import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
 export function SuppliersPage() {
   const { toast } = useToast()
+  const { currentOrganization } = useOrganization()
+  
+  // 🔗 Helper: Organization-aware URL builder
+  const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
   
   // State
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -117,7 +122,7 @@ export function SuppliersPage() {
         
         <div className="flex items-center space-x-2">
           <Button variant="outline" asChild>
-            <Link href="/settings/import">
+            <Link href={getOrgUrl("/settings/import")}>
               <Upload className="h-4 w-4 mr-2" />
               CSV Import
             </Link>

@@ -1,8 +1,30 @@
-// Business Settings Service
-// CRUD operations for company data and configuration
+// Business Settings Service  
+// CRUD operations for company data and configuration (Multi-Tenant)
 
 import { supabase } from '@/shared/lib/supabase/client'
 import type { BusinessSettings, BusinessSettingsFormData } from '@/shared/types/businessSettings'
+
+// Helper function to get current organization ID
+async function getCurrentOrganizationId(): Promise<string> {
+  // Note: This should ideally come from OrganizationContext, but services need to be context-free
+  // For now, we'll use a pragmatic approach and get it from URL or session storage
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname
+    const match = path.match(/^\/org\/([^\/]+)/)
+    if (match) {
+      const slug = match[1]
+      // Get organization ID by slug
+      const { data } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('slug', slug)
+        .single()
+      
+      if (data?.id) return data.id
+    }
+  }
+  throw new Error('No organization context available')
+}
 
 // =================================
 // Business Settings CRUD Operations
@@ -10,13 +32,12 @@ import type { BusinessSettings, BusinessSettingsFormData } from '@/shared/types/
 
 export async function getBusinessSettings(): Promise<BusinessSettings | null> {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    const organizationId = await getCurrentOrganizationId()
 
     const { data, error } = await supabase
       .from('business_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -34,17 +55,16 @@ export async function upsertBusinessSettings(
   settingsData: BusinessSettingsFormData
 ): Promise<BusinessSettings> {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    const organizationId = await getCurrentOrganizationId()
 
     const { data, error } = await supabase
       .from('business_settings')
       .upsert({
-        user_id: user.id,
+        organization_id: organizationId, // 🔒 Multi-Tenant Security
         ...settingsData,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'user_id'
+        onConflict: 'organization_id' // Changed from user_id to organization_id
       })
       .select()
       .single()
@@ -66,8 +86,7 @@ export async function uploadLogo(file: File): Promise<{
   path: string
 }> {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    const organizationId = await getCurrentOrganizationId()
 
     // File validation
     const allowedTypes = ['image/jpeg', 'image/png']
@@ -79,9 +98,9 @@ export async function uploadLogo(file: File): Promise<{
       throw new Error('Logo file must be smaller than 5MB')
     }
 
-    // Generate unique filename
+    // Generate unique filename (Multi-Tenant: use organization_id)
     const fileExtension = file.name.split('.').pop()
-    const fileName = `${user.id}/logo-${Date.now()}.${fileExtension}`
+    const fileName = `${organizationId}/logo-${Date.now()}.${fileExtension}`
 
     // Delete old logo if exists
     const currentSettings = await getBusinessSettings()

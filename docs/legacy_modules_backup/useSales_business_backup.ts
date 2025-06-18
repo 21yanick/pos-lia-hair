@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
+// Entfernt: useDocumentGeneration Hook (direkte react-pdf Integration)
 
 // Typen für Verkäufe (ersetzt Transaktionen)
 export type Sale = Database['public']['Tables']['sales']['Row']
@@ -38,30 +40,46 @@ export function useSales() {
   const [sales, setSales] = useState<Sale[]>([])
   const [currentSale, setCurrentSale] = useState<Sale | null>(null)
   const { createSaleCashMovement, reverseCashMovement } = useCashMovements()
+  const { currentOrganization } = useOrganization()
+  // Entfernt: generateReceipt Hook (direkte react-pdf Integration)
 
   // Verkauf erstellen mit allen Posten
   const createSale = async (data: CreateSaleData) => {
+    console.log('🔥 ENTRY: createSale function called with data:', data)
     try {
       setLoading(true)
       setError(null)
 
-      // 1. Benutzer-ID abrufen
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData?.user) {
-        throw new Error('Nicht angemeldet. Bitte melden Sie sich an.')
+      // 1. Organization ID abrufen (Frontend-Enforced Multi-Tenancy)
+      console.log('🔍 DEBUG useSales: currentOrganization:', currentOrganization)
+      console.log('🔍 DEBUG useSales: currentOrganization.id:', currentOrganization?.id)
+      console.log('🔍 DEBUG useSales: typeof currentOrganization:', typeof currentOrganization)
+      console.log('🔍 DEBUG useSales: currentOrganization keys:', currentOrganization ? Object.keys(currentOrganization) : 'N/A')
+      
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
       }
-      const userId = userData.user.id
+      
+      if (!currentOrganization.id) {
+        throw new Error(`Organization hat keine ID: ${JSON.stringify(currentOrganization)}`)
+      }
 
       // 2. Verkauf erstellen
+      const saleData = {
+        total_amount: data.total_amount,
+        payment_method: data.payment_method,
+        status: 'completed',  // Standard-Status für neue Verkäufe
+        notes: data.notes || null,
+        organization_id: currentOrganization.id,
+      }
+      
+      console.log('🚨 CRITICAL DEBUG: About to insert sale with data:', saleData)
+      console.log('🚨 CRITICAL DEBUG: organization_id value:', saleData.organization_id)
+      console.log('🚨 CRITICAL DEBUG: currentOrganization at insert time:', currentOrganization)
+      
       const { data: sale, error: saleError } = await supabase
         .from('sales')
-        .insert({
-          total_amount: data.total_amount,
-          payment_method: data.payment_method,
-          status: 'completed',  // Standard-Status für neue Verkäufe
-          notes: data.notes || null,
-          user_id: userId,
-        })
+        .insert(saleData)
         .select()
         .single()
 
@@ -141,11 +159,17 @@ export function useSales() {
       const { pdf } = await import('@react-pdf/renderer')
       
       // Business Settings laden
-      const { getBusinessSettings } = await import('@/shared/services/businessSettingsService')
+      const { getBusinessSettings, resolveLogoUrl } = await import('@/shared/services/businessSettingsService')
       const businessSettings = await getBusinessSettings()
       
+      // Logo URL für PDF-Kontext auflösen (Development: localhost -> Docker-interne URL)
+      const resolvedBusinessSettings = businessSettings ? {
+        ...businessSettings,
+        logo_url: resolveLogoUrl(businessSettings.logo_url)
+      } : null
+      
       // PDF erstellen  
-      const pdfComponent = React.createElement(ReceiptPDF, { sale, items, businessSettings }) as any
+      const pdfComponent = React.createElement(ReceiptPDF, { sale, items, businessSettings: resolvedBusinessSettings }) as any
       const blob = await pdf(pdfComponent).toBlob()
       const fileName = `quittung-${sale.id}.pdf`
       const file = new File([blob], fileName, { type: 'application/pdf' })
@@ -198,11 +222,16 @@ export function useSales() {
     }
   }
 
-  // Verkäufe für den aktuellen Tag laden
+  // Verkäufe für den aktuellen Tag laden (Multi-Tenant: nur für aktuelle Organization)
   const loadTodaySales = async () => {
     try {
       setLoading(true)
       setError(null)
+
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
 
       const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
       
@@ -215,6 +244,7 @@ export function useSales() {
             item:items (name)
           )
         `)
+        .eq('organization_id', currentOrganization.id) // 🔒 CRITICAL: Organization-scoped
         .gte('created_at', `${today}T00:00:00`)
         .lte('created_at', `${today}T23:59:59`)
         .order('created_at', { ascending: false })
@@ -235,19 +265,25 @@ export function useSales() {
     }
   }
 
-  // Verkauf stornieren
+  // Verkauf stornieren (Multi-Tenant: nur eigene Organization)
   const cancelSale = async (saleId: string) => {
     try {
       setLoading(true)
       setError(null)
 
-      // Status des Verkaufs auf 'cancelled' ändern
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
+      // Status des Verkaufs auf 'cancelled' ändern (mit Organization Security)
       const { data, error } = await supabase
         .from('sales')
         .update({ 
           status: 'cancelled'
         })
         .eq('id', saleId)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Sales
         .select()
         .single()
 
@@ -280,15 +316,21 @@ export function useSales() {
     }
   }
 
-  // Verkäufe für Datumsbereich laden
+  // Verkäufe für Datumsbereich laden (Multi-Tenant: nur eigene Organization)
   const getSalesForDateRange = async (startDate: string, endDate: string) => {
     try {
       setLoading(true)
       setError(null)
 
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       const { data, error } = await supabase
         .from('sales')
         .select('*')
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Sales
         .gte('created_at', startDate)
         .lte('created_at', endDate)
         .order('created_at', { ascending: false })
@@ -307,15 +349,21 @@ export function useSales() {
     }
   }
 
-  // Verkäufe für Datumsbereich laden und in State setzen
+  // Verkäufe für Datumsbereich laden und in State setzen (Multi-Tenant)
   const loadSalesForDateRange = async (startDate: string, endDate: string) => {
     try {
       setLoading(true)
       setError(null)
 
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       const { data, error } = await supabase
         .from('sales')
         .select('*')
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Sales
         .gte('created_at', startDate)
         .lte('created_at', endDate)
         .order('created_at', { ascending: false })
@@ -341,6 +389,7 @@ export function useSales() {
     sales,
     currentSale,
     createSale,
+    createReceiptPDF,
     loadTodaySales,
     getSalesForDateRange,
     loadSalesForDateRange,

@@ -16,6 +16,9 @@ export type TransactionResult = {
   change?: number
   receiptUrl?: string
   error?: string
+  amount?: number              // Enhanced: for POS display purposes
+  paymentMethod?: PaymentMethod // Enhanced: for confirmation dialog
+  cashReceived?: number        // Enhanced: for cash payment tracking
 }
 
 export function usePOSState() {

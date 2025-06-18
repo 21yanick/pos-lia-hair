@@ -24,6 +24,7 @@ import {
 } from '../services/bankingApi'
 import { getOwnerBalance, type OwnerBalance } from '../services/ownerTransactionsApi'
 import { supabase } from '@/shared/lib/supabase/client'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 
 // =====================================================
 // HOOK INTERFACE
@@ -84,6 +85,9 @@ export function useBankingData(): UseBankingDataReturn {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
+
   // =====================================================
   // DATA FETCHING
   // =====================================================
@@ -93,11 +97,16 @@ export function useBankingData(): UseBankingDataReturn {
       setIsLoading(true)
       setError(null)
 
+      // 🔒 CRITICAL SECURITY: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
+
       // Get current user ID for Owner Balance
       const { data: { session } } = await supabase.auth.getSession()
       const userId = session?.user?.id
 
-      // Fetch all data in parallel for performance
+      // Fetch all data in parallel for performance with ORGANIZATION SECURITY
       const [
         salesResult,
         providerResult,
@@ -107,12 +116,12 @@ export function useBankingData(): UseBankingDataReturn {
         accountsResult,
         ownerBalanceResult
       ] = await Promise.all([
-        getUnmatchedSalesForProvider(),
-        getUnmatchedProviderReports(),
-        getUnmatchedBankTransactions(),
-        getAvailableForBankMatching(),
-        getBankingStats(),
-        getBankAccounts(),
+        getUnmatchedSalesForProvider(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
+        getUnmatchedProviderReports(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
+        getUnmatchedBankTransactions(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
+        getAvailableForBankMatching(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
+        getBankingStats(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
+        getBankAccounts(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
         userId ? getOwnerBalance(userId) : Promise.resolve({ data: null, error: null })
       ])
 
@@ -186,8 +195,8 @@ export function useBankingData(): UseBankingDataReturn {
         
         // Refresh Tab 2 data - matched sale should now appear in available_for_bank_matching
         const [matchingResult, statsResult] = await Promise.all([
-          getAvailableForBankMatching(),
-          getBankingStats()
+          getAvailableForBankMatching(currentOrganization!.id), // 🔒 SECURITY: Organization-scoped
+          getBankingStats(currentOrganization!.id) // 🔒 SECURITY: Organization-scoped
         ])
         
         if (matchingResult.data && !matchingResult.error) {
@@ -230,7 +239,7 @@ export function useBankingData(): UseBankingDataReturn {
         )
         
         // Refresh stats
-        const statsResult = await getBankingStats()
+        const statsResult = await getBankingStats(currentOrganization!.id) // 🔒 SECURITY: Organization-scoped
         if (statsResult.data && !statsResult.error) {
           setStats(statsResult.data)
         }
@@ -251,10 +260,12 @@ export function useBankingData(): UseBankingDataReturn {
   // EFFECTS
   // =====================================================
 
-  // Initial data fetch
+  // Initial data fetch and refetch on organization change
   useEffect(() => {
-    fetchAllData()
-  }, [])
+    if (currentOrganization) {
+      fetchAllData()
+    }
+  }, [currentOrganization]) // 🔒 SECURITY: Refetch when organization changes
 
   // =====================================================
   // RETURN HOOK INTERFACE

@@ -38,6 +38,7 @@ export async function createOwnerTransaction(transaction: OwnerTransactionInsert
         ? `Owner Einlage: ${transaction.description}`
         : `Owner Entnahme: ${transaction.description}`
 
+      // ✅ CRITICAL FIX: Include organization_id for Multi-Tenant security
       const { error: cashError } = await supabase
         .from('cash_movements')
         .insert([{
@@ -47,6 +48,7 @@ export async function createOwnerTransaction(transaction: OwnerTransactionInsert
           reference_type: 'owner_transaction',
           reference_id: ownerTransaction.id,
           user_id: transaction.user_id,
+          organization_id: transaction.organization_id, // 🔒 CRITICAL FIX: Organization security
           movement_type: 'cash_operation',
           banking_status: 'unmatched'
         }])

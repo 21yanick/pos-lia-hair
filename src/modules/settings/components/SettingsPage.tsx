@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Button } from "@/shared/components/ui/button"
@@ -7,8 +9,14 @@ import {
   Users, 
   Database
 } from "lucide-react"
+import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
 export function SettingsPage() {
+  const { currentOrganization } = useOrganization()
+  
+  // 🔗 Helper: Organization-aware URL builder
+  const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
+  
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="space-y-2">
@@ -46,7 +54,7 @@ export function SettingsPage() {
                 • Lieferanten & Partner
               </p>
               <Button asChild className="w-full mt-4">
-                <Link href="/settings/import">
+                <Link href={getOrgUrl("/settings/import")}>
                   Import-Center öffnen
                 </Link>
               </Button>
@@ -80,7 +88,7 @@ export function SettingsPage() {
                 • CSV Import & Export
               </p>
               <Button asChild className="w-full mt-4">
-                <Link href="/settings/suppliers">
+                <Link href={getOrgUrl("/settings/suppliers")}>
                   Lieferanten verwalten
                 </Link>
               </Button>
@@ -111,7 +119,7 @@ export function SettingsPage() {
                 • Preiseinstellungen
               </p>
               <Button asChild className="w-full mt-4">
-                <Link href="/settings/business">
+                <Link href={getOrgUrl("/settings/business")}>
                   Geschäft konfigurieren
                 </Link>
               </Button>

@@ -27,11 +27,12 @@ export interface BankAccount {
   updated_at: string
 }
 
-export async function getBankAccounts() {
+export async function getBankAccounts(organizationId: string) {
   const { data, error } = await supabase
     .from('bank_accounts')
     .select('*')
     .eq('is_active', true)
+    .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -57,10 +58,11 @@ export interface UnmatchedSaleForProvider {
   banking_status: string
 }
 
-export async function getUnmatchedSalesForProvider() {
+export async function getUnmatchedSalesForProvider(organizationId: string) {
   const { data, error } = await supabase
     .from('unmatched_sales_for_provider' as any)
     .select('*')
+    .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -84,10 +86,11 @@ export interface UnmatchedProviderReport {
   status: string
 }
 
-export async function getUnmatchedProviderReports() {
+export async function getUnmatchedProviderReports(organizationId: string) {
   const { data, error } = await supabase
     .from('unmatched_provider_reports' as any)
     .select('*')
+    .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
     .order('transaction_date', { ascending: false })
 
   if (error) {
@@ -115,10 +118,11 @@ export interface UnmatchedBankTransaction {
   status: string
 }
 
-export async function getUnmatchedBankTransactions() {
+export async function getUnmatchedBankTransactions(organizationId: string) {
   const { data, error } = await supabase
     .from('unmatched_bank_transactions' as any)
     .select('*')
+    .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
     .order('transaction_date', { ascending: false })
 
   if (error) {
@@ -139,10 +143,11 @@ export interface AvailableForBankMatching {
   banking_status: string
 }
 
-export async function getAvailableForBankMatching() {
+export async function getAvailableForBankMatching(organizationId: string) {
   const { data, error } = await supabase
     .from('available_for_bank_matching' as any)
     .select('*')
+    .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
     .order('date', { ascending: false })
 
   if (error) {
@@ -166,20 +171,29 @@ export interface BankingStats {
   matchingProgress: number
 }
 
-export async function getBankingStats(): Promise<{ data: BankingStats | null, error: any }> {
+export async function getBankingStats(organizationId: string): Promise<{ data: BankingStats | null, error: any }> {
   try {
-    // Get counts from each view
+    // Get counts from each view with ORGANIZATION SECURITY
     const [salesResult, providerResult, bankResult, expensesResult] = await Promise.all([
-      supabase.from('unmatched_sales_for_provider' as any).select('id', { count: 'exact', head: true }),
-      supabase.from('unmatched_provider_reports' as any).select('id', { count: 'exact', head: true }),
-      supabase.from('unmatched_bank_transactions' as any).select('id', { count: 'exact', head: true }),
-      supabase.from('available_for_bank_matching' as any).select('id', { count: 'exact', head: true })
+      supabase.from('unmatched_sales_for_provider' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', organizationId), // 🔒 SECURITY: Organization-scoped
+      supabase.from('unmatched_provider_reports' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', organizationId), // 🔒 SECURITY: Organization-scoped
+      supabase.from('unmatched_bank_transactions' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', organizationId), // 🔒 SECURITY: Organization-scoped
+      supabase.from('available_for_bank_matching' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
     ])
 
-    // Get total unmatched amount from bank transactions
+    // Get total unmatched amount from bank transactions with ORGANIZATION SECURITY
     const { data: bankAmounts } = await supabase
       .from('unmatched_bank_transactions' as any)
       .select('amount_abs')
+      .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
 
     const totalUnmatchedAmount = (bankAmounts as any)?.reduce((sum: number, item: any) => sum + (item.amount_abs || 0), 0) || 0
 

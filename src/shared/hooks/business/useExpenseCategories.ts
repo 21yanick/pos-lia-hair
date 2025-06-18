@@ -2,12 +2,16 @@
 
 import { useMemo, useCallback } from 'react'
 import { useBusinessSettings } from './useBusinessSettings'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import { DEFAULT_EXPENSE_CATEGORIES } from '@/shared/types/expenses'
 import { upsertBusinessSettings } from '@/shared/services/businessSettingsService'
 
 export function useExpenseCategories() {
   const { settings: businessSettings, loading, loadSettings: refetch } = useBusinessSettings()
   const error = null // useBusinessSettings doesn't provide error, so we set it to null
+
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useOrganization()
 
   // Kombinierte Kategorien: Default + Custom
   const categories = useMemo(() => {
@@ -16,7 +20,7 @@ export function useExpenseCategories() {
       ...DEFAULT_EXPENSE_CATEGORIES,
       ...customCategories
     }
-  }, [businessSettings?.custom_expense_categories])
+  }, [businessSettings?.custom_expense_categories, currentOrganization])
 
   // Kategorien als Array für UI
   const categoriesArray = useMemo(() => {
@@ -29,6 +33,11 @@ export function useExpenseCategories() {
 
   // Custom Kategorien hinzufügen
   const addCategory = useCallback(async (key: string, label: string) => {
+    // 🔒 CRITICAL SECURITY: Organization required
+    if (!currentOrganization) {
+      return { success: false, error: 'Keine Organization ausgewählt.' }
+    }
+
     if (!businessSettings) {
       // Erstelle Default Business Settings falls keine existieren
       try {
@@ -86,10 +95,15 @@ export function useExpenseCategories() {
       console.error('Error in addCategory:', err)
       return { success: false, error: err.message }
     }
-  }, [businessSettings, refetch])
+  }, [businessSettings, refetch, currentOrganization])
 
   // Custom Kategorie aktualisieren
   const updateCategory = useCallback(async (key: string, newLabel: string) => {
+    // 🔒 CRITICAL SECURITY: Organization required
+    if (!currentOrganization) {
+      return { success: false, error: 'Keine Organization ausgewählt.' }
+    }
+
     if (!businessSettings) return { success: false, error: 'Business settings not loaded' }
     
     // Nur Custom-Kategorien können aktualisiert werden
@@ -113,10 +127,15 @@ export function useExpenseCategories() {
     } catch (err: any) {
       return { success: false, error: err.message }
     }
-  }, [businessSettings, refetch])
+  }, [businessSettings, refetch, currentOrganization])
 
   // Custom Kategorie löschen
   const removeCategory = useCallback(async (key: string) => {
+    // 🔒 CRITICAL SECURITY: Organization required
+    if (!currentOrganization) {
+      return { success: false, error: 'Keine Organization ausgewählt.' }
+    }
+
     if (!businessSettings) return { success: false, error: 'Business settings not loaded' }
     
     // Default-Kategorien können nicht gelöscht werden
@@ -138,7 +157,7 @@ export function useExpenseCategories() {
     } catch (err: any) {
       return { success: false, error: err.message }
     }
-  }, [businessSettings, refetch])
+  }, [businessSettings, refetch, currentOrganization])
 
   // Kategorie-Key validieren
   const validateCategoryKey = useCallback((key: string): { isValid: boolean; error?: string } => {
@@ -159,7 +178,7 @@ export function useExpenseCategories() {
     }
 
     return { isValid: true }
-  }, [businessSettings?.custom_expense_categories])
+  }, [businessSettings?.custom_expense_categories, currentOrganization])
 
   return {
     // Data

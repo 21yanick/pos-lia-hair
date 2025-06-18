@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import type { 
   Expense, 
   ExpenseWithSupplier,
@@ -22,6 +23,7 @@ export function useExpenses() {
   const [expenses, setExpenses] = useState<ExpenseWithSupplier[]>([])
   const [currentExpense, setCurrentExpense] = useState<Expense | null>(null)
   const { createExpenseCashMovement, reverseCashMovement } = useCashMovements()
+  const { currentOrganization } = useOrganization()
 
   // Ausgabe erstellen (mit optionalem Beleg-Upload)
   const createExpense = async (data: ExpenseInsert, receiptFile?: File) => {
@@ -29,19 +31,17 @@ export function useExpenses() {
       setLoading(true)
       setError(null)
 
-      // Benutzer-ID abrufen
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData?.user) {
-        throw new Error('Nicht angemeldet. Bitte melden Sie sich an.')
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
       }
-      const userId = userData.user.id
 
-      // Ausgabe erstellen
+      // Ausgabe erstellen (Multi-Tenant)
       const { data: expense, error: expenseError } = await supabase
         .from('expenses')
         .insert({
           ...data,
-          user_id: userId,
+          organization_id: currentOrganization.id,
         })
         .select()
         .single()
@@ -96,11 +96,16 @@ export function useExpenses() {
     }
   }
 
-  // Ausgaben laden
+  // Ausgaben laden (Multi-Tenant)
   const loadExpenses = async (limit?: number) => {
     try {
       setLoading(true)
       setError(null)
+
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
 
       let query = supabase
         .from('expenses')
@@ -116,6 +121,7 @@ export function useExpenses() {
             is_active
           )
         `)
+        .eq('organization_id', currentOrganization.id) // 🔒 Multi-Tenant Security
         .order('payment_date', { ascending: false })
 
       if (limit) {
@@ -146,11 +152,16 @@ export function useExpenses() {
     }
   }
 
-  // Ausgaben für einen bestimmten Zeitraum laden
+  // Ausgaben für einen bestimmten Zeitraum laden (Multi-Tenant)
   const loadExpensesByDateRange = async (startDate: string, endDate: string) => {
     try {
       setLoading(true)
       setError(null)
+
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
 
       const { data, error } = await supabase
         .from('expenses')
@@ -166,6 +177,7 @@ export function useExpenses() {
             is_active
           )
         `)
+        .eq('organization_id', currentOrganization.id) // 🔒 Multi-Tenant Security
         .gte('payment_date', startDate)
         .lte('payment_date', endDate)
         .order('payment_date', { ascending: false })
@@ -201,16 +213,22 @@ export function useExpenses() {
     return await loadExpensesByDateRange(startDate, endDate)
   }
 
-  // Ausgabe aktualisieren
+  // Ausgabe aktualisieren (Multi-Tenant)
   const updateExpense = async (id: string, updates: Partial<ExpenseUpdate>) => {
     try {
       setLoading(true)
       setError(null)
 
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
       const { data, error } = await supabase
         .from('expenses')
         .update(updates)
         .eq('id', id)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Expenses
         .select()
         .single()
 
@@ -235,28 +253,35 @@ export function useExpenses() {
     }
   }
 
-  // Ausgabe löschen
+  // Ausgabe löschen (Multi-Tenant)
   const deleteExpense = async (id: string) => {
     try {
       setLoading(true)
       setError(null)
+
+      // Multi-Tenant Security: Organization required
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
 
       // Erst die Ausgabe aus der Datenbank abrufen für die Bargeld-Bewegung
       const { data: expense, error: fetchError } = await supabase
         .from('expenses')
         .select('*')
         .eq('id', id)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Expenses
         .single()
 
       if (fetchError) {
         throw fetchError
       }
 
-      // Ausgabe löschen
+      // Ausgabe löschen (mit Organization Security)
       const { error: deleteError } = await supabase
         .from('expenses')
         .delete()
         .eq('id', id)
+        .eq('organization_id', currentOrganization.id) // 🔒 Security: nur eigene Expenses
 
       if (deleteError) {
         throw deleteError
@@ -495,11 +520,17 @@ export function useExpenses() {
       setLoading(true)
       setError(null)
 
-      // Get expense data
+      // 🔒 CRITICAL SECURITY: Organization required (SECURITY FIX)
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt.')
+      }
+
+      // Get expense data (🔒 SECURITY: Organization-scoped)
       const { data: expense, error: expenseError } = await supabase
         .from('expenses')
         .select('*')
         .eq('id', expenseId)
+        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
         .single()
 
       if (expenseError || !expense) {
@@ -570,7 +601,8 @@ export function useExpenses() {
           notes: notesText,
           payment_method: expense.payment_method,
           document_date: expense.payment_date,
-          user_id: userId
+          user_id: userId,
+          organization_id: currentOrganization.id // 🔒 CRITICAL FIX: Organization security
         })
         .select()
         .single()

@@ -164,7 +164,8 @@ export async function executeCAMTImport(
   document: CAMTDocument,
   filename: string,
   bankAccountId: string,
-  userId: string
+  userId: string,
+  organizationId: string  // ✅ CRITICAL FIX: Multi-Tenant organization parameter
 ): Promise<{ success: boolean; importedCount: number; errors: string[] }> {
   
   try {
@@ -207,6 +208,7 @@ export async function executeCAMTImport(
       statement_to_date: formatDateForAPI(document.statement.toDateTime),
       status: 'completed',
       imported_by: userId,
+      organization_id: organizationId, // ✅ CRITICAL FIX: Organization security
       notes: `CAMT.053 import: ${document.statement.statementId}`
     }
     
@@ -242,6 +244,7 @@ export async function executeCAMTImport(
         statement_to_date: formatDateForAPI(document.statement.toDateTime),
         status: 'failed',
         imported_by: userId,
+        organization_id: organizationId, // ✅ CRITICAL FIX: Organization security
         notes: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       }
       
@@ -309,7 +312,8 @@ export async function importCAMTFile(
   xmlContent: string,
   filename: string,
   bankAccountId: string,
-  userId: string
+  userId: string,
+  organizationId: string  // ✅ ADDED: Multi-Tenant support
 ): Promise<{
   success: boolean
   preview?: CAMTImportPreview
@@ -338,7 +342,8 @@ export async function importCAMTFile(
         parseResult.document,
         filename,
         bankAccountId,
-        userId
+        userId,
+        organizationId  // ✅ CRITICAL FIX: Pass organization ID
       )
       
       return {

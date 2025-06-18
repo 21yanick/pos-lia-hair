@@ -136,6 +136,7 @@ export interface BankImportSessionInsert {
   statement_to_date: string             // ISO date string
   status: 'pending' | 'completed' | 'failed'
   imported_by: string
+  organization_id: string               // ✅ ADDED: Multi-Tenant support
   notes?: string
 }
 
