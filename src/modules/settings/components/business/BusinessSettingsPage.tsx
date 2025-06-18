@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { Badge } from '@/shared/components/ui/badge'
 import { Building2, ImageIcon, Tag } from 'lucide-react'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
 import { CompanyInfoForm } from './CompanyInfoForm'
 import { LogoUploadSection } from './LogoUploadSection'
 import { ExpenseCategoriesForm } from './ExpenseCategoriesForm'
+import { SupplierCategoriesForm } from './SupplierCategoriesForm'
+import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 
 export function BusinessSettingsPage() {
   const { settings, loading, isConfigured } = useBusinessSettings()
@@ -27,23 +28,15 @@ export function BusinessSettingsPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Geschäfts-Einstellungen</h1>
-          <p className="text-muted-foreground">
-            Konfigurieren Sie Ihre Firmendaten für PDFs und Belege
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Badge 
-            variant={isConfigured ? "default" : "secondary"}
-            className="px-3 py-1"
-          >
-            {isConfigured ? "Konfiguriert" : "Nicht konfiguriert"}
-          </Badge>
-        </div>
-      </div>
+      {/* Header with Navigation */}
+      <SettingsHeader
+        title="Geschäfts-Einstellungen"
+        description="Konfigurieren Sie Ihre Firmendaten für PDFs und Belege"
+        badge={{
+          text: isConfigured ? "Konfiguriert" : "Nicht konfiguriert",
+          variant: isConfigured ? "default" : "secondary"
+        }}
+      />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -96,6 +89,7 @@ export function BusinessSettingsPage() {
         <TabsContent value="categories">
           <div className="space-y-6">
             <ExpenseCategoriesForm />
+            <SupplierCategoriesForm />
           </div>
         </TabsContent>
       </Tabs>

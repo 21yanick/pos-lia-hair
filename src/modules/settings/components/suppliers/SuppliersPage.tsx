@@ -16,6 +16,7 @@ import { supabase } from "@/shared/lib/supabase/client"
 import type { Supplier, SupplierCategory } from '@/shared/types/suppliers'
 import Link from 'next/link'
 import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 
 export function SuppliersPage() {
   const { toast } = useToast()
@@ -111,31 +112,28 @@ export function SuppliersPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Lieferanten</h1>
-          <p className="text-muted-foreground">
-            Verwalten Sie Ihre Lieferanten und Geschäftspartner
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" asChild>
-            <Link href={getOrgUrl("/settings/import")}>
-              <Upload className="h-4 w-4 mr-2" />
-              CSV Import
-            </Link>
-          </Button>
-          
-          {currentUserId && (
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Neuer Lieferant
+      {/* Header with Navigation */}
+      <SettingsHeader
+        title="Lieferanten"
+        description="Verwalten Sie Ihre Lieferanten und Geschäftspartner"
+        actions={
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" asChild>
+              <Link href={getOrgUrl("/settings/import")}>
+                <Upload className="h-4 w-4 mr-2" />
+                CSV Import
+              </Link>
             </Button>
-          )}
-        </div>
-      </div>
+            
+            {currentUserId && (
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Neuer Lieferant
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">

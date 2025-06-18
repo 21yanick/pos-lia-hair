@@ -10,7 +10,6 @@ import { Badge } from "@/shared/components/ui/badge"
 import { Separator } from "@/shared/components/ui/separator"
 import { useSystemStats } from "@/shared/hooks/business/useSystemStats"
 import { 
-  ArrowLeft,
   Upload, 
   FileJson,
   FileSpreadsheet,
@@ -21,6 +20,7 @@ import {
   RefreshCw
 } from "lucide-react"
 import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { SettingsHeader } from "@/shared/components/settings/SettingsHeader"
 
 export function ImportCenter() {
   const { currentOrganization } = useOrganization()
@@ -33,21 +33,11 @@ export function ImportCenter() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={getOrgUrl("/settings")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück zu Einstellungen
-          </Link>
-        </Button>
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold">Import-Center</h1>
-          <p className="text-muted-foreground">
-            Importieren Sie Ihre Daten schnell und sicher in das POS-System
-          </p>
-        </div>
-      </div>
+      {/* Header with Navigation */}
+      <SettingsHeader
+        title="Import-Center"
+        description="Importieren Sie Ihre Daten schnell und sicher in das POS-System"
+      />
 
       {/* Navigation Tabs */}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
