@@ -26,6 +26,8 @@ interface UseBusinessSettingsReturn {
   updateSettings: (data: BusinessSettingsFormData) => Promise<void>
   uploadCompanyLogo: (file: File) => Promise<void>
   deleteCompanyLogo: () => Promise<void>
+  uploadAppLogo: (file: File, theme: 'light' | 'dark') => Promise<void>
+  deleteAppLogo: (theme: 'light' | 'dark') => Promise<void>
   
   // Utilities
   getFormattedAddress: () => string
@@ -170,6 +172,111 @@ export function useBusinessSettings(): UseBusinessSettingsReturn {
     }
   }, [settings])
 
+  // Upload app logo
+  const uploadAppLogo = useCallback(async (file: File, theme: 'light' | 'dark') => {
+    if (!settings) return
+
+    try {
+      setUploading(true)
+      const { url, path } = await uploadLogo(file, `app-logo-${theme}`)
+      
+      // Update settings with new app logo
+      const updatedSettings = {
+        ...settings,
+        [`app_logo_${theme}_url`]: url,
+        [`app_logo_${theme}_storage_path`]: path,
+        updated_at: new Date().toISOString()
+      }
+      setSettings(updatedSettings)
+      
+      // Save to database
+      if (settings.company_name) {
+        await upsertBusinessSettings({
+          company_name: settings.company_name,
+          company_tagline: settings.company_tagline,
+          company_address: settings.company_address,
+          company_postal_code: settings.company_postal_code,
+          company_city: settings.company_city,
+          company_phone: settings.company_phone,
+          company_email: settings.company_email,
+          company_website: settings.company_website,
+          company_uid: settings.company_uid,
+          default_currency: settings.default_currency,
+          tax_rate: settings.tax_rate,
+          pdf_show_logo: settings.pdf_show_logo,
+          pdf_show_company_details: settings.pdf_show_company_details,
+          logo_url: settings.logo_url,
+          logo_storage_path: settings.logo_storage_path,
+          app_logo_light_url: theme === 'light' ? url : settings.app_logo_light_url,
+          app_logo_light_storage_path: theme === 'light' ? path : settings.app_logo_light_storage_path,
+          app_logo_dark_url: theme === 'dark' ? url : settings.app_logo_dark_url,
+          app_logo_dark_storage_path: theme === 'dark' ? path : settings.app_logo_dark_storage_path,
+        })
+      }
+      
+      toast.success(`${theme === 'light' ? 'Helles' : 'Dunkles'} App-Logo erfolgreich hochgeladen`)
+    } catch (error) {
+      console.error('Error uploading app logo:', error)
+      toast.error(`Fehler beim Hochladen des ${theme === 'light' ? 'hellen' : 'dunklen'} App-Logos`)
+      throw error
+    } finally {
+      setUploading(false)
+    }
+  }, [settings])
+
+  // Delete app logo
+  const deleteAppLogo = useCallback(async (theme: 'light' | 'dark') => {
+    const storagePath = theme === 'light' ? settings?.app_logo_light_storage_path : settings?.app_logo_dark_storage_path
+    if (!storagePath || !settings) return
+
+    try {
+      setUploading(true)
+      await deleteLogo(storagePath)
+      
+      // Update settings without app logo
+      const updatedSettings = {
+        ...settings,
+        [`app_logo_${theme}_url`]: undefined,
+        [`app_logo_${theme}_storage_path`]: undefined,
+        updated_at: new Date().toISOString()
+      }
+      setSettings(updatedSettings)
+      
+      // Save to database
+      if (settings.company_name) {
+        await upsertBusinessSettings({
+          company_name: settings.company_name,
+          company_tagline: settings.company_tagline,
+          company_address: settings.company_address,
+          company_postal_code: settings.company_postal_code,
+          company_city: settings.company_city,
+          company_phone: settings.company_phone,
+          company_email: settings.company_email,
+          company_website: settings.company_website,
+          company_uid: settings.company_uid,
+          default_currency: settings.default_currency,
+          tax_rate: settings.tax_rate,
+          pdf_show_logo: settings.pdf_show_logo,
+          pdf_show_company_details: settings.pdf_show_company_details,
+          logo_url: settings.logo_url,
+          logo_storage_path: settings.logo_storage_path,
+          app_logo_light_url: theme === 'light' ? undefined : settings.app_logo_light_url,
+          app_logo_light_storage_path: theme === 'light' ? undefined : settings.app_logo_light_storage_path,
+          app_logo_dark_url: theme === 'dark' ? undefined : settings.app_logo_dark_url,
+          app_logo_dark_storage_path: theme === 'dark' ? undefined : settings.app_logo_dark_storage_path,
+        })
+      }
+      
+      toast.success(`${theme === 'light' ? 'Helles' : 'Dunkles'} App-Logo erfolgreich entfernt`)
+    } catch (error) {
+      console.error('Error deleting app logo:', error)
+      toast.error(`Fehler beim Entfernen des ${theme === 'light' ? 'hellen' : 'dunklen'} App-Logos`)
+      throw error
+    } finally {
+      setUploading(false)
+    }
+  }, [settings])
+
   // Get formatted address
   const getFormattedAddress = useCallback(() => {
     if (!settings) return ''
@@ -204,6 +311,8 @@ export function useBusinessSettings(): UseBusinessSettingsReturn {
     updateSettings,
     uploadCompanyLogo,
     deleteCompanyLogo,
+    uploadAppLogo,
+    deleteAppLogo,
     
     // Utilities
     getFormattedAddress,

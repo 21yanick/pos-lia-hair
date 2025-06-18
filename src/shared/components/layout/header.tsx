@@ -4,22 +4,13 @@ import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import Link from "next/link"
-import { Bell, User, Sun, Moon, Monitor } from "lucide-react"
+import { Bell, Sun, Moon } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu"
-import { useAuth } from "@/shared/hooks/auth/useAuth"
+import { ProfileMenu } from "@/shared/components/profile"
 import { useOrganization } from "@/shared/contexts/OrganizationContext"
 
 export function Header() {
   const pathname = usePathname()
-  const { user, signOut, userRole } = useAuth()
   const { currentOrganization } = useOrganization()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -124,48 +115,7 @@ export function Header() {
           <Bell size={20} />
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center space-x-2">
-              <User size={20} />
-              <span className="hidden md:inline-block">
-                {user?.name || user?.email || "User"}
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {user?.name || "User"}
-                </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {userRole && `${userRole.charAt(0).toUpperCase() + userRole.slice(1)}`}
-                </p>
-                {currentOrganization && (
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {currentOrganization.name}
-                  </p>
-                )}
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href={currentOrganization ? `/org/${currentOrganization.slug}/settings` : "/settings"}>
-                Einstellungen
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="text-destructive"
-              onClick={() => {
-                signOut() // Uses enhanced auth hook with organization context clearing
-              }}
-            >
-              Abmelden
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ProfileMenu />
       </div>
     </header>
   )

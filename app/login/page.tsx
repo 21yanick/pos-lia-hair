@@ -10,7 +10,7 @@ import { Label } from "@/shared/components/ui/label"
 import { Checkbox } from "@/shared/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { supabase } from "@/shared/lib/supabase/client"
-import Image from "next/image"
+import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -64,15 +64,16 @@ export default function LoginPage() {
       <Card className={`w-full max-w-md shadow-xl bg-card border-border/50 transition-all duration-600 hover:shadow-2xl transform-gpu relative z-10
         ${isSuccess ? 'animate-card-flip scale-95 opacity-0' : 'animate-in fade-in-0 zoom-in-90'}`}>
         <CardHeader className="space-y-1 flex flex-col items-center pb-8">
-          <div className="relative w-32 h-32 mb-6 transform transition-transform duration-300 hover:scale-105">
-            <Image
-              src="/logo_clean.svg"
+          <div className="relative mb-6 transform transition-transform duration-300 hover:scale-105">
+            <SmartAppLogo 
+              size="xl"
               alt="Coiffeursalon Logo"
-              width={128}
-              height={128}
-              className="drop-shadow-lg"
-              style={{ width: 'auto', height: 'auto' }}
-              priority
+              className="drop-shadow-lg w-32 h-32"
+              fallback={
+                <div className="w-32 h-32 flex items-center justify-center bg-muted rounded-lg border border-border">
+                  <span className="text-2xl font-bold text-muted-foreground">Logo</span>
+                </div>
+              }
             />
           </div>
           <CardTitle className="text-3xl font-bold text-center">

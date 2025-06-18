@@ -44,10 +44,12 @@ export function OrganizationSelector({
 
   const handleSwitchOrganization = async (organizationId: string) => {
     try {
+      console.log('📋 ORG SELECTOR - Switch requested:', organizationId)
       setSwitching(organizationId)
       await switchToOrganization(organizationId)
+      console.log('📋 ORG SELECTOR - Switch completed')
     } catch (err) {
-      console.error('Error switching organization:', err)
+      console.error('❌ ORG SELECTOR - Error switching organization:', err)
     } finally {
       setSwitching(null)
     }

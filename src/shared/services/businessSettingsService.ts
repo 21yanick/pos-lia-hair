@@ -56,15 +56,20 @@ export async function upsertBusinessSettings(
 ): Promise<BusinessSettings> {
   try {
     const organizationId = await getCurrentOrganizationId()
+    
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) throw new Error('User not authenticated')
 
     const { data, error } = await supabase
       .from('business_settings')
       .upsert({
+        user_id: user.id, // 🔒 Required for unique constraint
         organization_id: organizationId, // 🔒 Multi-Tenant Security
         ...settingsData,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'organization_id' // Changed from user_id to organization_id
+        onConflict: 'user_id,organization_id' // 🔒 Match the actual unique constraint
       })
       .select()
       .single()
@@ -81,7 +86,7 @@ export async function upsertBusinessSettings(
 // Logo Upload Operations
 // =================================
 
-export async function uploadLogo(file: File): Promise<{
+export async function uploadLogo(file: File, prefix: string = 'logo'): Promise<{
   url: string
   path: string
 }> {
@@ -89,9 +94,9 @@ export async function uploadLogo(file: File): Promise<{
     const organizationId = await getCurrentOrganizationId()
 
     // File validation
-    const allowedTypes = ['image/jpeg', 'image/png']
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml']
     if (!allowedTypes.includes(file.type)) {
-      throw new Error('Only JPEG and PNG files are allowed')
+      throw new Error('Only JPEG, PNG and SVG files are allowed')
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB
@@ -100,12 +105,14 @@ export async function uploadLogo(file: File): Promise<{
 
     // Generate unique filename (Multi-Tenant: use organization_id)
     const fileExtension = file.name.split('.').pop()
-    const fileName = `${organizationId}/logo-${Date.now()}.${fileExtension}`
+    const fileName = `${organizationId}/${prefix}-${Date.now()}.${fileExtension}`
 
-    // Delete old logo if exists
-    const currentSettings = await getBusinessSettings()
-    if (currentSettings?.logo_storage_path) {
-      await deleteLogo(currentSettings.logo_storage_path)
+    // Delete old logo if exists (only for standard logo, not app logos)
+    if (prefix === 'logo') {
+      const currentSettings = await getBusinessSettings()
+      if (currentSettings?.logo_storage_path) {
+        await deleteLogo(currentSettings.logo_storage_path)
+      }
     }
 
     // Upload new file

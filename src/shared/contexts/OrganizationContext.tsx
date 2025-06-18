@@ -37,6 +37,26 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     return match ? match[1] : null
   }, [pathname])
 
+  // Session Recovery: Restore organization from session storage
+  const recoverFromSessionStorage = useCallback((): boolean => {
+    const storedOrgId = sessionStorage.getItem('currentOrganizationId')
+    console.log('💾 SESSION RECOVERY - Checking stored org ID:', storedOrgId)
+    
+    if (storedOrgId && userOrganizations.length > 0) {
+      const membership = userOrganizations.find(m => m.organization.id === storedOrgId)
+      if (membership) {
+        console.log('💾 SESSION RECOVERY - Restoring:', membership.organization.name)
+        setCurrentOrganization(membership.organization)
+        setUserRole(membership.role)
+        return true
+      } else {
+        console.log('💾 SESSION RECOVERY - Stored org not found in user orgs')
+        sessionStorage.removeItem('currentOrganizationId')
+      }
+    }
+    return false
+  }, [userOrganizations])
+
   // Load user's organizations
   const loadUserOrganizations = useCallback(async () => {
     try {
@@ -88,61 +108,36 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       }))
 
       setUserOrganizations(organizationMemberships)
-      
-      // Auto-select organization based on URL slug
-      const slug = getSlugFromPath()
-      console.log('🔍 DEBUG OrganizationContext - URL slug:', slug)
-      console.log('🔍 DEBUG OrganizationContext - Available orgs:', organizationMemberships.map(m => m.organization.slug))
-      
-      if (slug) {
-        const targetOrg = organizationMemberships.find(m => m.organization.slug === slug)
-        console.log('🔍 DEBUG OrganizationContext - Target org found:', targetOrg?.organization.name)
-        
-        if (targetOrg) {
-          setCurrentOrganization(targetOrg.organization)
-          setUserRole(targetOrg.role)
-          console.log('🔍 DEBUG OrganizationContext - Current org set to:', targetOrg.organization.name, targetOrg.organization.id)
-        } else {
-          // Invalid slug - redirect to organization selector
-          router.push('/organizations')
-        }
-      } else if (organizationMemberships.length === 1) {
-        // Auto-select if user has only one organization
-        const membership = organizationMemberships[0]
-        setCurrentOrganization(membership.organization)
-        setUserRole(membership.role)
-      }
+      console.log('🔍 LOAD ORGS - Loaded', organizationMemberships.length, 'organizations:', organizationMemberships.map(m => m.organization.slug))
     } catch (err) {
       console.error('Error in loadUserOrganizations:', err)
       setError('Fehler beim Laden der Organisationen')
     }
-  }, [getSlugFromPath, router, supabase])
+  }, [supabase])
 
-  // Switch to different organization
+  // Switch to different organization (SIMPLIFIED - Single Source of Truth)
   const switchOrganization = useCallback(async (organizationId: string) => {
-    try {
-      setLoading(true)
-      
-      const membership = userOrganizations.find(m => m.organization.id === organizationId)
-      if (!membership) {
-        throw new Error('Organization not found')
-      }
-
-      setCurrentOrganization(membership.organization)
-      setUserRole(membership.role)
-      
-      // Update URL to reflect organization change
-      const newPath = `/org/${membership.organization.slug}/dashboard`
-      router.push(newPath)
-      
-      // Store in sessionStorage for persistence
-      sessionStorage.setItem('currentOrganizationId', organizationId)
-    } catch (err) {
-      console.error('Error switching organization:', err)
-      setError('Fehler beim Wechseln der Organisation')
-    } finally {
-      setLoading(false)
+    console.log('🔄 SWITCH ORG START:', organizationId)
+    
+    const membership = userOrganizations.find(m => m.organization.id === organizationId)
+    if (!membership) {
+      console.error('❌ SWITCH ORG - Organization not found:', organizationId)
+      return
     }
+    
+    console.log('🔄 SWITCH ORG - Target:', membership.organization.name, membership.organization.slug)
+    
+    // Update state
+    setCurrentOrganization(membership.organization)
+    setUserRole(membership.role)
+    
+    // Store in sessionStorage for persistence
+    sessionStorage.setItem('currentOrganizationId', organizationId)
+    
+    // Navigate to organization (URL becomes source of truth)
+    const newPath = `/org/${membership.organization.slug}/dashboard`
+    console.log('🔄 SWITCH ORG - Navigating to:', newPath)
+    router.push(newPath)
   }, [userOrganizations, router])
 
   // Refresh organizations list
@@ -284,6 +279,53 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
 
     initializeOrganizations()
   }, [loadUserOrganizations])
+
+  // Organization Selection Logic (SIMPLIFIED - Single Source of Truth)
+  useEffect(() => {
+    if (loading || userOrganizations.length === 0) return
+
+    const slug = getSlugFromPath()
+    console.log('🎯 ORG SELECTION - URL slug:', slug, 'currentOrg:', currentOrganization?.slug, 'orgs:', userOrganizations.length)
+    
+    // Priority 1: Try to match URL slug
+    if (slug) {
+      const targetOrg = userOrganizations.find(m => m.organization.slug === slug)
+      if (targetOrg) {
+        if (!currentOrganization || currentOrganization.id !== targetOrg.organization.id) {
+          console.log('🎯 ORG SELECTION - Setting org from URL:', targetOrg.organization.name)
+          setCurrentOrganization(targetOrg.organization)
+          setUserRole(targetOrg.role)
+          sessionStorage.setItem('currentOrganizationId', targetOrg.organization.id)
+        }
+        return
+      } else {
+        console.log('🎯 ORG SELECTION - Invalid slug in URL, redirecting to /organizations')
+        router.push('/organizations')
+        return
+      }
+    }
+
+    // Priority 2: Try session recovery (for non-org URLs)
+    if (!currentOrganization && recoverFromSessionStorage()) {
+      return
+    }
+
+    // Priority 3: Auto-select single organization
+    if (!currentOrganization && userOrganizations.length === 1) {
+      const membership = userOrganizations[0]
+      console.log('🎯 ORG SELECTION - Auto-selecting single org:', membership.organization.name)
+      setCurrentOrganization(membership.organization)
+      setUserRole(membership.role)
+      sessionStorage.setItem('currentOrganizationId', membership.organization.id)
+      return
+    }
+
+    // Priority 4: Multiple orgs but none selected - redirect to selector
+    if (!currentOrganization && userOrganizations.length > 1) {
+      console.log('🎯 ORG SELECTION - Multiple orgs, redirecting to selector')
+      router.push('/organizations')
+    }
+  }, [userOrganizations, loading, pathname, currentOrganization, getSlugFromPath, recoverFromSessionStorage, router])
 
   // Clear organization context on auth changes
   useEffect(() => {

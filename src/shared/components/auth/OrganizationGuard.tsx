@@ -47,61 +47,29 @@ export function OrganizationGuard({
     }
   }, [authLoading, isAuthenticated, router])
 
-  // Handle organization selection/validation
+  // Access Validation ONLY (OrganizationContext handles all state management)
   useEffect(() => {
     if (authLoading || orgLoading || !isAuthenticated) return
 
-    // If we have a slug in URL but no current organization, try to switch to it
-    if (urlSlug && !currentOrganization) {
-      const targetOrg = userOrganizations.find(org => org.organization.slug === urlSlug)
-      if (targetOrg) {
-        switchOrganization(targetOrg.organization.id)
-        return
-      }
-    }
+    console.log('🛡️ ORG GUARD - Access validation. urlSlug:', urlSlug, 'currentOrg:', currentOrganization?.slug, 'userOrgs:', userOrganizations.length)
 
-    // If slug doesn't match current organization, switch to it
-    if (urlSlug && currentOrganization && currentOrganization.slug !== urlSlug) {
-      const targetOrg = userOrganizations.find(org => org.organization.slug === urlSlug)
-      if (targetOrg) {
-        switchOrganization(targetOrg.organization.id)
-        return
-      } else {
-        // Invalid slug - redirect to organization selector
+    // Only validate access, don't manipulate state
+    if (urlSlug && userOrganizations.length > 0) {
+      const hasAccess = userOrganizations.some(org => org.organization.slug === urlSlug)
+      if (!hasAccess) {
+        console.log('🛡️ ORG GUARD - ACCESS DENIED to', urlSlug, '- redirecting to /organizations')
         router.push('/organizations')
         return
       }
     }
 
-    // If no organization selected and required, redirect to selector
-    if (requireOrganization && !currentOrganization && userOrganizations.length > 1) {
-      router.push('/organizations')
-      return
-    }
-
-    // If user has only one organization, auto-select it
-    if (requireOrganization && !currentOrganization && userOrganizations.length === 1) {
-      const org = userOrganizations[0]
-      switchOrganization(org.organization.id)
-      return
-    }
-
-    // If no organizations at all, redirect to create organization
+    // Redirect to create if user has no organizations at all
     if (requireOrganization && userOrganizations.length === 0) {
+      console.log('🛡️ ORG GUARD - No organizations, redirecting to create')
       router.push('/organizations/create')
       return
     }
-  }, [
-    authLoading,
-    orgLoading,
-    isAuthenticated,
-    urlSlug,
-    currentOrganization,
-    userOrganizations,
-    requireOrganization,
-    switchOrganization,
-    router,
-  ])
+  }, [authLoading, orgLoading, isAuthenticated, urlSlug, userOrganizations, requireOrganization, router])
 
   // Show loading state
   if (authLoading || orgLoading) {
@@ -231,23 +199,40 @@ export function useOrganizationSwitcher() {
   const { currentOrganization, userOrganizations, switchOrganization } = useOrganization()
 
   const switchToOrganization = async (organizationId: string, targetPath?: string) => {
+    console.log('🔄 SWITCHER START:', organizationId, 'targetPath:', targetPath)
     const targetOrg = userOrganizations.find(org => org.organization.id === organizationId)
     if (!targetOrg) {
+      console.log('❌ SWITCHER - Organization not found:', organizationId)
       throw new Error('Organization not found')
     }
 
-    await switchOrganization(organizationId)
+    console.log('🔄 SWITCHER - Target org:', targetOrg.organization.name, targetOrg.organization.slug)
     
-    const path = targetPath || '/dashboard'
-    router.push(`/org/${targetOrg.organization.slug}${path}`)
+    // Context switchOrganization already handles router.push to /dashboard
+    // Only override if targetPath is different from /dashboard
+    if (targetPath && targetPath !== '/dashboard') {
+      console.log('🔄 SWITCHER - Custom path, doing context switch first then custom navigation')
+      await switchOrganization(organizationId)
+      const customPath = `/org/${targetOrg.organization.slug}${targetPath}`
+      console.log('🔄 SWITCHER - Custom router push:', customPath)
+      router.push(customPath)
+    } else {
+      console.log('🔄 SWITCHER - Default path, letting context handle router.push')
+      await switchOrganization(organizationId)
+    }
+    
+    console.log('🔄 SWITCHER END')
   }
 
   const switchToOrganizationBySlug = async (slug: string, targetPath?: string) => {
+    console.log('🔄 SWITCHER BY SLUG START:', slug, 'targetPath:', targetPath)
     const targetOrg = userOrganizations.find(org => org.organization.slug === slug)
     if (!targetOrg) {
+      console.log('❌ SWITCHER BY SLUG - Organization not found:', slug)
       throw new Error('Organization not found')
     }
 
+    console.log('🔄 SWITCHER BY SLUG - Found org:', targetOrg.organization.name, targetOrg.organization.id)
     await switchToOrganization(targetOrg.organization.id, targetPath)
   }
 

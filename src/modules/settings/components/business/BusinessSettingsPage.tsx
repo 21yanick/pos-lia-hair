@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { Building2, ImageIcon, Tag } from 'lucide-react'
+import { Building2, ImageIcon, Tag, Smartphone } from 'lucide-react'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
 import { CompanyInfoForm } from './CompanyInfoForm'
 import { LogoUploadSection } from './LogoUploadSection'
+import { AppLogoUploadSection } from './AppLogoUploadSection'
 import { ExpenseCategoriesForm } from './ExpenseCategoriesForm'
 import { SupplierCategoriesForm } from './SupplierCategoriesForm'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
@@ -40,14 +41,18 @@ export function BusinessSettingsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="company" className="flex items-center space-x-2">
             <Building2 className="h-4 w-4" />
             <span>Firmendaten</span>
           </TabsTrigger>
-          <TabsTrigger value="logo" className="flex items-center space-x-2">
+          <TabsTrigger value="pdf-logo" className="flex items-center space-x-2">
             <ImageIcon className="h-4 w-4" />
-            <span>Logo</span>
+            <span>PDF-Logo</span>
+          </TabsTrigger>
+          <TabsTrigger value="app-logos" className="flex items-center space-x-2">
+            <Smartphone className="h-4 w-4" />
+            <span>App-Logos</span>
           </TabsTrigger>
           <TabsTrigger value="categories" className="flex items-center space-x-2">
             <Tag className="h-4 w-4" />
@@ -70,19 +75,24 @@ export function BusinessSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Logo Tab */}
-        <TabsContent value="logo">
+        {/* PDF Logo Tab */}
+        <TabsContent value="pdf-logo">
           <Card className="border-l-4 border-l-accent">
             <CardHeader>
-              <CardTitle>Firmen-Logo</CardTitle>
+              <CardTitle>PDF-Logo</CardTitle>
               <CardDescription>
-                Logo für PDFs und Belege hochladen und verwalten
+                Logo für PDFs, Belege und Quittungen hochladen und verwalten
               </CardDescription>
             </CardHeader>
             <CardContent>
               <LogoUploadSection />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* App Logos Tab */}
+        <TabsContent value="app-logos">
+          <AppLogoUploadSection />
         </TabsContent>
 
         {/* Categories Tab */}

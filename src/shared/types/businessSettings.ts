@@ -1,6 +1,7 @@
 export interface BusinessSettings {
   id: string
   user_id: string
+  organization_id: string
   
   // Company Data
   company_name?: string
@@ -13,9 +14,15 @@ export interface BusinessSettings {
   company_website?: string
   company_uid?: string
   
-  // Logo
+  // Logo (Business - for PDFs, receipts)
   logo_url?: string
   logo_storage_path?: string
+  
+  // App Logos (for UI, navigation, login)
+  app_logo_light_url?: string
+  app_logo_light_storage_path?: string
+  app_logo_dark_url?: string
+  app_logo_dark_storage_path?: string
   
   // Settings
   default_currency: string
@@ -23,6 +30,7 @@ export interface BusinessSettings {
   pdf_show_logo: boolean
   pdf_show_company_details: boolean
   custom_expense_categories?: Record<string, string>
+  custom_supplier_categories?: Record<string, string>
   
   // Timestamps
   created_at: string
@@ -41,11 +49,16 @@ export interface BusinessSettingsFormData {
   company_uid?: string
   logo_url?: string
   logo_storage_path?: string
+  app_logo_light_url?: string
+  app_logo_light_storage_path?: string
+  app_logo_dark_url?: string
+  app_logo_dark_storage_path?: string
   default_currency: string
   tax_rate: number
   pdf_show_logo: boolean
   pdf_show_company_details: boolean
   custom_expense_categories?: Record<string, string>
+  custom_supplier_categories?: Record<string, string>
 }
 
 export const DEFAULT_BUSINESS_SETTINGS: Partial<BusinessSettings> = {

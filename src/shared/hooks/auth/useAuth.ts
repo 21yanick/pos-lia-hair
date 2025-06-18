@@ -105,7 +105,7 @@ export function useAuth(): AuthContextType {
     return () => subscription.unsubscribe()
   }, [supabase, loadUser])
 
-  const isAuthenticated = !!(user && currentOrganization && !orgLoading)
+  const isAuthenticated = !!user && !loading
 
   return {
     user,
@@ -173,7 +173,6 @@ export function usePermissions() {
 
 // Legacy compatibility hook for existing code
 export function useLegacyAuth() {
-  const supabase = createClient()
   const { user, currentOrganization } = useAuth()
 
   // This provides the same interface as the old direct supabase calls
@@ -199,7 +198,6 @@ export function useLegacyAuth() {
   }, [currentOrganization])
 
   return {
-    supabase,
     getUserData,
     getOrganizationId,
     user,

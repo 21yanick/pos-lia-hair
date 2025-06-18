@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import Image from "next/image"
+import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
 import {
   BarChart4,
   ShoppingCart,
@@ -58,16 +58,16 @@ export function Sidebar() {
         {!collapsed ? (
           <>
             <div className="flex items-center">
-              <div className="w-20 h-10 mr-2">
-                <Image
-                  src="/Logo_black.png"
-                  alt="Lia Hair Logo"
-                  width={96}
-                  height={48}
-                  className="w-full h-full object-contain"
-                  priority
-                />
-              </div>
+              <SmartAppLogo 
+                size="lg"
+                alt="Lia Hair Logo"
+                className="w-20 h-10 mr-2"
+                fallback={
+                  <div className="w-20 h-10 flex items-center justify-center bg-muted rounded border border-border mr-2">
+                    <span className="text-xs font-bold text-muted-foreground">Logo</span>
+                  </div>
+                }
+              />
             </div>
             <Button
               variant="ghost"
@@ -80,15 +80,16 @@ export function Sidebar() {
           </>
         ) : (
           <div className="w-full flex flex-col items-center">
-            <div className="w-8 h-8 mb-2">
-              <Image
-                src="/Logo_black.png"
-                alt="Lia Hair Logo"
-                width={32}
-                height={32}
-                className="w-full h-full object-contain"
-              />
-            </div>
+            <SmartAppLogo 
+              size="sm"
+              alt="Lia Hair Logo"
+              className="w-8 h-8 mb-2"
+              fallback={
+                <div className="w-8 h-8 flex items-center justify-center bg-muted rounded border border-border mb-2">
+                  <span className="text-xs font-bold text-muted-foreground">L</span>
+                </div>
+              }
+            />
             <Button
               variant="ghost"
               size="icon"
