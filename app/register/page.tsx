@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+// Router import removed - using window.location for direct navigation
 import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
 import { Label } from "@/shared/components/ui/label"
@@ -14,7 +14,6 @@ import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
 import Link from "next/link"
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
@@ -132,25 +131,11 @@ export default function RegisterPage() {
         return
       }
 
-      // 2. Create user record in users table
-      const { error: userError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          name: name.trim(),
-          username: email.trim().split('@')[0],
-          email: email.trim(),
-          role: 'admin' // Default role
-        })
-
-      if (userError) {
-        console.error("Error creating user record:", userError)
-        setError("Fehler beim Erstellen des Benutzerprofils")
-        return
-      }
+      // 2. User record is automatically created by the handle_new_user trigger
+      // No manual insert needed - the trigger handles it when auth.users gets a new row
 
       if (tabValue === "create") {
-        // 3a. Create new organization
+        // 3. Create new organization
         const { data: orgData, error: orgError } = await supabase
           .from('organizations')
           .insert({
@@ -183,7 +168,7 @@ export default function RegisterPage() {
           return
         }
 
-        // 4a. Add user as owner to organization
+        // 4. Add user as owner to organization
         const { error: memberError } = await supabase
           .from('organization_users')
           .insert({
@@ -199,12 +184,14 @@ export default function RegisterPage() {
         }
 
         setSuccess(true)
+        
+        // Wait a moment for database consistency before redirect
         setTimeout(() => {
-          router.push(`/org/${orgData.slug}/dashboard`)
-        }, 1500)
+          window.location.href = `/org/${orgData.slug}/dashboard`
+        }, 1000)
 
       } else {
-        // 3b. Join existing organization with invite code
+        // 3. Join existing organization with invite code
         // For now, we'll implement a simple approach where invite code = organization slug
         // In production, you might want proper invite tokens
         
@@ -220,7 +207,7 @@ export default function RegisterPage() {
           return
         }
 
-        // 4b. Add user as staff to organization
+        // 4. Add user as staff to organization
         const { error: memberError } = await supabase
           .from('organization_users')
           .insert({
@@ -240,9 +227,11 @@ export default function RegisterPage() {
         }
 
         setSuccess(true)
+        
+        // Wait a moment for database consistency before redirect
         setTimeout(() => {
-          router.push(`/org/${orgData.slug}/dashboard`)
-        }, 1500)
+          window.location.href = `/org/${orgData.slug}/dashboard`
+        }, 1000)
       }
 
     } catch (err) {

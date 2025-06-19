@@ -44,20 +44,48 @@ async function getCurrentOrganizationId(): Promise<string> {
 export async function getBusinessSettings(): Promise<BusinessSettings | null> {
   try {
     const organizationId = await getCurrentOrganizationId()
+    
+    console.log('🔍 DEBUG business_settings request:', {
+      organizationId,
+      url: `https://db.lia-hair.ch/rest/v1/business_settings`,
+      filter: `organization_id=eq.${organizationId}`,
+    })
 
+    // Get current user/session for debugging  
+    const { data: user } = await supabase.auth.getUser()
+    console.log('🔍 DEBUG current user:', {
+      userId: user?.user?.id,
+      email: user?.user?.email,
+      role: user?.user?.role,
+    })
+
+    const requestStart = Date.now()
     const { data, error } = await supabase
       .from('business_settings')
       .select('*')
       .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
-      .single()
+      .maybeSingle()
+    
+    const requestTime = Date.now() - requestStart
+    
+    console.log('🔍 DEBUG business_settings response:', {
+      requestTime: `${requestTime}ms`,
+      data,
+      error,
+      errorCode: error?.code,
+      errorMessage: error?.message,
+      errorDetails: error?.details,
+      errorHint: error?.hint,
+    })
 
     if (error && error.code !== 'PGRST116') {
+      console.error('🚨 business_settings ERROR (non-404):', error)
       throw error
     }
 
     return data || null
   } catch (error) {
-    console.error('Error loading business settings:', error)
+    console.error('🚨 business_settings CATCH:', error)
     throw error
   }
 }
@@ -68,19 +96,21 @@ export async function upsertBusinessSettings(
   try {
     const organizationId = await getCurrentOrganizationId()
     
-    // Get current user
+    // Get current user for audit trail
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) throw new Error('User not authenticated')
 
     const { data, error } = await supabase
       .from('business_settings')
       .upsert({
-        user_id: user.id, // 🔒 Required for unique constraint
         organization_id: organizationId, // 🔒 Multi-Tenant Security
         ...settingsData,
-        updated_at: new Date().toISOString()
+        // Audit trail is handled by database triggers
+        // created_by: auto-set on INSERT
+        // updated_by: auto-set on UPDATE
+        // updated_at: auto-set by trigger
       }, {
-        onConflict: 'user_id,organization_id' // 🔒 Match the actual unique constraint
+        onConflict: 'organization_id' // 🔒 One settings record per organization
       })
       .select()
       .single()
@@ -102,21 +132,32 @@ export async function uploadLogo(file: File, prefix: string = 'logo'): Promise<{
   path: string
 }> {
   try {
+    console.log('🔍 DEBUG uploadLogo START:', { 
+      fileName: file.name, 
+      fileSize: file.size, 
+      fileType: file.type,
+      prefix 
+    })
+
     const organizationId = await getCurrentOrganizationId()
+    console.log('🔍 DEBUG uploadLogo organizationId:', organizationId)
 
     // File validation
     const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml']
     if (!allowedTypes.includes(file.type)) {
+      console.error('🚨 File type not allowed:', file.type)
       throw new Error('Only JPEG, PNG and SVG files are allowed')
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB
+      console.error('🚨 File too large:', file.size)
       throw new Error('Logo file must be smaller than 5MB')
     }
 
     // Generate unique filename (Multi-Tenant: use organization_id)
     const fileExtension = file.name.split('.').pop()
     const fileName = `${organizationId}/${prefix}-${Date.now()}.${fileExtension}`
+    console.log('🔍 DEBUG uploadLogo fileName:', fileName)
 
     // Delete old logo if exists (only for standard logo, not app logos)
     if (prefix === 'logo') {

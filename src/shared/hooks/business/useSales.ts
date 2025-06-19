@@ -103,11 +103,14 @@ export function useSales() {
       }
 
       // 🛠️ Verkaufsposten für jedes Item im Warenkorb erstellen
+      // ✅ NEW: Include user_id and organization_id for consistent schema and stylist tracking
       const saleItems: SaleItemInsert[] = data.items.map(item => ({
         sale_id: sale.id,
         item_id: item.id,
         price: item.price,
-        notes: null  // Optional: Anmerkungen zum Posten
+        notes: null,  // Optional: Anmerkungen zum Posten
+        user_id: userId,                    // ✅ Stylist who performed this service
+        organization_id: organizationId     // ✅ Multi-tenant security
       }))
 
       // 🔗 Alle Verkaufsposten in einer Operation einfügen
@@ -188,8 +191,9 @@ export function useSales() {
       const fileName = `quittung-${sale.id}.pdf`
       const file = new File([blob], fileName, { type: 'application/pdf' })
       
-      // ☁️ Upload zu Storage
-      const filePath = `documents/receipts/${fileName}`
+      // ☁️ Upload zu Storage - Organization-based path for multi-tenant isolation
+      const organizationId = securityGuard() // Use organization ID for folder structure
+      const filePath = `${organizationId}/receipts/${fileName}`
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file, {
@@ -204,7 +208,7 @@ export function useSales() {
       
       // 📄 Document-Eintrag erstellen
       const userId = await getUserId()
-      const organizationId = securityGuard() // 🔒 SECURITY: Organization required
+      // organizationId already defined above for file path
       const documentData = {
         type: 'receipt' as const,
         reference_id: sale.id,
