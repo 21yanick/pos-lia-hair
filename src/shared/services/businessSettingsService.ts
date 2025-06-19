@@ -47,7 +47,6 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
     
     console.log('🔍 DEBUG business_settings request:', {
       organizationId,
-      url: `https://db.lia-hair.ch/rest/v1/business_settings`,
       filter: `organization_id=eq.${organizationId}`,
     })
 

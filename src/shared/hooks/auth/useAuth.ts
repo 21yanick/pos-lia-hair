@@ -63,7 +63,7 @@ export function useAuth(): AuthContextType {
       console.error('Error in loadUser:', err)
       setUser(null)
     }
-  }, [supabase])
+  }, [])
 
   // Sign out user
   const signOut = useCallback(async () => {
@@ -74,7 +74,7 @@ export function useAuth(): AuthContextType {
     } catch (error) {
       console.error('Error signing out:', error)
     }
-  }, [supabase, router])
+  }, [router])
 
   // Check if user has specific permission
   const hasPermission = useCallback((permission: Permission): boolean => {

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useOrganization } from '@/shared/contexts/OrganizationContext'
-import { useOrganizationSwitcher } from './OrganizationGuard'
+import { useOrganizationSwitcher } from '@/shared/components/auth/OrganizationGuard'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
