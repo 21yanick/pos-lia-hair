@@ -40,9 +40,30 @@ export default function LoginPage() {
 
       if (data.session) {
         setIsSuccess(true)
-        // Warte kurz für die Animation
+        
+        // Hole User-Organisationen nach erfolgreichem Login
+        const { data: userOrgs, error: orgError } = await supabase
+          .from('organization_users')
+          .select(`
+            role,
+            active,
+            organization:organizations(*)
+          `)
+          .eq('user_id', data.user.id)
+          .eq('active', true)
+        
         setTimeout(() => {
-          router.push("/org/lia-hair/dashboard")
+          if (orgError || !userOrgs || userOrgs.length === 0) {
+            // Keine Organisationen gefunden - zur Auswahl/Erstellung
+            router.push("/organizations")
+          } else if (userOrgs.length === 1) {
+            // Genau eine Organisation - direkt dorthin
+            const org = userOrgs[0].organization
+            router.push(`/org/${org.slug}/dashboard`)
+          } else {
+            // Mehrere Organisationen - zur Auswahl
+            router.push("/organizations")
+          }
           router.refresh()
         }, 600)
       }
@@ -136,7 +157,7 @@ export default function LoginPage() {
             </div>
           </CardContent>
 
-          <CardFooter className="pb-8">
+          <CardFooter className="flex flex-col space-y-4 pb-8">
             <Button 
               type="submit" 
               className="w-full h-11 font-medium shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary" 
@@ -151,6 +172,13 @@ export default function LoginPage() {
                 "Anmelden"
               )}
             </Button>
+            
+            <div className="text-center text-sm text-muted-foreground">
+              Noch kein Konto?{" "}
+              <a href="/register" className="text-primary hover:underline font-medium">
+                Hier registrieren
+              </a>
+            </div>
           </CardFooter>
         </form>
       </Card>

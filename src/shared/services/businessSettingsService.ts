@@ -9,6 +9,13 @@ async function getCurrentOrganizationId(): Promise<string> {
   // Note: This should ideally come from OrganizationContext, but services need to be context-free
   // For now, we'll use a pragmatic approach and get it from URL or session storage
   if (typeof window !== 'undefined') {
+    // First check session storage for current organization
+    const storedOrgId = sessionStorage.getItem('currentOrganizationId')
+    if (storedOrgId) {
+      return storedOrgId
+    }
+    
+    // Then try to extract from URL
     const path = window.location.pathname
     const match = path.match(/^\/org\/([^\/]+)/)
     if (match) {
@@ -20,7 +27,11 @@ async function getCurrentOrganizationId(): Promise<string> {
         .eq('slug', slug)
         .single()
       
-      if (data?.id) return data.id
+      if (data?.id) {
+        // Store for next time
+        sessionStorage.setItem('currentOrganizationId', data.id)
+        return data.id
+      }
     }
   }
   throw new Error('No organization context available')

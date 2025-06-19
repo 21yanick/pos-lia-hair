@@ -44,6 +44,17 @@ export function useBusinessSettings(): UseBusinessSettingsReturn {
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true)
+      
+      // Check if we're in an organization context before trying to load
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname
+        // Only load settings if we're in an organization route
+        if (!path.startsWith('/org/')) {
+          setLoading(false)
+          return
+        }
+      }
+      
       const data = await getBusinessSettings()
       setSettings(data)
     } catch (error) {
