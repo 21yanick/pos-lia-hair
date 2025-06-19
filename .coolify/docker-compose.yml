@@ -1,0 +1,61 @@
+# Coolify-optimized Docker Compose for POS-LIA-HAIR
+# This file is specifically designed for Coolify deployment
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Production settings
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      
+      # Supabase connection (set in Coolify dashboard)
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      
+      # Domain configuration
+      - SITE_URL=${SITE_URL:-https://pos.lia-hair.ch}
+      - API_EXTERNAL_URL=${API_EXTERNAL_URL:-https://db.lia-hair.ch}
+      
+      # Performance optimization for Hetzner VPS
+      - NODE_OPTIONS=--max-old-space-size=3072
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      
+    restart: unless-stopped
+    
+    # Health check for Coolify monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Resource limits optimized for 4GB+ VPS
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Network configuration for Coolify
+networks:
+  default:
+    external: true
+    name: coolify
