@@ -13,16 +13,9 @@ import {
   getSalesForDateRange as getSalesForDateRangeService,
   createReceiptPDF as createReceiptPDFService,
   type Sale,
-  type SaleInsert,
-  type SaleUpdate,
-  type SaleItem,
-  type SaleItemInsert,
   type CreateSaleData,
   type CartItem
 } from '@/shared/services/salesService'
-
-// Re-export types for compatibility
-export type { Sale, SaleInsert, SaleUpdate, SaleItem, SaleItemInsert, CreateSaleData, CartItem }
 
 /**
  * React Query-powered Sales Hook
@@ -40,7 +33,7 @@ export type { Sale, SaleInsert, SaleUpdate, SaleItem, SaleItemInsert, CreateSale
  * - Optimistic updates for create/cancel operations
  */
 
-interface UseSalesReturn {
+interface UseSalesQueryReturn {
   // State Management (Legacy Compatible)
   loading: boolean
   error: string | null
@@ -60,7 +53,7 @@ interface UseSalesReturn {
   cancelSale: (saleId: string) => Promise<any>
 }
 
-export function useSales(): UseSalesReturn {
+export function useSalesQuery(): UseSalesQueryReturn {
   const { currentOrganization } = useOrganization()
   const queryClient = useQueryClient()
   const { createSaleCashMovement, reverseCashMovement } = useCashMovements()
@@ -162,7 +155,7 @@ export function useSales(): UseSalesReturn {
       // Return context with the snapshotted value
       return { previousSales, optimisticSale }
     },
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       // Rollback on error
       if (context?.previousSales && organizationId) {
         queryClient.setQueryData(
@@ -252,7 +245,7 @@ export function useSales(): UseSalesReturn {
       // Return context with the snapshotted value
       return { previousSales }
     },
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       // Rollback on error
       if (context?.previousSales && organizationId) {
         queryClient.setQueryData(

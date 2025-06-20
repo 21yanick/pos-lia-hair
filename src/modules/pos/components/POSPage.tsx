@@ -13,9 +13,6 @@ export function POSPage() {
   const { currentOrganization, loading } = useOrganization()
   const pos = usePOS()
 
-  console.log('🔍 DEBUG POSPage: currentOrganization:', currentOrganization)
-  console.log('🔍 DEBUG POSPage: loading:', loading)
-
   // Wait for organization to load before showing POS
   if (loading || !currentOrganization) {
     return (

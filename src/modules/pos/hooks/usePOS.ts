@@ -1,26 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { usePOSState } from '@/shared/hooks/business/usePOSState'
 import { useSales } from '@/shared/hooks/business/useSales'
 import { useItems } from '@/shared/hooks/business/useItems'
 import type { Item } from '@/shared/hooks/business/useItems'
 import type { CartItem, CreateSaleData } from '@/shared/hooks/business/useSales'
 
-// Warenkorb-Logik Hook
+// Warenkorb-Logik Hook (optimized with useCallback)
 function useCart() {
   const [cart, setCart] = useState<CartItem[]>([])
 
-  const addToCart = (item: Item) => {
-    console.log('addToCart called with:', item)
+  const addToCart = useCallback((item: Item) => {
     setCart(prevCart => {
-      console.log('Previous cart:', prevCart)
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id)
-      console.log('Existing item:', existingItem)
       
       if (existingItem) {
         // Item bereits im Warenkorb -> Menge erhöhen
-        const newCart = prevCart.map(cartItem =>
+        return prevCart.map(cartItem =>
           cartItem.id === item.id
             ? {
                 ...cartItem,
@@ -29,8 +26,6 @@ function useCart() {
               }
             : cartItem
         )
-        console.log('Updated cart (existing item):', newCart)
-        return newCart
       } else {
         // Neues Item zum Warenkorb hinzufügen
         const newCartItem: CartItem = {
@@ -40,16 +35,14 @@ function useCart() {
           quantity: 1,
           total: item.default_price
         }
-        const newCart = [...prevCart, newCartItem]
-        console.log('New cart (new item):', newCart)
-        return newCart
+        return [...prevCart, newCartItem]
       }
     })
-  }
+  }, [])
 
-  const updateQuantity = (itemId: string, newQuantity: number) => {
+  const updateQuantity = useCallback((itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeFromCart(itemId)
+      setCart(prevCart => prevCart.filter(item => item.id !== itemId))
       return
     }
 
@@ -64,9 +57,9 @@ function useCart() {
           : item
       )
     )
-  }
+  }, [])
 
-  const updatePrice = (itemId: string, newPrice: number) => {
+  const updatePrice = useCallback((itemId: string, newPrice: number) => {
     setCart(prevCart =>
       prevCart.map(item =>
         item.id === itemId
@@ -78,21 +71,21 @@ function useCart() {
           : item
       )
     )
-  }
+  }, [])
 
-  const removeFromCart = (itemId: string) => {
+  const removeFromCart = useCallback((itemId: string) => {
     setCart(prevCart => prevCart.filter(item => item.id !== itemId))
-  }
+  }, [])
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([])
-  }
+  }, [])
 
-  const getCartTotal = () => {
+  const getCartTotal = useCallback(() => {
     return cart.reduce((sum, item) => sum + item.total, 0)
-  }
+  }, [cart])
 
-  return {
+  return useMemo(() => ({
     cart,
     addToCart,
     updateQuantity,
@@ -100,7 +93,7 @@ function useCart() {
     removeFromCart,
     clearCart,
     getCartTotal
-  }
+  }), [cart, addToCart, updateQuantity, updatePrice, removeFromCart, clearCart, getCartTotal])
 }
 
 // Hauptorchestrator Hook für das gesamte POS System
@@ -110,21 +103,23 @@ export function usePOS() {
   const { items, loading: itemsLoading } = useItems()
   const cart = useCart()
 
-  // Kombinierte Funktionen für POS-spezifische Workflows
-  const handleAddToCart = (item: Item) => {
-    console.log('Adding to cart:', item) // Debug
+  // Memoized cart total to prevent recalculation on every render
+  const cartTotal = useMemo(() => cart.getCartTotal(), [cart.cart])
+
+  // Kombinierte Funktionen für POS-spezifische Workflows (memoized)
+  const handleAddToCart = useCallback((item: Item) => {
     cart.addToCart(item)
-  }
+  }, [cart.addToCart])
 
-  const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
+  const handleUpdateQuantity = useCallback((itemId: string, newQuantity: number) => {
     cart.updateQuantity(itemId, newQuantity)
-  }
+  }, [cart.updateQuantity])
 
-  const handleEditPrice = (item: CartItem) => {
+  const handleEditPrice = useCallback((item: CartItem) => {
     posState.openEditPriceDialog(item)
-  }
+  }, [posState.openEditPriceDialog])
 
-  const handleSaveEditedPrice = () => {
+  const handleSaveEditedPrice = useCallback(() => {
     if (posState.editingItem && posState.editPrice) {
       const newPrice = parseFloat(posState.editPrice)
       if (newPrice > 0) {
@@ -132,25 +127,25 @@ export function usePOS() {
       }
     }
     posState.closeEditPriceDialog()
-  }
+  }, [posState.editingItem, posState.editPrice, cart.updatePrice, posState.closeEditPriceDialog])
 
-  const handleDeleteItem = (itemId: string) => {
+  const handleDeleteItem = useCallback((itemId: string) => {
     posState.openDeleteConfirmation(itemId)
-  }
+  }, [posState.openDeleteConfirmation])
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (posState.itemToDelete) {
       cart.removeFromCart(posState.itemToDelete)
     }
     posState.closeDeleteConfirmation()
-  }
+  }, [posState.itemToDelete, cart.removeFromCart, posState.closeDeleteConfirmation])
 
-  const handleCheckout = () => {
+  const handleCheckout = useCallback(() => {
     if (cart.cart.length === 0) return
     posState.openPaymentDialog()
-  }
+  }, [cart.cart.length, posState.openPaymentDialog])
 
-  const handlePayment = async (data: CreateSaleData) => {
+  const handlePayment = useCallback(async (data: CreateSaleData) => {
     const result = await sales.createSale(data)
     
     if (result.success) {
@@ -160,7 +155,7 @@ export function usePOS() {
         transaction: result.sale,
         change: result.change,
         receiptUrl: result.receiptUrl,
-        amount: cart.getCartTotal(),
+        amount: cartTotal,
         paymentMethod: posState.selectedPaymentMethod || undefined,
         cashReceived: posState.selectedPaymentMethod === 'cash' ? parseFloat(posState.cashReceived) : undefined
       })
@@ -173,14 +168,15 @@ export function usePOS() {
         error: result.error
       })
     }
-  }
+  }, [sales.createSale, cartTotal, posState, cart.clearCart])
 
-  const handleStartNewSale = () => {
+  const handleStartNewSale = useCallback(() => {
     posState.startNewSale()
     cart.clearCart()
-  }
+  }, [posState.startNewSale, cart.clearCart])
 
-  return {
+  // Memoized return object to prevent unnecessary re-renders
+  return useMemo(() => ({
     // Products & Search
     products: {
       items,
@@ -196,7 +192,7 @@ export function usePOS() {
     // Shopping Cart
     cart: {
       cart: cart.cart,
-      total: cart.getCartTotal(),
+      total: cartTotal,
       loading: sales.loading,
       onUpdateQuantity: handleUpdateQuantity,
       onEditPrice: handleEditPrice,
@@ -207,7 +203,7 @@ export function usePOS() {
     // Payment Dialog
     payment: {
       isOpen: posState.isPaymentDialogOpen,
-      cartTotal: cart.getCartTotal(),
+      cartTotal: cartTotal,
       cartItems: cart.cart,
       selectedPaymentMethod: posState.selectedPaymentMethod,
       cashReceived: posState.cashReceived,
@@ -223,7 +219,7 @@ export function usePOS() {
       isOpen: posState.isConfirmationDialogOpen,
       selectedPaymentMethod: posState.selectedPaymentMethod,
       cashReceived: posState.cashReceived,
-      cartTotal: cart.getCartTotal(),
+      cartTotal: cartTotal,
       transactionResult: posState.transactionResult,
       onStartNewSale: handleStartNewSale,
       onClose: posState.closeConfirmationDialog
@@ -251,7 +247,12 @@ export function usePOS() {
       salesLoading: sales.loading,
       salesError: sales.error,
       cartCount: cart.cart.length,
-      cartTotal: cart.getCartTotal()
+      cartTotal: cartTotal
     }
-  }
+  }), [
+    // Dependencies for memoization
+    items, itemsLoading, posState, cart.cart, cartTotal, sales.loading, sales.error,
+    handleAddToCart, handleUpdateQuantity, handleEditPrice, handleDeleteItem, handleCheckout,
+    handlePayment, handleStartNewSale, handleSaveEditedPrice, handleConfirmDelete
+  ])
 }

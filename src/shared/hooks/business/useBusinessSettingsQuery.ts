@@ -41,7 +41,6 @@ interface UseBusinessSettingsQueryReturn {
   isSuccess: boolean
   
   // Actions
-  loadSettings: () => Promise<any>
   updateSettings: (data: BusinessSettingsFormData) => Promise<void>
   uploadCompanyLogo: (file: File) => Promise<void>
   deleteCompanyLogo: () => Promise<void>
@@ -57,7 +56,7 @@ interface UseBusinessSettingsQueryReturn {
   invalidate: () => Promise<void>
 }
 
-export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
+export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
   const { currentOrganization } = useOrganization()
   const queryClient = useQueryClient()
   
@@ -408,8 +407,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
     isFetching,
     isSuccess,
     
-    // Actions  
-    loadSettings: refetch, // Compatibility with old interface
+    // Actions
     updateSettings: updateMutation.mutateAsync,
     uploadCompanyLogo: uploadLogoMutation.mutateAsync,
     deleteCompanyLogo: deleteLogoMutation.mutateAsync,

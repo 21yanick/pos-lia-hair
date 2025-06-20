@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 // ✅ GDPR-COMPLIANT: Local Inter Variable Font hosting
 import { ThemeProvider } from "@/shared/components/theme-provider"
+import { QueryProvider } from "@/shared/lib/react-query"
 import { OrganizationProvider } from "@/shared/contexts/OrganizationContext"
 import { Toaster } from "@/shared/components/ui/sonner"
 import { inter } from "@/shared/styles/fonts"
@@ -24,10 +25,12 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <OrganizationProvider>
-            {children}
-            <Toaster />
-          </OrganizationProvider>
+          <QueryProvider>
+            <OrganizationProvider>
+              {children}
+              <Toaster />
+            </OrganizationProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

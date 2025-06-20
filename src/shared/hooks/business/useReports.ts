@@ -1,39 +1,46 @@
+/**
+ * React Query-powered Reports Hook
+ * 
+ * High-performance replacement for useReports with:
+ * - Granular caching strategies
+ * - Optimized parallel queries  
+ * - Background refetching
+ * - Smart cache invalidation
+ * - 100% Legacy compatibility
+ */
+
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/shared/lib/supabase/client'
-import { formatDateForAPI, getSwissDayRange, getFirstDayOfMonth, getLastDayOfMonth } from '@/shared/utils/dateUtils'
-import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
-import { useExpenses } from './useExpenses'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 
-// Type für die vereinfachten Transaktionsdaten im Dashboard
-export type DashboardTransaction = {
-  id: string
-  time: string
-  amount: number
-  method: 'cash' | 'twint' | 'sumup'
-}
+// Import optimized service functions
+import {
+  getCurrentCashBalance,
+  getTodayStats,
+  getRecentTransactions,
+  getWeekStats,
+  getMonthStats,
+  getRecentActivities,
+  getMonthlyTrends,
+  getProductCount,
+  getYearTotal,
+  type DashboardTransaction,
+  type ActivityItem,
+  type MonthlyData,
+  type TodayStatsData,
+  type WeekStatsData,
+  type MonthStatsData,
+  type YearTotalData
+} from '@/shared/services/dashboardService'
 
-// Typen für das neue Dashboard
-export type ActivityItem = {
-  id: string
-  date: string
-  type: 'sale' | 'expense'
-  description: string
-  amount: number
-  paymentMethod: 'cash' | 'twint' | 'sumup' | 'bank'
-  category?: string
-  time?: string
-}
+// Legacy compatibility imports
+import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
 
-export type MonthlyData = {
-  month: string
-  revenue: number
-  expenses: number
-  profit: number
-  monthName: string
-}
+// ========================================
+// Legacy Compatible Types
+// ========================================
 
 export type DashboardStatsData = {
   cashBalance: number
@@ -54,7 +61,6 @@ export type DashboardStatsData = {
   }
 }
 
-// Type für die Statistiken (erweitert von useDashboardStats)
 export type DashboardStats = {
   todayRevenue: number
   todayTransactions: number
@@ -67,672 +73,269 @@ export type DashboardStats = {
     sumup: number
   }
   recentTransactions: DashboardTransaction[]
-  // Neue Dashboard-Daten
+  // New Dashboard data
   dashboardStatsData: DashboardStatsData
   monthlyTrendData: MonthlyData[]
   recentActivities: ActivityItem[]
 }
 
-// Kombinierter Hook für alle Report-Funktionalitäten
-export function useReports() {
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
-    todayRevenue: 0,
-    todayTransactions: 0,
-    weekRevenue: 0,
-    monthRevenue: 0,
-    activeProducts: 0,
-    paymentMethods: {
-      cash: 0,
-      twint: 0,
-      sumup: 0,
-    },
-    recentTransactions: [],
-    dashboardStatsData: {
-      cashBalance: 0,
-      thisMonth: { revenue: 0, expenses: 0, profit: 0 },
-      last30Days: { revenue: 0, trend: 'stable', percentage: 0 },
-      yearTotal: { revenue: 0, expenses: 0, profit: 0 }
-    },
-    monthlyTrendData: [],
-    recentActivities: []
-  })
-  const [dashboardLoading, setDashboardLoading] = useState(true)
-  const [dashboardError, setDashboardError] = useState<string | null>(null)
+interface UseReportsQueryReturn {
+  // Dashboard-specific data (Legacy Compatible)
+  dashboardStats: DashboardStats
+  loading: boolean
+  error: string | null
+  refreshDashboard: () => Promise<void>
+  
+  // Cash Balance Functions (delegated, Legacy Compatible)
+  getCurrentCashBalance: () => Promise<{success: boolean, balance: number}>
+  getCashMovementsForMonth: (start: Date, end: Date) => Promise<any>
+  getCashMovementsForDate: (date: string) => Promise<any>
+  cashLoading: boolean
+  cashError: string | null
+}
 
-  // 🔒 SECURITY: Multi-Tenant Organization Context
+/**
+ * React Query-powered Reports Hook
+ * 
+ * Features:
+ * - Granular queries with optimal caching
+ * - Background refetching for real-time data
+ * - Parallel loading for performance
+ * - Legacy-compatible interface
+ * - Smart invalidation strategies
+ */
+export function useReports(): UseReportsQueryReturn {
   const { currentOrganization } = useOrganization()
+  const queryClient = useQueryClient()
+  
+  const organizationId = currentOrganization?.id
+  const today = new Date().toISOString().split('T')[0]
+  const currentYear = new Date().getFullYear()
 
-  // Hooks für erweiterte Funktionalitäten
+  // Legacy cash balance hook for delegation
   const cashBalanceHook = useCashBalance()
-  const expensesHook = useExpenses()
 
-  // WICHTIG: Verwende das gleiche Datum wie alle anderen Systeme
-  // Das ist der aktuelle Tag in Schweizer Zeit (YYYY-MM-DD)
-  const today = formatDateForAPI(new Date())
+  // ========================================
+  // Granular Dashboard Queries
+  // ========================================
 
-  // Dashboard-Statistiken laden (migriert von useDashboardStats)
-  const loadDashboardStats = async () => {
-    try {
-      setDashboardLoading(true)
-      setDashboardError(null)
-      
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
-      }
+  // Real-time data (high volatility)
+  const {
+    data: cashBalance = 0,
+    isLoading: isBalanceLoading,
+    error: balanceError
+  } = useQuery({
+    queryKey: queryKeys.business.dashboard.balance(organizationId || ''),
+    queryFn: () => getCurrentCashBalance(organizationId!),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.balance,
+    refetchInterval: cacheConfig.dashboard.balance.refetchInterval,
+  })
 
-      // Heutige Verkäufe mit korrekter Schweizer Zeitzone abrufen mit ORGANIZATION SECURITY
-      const { start, end } = getSwissDayRange(new Date())
-      const { data: sales, error: salesError } = await supabase
-        .from('sales')
-        .select('*')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', start)
-        .lte('created_at', end)
-        .order('created_at', { ascending: false })
-        .limit(20)
-      
-      if (salesError) {
-        console.error('❌ Fehler beim Laden der Verkäufe:', salesError.message)
-        setDashboardError(salesError.message || 'Fehler beim Laden der Verkäufe')
-        return
-      }
-      
+  const {
+    data: todayStatsData,
+    isLoading: isTodayLoading,
+    error: todayError
+  } = useQuery<TodayStatsData>({
+    queryKey: queryKeys.business.dashboard.todayStats(organizationId || '', today),
+    queryFn: () => getTodayStats(organizationId!),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.todayStats,
+    refetchOnWindowFocus: cacheConfig.dashboard.todayStats.refetchOnWindowFocus,
+  })
 
-      // Aktive Produkte zählen mit ORGANIZATION SECURITY
-      const { data: items } = await supabase
-        .from('items')
-        .select('id')
-        .eq('active', true)
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
+  const {
+    data: recentTransactions = [],
+    isLoading: isTransactionsLoading,
+    error: transactionsError
+  } = useQuery<DashboardTransaction[]>({
+    queryKey: queryKeys.business.dashboard.recentTransactions(organizationId || '', 10),
+    queryFn: () => getRecentTransactions(organizationId!, 10),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.recentTransactions,
+  })
 
-      const activeProductsCount = items?.length || 0
+  // Medium volatility data
+  const {
+    data: weekStatsData,
+    isLoading: isWeekLoading,
+    error: weekError
+  } = useQuery<WeekStatsData>({
+    queryKey: queryKeys.business.dashboard.weekStats(organizationId || '', ''),
+    queryFn: () => getWeekStats(organizationId!),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.weekStats,
+  })
 
-      // Wochenumsatz und Monatsumsatz IMMER berechnen (unabhängig von heutigen Verkäufen)
-      // Verwende getRevenueBreakdown() für korrekte Netto-Berechnung nach Abzug Provider-Gebühren
-      const weekStart = new Date()
-      weekStart.setDate(weekStart.getDate() - 7)
-      const { data: weekSales } = await supabase
-        .from('sales')
-        .select('id, total_amount, payment_method')
-        .eq('status', 'completed')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', weekStart.toISOString())
+  const {
+    data: monthStatsData,
+    isLoading: isMonthLoading,
+    error: monthError
+  } = useQuery<MonthStatsData>({
+    queryKey: queryKeys.business.dashboard.monthStats(organizationId || '', ''),
+    queryFn: () => getMonthStats(organizationId!),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.monthStats,
+  })
 
-      const { netRevenue: weekRevenue } = await getRevenueBreakdown(weekSales || [])
+  const {
+    data: recentActivities = [],
+    isLoading: isActivitiesLoading,
+    error: activitiesError
+  } = useQuery<ActivityItem[]>({
+    queryKey: queryKeys.business.dashboard.recentActivities(organizationId || '', 10),
+    queryFn: () => getRecentActivities(organizationId!, 10),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.recentActivities,
+  })
 
-      const monthStart = new Date()
-      monthStart.setDate(monthStart.getDate() - 30)
-      const { data: monthSales } = await supabase
-        .from('sales')
-        .select('id, total_amount, payment_method')
-        .eq('status', 'completed')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', monthStart.toISOString())
+  // Low volatility / Historical data
+  const {
+    data: monthlyTrendData = [],
+    isLoading: isTrendsLoading,
+    error: trendsError
+  } = useQuery<MonthlyData[]>({
+    queryKey: queryKeys.business.dashboard.monthlyTrends(organizationId || '', 12),
+    queryFn: () => getMonthlyTrends(organizationId!, 12),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.monthlyTrends,
+  })
 
-      const { netRevenue: monthRevenue } = await getRevenueBreakdown(monthSales || [])
+  const {
+    data: productCount = 0,
+    isLoading: isProductsLoading,
+    error: productsError
+  } = useQuery<number>({
+    queryKey: queryKeys.business.dashboard.productCount(organizationId || ''),
+    queryFn: () => getProductCount(organizationId!),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.productCount,
+  })
 
-      if (!sales || sales.length === 0) {
-        
-        // Fallback: Zeige die letzten 5 Transaktionen aus der Woche mit ORGANIZATION SECURITY
-        const { data: recentSales } = await supabase
-          .from('sales')
-          .select('*')
-          .eq('status', 'completed')
-          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-          .gte('created_at', weekStart.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(5)
-        
-        const recentTransactions: DashboardTransaction[] = recentSales?.slice(0, 5).map(s => ({
-          id: s.id,
-          time: s.created_at ? new Date(s.created_at).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }) : '00:00',
-          amount: s.total_amount,
-          method: s.payment_method,
-        })) || []
-        
-        // Erweiterte Dashboard-Daten laden auch bei leeren heutigen Sales
-        const enhancedDashboardData = await loadEnhancedDashboardData()
+  const {
+    data: yearTotalData,
+    isLoading: isYearLoading,
+    error: yearError
+  } = useQuery<YearTotalData>({
+    queryKey: queryKeys.business.dashboard.yearTotal(organizationId || '', currentYear),
+    queryFn: () => getYearTotal(organizationId!, currentYear),
+    enabled: !!organizationId,
+    ...cacheConfig.dashboard.yearTotal,
+  })
 
-        setDashboardStats({
-          todayRevenue: 0,
-          todayTransactions: 0,
-          weekRevenue,
-          monthRevenue,
-          activeProducts: activeProductsCount,
-          paymentMethods: { cash: 0, twint: 0, sumup: 0 },
-          recentTransactions,
-          dashboardStatsData: enhancedDashboardData.statsData,
-          monthlyTrendData: enhancedDashboardData.trendData,
-          recentActivities: enhancedDashboardData.activities
-        })
-        return
-      }
+  // ========================================
+  // Combined Loading and Error States
+  // ========================================
+  const isLoading = isBalanceLoading || isTodayLoading || isTransactionsLoading || 
+                   isWeekLoading || isMonthLoading || isActivitiesLoading || 
+                   isTrendsLoading || isProductsLoading || isYearLoading
 
-      // Nur abgeschlossene Verkäufe für die Berechnungen verwenden
-      const completedSales = sales.filter(s => s.status === 'completed')
-      if (completedSales.length === 0) {
-        // Erweiterte Dashboard-Daten laden auch bei no completed sales
-        const enhancedDashboardData = await loadEnhancedDashboardData()
+  const error = balanceError || todayError || transactionsError || 
+               weekError || monthError || activitiesError || 
+               trendsError || productsError || yearError
 
-        setDashboardStats({
-          todayRevenue: 0,
-          todayTransactions: 0,
-          weekRevenue: 0,
-          monthRevenue: 0,
-          activeProducts: activeProductsCount,
-          paymentMethods: { cash: 0, twint: 0, sumup: 0 },
-          recentTransactions: [],
-          dashboardStatsData: enhancedDashboardData.statsData,
-          monthlyTrendData: enhancedDashboardData.trendData,
-          recentActivities: enhancedDashboardData.activities
-        })
-        return
-      }
-      
-      // Gesamtumsatz heute berechnen (KORRIGIERT: Brutto-Umsatz als Hauptzahl)
-      const { grossRevenue: todayRevenue, totalProviderFees: todayFees } = await getRevenueBreakdown(completedSales)
+  // ========================================
+  // Legacy Compatible Data Assembly
+  // ========================================
 
-      // Nach Zahlungsmethode aufteilen
-      const cashTotal = completedSales
-        .filter(s => s.payment_method === 'cash')
-        .reduce((sum, s) => sum + s.total_amount, 0)
-
-      const twintTotal = completedSales
-        .filter(s => s.payment_method === 'twint')
-        .reduce((sum, s) => sum + s.total_amount, 0)
-
-      const sumupTotal = completedSales
-        .filter(s => s.payment_method === 'sumup')
-        .reduce((sum, s) => sum + s.total_amount, 0)
-
-      // Neueste 5 Verkäufe für die Anzeige formatieren
-      const recentTransactions: DashboardTransaction[] = completedSales
-        .slice(0, 5)
-        .map(s => ({
-          id: s.id,
-          time: s.created_at ? new Date(s.created_at).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }) : '00:00',
-          amount: s.total_amount,
-          method: s.payment_method,
-        }))
-
-      // Week/Month revenue wurde bereits oben berechnet
-
-      // Erweiterte Dashboard-Daten laden
-      const enhancedDashboardData = await loadEnhancedDashboardData()
-
-      // Dashboard-Statistiken setzen
-      setDashboardStats({
-        todayRevenue,
-        todayTransactions: completedSales.length,
-        weekRevenue,
-        monthRevenue,
-        activeProducts: activeProductsCount,
-        paymentMethods: {
-          cash: cashTotal,
-          twint: twintTotal,
-          sumup: sumupTotal,
-        },
-        recentTransactions,
-        dashboardStatsData: enhancedDashboardData.statsData,
-        monthlyTrendData: enhancedDashboardData.trendData,
-        recentActivities: enhancedDashboardData.activities
-      })
-    } catch (err: any) {
-      console.error('Fehler beim Laden der Dashboard-Statistik:', err?.message)
-      setDashboardStats({
-        todayRevenue: 0,
-        todayTransactions: 0,
-        weekRevenue: 0,
-        monthRevenue: 0,
-        activeProducts: 0,
-        paymentMethods: { cash: 0, twint: 0, sumup: 0 },
-        recentTransactions: [],
-        dashboardStatsData: {
-          cashBalance: 0,
-          thisMonth: { revenue: 0, expenses: 0, profit: 0 },
-          last30Days: { revenue: 0, trend: 'stable', percentage: 0 },
-          yearTotal: { revenue: 0, expenses: 0, profit: 0 }
-        },
-        monthlyTrendData: [],
-        recentActivities: []
-      })
-      setDashboardError(err?.message || 'Fehler beim Laden der Daten')
-    } finally {
-      setDashboardLoading(false)
-    }
-  }
-
-  // Berechnet Revenue-Kennzahlen (Brutto, Netto, Fees) für eine Liste von Sales
-  // REPARIERT: Verwendet zuverlässige Standard-Fees statt fehlerhafter provider_reports
-  const getRevenueBreakdown = async (sales: any[]) => {
-    if (!sales || sales.length === 0) {
-      return { netRevenue: 0, totalProviderFees: 0, grossRevenue: 0 }
-    }
-
-    // Standard Provider-Gebührensätze (zuverlässig für Development & Dashboard)
-    const STANDARD_FEES = {
-      cash: 0,       // Keine Gebühren bei Bargeld
-      twint: 0.013,  // 1.3% (offizieller Twint-Satz)
-      sumup: 0.015   // 1.5% (offizieller SumUp-Satz)
-    }
-
-    let netRevenue = 0
-    let totalProviderFees = 0
-    let grossRevenue = 0
+  // Calculate last 30 days trend (simplified for now)
+  const calculateLast30DaysTrend = (): { revenue: number; trend: 'up' | 'down' | 'stable'; percentage: number } => {
+    const currentMonthRevenue = monthStatsData?.revenue || 0
+    const previousMonthRevenue = monthlyTrendData && monthlyTrendData.length >= 2 ? monthlyTrendData[monthlyTrendData.length - 2]?.revenue || 0 : 0
     
-    for (const sale of sales) {
-      grossRevenue += sale.total_amount
-      
-      // Berechne Provider-Fees basierend auf Payment-Method
-      const feeRate = STANDARD_FEES[sale.payment_method as keyof typeof STANDARD_FEES] || 0
-      const estimatedFees = sale.total_amount * feeRate
-      
-      netRevenue += sale.total_amount - estimatedFees
-      totalProviderFees += estimatedFees
-      
+    if (previousMonthRevenue === 0) {
+      return { revenue: currentMonthRevenue, trend: 'stable', percentage: 0 }
     }
     
-    return { netRevenue, totalProviderFees, grossRevenue }
-  }
-
-  // Erweiterte Dashboard-Daten laden
-  const loadEnhancedDashboardData = async () => {
-    try {
-      // 1. Cash Balance abrufen
-      const { success: cashSuccess, balance: cashBalance } = await cashBalanceHook.getCurrentCashBalance()
-      
-      // 2. Monatsdaten für die letzten 12 Monate abrufen
-      const monthlyTrendData = await loadMonthlyTrendData()
-      
-      // 3. Dieser Monat Daten
-      const thisMonth = await getThisMonthData()
-      
-      // 4. Letzte 30 Tage Trend
-      const last30Days = await getLast30DaysTrend()
-      
-      // 5. Jahres-Total
-      const yearTotal = await getYearTotalData()
-      
-      // 6. Recent Activities (Sales + Expenses)
-      const recentActivities = await getRecentActivities()
-      
-      return {
-        statsData: {
-          cashBalance: cashSuccess ? cashBalance : 0,
-          thisMonth,
-          last30Days,
-          yearTotal
-        },
-        trendData: monthlyTrendData,
-        activities: recentActivities
-      }
-    } catch (error) {
-      console.error('Fehler beim Laden der erweiterten Dashboard-Daten:', error)
-      return {
-        statsData: {
-          cashBalance: 0,
-          thisMonth: { revenue: 0, expenses: 0, profit: 0 },
-          last30Days: { revenue: 0, trend: 'stable' as const, percentage: 0 },
-          yearTotal: { revenue: 0, expenses: 0, profit: 0 }
-        },
-        trendData: [],
-        activities: []
-      }
+    const percentageChange = ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
+    
+    return {
+      revenue: currentMonthRevenue,
+      trend: percentageChange > 5 ? 'up' : percentageChange < -5 ? 'down' : 'stable',
+      percentage: Math.abs(percentageChange)
     }
   }
 
-  // Monatsdaten für Chart
-  const loadMonthlyTrendData = async (): Promise<MonthlyData[]> => {
-    try {
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt für Monthly Trend Data.')
+  // Assemble legacy-compatible dashboard stats
+  const dashboardStats: DashboardStats = {
+    // Today's data
+    todayRevenue: todayStatsData?.revenue || 0,
+    todayTransactions: todayStatsData?.transactions || 0,
+    
+    // Week/Month data
+    weekRevenue: weekStatsData?.revenue || 0,
+    monthRevenue: monthStatsData?.revenue || 0,
+    
+    // Products
+    activeProducts: productCount || 0,
+    
+    // Payment methods (from today's stats)
+    paymentMethods: todayStatsData?.paymentMethods || { cash: 0, twint: 0, sumup: 0 },
+    
+    // Recent data
+    recentTransactions: recentTransactions || [],
+    
+    // Extended dashboard data
+    dashboardStatsData: {
+      cashBalance: cashBalance || 0,
+      thisMonth: {
+        revenue: monthStatsData?.revenue || 0,
+        expenses: monthStatsData?.expenses || 0,
+        profit: monthStatsData?.profit || 0
+      },
+      last30Days: calculateLast30DaysTrend(),
+      yearTotal: {
+        revenue: yearTotalData?.revenue || 0,
+        expenses: yearTotalData?.expenses || 0,
+        profit: yearTotalData?.profit || 0
       }
-
-      const months = []
-      const now = new Date()
-      
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-        // KORRIGIERT: Swiss-aware month boundaries
-        const firstDay = getFirstDayOfMonth(date)
-        const lastDay = getLastDayOfMonth(date)
-        const startDate = formatDateForAPI(firstDay)
-        const endDate = formatDateForAPI(lastDay)
-        
-        // Sales für den Monat (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
-        const { data: sales } = await supabase
-          .from('sales')
-          .select('id, total_amount, payment_method')
-          .eq('status', 'completed')
-          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-          .gte('created_at', startDate + 'T00:00:00')
-          .lte('created_at', endDate + 'T23:59:59')
-        
-        // Expenses für den Monat mit ORGANIZATION SECURITY
-        const { data: expenses } = await supabase
-          .from('expenses')
-          .select('amount')
-          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-          .gte('payment_date', startDate)
-          .lte('payment_date', endDate)
-        
-        // Revenue-Breakdown berechnen (Brutto, Netto, Fees)
-        const { grossRevenue, netRevenue, totalProviderFees } = await getRevenueBreakdown(sales || [])
-        const expenseTotal = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0
-        const profit = netRevenue - expenseTotal
-        
-        months.push({
-          month: startDate,
-          revenue: grossRevenue,  // Chart zeigt Brutto-Umsätze
-          expenses: expenseTotal,
-          profit,  // Profit bleibt Netto minus Expenses
-          monthName: date.toLocaleDateString('de-CH', { month: 'short' })
-        })
-      }
-      
-      return months
-    } catch (error) {
-      console.error('Fehler beim Laden der Monatsdaten:', error)
-      return []
-    }
+    },
+    monthlyTrendData: monthlyTrendData || [],
+    recentActivities: recentActivities || []
   }
 
-  // Dieser Monat Daten
-  const getThisMonthData = async () => {
-    try {
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt für This Month Data.')
-      }
+  // ========================================
+  // Refresh Function (Legacy Compatible)
+  // ========================================
+  const refreshDashboard = async (): Promise<void> => {
+    if (!organizationId) return
 
-      const now = new Date()
-      // KORRIGIERT: Verwende Swiss-aware date utilities statt naive JavaScript Date
-      const firstDay = getFirstDayOfMonth(now)
-      const lastDay = getLastDayOfMonth(now)
-      const startDate = formatDateForAPI(firstDay)
-      const endDate = formatDateForAPI(lastDay)
-      
-      
-      // Sales (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
-      const { data: sales } = await supabase
-        .from('sales')
-        .select('id, total_amount, payment_method')
-        .eq('status', 'completed')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', startDate + 'T00:00:00')
-        .lte('created_at', endDate + 'T23:59:59')
-      
-      
-      // Expenses mit ORGANIZATION SECURITY
-      const { data: expenses } = await supabase
-        .from('expenses')
-        .select('amount')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('payment_date', startDate)
-        .lte('payment_date', endDate)
-      
-      
-      // Revenue-Breakdown berechnen (Brutto, Netto, Fees)
-      const { netRevenue, totalProviderFees, grossRevenue } = await getRevenueBreakdown(sales || [])
-      const expenseTotal = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0
-      
-      
-      const result = {
-        revenue: grossRevenue,  // Dashboard zeigt Brutto-Umsatz als Hauptzahl
-        expenses: expenseTotal,
-        profit: netRevenue - expenseTotal,  // Gewinn = Netto-Revenue minus Expenses
-        grossRevenue,
-        providerFees: totalProviderFees
-      }
-      
-      return result
-    } catch (error) {
-      console.error('Fehler beim Laden der Monatsdaten:', error)
-      return { revenue: 0, expenses: 0, profit: 0, grossRevenue: 0, providerFees: 0 }
-    }
+    // Invalidate all dashboard queries for fresh data
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.balance(organizationId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.todayStats(organizationId, today) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.recentTransactions(organizationId, 10) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.weekStats(organizationId, '') }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.monthStats(organizationId, '') }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.recentActivities(organizationId, 10) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.monthlyTrends(organizationId, 12) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.productCount(organizationId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.yearTotal(organizationId, currentYear) })
+    ])
   }
 
-  // Letzte 30 Tage Trend
-  const getLast30DaysTrend = async () => {
-    try {
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt für Last 30 Days Trend.')
-      }
-
-      const now = new Date()
-      const last30Start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      const prev30Start = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      const prev30End = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      
-      // Letzte 30 Tage (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
-      const { data: recentSales } = await supabase
-        .from('sales')
-        .select('id, total_amount, payment_method')
-        .eq('status', 'completed')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', last30Start + 'T00:00:00')
-      
-      // Vorherige 30 Tage (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
-      const { data: prevSales } = await supabase
-        .from('sales')
-        .select('id, total_amount, payment_method')
-        .eq('status', 'completed')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', prev30Start + 'T00:00:00')
-        .lte('created_at', prev30End + 'T23:59:59')
-      
-      // Brutto-Umsätze berechnen (für 30-Tage Trend)
-      const { grossRevenue: recentRevenue } = await getRevenueBreakdown(recentSales || [])
-      const { grossRevenue: prevRevenue } = await getRevenueBreakdown(prevSales || [])
-      
-      let trend: 'up' | 'down' | 'stable' = 'stable'
-      let percentage = 0
-      
-      if (prevRevenue > 0) {
-        percentage = ((recentRevenue - prevRevenue) / prevRevenue) * 100
-        if (percentage > 5) trend = 'up'
-        else if (percentage < -5) trend = 'down'
-      }
-      
-      return {
-        revenue: recentRevenue,
-        trend,
-        percentage: Math.abs(percentage)
-      }
-    } catch (error) {
-      console.error('Fehler beim Laden des 30-Tage Trends:', error)
-      return { revenue: 0, trend: 'stable' as const, percentage: 0 }
-    }
-  }
-
-  // Jahres-Total
-  const getYearTotalData = async () => {
-    try {
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt für Year Total Data.')
-      }
-
-      const now = new Date()
-      // KORRIGIERT: Swiss-aware year start
-      const yearStartDate = new Date(now.getFullYear(), 0, 1) // 1. Januar
-      const yearStart = formatDateForAPI(yearStartDate)
-      
-      // Sales (mit payment_method für Provider-Gebühren) mit ORGANIZATION SECURITY
-      const { data: sales } = await supabase
-        .from('sales')
-        .select('id, total_amount, payment_method')
-        .eq('status', 'completed')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', yearStart + 'T00:00:00')
-      
-      // Expenses mit ORGANIZATION SECURITY
-      const { data: expenses } = await supabase
-        .from('expenses')
-        .select('amount')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('payment_date', yearStart)
-      
-      // Revenue-Breakdown berechnen (Brutto, Netto, Fees)
-      const { netRevenue, totalProviderFees, grossRevenue } = await getRevenueBreakdown(sales || [])
-      const expenseTotal = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0
-      
-      return {
-        revenue: grossRevenue,  // Dashboard zeigt Brutto-Umsatz als Hauptzahl
-        expenses: expenseTotal,
-        profit: netRevenue - expenseTotal,  // Gewinn = Netto-Revenue minus Expenses
-        grossRevenue,
-        providerFees: totalProviderFees
-      }
-    } catch (error) {
-      console.error('Fehler beim Laden der Jahresdaten:', error)
-      return { revenue: 0, expenses: 0, profit: 0, grossRevenue: 0, providerFees: 0 }
-    }
-  }
-
-  // Recent Activities
-  const getRecentActivities = async (): Promise<ActivityItem[]> => {
-    try {
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt für Recent Activities.')
-      }
-
-      const activities: ActivityItem[] = []
-      
-      // Letzte 10 Sales mit ORGANIZATION SECURITY
-      const { data: sales, error: salesError } = await supabase
-        .from('sales')
-        .select('*')
-        .eq('status', 'completed')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (salesError) {
-        console.error('Error loading sales for activities:', salesError)
-      }
-      
-      // Letzte 10 Expenses mit ORGANIZATION SECURITY
-      const { data: expenses, error: expensesError } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (expensesError) {
-        console.error('Error loading expenses for activities:', expensesError)
-      }
-      
-      // Sales zu Activities konvertieren
-      sales?.forEach(sale => {
-        activities.push({
-          id: sale.id,
-          date: sale.created_at?.split('T')[0] || '',
-          time: sale.created_at ? new Date(sale.created_at).toLocaleTimeString('de-CH', {
-            hour: '2-digit',
-            minute: '2-digit'
-          }) : '',
-          type: 'sale',
-          description: 'Verkauf',
-          amount: sale.total_amount,
-          paymentMethod: sale.payment_method,
-        })
-      })
-      
-      // Expenses zu Activities konvertieren
-      expenses?.forEach(expense => {
-        activities.push({
-          id: expense.id,
-          date: expense.payment_date,
-          type: 'expense',
-          description: expense.description || 'Ausgabe',
-          amount: expense.amount,
-          paymentMethod: expense.payment_method,
-          category: expense.category
-        })
-      })
-      
-      // Nach Datum sortieren (neueste zuerst)
-      const sortedActivities = activities
-        .sort((a, b) => {
-          try {
-            // Sichere Date-Konstruktion mit Fallbacks
-            let dateStringA = a.date || '1970-01-01'
-            let dateStringB = b.date || '1970-01-01'
-            
-            // Für Sales: time ist bereits im Format "HH:MM"
-            if (a.time && !a.time.includes('T')) {
-              dateStringA += 'T' + a.time + ':00'
-            } else if (a.time) {
-              dateStringA += a.time
-            } else {
-              dateStringA += 'T12:00:00'
-            }
-            
-            if (b.time && !b.time.includes('T')) {
-              dateStringB += 'T' + b.time + ':00'
-            } else if (b.time) {
-              dateStringB += b.time
-            } else {
-              dateStringB += 'T12:00:00'
-            }
-            
-            const dateA = new Date(dateStringA)
-            const dateB = new Date(dateStringB)
-            
-            // Prüfe auf ungültige Dates
-            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
-              return 0
-            }
-            
-            return dateB.getTime() - dateA.getTime()
-          } catch (error) {
-            console.error('Date sorting error:', error)
-            return 0
-          }
-        })
-        .slice(0, 10)
-      
-      return sortedActivities
-        
-    } catch (error) {
-      console.error('Fehler beim Laden der Recent Activities:', error)
-      return []
-    }
-  }
-
-  // Statistiken beim ersten Laden abrufen und bei Organization-Wechsel
-  useEffect(() => {
-    if (currentOrganization) {
-      loadDashboardStats()
-    }
-  }, [currentOrganization]) // 🔒 SECURITY: Refetch when organization changes
-
-  // Cash balance destructuring ohne Konflikte
-  const { loading: cashLoading, error: cashError, ...cashFunctions } = cashBalanceHook
-
-  // Öffentliche API: Dashboard-Funktionen + Cash Balance
+  // ========================================
+  // Legacy Compatible Return Interface
+  // ========================================
   return {
-    // Dashboard-spezifische Daten
+    // Dashboard-specific data (Legacy Compatible)
     dashboardStats,
-    loading: dashboardLoading,
-    error: dashboardError,
-    refreshDashboard: loadDashboardStats,
+    loading: isLoading,
+    error: error?.message || null,
+    refreshDashboard,
     
-    // Cash Balance Funktionen (delegiert, ohne Konflikte)
-    ...cashFunctions,
-    cashLoading,
-    cashError,
+    // Cash Balance Functions (delegated to maintain compatibility)
+    getCurrentCashBalance: cashBalanceHook.getCurrentCashBalance,
+    getCashMovementsForMonth: cashBalanceHook.getCashMovementsForMonth,
+    getCashMovementsForDate: cashBalanceHook.getCashMovementsForDate,
+    cashLoading: cashBalanceHook.loading,
+    cashError: cashBalanceHook.error,
   }
 }
+
+// Export types for compatibility
+export type {
+  DashboardTransaction,
+  ActivityItem,
+  MonthlyData
+} from '@/shared/services/dashboardService'

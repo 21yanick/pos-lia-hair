@@ -108,6 +108,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.75.2
         version: 5.75.2(react@19.0.0)
+      '@tanstack/react-query-devtools':
+        specifier: ^5.80.10
+        version: 5.80.10(@tanstack/react-query@5.75.2(react@19.0.0))(react@19.0.0)
       '@types/papaparse':
         specifier: ^5.3.16
         version: 5.3.16
@@ -168,6 +171,9 @@ importers:
       recharts:
         specifier: 2.15.0
         version: 2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      sharp:
+        specifier: ^0.33.5
+        version: 0.33.5
       sonner:
         specifier: ^1.7.1
         version: 1.7.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1124,6 +1130,15 @@ packages:
 
   '@tanstack/query-core@5.75.0':
     resolution: {integrity: sha512-rk8KQuCdhoRkzjRVF3QxLgAfFUyS0k7+GCQjlGEpEGco+qazJ0eMH6aO1DjDjibH7/ik383nnztua3BG+lOnwg==}
+
+  '@tanstack/query-devtools@5.80.0':
+    resolution: {integrity: sha512-D6gH4asyjaoXrCOt5vG5Og/YSj0D/TxwNQgtLJIgWbhbWCC/emu2E92EFoVHh4ppVWg1qT2gKHvKyQBEFZhCuA==}
+
+  '@tanstack/react-query-devtools@5.80.10':
+    resolution: {integrity: sha512-6JL63fSc7kxyGOLV2w466SxhMn/m7LZk/ximQciy6OpVt+n2A8Mq3S0QwhIzfm4WEwLK/F3OELfzRToQburnYA==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.80.10
+      react: ^18 || ^19
 
   '@tanstack/react-query@5.75.2':
     resolution: {integrity: sha512-8F8VOsWUfSkCFoi62O9HSZT9jDgg28Ln8Z2dYKfRo/O2A0sgvr0uxTuNoon3PPXoDuHofv5V3elBI1M2Gh1MPg==}
@@ -3148,6 +3163,14 @@ snapshots:
 
   '@tanstack/query-core@5.75.0': {}
 
+  '@tanstack/query-devtools@5.80.0': {}
+
+  '@tanstack/react-query-devtools@5.80.10(@tanstack/react-query@5.75.2(react@19.0.0))(react@19.0.0)':
+    dependencies:
+      '@tanstack/query-devtools': 5.80.0
+      '@tanstack/react-query': 5.75.2(react@19.0.0)
+      react: 19.0.0
+
   '@tanstack/react-query@5.75.2(react@19.0.0)':
     dependencies:
       '@tanstack/query-core': 5.75.0
@@ -3328,7 +3351,6 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
       color-string: 1.9.1
-    optional: true
 
   commander@4.1.1: {}
 
@@ -3392,8 +3414,7 @@ snapshots:
 
   decimal.js-light@2.5.1: {}
 
-  detect-libc@2.0.3:
-    optional: true
+  detect-libc@2.0.3: {}
 
   detect-node-es@1.1.0: {}
 
@@ -3886,8 +3907,7 @@ snapshots:
 
   scheduler@0.25.0-rc-603e6108-20241029: {}
 
-  semver@7.7.1:
-    optional: true
+  semver@7.7.1: {}
 
   setimmediate@1.0.5: {}
 
@@ -3916,7 +3936,6 @@ snapshots:
       '@img/sharp-wasm32': 0.33.5
       '@img/sharp-win32-ia32': 0.33.5
       '@img/sharp-win32-x64': 0.33.5
-    optional: true
 
   shebang-command@2.0.0:
     dependencies:

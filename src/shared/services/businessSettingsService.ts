@@ -45,18 +45,20 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
   try {
     const organizationId = await getCurrentOrganizationId()
     
-    console.log('🔍 DEBUG business_settings request:', {
-      organizationId,
-      filter: `organization_id=eq.${organizationId}`,
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 DEBUG business_settings request:', {
+        organizationId,
+        filter: `organization_id=eq.${organizationId}`,
+      })
 
-    // Get current user/session for debugging  
-    const { data: user } = await supabase.auth.getUser()
-    console.log('🔍 DEBUG current user:', {
-      userId: user?.user?.id,
-      email: user?.user?.email,
-      role: user?.user?.role,
-    })
+      // Get current user/session for debugging  
+      const { data: user } = await supabase.auth.getUser()
+      console.log('🔍 DEBUG current user:', {
+        userId: user?.user?.id,
+        email: user?.user?.email,
+        role: user?.user?.role,
+      })
+    }
 
     const requestStart = Date.now()
     const { data, error } = await supabase
@@ -67,15 +69,17 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
     
     const requestTime = Date.now() - requestStart
     
-    console.log('🔍 DEBUG business_settings response:', {
-      requestTime: `${requestTime}ms`,
-      data,
-      error,
-      errorCode: error?.code,
-      errorMessage: error?.message,
-      errorDetails: error?.details,
-      errorHint: error?.hint,
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 DEBUG business_settings response:', {
+        requestTime: `${requestTime}ms`,
+        data,
+        error,
+        errorCode: error?.code,
+        errorMessage: error?.message,
+        errorDetails: error?.details,
+        errorHint: error?.hint,
+      })
+    }
 
     if (error && error.code !== 'PGRST116') {
       console.error('🚨 business_settings ERROR (non-404):', error)

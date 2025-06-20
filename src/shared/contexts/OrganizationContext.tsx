@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/shared/lib/supabase/client'
 import {
@@ -31,7 +31,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Extract organization slug from URL
+  // Extract organization slug from URL (stable reference)
   const getSlugFromPath = useCallback((): string | null => {
     const match = pathname.match(/^\/org\/([^\/]+)/)
     return match ? match[1] : null
@@ -57,9 +57,14 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     return false
   }, [userOrganizations])
 
-  // Load user's organizations
-  const loadUserOrganizations = useCallback(async () => {
+  // Stable reference for loadUserOrganizations to prevent unnecessary re-renders
+  const loadUserOrganizationsRef = useRef<() => Promise<void>>()
+  
+  // Load user's organizations with AbortController for cleanup
+  loadUserOrganizationsRef.current = async () => {
     try {
+      setError(null) // Clear previous errors
+      
       const { data: userData } = await supabase.auth.getUser()
       if (!userData?.user) {
         setUserOrganizations([])
@@ -113,7 +118,12 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       console.error('Error in loadUserOrganizations:', err)
       setError('Fehler beim Laden der Organisationen')
     }
-  }, [supabase])
+  }
+
+  // Stable wrapper function
+  const loadUserOrganizations = useCallback(async () => {
+    await loadUserOrganizationsRef.current?.()
+  }, [])
 
   // Switch to different organization (SIMPLIFIED - Single Source of Truth)
   const switchOrganization = useCallback(async (organizationId: string) => {
@@ -269,77 +279,125 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     }
   }, [hasPermission, currentOrganization, supabase])
 
-  // Initialize on mount
+  // Initialize on mount with error handling
   useEffect(() => {
     const initializeOrganizations = async () => {
-      setLoading(true)
-      await loadUserOrganizations()
-      setLoading(false)
+      try {
+        setLoading(true)
+        setError(null)
+        await loadUserOrganizations()
+      } catch (error) {
+        console.error('Error initializing organizations:', error)
+        setError('Fehler beim Initialisieren der Organisationen')
+      } finally {
+        setLoading(false)
+      }
     }
 
     initializeOrganizations()
   }, [loadUserOrganizations])
 
-  // Organization Selection Logic (SIMPLIFIED - Single Source of Truth)
+  // 1. URL-based organization selection (highest priority)
   useEffect(() => {
     if (loading || userOrganizations.length === 0) return
 
     const slug = getSlugFromPath()
-    console.log('🎯 ORG SELECTION - URL slug:', slug, 'currentOrg:', currentOrganization?.slug, 'orgs:', userOrganizations.length)
+    if (!slug) return
+
+    console.log('🎯 URL ORG SELECTION - URL slug:', slug, 'currentOrg:', currentOrganization?.slug)
     
-    // Priority 1: Try to match URL slug
-    if (slug) {
-      const targetOrg = userOrganizations.find(m => m.organization.slug === slug)
-      if (targetOrg) {
-        if (!currentOrganization || currentOrganization.id !== targetOrg.organization.id) {
-          console.log('🎯 ORG SELECTION - Setting org from URL:', targetOrg.organization.name)
-          setCurrentOrganization(targetOrg.organization)
-          setUserRole(targetOrg.role)
-          sessionStorage.setItem('currentOrganizationId', targetOrg.organization.id)
-        }
-        return
-      } else {
-        console.log('🎯 ORG SELECTION - Invalid slug in URL, redirecting to /organizations')
-        router.push('/organizations')
-        return
+    const targetOrg = userOrganizations.find(m => m.organization.slug === slug)
+    if (targetOrg) {
+      if (!currentOrganization || currentOrganization.id !== targetOrg.organization.id) {
+        console.log('🎯 URL ORG SELECTION - Setting org from URL:', targetOrg.organization.name)
+        setCurrentOrganization(targetOrg.organization)
+        setUserRole(targetOrg.role)
+        sessionStorage.setItem('currentOrganizationId', targetOrg.organization.id)
       }
-    }
-
-    // Priority 2: Try session recovery (for non-org URLs)
-    if (!currentOrganization && recoverFromSessionStorage()) {
-      return
-    }
-
-    // Priority 3: Auto-select single organization
-    if (!currentOrganization && userOrganizations.length === 1) {
-      const membership = userOrganizations[0]
-      console.log('🎯 ORG SELECTION - Auto-selecting single org:', membership.organization.name)
-      setCurrentOrganization(membership.organization)
-      setUserRole(membership.role)
-      sessionStorage.setItem('currentOrganizationId', membership.organization.id)
-      return
-    }
-
-    // Priority 4: Multiple orgs but none selected - redirect to selector
-    if (!currentOrganization && userOrganizations.length > 1) {
-      console.log('🎯 ORG SELECTION - Multiple orgs, redirecting to selector')
+    } else {
+      console.log('🎯 URL ORG SELECTION - Invalid slug in URL, redirecting to /organizations')
       router.push('/organizations')
     }
-  }, [userOrganizations, loading, pathname, currentOrganization, getSlugFromPath, recoverFromSessionStorage, router])
+  }, [userOrganizations, loading, pathname, currentOrganization])
 
-  // Clear organization context on auth changes
+  // 2. Session recovery for non-org URLs
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    if (loading || userOrganizations.length === 0) return
+    if (getSlugFromPath()) return // Skip if we're on an org URL
+    if (currentOrganization) return // Skip if already have org
+
+    console.log('💾 SESSION RECOVERY - Attempting recovery')
+    recoverFromSessionStorage()
+  }, [userOrganizations, loading, pathname, currentOrganization])
+
+  // 3. Auto-redirect for single organization (only on /organizations page)
+  useEffect(() => {
+    if (loading || userOrganizations.length !== 1) return
+    if (pathname !== '/organizations') return
+    if (currentOrganization) return
+
+    const membership = userOrganizations[0]
+    console.log('🎯 AUTO REDIRECT - Single org detected, redirecting to:', membership.organization.name)
+    
+    setCurrentOrganization(membership.organization)
+    setUserRole(membership.role)
+    sessionStorage.setItem('currentOrganizationId', membership.organization.id)
+    router.replace(`/org/${membership.organization.slug}/dashboard`)
+  }, [userOrganizations, loading, pathname, currentOrganization])
+
+  // 4. Redirect to selector for multiple orgs
+  useEffect(() => {
+    if (loading || userOrganizations.length <= 1) return
+    if (getSlugFromPath()) return // Skip if on org URL
+    if (pathname === '/organizations') return // Skip if already on selector
+    if (currentOrganization) return // Skip if org is selected
+
+    console.log('🎯 MULTI ORG REDIRECT - Multiple orgs, redirecting to selector')
+    router.push('/organizations')
+  }, [userOrganizations, loading, pathname, currentOrganization])
+
+  // Handle auth state changes with proper cleanup
+  useEffect(() => {
+    let mounted = true
+    let isLoading = false
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
+      
+      console.log('🔐 AUTH STATE CHANGE:', event, !!session)
+      
       if (event === 'SIGNED_OUT') {
+        // Clear everything on sign out
         setCurrentOrganization(null)
         setUserOrganizations([])
         setUserRole(null)
+        setError(null)
         sessionStorage.removeItem('currentOrganizationId')
+      } else if (event === 'SIGNED_IN' && session && !isLoading) {
+        // Load organizations on sign in - avoid double loading
+        isLoading = true
+        console.log('🔐 AUTH STATE CHANGE - Loading organizations after sign in')
+        
+        try {
+          setLoading(true)
+          await loadUserOrganizations()
+        } catch (error) {
+          console.error('Error loading organizations after sign in:', error)
+          if (mounted) setError('Fehler beim Laden der Organisationen nach Anmeldung')
+        } finally {
+          if (mounted) {
+            setLoading(false)
+            isLoading = false
+          }
+        }
       }
     })
 
-    return () => subscription.unsubscribe()
-  }, [supabase])
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [loadUserOrganizations])
 
   const value: OrganizationContextType = {
     currentOrganization,

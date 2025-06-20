@@ -55,13 +55,8 @@ export function OrganizationSelector({
     }
   }
 
-  // Auto-redirect if user has only one organization
-  useEffect(() => {
-    if (!loading && !error && userOrganizations.length === 1) {
-      console.log('📋 ORG SELECTOR - Auto-redirecting to single organization:', userOrganizations[0].organization.name)
-      handleSwitchOrganization(userOrganizations[0].organization.id)
-    }
-  }, [loading, error, userOrganizations])
+  // Auto-redirect is now handled by OrganizationContext for better performance
+  // This component is now a pure display component
 
   const handleCreateNew = () => {
     if (onCreateNew) {
@@ -82,15 +77,22 @@ export function OrganizationSelector({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {error}
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-2"
-              onClick={() => window.location.reload()}
-            >
-              Erneut versuchen
-            </Button>
+            <div className="space-y-2">
+              <div>{error}</div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.reload()}
+                >
+                  Erneut versuchen
+                </Button>
+                <span className="text-sm">oder</span>
+                <a href="/login" className="text-sm text-primary hover:underline">
+                  Anmelden
+                </a>
+              </div>
+            </div>
           </AlertDescription>
         </Alert>
       </div>
@@ -111,12 +113,20 @@ export function OrganizationSelector({
           <p className="text-muted-foreground mb-6">
             Sie sind noch keiner Organisation zugeordnet. Erstellen Sie eine neue Organisation, um zu beginnen.
           </p>
-          {showCreateButton && (
-            <Button onClick={handleCreateNew} size="lg">
-              <Plus className="h-4 w-4 mr-2" />
-              Neue Organisation erstellen
-            </Button>
-          )}
+          <div className="space-y-4">
+            {showCreateButton && (
+              <Button onClick={handleCreateNew} size="lg">
+                <Plus className="h-4 w-4 mr-2" />
+                Neue Organisation erstellen
+              </Button>
+            )}
+            <div className="text-sm text-muted-foreground">
+              Noch nicht angemeldet?{" "}
+              <a href="/login" className="text-primary hover:underline font-medium">
+                Hier anmelden
+              </a>
+            </div>
+          </div>
         </div>
       ) : (
         <>

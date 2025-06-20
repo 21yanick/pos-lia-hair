@@ -68,7 +68,7 @@ interface UseCashMovementsQueryReturn {
  * - Background refetching for accurate data
  * - Multi-tenant security
  */
-export function useCashMovements(): UseCashMovementsQueryReturn {
+export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
   const { currentOrganization } = useOrganization()
   const queryClient = useQueryClient()
   
