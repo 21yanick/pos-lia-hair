@@ -1,7 +1,9 @@
 import type React from "react"
 import { OrganizationGuard } from "@/shared/components/auth/OrganizationGuard"
-import { Sidebar } from "@/shared/components/layout/sidebar"
+import { AppSidebar } from "@/shared/components/layout/app-sidebar"
 import { Header } from "@/shared/components/layout/header"
+import { SidebarAutoClose } from "@/shared/components/layout/sidebar-auto-close"
+import { SidebarProvider, SidebarInset } from "@/shared/components/ui/sidebar"
 
 interface OrganizationLayoutProps {
   children: React.ReactNode
@@ -16,13 +18,16 @@ export default async function OrganizationLayout({
   
   return (
     <OrganizationGuard slug={slug} requireOrganization={true}>
-      <div className="flex h-screen bg-muted/30">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
+      <SidebarProvider>
+        <SidebarAutoClose />
+        <AppSidebar />
+        <SidebarInset>
           <Header />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
-        </div>
-      </div>
+          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+            {children}
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     </OrganizationGuard>
   )
 }

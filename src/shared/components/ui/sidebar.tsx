@@ -10,8 +10,9 @@ import { cn } from "@/shared/utils"
 import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
 import { Separator } from "@/shared/components/ui/separator"
-import { Sheet, SheetContent } from "@/shared/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet"
 import { Skeleton } from "@/shared/components/ui/skeleton"
+import { VisuallyHidden } from "@/shared/components/ui/visually-hidden"
 import {
   Tooltip,
   TooltipContent,
@@ -206,6 +207,9 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
+            <VisuallyHidden asChild>
+              <SheetTitle>Navigation Menu</SheetTitle>
+            </VisuallyHidden>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>

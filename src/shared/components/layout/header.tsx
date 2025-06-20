@@ -8,6 +8,8 @@ import { Bell, Sun, Moon } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { ProfileMenu } from "@/shared/components/profile"
 import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { SidebarTrigger } from "@/shared/components/ui/sidebar"
+import { Separator } from "@/shared/components/ui/separator"
 
 export function Header() {
   const pathname = usePathname()
@@ -73,7 +75,13 @@ export function Header() {
 
   return (
     <header className="bg-background border-b border-border py-3 px-4 md:px-6 flex items-center justify-between">
-      <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
+      <div className="flex items-center gap-2">
+        <SidebarTrigger className="md:hidden" />
+        <Separator orientation="vertical" className="mr-2 h-4 md:hidden" />
+        <SidebarTrigger className="hidden md:flex" />
+        <Separator orientation="vertical" className="mr-2 h-4 hidden md:block" />
+        <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
+      </div>
 
       <div className="flex items-center space-x-3">
         {/* Theme Toggle Switch */}
