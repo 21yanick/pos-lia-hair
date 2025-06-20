@@ -68,13 +68,30 @@ export function useAuth(): AuthContextType {
   // Sign out user
   const signOut = useCallback(async () => {
     try {
-      await supabase.auth.signOut()
+      console.log('🚪 Starting logout process...')
+      
+      // Clear user state immediately for better UX
       setUser(null)
-      router.push('/login')
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('❌ Supabase logout error:', error)
+        // Still continue with navigation even if logout partially failed
+      } else {
+        console.log('✅ Supabase logout successful')
+      }
+      
+      // Force navigation to login page (works better with org routes)
+      window.location.href = '/login'
+      
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('❌ Error signing out:', error)
+      // Force navigation even on error
+      window.location.href = '/login'
     }
-  }, [router])
+  }, [])
 
   // Check if user has specific permission
   const hasPermission = useCallback((permission: Permission): boolean => {

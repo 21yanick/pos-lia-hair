@@ -178,7 +178,7 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
         <View style={styles.header}>
           <View style={styles.companyInfo}>
             <Text style={styles.companyName}>
-              {businessSettings?.company_name || 'Lia Hair by Zilfije Rupp'}
+              {businessSettings?.company_name || 'Unternehmen'}
             </Text>
             <Text style={styles.companyAddress}>
               {businessSettings ? (

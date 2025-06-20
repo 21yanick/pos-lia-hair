@@ -99,7 +99,7 @@ export function CompanyInfoForm() {
               id="company_name"
               value={formData.company_name}
               onChange={(e) => handleInputChange('company_name', e.target.value)}
-              placeholder="Lia Hair by Zilfije Rupp"
+              placeholder="Mein Unternehmen"
               className="bg-background border-input"
               required
             />

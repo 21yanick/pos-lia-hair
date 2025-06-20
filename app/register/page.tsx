@@ -255,20 +255,24 @@ export default function RegisterPage() {
           <div className="relative mb-4 transform transition-transform duration-300 hover:scale-105">
             <SmartAppLogo 
               size="lg"
-              alt="Coiffeursalon Logo"
+              alt="SwissPOS Logo"
               className="drop-shadow-lg w-24 h-24"
               fallback={
-                <div className="w-24 h-24 flex items-center justify-center bg-muted rounded-lg border border-border">
-                  <span className="text-xl font-bold text-muted-foreground">Logo</span>
+                <div className="w-24 h-24 flex items-center justify-center bg-primary/10 rounded-lg border border-primary/20 relative">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-primary mb-0.5">Swiss</div>
+                    <div className="text-sm font-semibold text-primary/80">POS</div>
+                  </div>
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-sm" />
                 </div>
               }
             />
           </div>
           <CardTitle className="text-2xl font-bold text-center">
-            Lia Hair by Zilfije Rupp
+            SwissPOS
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground/80">
-            Neues Konto erstellen
+            Neues Konto für POS & Business Management erstellen
           </CardDescription>
         </CardHeader>
 

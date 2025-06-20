@@ -70,7 +70,7 @@ export default function CashRegisterPage() {
         // Cash movements zu CashEntry konvertieren
         const allEntries: CashEntry[] = []
         if (movementsResult.success) {
-          movementsResult.movements.forEach(movement => {
+          movementsResult.movements.forEach((movement: any) => {
             if (movement.created_at) {
               allEntries.push({
                 id: movement.id,
@@ -362,8 +362,9 @@ export default function CashRegisterPage() {
       <Card className="shadow-md border-0 overflow-hidden mb-6">
         <div className="h-2 w-full bg-muted"></div>
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1 w-full">
+          <div className="space-y-3">
+            {/* Search Field - Full Width */}
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
               <Input 
                 placeholder="VK2025000038, CM2025000010 oder Beschreibung..." 
@@ -373,9 +374,10 @@ export default function CashRegisterPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Filters - Responsive Layout */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {/* Type Filter */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 justify-center sm:justify-start">
                 <Button
                   variant={typeFilter === 'all' ? 'default' : 'outline'}
                   size="sm"
@@ -402,11 +404,8 @@ export default function CashRegisterPage() {
                 </Button>
               </div>
 
-              {/* Trennlinie */}
-              <div className="h-6 w-px bg-border" />
-
               {/* Month Navigation */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1">
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -428,19 +427,19 @@ export default function CashRegisterPage() {
                 >
                   <ChevronRight size={16} />
                 </Button>
+                
+                {/* Jump to current month button */}
+                {!isCurrentMonth && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={goToCurrentMonth}
+                    className="text-xs ml-2"
+                  >
+                    Heute
+                  </Button>
+                )}
               </div>
-              
-              {/* Jump to current month button */}
-              {!isCurrentMonth && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={goToCurrentMonth}
-                  className="text-xs"
-                >
-                  Aktueller Monat
-                </Button>
-              )}
             </div>
           </div>
         </CardContent>
@@ -460,7 +459,9 @@ export default function CashRegisterPage() {
               <span className="text-muted-foreground">Daten werden geladen...</span>
             </div>
           ) : (
-            <div className="rounded-lg border border-border overflow-hidden">
+            <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
@@ -584,6 +585,116 @@ export default function CashRegisterPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3">
+              {(() => {
+                const filteredEntries = getFilteredEntries()
+                
+                if (!loading && filteredEntries.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <div className="flex flex-col items-center space-y-2">
+                        <ReceiptIcon size={32} className="text-muted-foreground" />
+                        <span>
+                          {entries.length === 0 
+                            ? 'Keine Kassenbewegungen für diesen Monat gefunden.'
+                            : 'Keine Einträge entsprechen den aktuellen Filtern.'
+                          }
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {entries.length === 0
+                            ? 'Verwenden Sie POS und Ausgaben für neue Einträge'
+                            : 'Versuchen Sie andere Suchbegriffe oder Filter'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  )
+                }
+                
+                // Für laufenden Saldo: Startpunkt berechnen
+                const monthlyChange = filteredEntries.reduce((sum, entry) => {
+                  return sum + (entry.type === 'cash_in' ? entry.amount : -entry.amount)
+                }, 0)
+                const startBalance = (currentBalance || 0) - monthlyChange
+                
+                // Entries in chronologischer Reihenfolge für Saldo-Berechnung
+                const chronologicalEntries = [...filteredEntries].sort((a, b) => 
+                  new Date(a.created_at || a.date).getTime() - new Date(b.created_at || b.date).getTime()
+                )
+                
+                // Für Anzeige: neueste zuerst
+                const displayEntries = [...filteredEntries].sort((a, b) => 
+                  new Date(b.created_at || b.date).getTime() - new Date(a.created_at || a.date).getTime()
+                )
+                
+                return displayEntries.map((entry: any, displayIndex: number) => {
+                  // Finde Index in chronologischer Liste für Saldo-Berechnung
+                  const chronoIndex = chronologicalEntries.findIndex(e => e.id === entry.id)
+                  
+                  // Berechne laufenden Saldo bis zu diesem Punkt
+                  let runningBalance = startBalance
+                  for (let i = 0; i <= chronoIndex; i++) {
+                    const e = chronologicalEntries[i]
+                    runningBalance += e.type === 'cash_in' ? e.amount : -e.amount
+                  }
+                  
+                  return (
+                    <div key={entry.id} className="border border-border rounded-lg p-4 space-y-3">
+                      {/* Header Row */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-mono text-xs font-semibold text-primary">
+                              {getDisplayNumber(entry)}
+                            </span>
+                            <Badge 
+                              variant={entry.reference_type === 'sale' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {getDescriptionBadge(entry)}
+                            </Badge>
+                          </div>
+                          <h3 className="font-medium text-sm leading-tight mb-1">
+                            {getDisplayDescription(entry)}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{formatDate(entry.date)}</span>
+                            <span>•</span>
+                            <span>{formatTime(entry.created_at)}</span>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-4">
+                          <div className={`font-bold text-lg ${entry.type === "cash_in" ? "text-chart-3" : "text-destructive"}`}>
+                            {entry.type === "cash_in" ? "+" : "-"} CHF {entry.amount.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Saldo: CHF {runningBalance.toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Type Badge Row */}
+                      <div className="flex items-center pt-2 border-t border-border">
+                        {entry.type === "cash_in" ? (
+                          <div className="flex items-center bg-chart-3/10 px-3 py-1 rounded-full text-sm">
+                            <ArrowUpRight className="mr-1 text-chart-3" size={14} />
+                            <span className="text-chart-3 font-medium">Einnahme</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center bg-destructive/10 px-3 py-1 rounded-full text-sm">
+                            <ArrowDownRight className="mr-1 text-destructive" size={14} />
+                            <span className="text-destructive font-medium">Ausgabe</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              })()}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

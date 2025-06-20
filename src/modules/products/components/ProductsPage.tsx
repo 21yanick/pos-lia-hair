@@ -308,7 +308,8 @@ export function ProductsPage() {
         </Button>
       </div>
 
-      <div className="bg-background rounded-md border border-border overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-background rounded-md border border-border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -381,6 +382,86 @@ export function ProductsPage() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 size={24} className="animate-spin mr-2" />
+            <span>Daten werden geladen...</span>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Keine Einträge gefunden.
+          </div>
+        ) : (
+          filteredItems.map((item) => (
+            <div key={item.id} className="bg-background border border-border rounded-lg p-4 space-y-3">
+              {/* Header Row */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-lg truncate">{item.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant={item.type === "service" ? "default" : "secondary"}>
+                      {item.type === "service" ? "Dienstleistung" : "Produkt"}
+                    </Badge>
+                    {item.is_favorite && (
+                      <Badge variant="outline" className="text-warning border-warning">
+                        ⭐ Favorit
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0 ml-4">
+                  <div className="text-xl font-bold">
+                    {item.default_price != null ? item.default_price.toFixed(2) : '0.00'} CHF
+                  </div>
+                </div>
+              </div>
+
+              {/* Controls Row */}
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Favorit:</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleToggleFavorite(item.id, item.is_favorite ?? false)}
+                      className={`h-8 w-8 ${item.is_favorite ? "text-warning" : "text-muted-foreground"}`}
+                    >
+                      {item.is_favorite ? <Star size={16} /> : <StarOff size={16} />}
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Aktiv:</span>
+                    <Switch 
+                      checked={item.active ?? true} 
+                      onCheckedChange={() => handleToggleActive(item.id, item.active ?? true)}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleOpenDialog(item)}>
+                    <Pencil size={14} className="mr-1" />
+                    Bearbeiten
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => handleDeleteItem(item.id)}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Product Dialog */}

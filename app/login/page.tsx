@@ -69,20 +69,24 @@ export default function LoginPage() {
           <div className="relative mb-6 transform transition-transform duration-300 hover:scale-105">
             <SmartAppLogo 
               size="xl"
-              alt="Coiffeursalon Logo"
+              alt="SwissPOS Logo"
               className="drop-shadow-lg w-32 h-32"
               fallback={
-                <div className="w-32 h-32 flex items-center justify-center bg-muted rounded-lg border border-border">
-                  <span className="text-2xl font-bold text-muted-foreground">Logo</span>
+                <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg border border-primary/20 relative">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary mb-1">Swiss</div>
+                    <div className="text-lg font-semibold text-primary/80">POS</div>
+                  </div>
+                  <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-sm" />
                 </div>
               }
             />
           </div>
           <CardTitle className="text-3xl font-bold text-center">
-            Lia Hair by Zilfije Rupp
+            SwissPOS
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground/80 mt-2">
-            Melde dich bitte an
+            POS & Business Management
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

@@ -172,40 +172,48 @@ export function BankingPage() {
           <h1 className="text-3xl font-bold">Banking</h1>
         </div>
         
-        {/* Action Buttons */}
-        <div className="flex gap-2">
+        {/* Action Buttons - Responsive Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-2 w-full lg:w-auto">
           {/* Cash Transfer Buttons */}
           <Button
             onClick={() => openCashTransferDialog('to_bank')}
             variant="outline"
-            className="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+            size="sm"
+            className="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground whitespace-nowrap"
           >
             <ArrowUpToLine className="h-4 w-4" />
-            Geld in Bank einzahlen
+            <span className="hidden sm:inline">Geld in Bank einzahlen</span>
+            <span className="sm:hidden">Einzahlen</span>
           </Button>
           <Button
             onClick={() => openCashTransferDialog('from_bank')}
-            variant="outline" 
-            className="flex items-center gap-2 text-chart-3 border-chart-3 hover:bg-chart-3 hover:text-background"
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 text-chart-3 border-chart-3 hover:bg-chart-3 hover:text-background whitespace-nowrap"
           >
             <ArrowDownToLine className="h-4 w-4" />
-            Geld von Bank abheben
+            <span className="hidden sm:inline">Geld von Bank abheben</span>
+            <span className="sm:hidden">Abheben</span>
           </Button>
           
           {/* Owner Transaction Buttons */}
           <Button 
             onClick={() => openOwnerTransactionDialog('deposit')}
-            variant="outline" 
-            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            variant="outline"
+            size="sm"
+            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground whitespace-nowrap"
           >
-            💰 Geld ins Geschäft einzahlen
+            💰 <span className="hidden sm:inline">Geld ins Geschäft einzahlen</span>
+            <span className="sm:hidden">Geschäft +</span>
           </Button>
           <Button 
             onClick={() => openOwnerTransactionDialog('withdrawal')}
-            variant="outline" 
-            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            variant="outline"
+            size="sm"
+            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground whitespace-nowrap"
           >
-            💸 Geld aus Geschäft entnehmen
+            💸 <span className="hidden sm:inline">Geld aus Geschäft entnehmen</span>
+            <span className="sm:hidden">Geschäft -</span>
           </Button>
         </div>
       </div>

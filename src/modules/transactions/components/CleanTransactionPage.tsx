@@ -716,37 +716,39 @@ export default function CleanTransactionPage() {
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3">
-                      <Checkbox
-                        checked={selectedTransactions.length === transactions.length}
-                        onCheckedChange={(checked) => 
-                          checked ? handleSelectAll() : handleClearSelection()
-                        }
-                      />
-                    </th>
-                    <th className="text-left p-3">Typ</th>
-                    <th className="text-left p-3">Beleg Nr.</th>
-                    <th className="text-left p-3">Datum</th>
-                    <th className="text-left p-3">Zeit</th>
-                    <th className="text-left p-3">Beschreibung</th>
-                    <th className="text-right p-3">Betrag</th>
-                    <th className="text-left p-3">Zahlung</th>
-                    <th className="text-right p-3">Gebühren</th>
-                    <th className="text-center p-3">
-                      <div className="flex items-center justify-center gap-1">
-                        Transaktion
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground">
-                              <Info className="h-3 w-3" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64 p-3" align="center">
-                            <div className="space-y-2">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-3">
+                        <Checkbox
+                          checked={selectedTransactions.length === transactions.length}
+                          onCheckedChange={(checked) => 
+                            checked ? handleSelectAll() : handleClearSelection()
+                          }
+                        />
+                      </th>
+                      <th className="text-left p-3">Typ</th>
+                      <th className="text-left p-3">Beleg Nr.</th>
+                      <th className="text-left p-3">Datum</th>
+                      <th className="text-left p-3">Zeit</th>
+                      <th className="text-left p-3">Beschreibung</th>
+                      <th className="text-right p-3">Betrag</th>
+                      <th className="text-left p-3">Zahlung</th>
+                      <th className="text-right p-3">Gebühren</th>
+                      <th className="text-center p-3">
+                        <div className="flex items-center justify-center gap-1">
+                          Transaktion
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground">
+                                <Info className="h-3 w-3" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 p-3" align="center">
+                              <div className="space-y-2">
                               <h4 className="font-semibold text-sm">Transaktions-Status</h4>
                               <div className="space-y-1 text-xs">
                                 <div className="flex items-center gap-2">
@@ -931,6 +933,79 @@ export default function CleanTransactionPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3">
+              {transactions.map((transaction) => (
+                <div key={transaction.id} className="border border-border rounded-lg p-4 space-y-3">
+                  {/* Header Row */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <Checkbox
+                        checked={selectedTransactions.includes(transaction.id)}
+                        onCheckedChange={() => handleTransactionSelect(transaction.id)}
+                        className="mt-1 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TransactionTypeBadge typeCode={getTypeCode(transaction.transaction_type)} />
+                          {transaction.receipt_number && (
+                            <span className="font-mono text-xs text-muted-foreground">
+                              {transaction.receipt_number}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-medium text-sm leading-tight mb-1">
+                          {transaction.description || 'Keine Beschreibung'}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{formatDateForDisplay(transaction.transaction_date)}</span>
+                          <span>•</span>
+                          <span>{formatTimeForDisplay(transaction.transaction_date)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-3">
+                      <div className={`font-bold text-lg ${
+                        transaction.transaction_type === 'sale' || transaction.transaction_type === 'cash_movement' 
+                          ? transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
+                          : 'text-red-600'
+                      }`}>
+                        {formatCurrency(transaction.amount)}
+                      </div>
+                      {transaction.payment_method && transaction.payment_method !== 'cash' && transaction.transaction_type === 'sale' && (
+                        <div className="text-xs text-orange-600 mt-1">
+                          Gebühr: {transaction.has_real_provider_fees && transaction.provider_fee ? (
+                            `-CHF ${transaction.provider_fee.toFixed(2)}`
+                          ) : (
+                            `~CHF ${(transaction.amount * (transaction.payment_method === 'twint' ? 0.016 : 0.0186)).toFixed(2)}`
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Details Row */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <div className="flex items-center gap-3">
+                      <PaymentMethodBadge paymentMethod={transaction.payment_method} />
+                      <div className="flex items-center gap-1">
+                        <TransactionStatusIcon transaction={transaction} />
+                        <BankingStatusIcon transaction={transaction} />
+                        <PdfStatusIcon
+                          transaction={transaction}
+                          onPdfAction={async (tx) => {
+                            await pdfActions.handlePdfAction(tx)
+                            await loadAllTransactions()
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
