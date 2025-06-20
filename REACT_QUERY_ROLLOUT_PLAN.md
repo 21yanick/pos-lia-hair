@@ -36,11 +36,11 @@
 ### **🛒 POS System Ecosystem**  
 | Component | Hook Used | Priority | Status |
 |-----------|-----------|----------|--------|
-| `ProductGrid.tsx` | `useItems` | **HIGH** | 🔴 Needs migration |
-| `ProductsPage.tsx` | `useItems` | **MEDIUM** | 🔴 Needs migration |
-| `PaymentDialog.tsx` | `useSales` | **CRITICAL** | ✅ **MIGRATED** *(NEW)* |
-| `ShoppingCart.tsx` | `useSales` | **CRITICAL** | ✅ **MIGRATED** *(NEW)* |
-| `EditPriceDialog.tsx` | `useSales` | **HIGH** | ✅ **MIGRATED** *(NEW)* |
+| `ProductGrid.tsx` | `useItems` | **HIGH** | ✅ **MIGRATED** *(NEW)* |
+| `ProductsPage.tsx` | `useItems` | **MEDIUM** | ✅ **MIGRATED** *(NEW)* |
+| `PaymentDialog.tsx` | `useSales` | **CRITICAL** | ✅ **MIGRATED** |
+| `ShoppingCart.tsx` | `useSales` | **CRITICAL** | ✅ **MIGRATED** |
+| `EditPriceDialog.tsx` | `useSales` | **HIGH** | ✅ **MIGRATED** |
 
 ### **💳 Banking & Financial Ecosystem**
 | Component | Hook Used | Priority | Status |

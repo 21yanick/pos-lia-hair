@@ -8,6 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
 import { Badge } from "@/shared/components/ui/badge"
 import { searchSuppliers } from '@/shared/services/supplierServices'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier, SupplierSearchResult } from '@/shared/types/suppliers'
 
@@ -26,6 +27,7 @@ export function SupplierAutocomplete({
   placeholder = "Lieferant suchen...",
   className
 }: SupplierAutocompleteProps) {
+  const { currentOrganization } = useOrganization()
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
   const [suppliers, setSuppliers] = useState<SupplierSearchResult[]>([])
@@ -34,14 +36,14 @@ export function SupplierAutocomplete({
   // Search suppliers when searchValue changes
   useEffect(() => {
     const search = async () => {
-      if (searchValue.length < 2) {
+      if (searchValue.length < 2 || !currentOrganization) {
         setSuppliers([])
         return
       }
 
       setLoading(true)
       try {
-        const results = await searchSuppliers(searchValue, {
+        const results = await searchSuppliers(searchValue, currentOrganization.id, {
           active_only: true,
           limit: 10
         })
@@ -56,7 +58,7 @@ export function SupplierAutocomplete({
 
     const debounceTimer = setTimeout(search, 300)
     return () => clearTimeout(debounceTimer)
-  }, [searchValue])
+  }, [searchValue, currentOrganization])
 
   const handleSelect = (supplier: SupplierSearchResult) => {
     // Convert SupplierSearchResult to Supplier format for onSelect
@@ -79,7 +81,8 @@ export function SupplierAutocomplete({
       notes: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      created_by: null
+      created_by: null,
+      organization_id: currentOrganization?.id || null // 🔒 Multi-Tenant Security
     }
     
     onSelect(fullSupplier)

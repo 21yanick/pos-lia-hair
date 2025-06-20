@@ -305,3 +305,6 @@ export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
     </Document>
   )
 }
+
+// Default export for better dynamic import compatibility
+export default PlaceholderReceiptPDF

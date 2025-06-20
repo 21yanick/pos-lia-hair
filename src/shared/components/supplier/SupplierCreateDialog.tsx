@@ -10,6 +10,7 @@ import { Textarea } from "@/shared/components/ui/textarea"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, AlertCircle } from "lucide-react"
 import { createSupplier } from '@/shared/services/supplierServices'
+import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier, SupplierCategory, SupplierFormData } from '@/shared/types/suppliers'
 
@@ -28,6 +29,7 @@ export function SupplierCreateDialog({
   initialName = "",
   userId
 }: SupplierCreateDialogProps) {
+  const { currentOrganization } = useOrganization()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -82,11 +84,16 @@ export function SupplierCreateDialog({
       return
     }
 
+    if (!currentOrganization) {
+      setError('Keine Organisation ausgewählt')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      const supplier = await createSupplier(formData, userId)
+      const supplier = await createSupplier(formData, userId, currentOrganization.id)
       onSuccess(supplier)
       handleOpenChange(false)
     } catch (error) {

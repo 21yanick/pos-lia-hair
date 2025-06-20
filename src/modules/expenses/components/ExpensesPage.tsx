@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { useExpenses, type ExpenseCategory } from "@/shared/hooks/business/useExpenses"
 import { useExpenseCategories } from "@/shared/hooks/business/useExpenseCategories"
 import { ExpensePDFActions } from "./ExpensePDFActions"
+import { ExpenseActions } from "./ExpenseActions"
 import { useToast } from "@/shared/hooks/core/useToast"
-import { format, parseISO } from "date-fns"
-import { de } from "date-fns/locale"
+import { formatDateForDisplay, getTodaySwissString, formatDateForAPI } from "@/shared/utils/dateUtils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
@@ -31,6 +31,8 @@ export function ExpensesPage() {
     createExpense,
     loadExpenses,
     loadCurrentMonthExpenses,
+    updateExpense,
+    deleteExpense,
     calculateExpenseStats,
     getExpensesByCategory,
     uploadExpenseReceipt,
@@ -58,7 +60,7 @@ export function ExpensesPage() {
     description: '',
     category: '' as ExpenseCategory | '',
     payment_method: '' as 'bank' | 'cash' | '',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: formatDateForAPI(new Date()),
     invoice_number: '',
     notes: ''
   })
@@ -188,7 +190,7 @@ export function ExpensesPage() {
         description: '',
         category: '',
         payment_method: '',
-        payment_date: new Date().toISOString().split('T')[0],
+        payment_date: formatDateForAPI(new Date()),
         invoice_number: '',
         notes: ''
       })
@@ -572,7 +574,7 @@ export function ExpensesPage() {
                         <Badge variant={expense.payment_method === 'cash' ? 'default' : 'secondary'}>
                           {expense.payment_method === 'cash' ? 'Bar' : 'Bank'}
                         </Badge>
-                        <span>{format(parseISO(expense.payment_date), 'dd.MM.yyyy', { locale: de })}</span>
+                        <span>{formatDateForDisplay(expense.payment_date)}</span>
                       </div>
                       {/* Supplier Display - prioritize supplier relation over supplier_name */}
                       {expense.supplier ? (
@@ -599,7 +601,37 @@ export function ExpensesPage() {
                     <div className="flex items-center space-x-3">
                       <ExpensePDFActions 
                         expense={expense}
-                        onReplace={replaceExpenseReceipt}
+                      />
+                      <ExpenseActions
+                        expense={expense}
+                        onUpdate={updateExpense}
+                        onDelete={deleteExpense}
+                        onReplaceReceipt={replaceExpenseReceipt}
+                        onDuplicate={(expense) => {
+                          // Duplizieren: Dialog mit vorausgefüllten Daten öffnen
+                          setFormData({
+                            amount: expense.amount.toString(),
+                            description: `${expense.description} (Kopie)`,
+                            category: expense.category as ExpenseCategory,
+                            payment_method: expense.payment_method as 'bank' | 'cash',
+                            payment_date: formatDateForAPI(new Date()),
+                            invoice_number: '',
+                            notes: expense.notes || ''
+                          })
+                          if (expense.supplier) {
+                            setSelectedSupplier(expense.supplier)
+                          } else if (expense.supplier_name) {
+                            setSelectedSupplier({
+                              id: '',
+                              name: expense.supplier_name,
+                              category: 'other',
+                              is_active: true,
+                              created_at: '',
+                              organization_id: ''
+                            })
+                          }
+                          setIsDialogOpen(true)
+                        }}
                       />
                       <div className="text-right">
                         <div className="text-lg font-bold">CHF {expense.amount.toFixed(2)}</div>

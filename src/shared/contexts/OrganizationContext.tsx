@@ -360,35 +360,80 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   useEffect(() => {
     let mounted = true
     let isLoading = false
+    let lastSessionId: string | null = null
+    let debounceTimer: number | null = null
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
       
-      console.log('🔐 AUTH STATE CHANGE:', event, !!session)
+      console.log('🔐 AUTH STATE CHANGE:', event, !!session, session?.user?.id)
       
       if (event === 'SIGNED_OUT') {
         // Clear everything on sign out
+        lastSessionId = null
         setCurrentOrganization(null)
         setUserOrganizations([])
         setUserRole(null)
         setError(null)
         sessionStorage.removeItem('currentOrganizationId')
-      } else if (event === 'SIGNED_IN' && session && !isLoading) {
-        // Load organizations on sign in - avoid double loading
-        isLoading = true
-        console.log('🔐 AUTH STATE CHANGE - Loading organizations after sign in')
         
-        try {
-          setLoading(true)
-          await loadUserOrganizations()
-        } catch (error) {
-          console.error('Error loading organizations after sign in:', error)
-          if (mounted) setError('Fehler beim Laden der Organisationen nach Anmeldung')
-        } finally {
-          if (mounted) {
-            setLoading(false)
-            isLoading = false
+      } else if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session && !isLoading) {
+        
+        // 🎯 SMART SESSION HANDLING: Only reload if session actually changed
+        const currentSessionId = session.access_token?.substring(0, 20) // Use token prefix as ID
+        
+        if (lastSessionId === currentSessionId) {
+          console.log('🔐 AUTH STATE CHANGE - Session unchanged, skipping reload', event)
+          return
+        }
+        
+        // Clear any existing debounce timer
+        if (debounceTimer) {
+          window.clearTimeout(debounceTimer)
+        }
+        
+        // 🔄 SMART LOAD STRATEGY
+        const shouldLoad = () => {
+          // First time (INITIAL_SESSION): Always load
+          if (event === 'INITIAL_SESSION' && !lastSessionId) {
+            return true
           }
+          
+          // SIGNED_IN with different session: Load
+          if (event === 'SIGNED_IN' && lastSessionId !== currentSessionId) {
+            return true
+          }
+          
+          // All other cases: Skip
+          return false
+        }
+        
+        if (shouldLoad()) {
+          // 🔄 DEBOUNCED RELOAD: Avoid rapid-fire reloads
+          debounceTimer = window.setTimeout(async () => {
+            if (!mounted || isLoading) return
+            
+            isLoading = true
+            lastSessionId = currentSessionId
+            console.log('🔐 AUTH STATE CHANGE - Loading organizations', event, 'session:', currentSessionId)
+            
+            try {
+              setLoading(true)
+              await loadUserOrganizations()
+            } catch (error) {
+              console.error('Error loading organizations after sign in:', error)
+              if (mounted) setError('Fehler beim Laden der Organisationen nach Anmeldung')
+            } finally {
+              if (mounted) {
+                setLoading(false)
+                isLoading = false
+              }
+            }
+          }, event === 'INITIAL_SESSION' ? 0 : 500) // No debounce for initial load
+        } else {
+          // Update session ID even if we don't reload
+          lastSessionId = currentSessionId
+          console.log('🔐 AUTH STATE CHANGE - Session tracking updated', event)
         }
       }
     })
@@ -396,6 +441,11 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     return () => {
       mounted = false
       subscription.unsubscribe()
+      
+      // Clean up debounce timer
+      if (debounceTimer) {
+        window.clearTimeout(debounceTimer)
+      }
     }
   }, [loadUserOrganizations])
 

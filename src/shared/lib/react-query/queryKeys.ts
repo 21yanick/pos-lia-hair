@@ -91,15 +91,25 @@ export const queryKeys = {
         ...queryKeys.business.items.lists(orgId), 
         filters
       ] as const,
+      active: (orgId: string) => [...queryKeys.business.items.lists(orgId), 'active'] as const,
+      favorites: (orgId: string) => [...queryKeys.business.items.lists(orgId), 'favorites'] as const,
+      search: (orgId: string, query: string, activeOnly?: boolean) => [
+        ...queryKeys.business.items.lists(orgId), 
+        'search',
+        query,
+        activeOnly
+      ] as const,
       details: (orgId: string) => [...queryKeys.business.items.all(orgId), 'detail'] as const,
       detail: (orgId: string, itemId: string) => [
         ...queryKeys.business.items.details(orgId), 
         itemId
       ] as const,
       categories: (orgId: string) => [...queryKeys.business.items.all(orgId), 'categories'] as const,
+      categoryCounts: (orgId: string) => [...queryKeys.business.items.all(orgId), 'category-counts'] as const,
+      optimized: (orgId: string) => [...queryKeys.business.items.all(orgId), 'optimized'] as const,
     },
     
-    // Expenses
+    // Expenses & Financial Operations
     expenses: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'expenses'] as const,
       lists: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'list'] as const,
@@ -107,12 +117,38 @@ export const queryKeys = {
         ...queryKeys.business.expenses.lists(orgId), 
         filters
       ] as const,
+      dateRange: (orgId: string, startDate: string, endDate: string) => [
+        ...queryKeys.business.expenses.lists(orgId), 
+        'dateRange',
+        startDate,
+        endDate
+      ] as const,
+      currentMonth: (orgId: string) => [
+        ...queryKeys.business.expenses.lists(orgId), 
+        'currentMonth'
+      ] as const,
+      byCategory: (orgId: string, category: string) => [
+        ...queryKeys.business.expenses.lists(orgId),
+        'category',
+        category
+      ] as const,
+      byPaymentMethod: (orgId: string, paymentMethod: string) => [
+        ...queryKeys.business.expenses.lists(orgId),
+        'paymentMethod',
+        paymentMethod
+      ] as const,
       details: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'detail'] as const,
       detail: (orgId: string, expenseId: string) => [
         ...queryKeys.business.expenses.details(orgId), 
         expenseId
       ] as const,
       categories: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'categories'] as const,
+      stats: (orgId: string, timeframe?: string) => [
+        ...queryKeys.business.expenses.all(orgId), 
+        'stats',
+        timeframe
+      ] as const,
+      grouped: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'grouped'] as const,
     },
     
     // Banking & Financial Data

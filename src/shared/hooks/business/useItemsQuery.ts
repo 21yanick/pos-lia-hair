@@ -43,7 +43,7 @@ import {
  * - Background refetching for data freshness
  */
 
-interface UseItemsReturn {
+interface UseItemsQueryReturn {
   // State Management (Legacy Compatible)
   items: Item[]
   loading: boolean
@@ -62,10 +62,7 @@ interface UseItemsReturn {
   syncAuthUser: () => Promise<{ success: boolean; error?: string; user?: any }>
 }
 
-// Re-export types for compatibility
-export type { Item, ItemInsert, ItemUpdate }
-
-export function useItems(): UseItemsReturn {
+export function useItemsQuery(): UseItemsQueryReturn {
   const { currentOrganization } = useOrganization()
   const queryClient = useQueryClient()
   

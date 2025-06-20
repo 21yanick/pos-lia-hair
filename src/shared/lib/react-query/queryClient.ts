@@ -89,6 +89,12 @@ export const cacheConfig = {
     gcTime: 1000 * 60 * 60,    // 1 hour
   },
   
+  // Expense data: Changes moderately, medium cache
+  expenses: {
+    staleTime: 1000 * 60 * 5,  // 5 minutes
+    gcTime: 1000 * 60 * 15,    // 15 minutes
+  },
+  
   // User data: Changes rarely, cache very long
   user: {
     staleTime: 1000 * 60 * 30, // 30 minutes

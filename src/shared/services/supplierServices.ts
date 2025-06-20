@@ -17,16 +17,21 @@ import type {
 // Supplier CRUD Operations
 // =================================
 
-export async function getSuppliers(options?: {
+export async function getSuppliers(organizationId: string, options?: {
   active_only?: boolean
   category?: SupplierCategory
   search?: string
   limit?: number
   offset?: number
 }): Promise<{ data: Supplier[], count: number }> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
+
   let query = supabase
     .from('suppliers')
     .select('*', { count: 'exact' })
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
     .order('name', { ascending: true })
 
   if (options?.active_only) {
@@ -58,11 +63,16 @@ export async function getSuppliers(options?: {
   return { data: data || [], count: count || 0 }
 }
 
-export async function getSupplierById(id: string): Promise<Supplier | null> {
+export async function getSupplierById(id: string, organizationId: string): Promise<Supplier | null> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
+
   const { data, error } = await supabase
     .from('suppliers')
     .select('*')
     .eq('id', id)
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
     .single()
 
   if (error) {
@@ -73,7 +83,11 @@ export async function getSupplierById(id: string): Promise<Supplier | null> {
   return data
 }
 
-export async function createSupplier(supplierData: SupplierFormData, userId: string): Promise<Supplier> {
+export async function createSupplier(supplierData: SupplierFormData, userId: string, organizationId: string): Promise<Supplier> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
+
   const normalizedName = normalizeSupplierName(supplierData.name)
   
   const insertData: SupplierInsert = {
@@ -92,7 +106,8 @@ export async function createSupplier(supplierData: SupplierFormData, userId: str
     vat_number: supplierData.vat_number?.trim() || null,
     notes: supplierData.notes?.trim() || null,
     is_active: supplierData.is_active,
-    created_by: userId
+    created_by: userId,
+    organization_id: organizationId // 🔒 Multi-Tenant Security - DAS WAR DAS PROBLEM!
   }
 
   const { data, error } = await supabase
@@ -111,7 +126,10 @@ export async function createSupplier(supplierData: SupplierFormData, userId: str
   return data
 }
 
-export async function updateSupplier(id: string, updates: Partial<SupplierFormData>): Promise<Supplier> {
+export async function updateSupplier(id: string, updates: Partial<SupplierFormData>, organizationId: string): Promise<Supplier> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
   const updateData: Partial<SupplierUpdate> = { id }
 
   if (updates.name) {
@@ -137,6 +155,7 @@ export async function updateSupplier(id: string, updates: Partial<SupplierFormDa
     .from('suppliers')
     .update(updateData)
     .eq('id', id)
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
     .select()
     .single()
 
@@ -150,12 +169,17 @@ export async function updateSupplier(id: string, updates: Partial<SupplierFormDa
   return data
 }
 
-export async function deleteSupplier(id: string): Promise<void> {
-  // Check if supplier is used in expenses
+export async function deleteSupplier(id: string, organizationId: string): Promise<void> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
+
+  // Check if supplier is used in expenses (organization-scoped)
   const { data: expenses, error: expenseError } = await supabase
     .from('expenses')
     .select('id')
     .eq('supplier_id', id)
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
     .limit(1)
 
   if (expenseError) {
@@ -170,6 +194,7 @@ export async function deleteSupplier(id: string): Promise<void> {
     .from('suppliers')
     .delete()
     .eq('id', id)
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
 
   if (error) {
     throw new Error(`Error deleting supplier: ${error.message}`)
@@ -180,12 +205,16 @@ export async function deleteSupplier(id: string): Promise<void> {
 // Supplier Search & Autocomplete
 // =================================
 
-export async function searchSuppliers(query: string, options?: {
+export async function searchSuppliers(query: string, organizationId: string, options?: {
   category?: SupplierCategory
   active_only?: boolean
   limit?: number
   include_stats?: boolean
 }): Promise<SupplierSearchResult[]> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
+
   const limit = options?.limit || 10
   
   let baseQuery = supabase
@@ -197,6 +226,7 @@ export async function searchSuppliers(query: string, options?: {
       category,
       updated_at
     `)
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
     .order('name', { ascending: true })
     .limit(limit)
 
@@ -234,15 +264,21 @@ export async function searchSuppliers(query: string, options?: {
 export async function getOrCreateSupplier(
   supplierName: string, 
   userId: string,
+  organizationId: string,
   suggestedCategory?: SupplierCategory
 ): Promise<string> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
+
   const normalizedName = normalizeSupplierName(supplierName)
   
-  // Try to find existing supplier
+  // Try to find existing supplier (organization-scoped)
   const { data: existing } = await supabase
     .from('suppliers')
     .select('id')
     .eq('normalized_name', normalizedName)
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
     .single()
 
   if (existing) {
@@ -256,7 +292,7 @@ export async function getOrCreateSupplier(
     name: supplierName.trim(),
     category,
     is_active: true
-  }, userId)
+  }, userId, organizationId)
 
   return newSupplier.id
 }
@@ -265,7 +301,11 @@ export async function getOrCreateSupplier(
 // Supplier Analytics
 // =================================
 
-export async function getSupplierWithStats(id: string): Promise<SupplierWithStats | null> {
+export async function getSupplierWithStats(id: string, organizationId: string): Promise<SupplierWithStats | null> {
+  if (!organizationId) {
+    throw new Error('Organization ID ist erforderlich')
+  }
+
   const { data, error } = await supabase
     .from('suppliers')
     .select(`
@@ -277,6 +317,7 @@ export async function getSupplierWithStats(id: string): Promise<SupplierWithStat
       )
     `)
     .eq('id', id)
+    .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
     .single()
 
   if (error) {
