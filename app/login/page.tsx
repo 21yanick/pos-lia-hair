@@ -41,29 +41,10 @@ export default function LoginPage() {
       if (data.session) {
         setIsSuccess(true)
         
-        // Hole User-Organisationen nach erfolgreichem Login
-        const { data: userOrgs, error: orgError } = await supabase
-          .from('organization_users')
-          .select(`
-            role,
-            active,
-            organization:organizations(*)
-          `)
-          .eq('user_id', data.user.id)
-          .eq('active', true)
-        
+        // Nach erfolgreichem Login: Redirect zu organizations
+        // OrganizationContext wird das intelligente Routing übernehmen
         setTimeout(() => {
-          if (orgError || !userOrgs || userOrgs.length === 0) {
-            // Keine Organisationen gefunden - zur Auswahl/Erstellung
-            router.push("/organizations")
-          } else if (userOrgs.length === 1) {
-            // Genau eine Organisation - direkt dorthin
-            const org = userOrgs[0].organization
-            router.push(`/org/${org.slug}/dashboard`)
-          } else {
-            // Mehrere Organisationen - zur Auswahl
-            router.push("/organizations")
-          }
+          router.push("/organizations")
           router.refresh()
         }, 600)
       }

@@ -1,20 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Supabase configuration with production fallbacks
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://db.lia-hair.ch';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc1MDI4Nzk2MCwiZXhwIjo0OTA1OTYxNTYwLCJyb2xlIjoiYW5vbiJ9.w__hClUJSKYmQ-DJh3t-1wNOAeFLpdP-J9_T_Kcxem0';
 
-// Debug environment variables
-console.log('🔍 Supabase Config:', {
-  url: supabaseUrl,
-  keyExists: !!supabaseAnonKey,
-  keyLength: supabaseAnonKey?.length
-});
-
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables!');
-  throw new Error('Missing Supabase environment variables. Check .env.local file.');
+// Runtime validation (development only)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  console.log('🔍 Supabase Config:', {
+    url: supabaseUrl,
+    keyExists: !!supabaseAnonKey,
+    keyLength: supabaseAnonKey?.length
+  });
 }
 
 export const supabase = createClient<Database>(

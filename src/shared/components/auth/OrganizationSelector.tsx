@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useOrganization } from '@/shared/contexts/OrganizationContext'
 import { useOrganizationSwitcher } from '@/shared/components/auth/OrganizationGuard'
 import { Button } from '@/shared/components/ui/button'
@@ -55,6 +55,14 @@ export function OrganizationSelector({
     }
   }
 
+  // Auto-redirect if user has only one organization
+  useEffect(() => {
+    if (!loading && !error && userOrganizations.length === 1) {
+      console.log('📋 ORG SELECTOR - Auto-redirecting to single organization:', userOrganizations[0].organization.name)
+      handleSwitchOrganization(userOrganizations[0].organization.id)
+    }
+  }, [loading, error, userOrganizations])
+
   const handleCreateNew = () => {
     if (onCreateNew) {
       onCreateNew()
@@ -64,7 +72,7 @@ export function OrganizationSelector({
     }
   }
 
-  if (loading) {
+  if (loading || (userOrganizations.length === 1 && switching)) {
     return <OrganizationSelectorSkeleton />
   }
 
