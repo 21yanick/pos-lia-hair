@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useOrganization } from '@/shared/contexts/OrganizationContext'
@@ -74,12 +74,38 @@ export function useItems(): UseItemsReturn {
   
   const organizationId = currentOrganization?.id
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🟢 Using React Query Items Hook')
-  }
+  // Development logging reduced to prevent excessive console spam
 
   // ========================================
-  // Query: Items List with Auto-Sync
+  // Side Effect: User Sync (Isolated from Query)
+  // ========================================
+  useEffect(() => {
+    let mounted = true
+    
+    const performUserSync = async () => {
+      if (!organizationId) return
+      
+      try {
+        const syncResult = await ensureUserExists(2)
+        if (!syncResult.success && mounted) {
+          console.warn('User sync failed:', syncResult.error)
+        }
+      } catch (syncError) {
+        if (mounted) {
+          console.warn('User sync error:', syncError)
+        }
+      }
+    }
+    
+    performUserSync()
+    
+    return () => {
+      mounted = false
+    }
+  }, [organizationId]) // Only sync when organization changes
+
+  // ========================================
+  // Query: Items List (Pure Function)
   // ========================================
   const {
     data: items = [],
@@ -93,17 +119,7 @@ export function useItems(): UseItemsReturn {
         throw new Error('No organization selected')
       }
 
-      // Auto-sync user if needed (with retry logic)
-      try {
-        const syncResult = await ensureUserExists(2)
-        if (!syncResult.success) {
-          console.warn('User sync failed but continuing with items load:', syncResult.error)
-        }
-      } catch (syncError) {
-        console.warn('User sync error but continuing:', syncError)
-      }
-
-      // Load items (this will throw if user doesn't have access)
+      // 🔧 PURE QUERY FUNCTION: No side effects!
       const optimizedData = await getItemsOptimized(organizationId)
       return optimizedData.items
     },
@@ -152,18 +168,17 @@ export function useItems(): UseItemsReturn {
         queryKeys.business.items.optimized(organizationId)
       ) as Item[]
 
-      // Create optimistic item
+      // Create optimistic item - EXACT DB STRUCTURE MATCH
       const optimisticItem: Item = {
         id: `temp-${Date.now()}`,
         name: newItem.name,
-        price: newItem.price || 0,
-        category: newItem.category || null,
-        description: newItem.description || null,
+        default_price: newItem.price || 0, // 🔧 FIX: price → default_price
+        type: newItem.type || 'service',
         active: newItem.active ?? true,
         is_favorite: newItem.is_favorite ?? false,
         organization_id: organizationId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_at: new Date().toISOString()
+        // 🔧 REMOVED: Non-DB fields (category, description, updated_at)
       }
 
       // Optimistically update the cache

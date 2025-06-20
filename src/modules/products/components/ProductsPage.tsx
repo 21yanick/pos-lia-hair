@@ -345,7 +345,9 @@ export function ProductsPage() {
                       {item.type === "service" ? "Dienstleistung" : "Produkt"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">{item.default_price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">
+                    {item.default_price != null ? item.default_price.toFixed(2) : '0.00'}
+                  </TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
