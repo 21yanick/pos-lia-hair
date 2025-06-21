@@ -76,7 +76,7 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
     })
 
     // Log error for debugging
-    console.error('🚨 QueryErrorBoundary caught an error:', error, errorInfo)
+    // console.error('🚨 QueryErrorBoundary caught an error:', error, errorInfo)
 
     // Call custom error handler if provided
     this.props.onError?.(error, errorInfo)
@@ -131,7 +131,7 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
       }
       
       // In a real app, send this to your error tracking service
-      console.log('📊 Error Report:', errorReport)
+      // console.log('📊 Error Report:', errorReport)
       
     } catch (reportingError) {
       console.error('Failed to report error:', reportingError)

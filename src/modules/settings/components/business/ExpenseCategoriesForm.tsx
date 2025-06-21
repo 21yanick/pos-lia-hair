@@ -223,7 +223,7 @@ export function ExpenseCategoriesForm() {
               <Button 
                 onClick={(e) => {
                   e.preventDefault()
-                  console.log('Button clicked!')
+                  // console.log('Button clicked!')
                   handleAddCategory()
                 }}
                 disabled={loading}

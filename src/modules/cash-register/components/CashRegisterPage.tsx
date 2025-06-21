@@ -88,7 +88,7 @@ export default function CashRegisterPage() {
             }
           })
         } else {
-          console.error('🏦 Kassenbuch Fehler:', movementsResult.error)
+          // console.error('🏦 Kassenbuch Fehler:', movementsResult.error)
         }
         
         // Entries nach Datum sortieren (älteste zuerst für korrekte Saldo-Berechnung)

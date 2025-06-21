@@ -19,7 +19,7 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react"
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 import { SettingsHeader } from "@/shared/components/settings/SettingsHeader"
 
 export function ImportCenter() {

@@ -87,7 +87,7 @@ export async function getCurrentCashBalance(orgId: string): Promise<number> {
   })
 
   if (error) {
-    console.error('Error loading cash balance:', error)
+    // console.error('Error loading cash balance:', error)
     throw new Error('Fehler beim Laden des Kassenstands')
   }
 
@@ -110,7 +110,7 @@ export async function getTodayStats(orgId: string, date?: string): Promise<Today
     .lte('created_at', end)
 
   if (error) {
-    console.error('Error loading today stats:', error)
+    // console.error('Error loading today stats:', error)
     throw new Error('Fehler beim Laden der Tagesstatistiken')
   }
 
@@ -149,7 +149,7 @@ export async function getRecentTransactions(orgId: string, limit = 10): Promise<
     .limit(limit)
 
   if (error) {
-    console.error('Error loading recent transactions:', error)
+    // console.error('Error loading recent transactions:', error)
     throw new Error('Fehler beim Laden der letzten Transaktionen')
   }
 
@@ -189,7 +189,7 @@ export async function getWeekStats(orgId: string, weekStart?: string): Promise<W
     .gte('created_at', startDate.toISOString())
 
   if (error) {
-    console.error('Error loading week stats:', error)
+    // console.error('Error loading week stats:', error)
     throw new Error('Fehler beim Laden der Wochenstatistiken')
   }
 
@@ -226,12 +226,12 @@ export async function getMonthStats(orgId: string, monthStart?: string): Promise
   ])
 
   if (salesResult.error) {
-    console.error('Error loading month sales:', salesResult.error)
+    // console.error('Error loading month sales:', salesResult.error)
     throw new Error('Fehler beim Laden der Monatsumsätze')
   }
 
   if (expensesResult.error) {
-    console.error('Error loading month expenses:', expensesResult.error)
+    // console.error('Error loading month expenses:', expensesResult.error)
     throw new Error('Fehler beim Laden der Monatsausgaben')
   }
 
@@ -271,12 +271,12 @@ export async function getRecentActivities(orgId: string, limit = 10): Promise<Ac
   ])
 
   if (salesResult.error) {
-    console.error('Error loading recent sales:', salesResult.error)
+    // console.error('Error loading recent sales:', salesResult.error)
     throw new Error('Fehler beim Laden der letzten Verkäufe')
   }
 
   if (expensesResult.error) {
-    console.error('Error loading recent expenses:', expensesResult.error)
+    // console.error('Error loading recent expenses:', expensesResult.error)
     throw new Error('Fehler beim Laden der letzten Ausgaben')
   }
 
@@ -351,12 +351,12 @@ export async function getMonthlyTrends(orgId: string, monthsBack = 12): Promise<
   ])
 
   if (salesResult.error) {
-    console.error('Error loading monthly sales trends:', salesResult.error)
+    // console.error('Error loading monthly sales trends:', salesResult.error)
     throw new Error('Fehler beim Laden der Monats-Trends (Verkäufe)')
   }
 
   if (expensesResult.error) {
-    console.error('Error loading monthly expenses trends:', expensesResult.error)
+    // console.error('Error loading monthly expenses trends:', expensesResult.error)
     throw new Error('Fehler beim Laden der Monats-Trends (Ausgaben)')
   }
 
@@ -413,7 +413,7 @@ export async function getProductCount(orgId: string): Promise<number> {
     .eq('active', true)
 
   if (error) {
-    console.error('Error loading product count:', error)
+    // console.error('Error loading product count:', error)
     throw new Error('Fehler beim Laden der Produktanzahl')
   }
 
@@ -447,12 +447,12 @@ export async function getYearTotal(orgId: string, year?: number): Promise<YearTo
   ])
 
   if (salesResult.error) {
-    console.error('Error loading year sales:', salesResult.error)
+    // console.error('Error loading year sales:', salesResult.error)
     throw new Error('Fehler beim Laden der Jahresumsätze')
   }
 
   if (expensesResult.error) {
-    console.error('Error loading year expenses:', expensesResult.error)
+    // console.error('Error loading year expenses:', expensesResult.error)
     throw new Error('Fehler beim Laden der Jahresausgaben')
   }
 

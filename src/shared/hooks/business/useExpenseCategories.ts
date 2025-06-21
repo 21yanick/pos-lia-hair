@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from 'react'
 import { useBusinessSettings } from './useBusinessSettings'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { DEFAULT_EXPENSE_CATEGORIES } from '@/shared/types/expenses'
 import { upsertBusinessSettings } from '@/shared/services/businessSettingsService'
 

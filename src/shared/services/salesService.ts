@@ -93,14 +93,14 @@ export async function createSale(
     createSaleCashMovement: (saleId: string, amount: number) => Promise<any>
   }
 ): Promise<CreateSaleResult> {
-  console.log('🔥 salesService: createSale called with data:', data)
+  // console.log('🔥 salesService: createSale called with data:', data)
   
   try {
     // Security validation
     const validOrgId = validateOrganizationId(organizationId)
     const userId = await getCurrentUserId()
     
-    console.log('🔍 SECURITY CHECK: organizationId:', validOrgId, 'userId:', userId)
+    // console.log('🔍 SECURITY CHECK: organizationId:', validOrgId, 'userId:', userId)
 
     // Create sale record
     const saleData = {
@@ -112,7 +112,7 @@ export async function createSale(
       organization_id: validOrgId,
     }
     
-    console.log('🚨 CRITICAL DEBUG: About to insert sale with data:', saleData)
+    // console.log('🚨 CRITICAL DEBUG: About to insert sale with data:', saleData)
     
     const { data: sale, error: saleError } = await supabase
       .from('sales')
@@ -121,7 +121,7 @@ export async function createSale(
       .single()
 
     if (saleError) {
-      console.error('❌ Fehler beim Erstellen des Verkaufs:', saleError)
+      // console.error('❌ Fehler beim Erstellen des Verkaufs:', saleError)
       throw saleError
     }
 
@@ -140,11 +140,11 @@ export async function createSale(
       .insert(saleItems)
 
     if (itemsError) {
-      console.error('❌ Fehler beim Erstellen der Verkaufsposten:', itemsError)
+      // console.error('❌ Fehler beim Erstellen der Verkaufsposten:', itemsError)
       throw itemsError
     }
     
-    console.log('✅ Verkaufsposten erfolgreich erstellt:', saleItems.length)
+    // console.log('✅ Verkaufsposten erfolgreich erstellt:', saleItems.length)
 
     // Create cash movement for cash payments
     if (data.payment_method === 'cash' && cashMovementService) {
@@ -252,7 +252,7 @@ export async function getTodaySales(organizationId: string): Promise<Sale[]> {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('❌ Fehler beim Laden der Verkäufe:', error)
+    // console.error('❌ Fehler beim Laden der Verkäufe:', error)
     throw new Error('Fehler beim Laden der Verkäufe')
   }
 
@@ -278,7 +278,7 @@ export async function getSalesForDateRange(
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('❌ Fehler beim Laden der Verkäufe für Datumsbereich:', error)
+    // console.error('❌ Fehler beim Laden der Verkäufe für Datumsbereich:', error)
     throw new Error('Fehler beim Laden der Verkäufe')
   }
 
@@ -328,7 +328,7 @@ export async function createReceiptPDF(
       })
     
     if (uploadError) {
-      console.error('❌ Fehler beim Hochladen der Quittung:', uploadError)
+      // console.error('❌ Fehler beim Hochladen der Quittung:', uploadError)
       throw uploadError
     }
     
@@ -349,7 +349,7 @@ export async function createReceiptPDF(
       .upsert(documentData)
     
     if (documentError) {
-      console.error('❌ Fehler beim Erstellen des Quittung Document-Eintrags:', documentError)
+      // console.error('❌ Fehler beim Erstellen des Quittung Document-Eintrags:', documentError)
     }
     
     // Get public URL

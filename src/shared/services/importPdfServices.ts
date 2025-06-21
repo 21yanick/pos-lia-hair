@@ -30,7 +30,7 @@ async function uploadPDFToStorage(
     throw new Error(`Upload Error für ${fileName}: ${uploadError.message}`)
   }
 
-  console.log(`✅ PDF uploaded: ${filePath}`)
+  // console.log(`✅ PDF uploaded: ${filePath}`)
 }
 
 async function createDocumentRecord(
@@ -56,7 +56,7 @@ async function createDocumentRecord(
     throw new Error(`Document Record Error: ${docError.message}`)
   }
 
-  console.log(`✅ Document record erstellt für ${documentData.reference_type} ${documentData.reference_id}`)
+  // console.log(`✅ Document record erstellt für ${documentData.reference_type} ${documentData.reference_id}`)
 }
 
 // =================================
@@ -72,7 +72,7 @@ export async function generateReceiptPDFsForSales(
   
   let generatedPDFs = 0
   
-  console.log('🔍 PDF Generation Debug - Input sales:', sales.length)
+  // console.log('🔍 PDF Generation Debug - Input sales:', sales.length)
   
   // Get all recent sales for this user with complete data
   const { data: recentSales, error: salesError } = await supabase
@@ -99,21 +99,21 @@ export async function generateReceiptPDFsForSales(
     .order('created_at', { ascending: false })
     .limit(sales.length * 2) // Get more than we imported to be safe
   
-  console.log('🔍 PDF Generation Debug - Found sales:', recentSales?.length || 0)
+  // console.log('🔍 PDF Generation Debug - Found sales:', recentSales?.length || 0)
   
   if (salesError) {
-    console.error('🔍 PDF Generation Error:', salesError)
+    // console.error('🔍 PDF Generation Error:', salesError)
     throw new Error(`Fehler beim Abrufen der Sales für PDF-Generation: ${salesError.message}`)
   }
   
   if (!recentSales || recentSales.length === 0) {
-    console.warn('🔍 PDF Generation - No sales found for user:', targetUserId)
+    // console.warn('🔍 PDF Generation - No sales found for user:', targetUserId)
     return 0
   }
   
   // For each sale, generate actual PDF
   for (const sale of recentSales) {
-    console.log(`🔍 Processing sale ${sale.id} for PDF generation...`)
+    // console.log(`🔍 Processing sale ${sale.id} for PDF generation...`)
     
     // Check if document already exists
     const { data: existingDoc } = await supabase
@@ -124,7 +124,7 @@ export async function generateReceiptPDFsForSales(
       .maybeSingle()
     
     if (existingDoc) {
-      console.log(`🔍 Document already exists for sale ${sale.id}, skipping`)
+      // console.log(`🔍 Document already exists for sale ${sale.id}, skipping`)
       continue // Skip if document already exists
     }
     
@@ -158,7 +158,7 @@ export async function generateReceiptPDFsForSales(
         type: item.items?.type || 'service'
       })) || []
       
-      console.log(`🔍 Generating PDF for sale ${sale.id}...`)
+      // console.log(`🔍 Generating PDF for sale ${sale.id}...`)
       
       // Generate actual PDF using React-PDF
       try {
@@ -175,7 +175,7 @@ export async function generateReceiptPDFsForSales(
         
         const pdfBlob = await pdf(pdfDocument).toBlob()
         
-        console.log(`🔍 PDF generated successfully, size: ${pdfBlob.size} bytes`)
+        // console.log(`🔍 PDF generated successfully, size: ${pdfBlob.size} bytes`)
         
         // Upload to Supabase Storage
         const fileName = `receipt_${sale.id}.pdf`
@@ -262,7 +262,7 @@ export async function generateDailyReportPDFs(
   updateProgress: ProgressCallback
 ): Promise<{ id: string, filePath: string }[]> {
   // Function disabled - Banking Module will replace Daily Reports
-  console.warn('DailyReportPDF generation disabled - Banking Module will replace Daily Reports')
+  // console.warn('DailyReportPDF generation disabled - Banking Module will replace Daily Reports')
   updateProgress(97, 'Daily Report PDFs deaktiviert (Banking Module Migration)')
   return []
 
@@ -284,7 +284,7 @@ export async function generateExpenseReceiptPDFs(
   
   let generatedPDFs = 0
   
-  console.log(`🔍 Generating Expense Receipt PDFs for ${expenses.length} expenses`)
+  // console.log(`🔍 Generating Expense Receipt PDFs for ${expenses.length} expenses`)
   
   // Get the actual expenses from database (they should be created by now)
   const { data: dbExpenses, error: expensesError } = await supabase
@@ -295,12 +295,12 @@ export async function generateExpenseReceiptPDFs(
     .limit(expenses.length * 2) // Get more than imported to be safe
   
   if (expensesError) {
-    console.error('🔍 Error loading expenses for PDF generation:', expensesError)
+    // console.error('🔍 Error loading expenses for PDF generation:', expensesError)
     return 0
   }
   
   if (!dbExpenses || dbExpenses.length === 0) {
-    console.warn('🔍 No expenses found for PDF generation')
+    // console.warn('🔍 No expenses found for PDF generation')
     return 0
   }
   
@@ -316,11 +316,11 @@ export async function generateExpenseReceiptPDFs(
         .maybeSingle()
       
       if (existingDoc) {
-        console.log(`🔍 Document already exists for expense ${dbExpense.id}, skipping`)
+        // console.log(`🔍 Document already exists for expense ${dbExpense.id}, skipping`)
         continue
       }
       
-      console.log(`🔍 Generating PDF for expense ${dbExpense.id}...`)
+      // console.log(`🔍 Generating PDF for expense ${dbExpense.id}...`)
       
       try {
         // Import PDF libraries dynamically
@@ -335,7 +335,7 @@ export async function generateExpenseReceiptPDFs(
         
         const pdfBlob = await pdf(pdfDocument).toBlob()
         
-        console.log(`🔍 Expense PDF generated, size: ${pdfBlob.size} bytes`)
+        // console.log(`🔍 Expense PDF generated, size: ${pdfBlob.size} bytes`)
         
         // Upload to Supabase Storage
         const fileName = `import-expense-${dbExpense.id}.pdf`
@@ -409,6 +409,6 @@ startxref
     }
   }
   
-  console.log(`🎉 Expense Receipt PDF Generation completed: ${generatedPDFs} PDFs created`)
+  // console.log(`🎉 Expense Receipt PDF Generation completed: ${generatedPDFs} PDFs created`)
   return generatedPDFs
 }

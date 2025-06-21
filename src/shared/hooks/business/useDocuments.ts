@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
 import { generateDocumentDisplayName } from '@/shared/utils/documentHelpers'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 
 // Typen für Dokumente
 export type Document = Database['public']['Tables']['documents']['Row']
@@ -71,7 +71,7 @@ export function useDocuments() {
         .createSignedUrl(filePath, 3600) // URL gültig für 1 Stunde
       
       if (urlError) {
-        console.error("Fehler beim Erstellen der Signed URL:", urlError)
+        // console.error("Fehler beim Erstellen der Signed URL:", urlError)
         // Fallback auf Public URL versuchen
         const { data: publicData } = await supabase.storage
           .from('documents')
@@ -178,7 +178,7 @@ export function useDocuments() {
               }
             }
           } catch (err) {
-            console.log('Konnte verknüpfte Daten nicht laden:', err)
+            // console.log('Konnte verknüpfte Daten nicht laden:', err)
           }
 
           // Bessere Dokumentnamen generieren
@@ -335,7 +335,7 @@ export function useDocuments() {
           .remove([docData.file_path])
 
         if (storageError) {
-          console.warn('Warnung: Datei konnte nicht aus Storage gelöscht werden:', storageError.message)
+          // console.warn('Warnung: Datei konnte nicht aus Storage gelöscht werden:', storageError.message)
         }
       }
 

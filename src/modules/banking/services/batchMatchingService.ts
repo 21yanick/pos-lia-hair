@@ -52,7 +52,7 @@ export async function findBatchMatchCandidates(
   organizationId: string  // ✅ CRITICAL FIX: Multi-Tenant organization security
 ): Promise<BatchMatchCandidate[]> {
   try {
-    console.log('🔍 Starting batch matching analysis...')
+    // console.log('🔍 Starting batch matching analysis...')
     
     // Get unmatched bank transactions
     const { data: unmatchedBankTx, error: bankError } = await supabase
@@ -84,7 +84,7 @@ export async function findBatchMatchCandidates(
     
     // For each unmatched bank transaction, find potential provider matches
     for (const bankTx of unmatchedBankTx || []) {
-      console.log(`\n🏦 Analyzing bank transaction: ${bankTx.amount} CHF - ${bankTx.description}`)
+      // console.log(`\n🏦 Analyzing bank transaction: ${bankTx.amount} CHF - ${bankTx.description}`)
       
       // Strategy 1: Exact single match
       const exactMatch = (matchedProviders || []).find(pr => 
@@ -107,7 +107,7 @@ export async function findBatchMatchCandidates(
           matchType: 'exact',
           reasons: ['Exact amount match', `${exactMatch.provider.toUpperCase()} settlement`]
         })
-        console.log(`  ✅ EXACT MATCH: ${exactMatch.net_amount} CHF ${exactMatch.provider}`)
+        // console.log(`  ✅ EXACT MATCH: ${exactMatch.net_amount} CHF ${exactMatch.provider}`)
         continue
       }
       
@@ -134,7 +134,7 @@ export async function findBatchMatchCandidates(
           matchType: 'tolerance',
           reasons: [`Tolerance match (±${diff.toFixed(2)} CHF)`, `${toleranceMatch.provider.toUpperCase()} settlement`]
         })
-        console.log(`  🔶 TOLERANCE MATCH: ${toleranceMatch.net_amount} CHF ${toleranceMatch.provider} (diff: ${diff.toFixed(2)})`)
+        // console.log(`  🔶 TOLERANCE MATCH: ${toleranceMatch.net_amount} CHF ${toleranceMatch.provider} (diff: ${diff.toFixed(2)})`)
       }
       
       // Strategy 3: Batch matching (multiple providers sum to bank amount)
@@ -195,7 +195,7 @@ async function findBatchCombinations(
             `Tolerance: ±${diff.toFixed(2)} CHF`
           ]
         })
-        console.log(`  🔀 BATCH MATCH: ${combSize} TWINT reports = ${totalAmount.toFixed(2)} CHF (diff: ${diff.toFixed(2)})`)
+        // console.log(`  🔀 BATCH MATCH: ${combSize} TWINT reports = ${totalAmount.toFixed(2)} CHF (diff: ${diff.toFixed(2)})`)
       }
     }
     
@@ -226,7 +226,7 @@ async function findBatchCombinations(
             `Tolerance: ±${diff.toFixed(2)} CHF`
           ]
         })
-        console.log(`  🔀 BATCH MATCH: ${combSize} SumUp reports = ${totalAmount.toFixed(2)} CHF (diff: ${diff.toFixed(2)})`)
+        // console.log(`  🔀 BATCH MATCH: ${combSize} SumUp reports = ${totalAmount.toFixed(2)} CHF (diff: ${diff.toFixed(2)})`)
       }
     }
   }
@@ -276,7 +276,7 @@ export async function executeBatchMatches(
   }
   
   try {
-    console.log(`🚀 Executing ${candidates.length} batch matches...`)
+    // console.log(`🚀 Executing ${candidates.length} batch matches...`)
     
     for (const candidate of candidates) {
       try {
@@ -319,17 +319,17 @@ export async function executeBatchMatches(
           confidence: candidate.confidence
         })
         
-        console.log(`  ✅ Matched: ${candidate.bankTransaction.amount} CHF → ${candidate.providerReports.length} provider reports`)
+        // console.log(`  ✅ Matched: ${candidate.bankTransaction.amount} CHF → ${candidate.providerReports.length} provider reports`)
         
       } catch (error) {
         const errorMessage = `Failed to match bank transaction ${candidate.bankTransaction.id}: ${error}`
         result.errors.push(errorMessage)
-        console.error(`  ❌ ${errorMessage}`)
+        // console.error(`  ❌ ${errorMessage}`)
       }
     }
     
     result.success = result.errors.length === 0
-    console.log(`🎉 Batch matching completed: ${result.matchedCount} successful matches, ${result.errors.length} errors`)
+    // console.log(`🎉 Batch matching completed: ${result.matchedCount} successful matches, ${result.errors.length} errors`)
     
     return result
     
@@ -351,13 +351,13 @@ export async function executeBatchMatches(
 export async function runAutomaticBatchMatching(
   organizationId: string  // ✅ CRITICAL FIX: Multi-Tenant organization parameter
 ): Promise<BatchMatchResult> {
-  console.log('🤖 Starting automatic batch matching...')
+  // console.log('🤖 Starting automatic batch matching...')
   
   // Find candidates
   const candidates = await findBatchMatchCandidates(organizationId)  // ✅ Pass organization
   
   if (candidates.length === 0) {
-    console.log('ℹ️ No batch match candidates found')
+    // console.log('ℹ️ No batch match candidates found')
     return {
       success: true,
       matchedCount: 0,
@@ -369,10 +369,10 @@ export async function runAutomaticBatchMatching(
   // Filter high-confidence candidates for automatic execution
   const highConfidenceCandidates = candidates.filter(c => c.confidence >= 85)
   
-  console.log(`Found ${candidates.length} total candidates, ${highConfidenceCandidates.length} high-confidence (≥85%)`)
+  // console.log(`Found ${candidates.length} total candidates, ${highConfidenceCandidates.length} high-confidence (≥85%)`)
   
   if (highConfidenceCandidates.length === 0) {
-    console.log('ℹ️ No high-confidence candidates for automatic matching')
+    // console.log('ℹ️ No high-confidence candidates for automatic matching')
     return {
       success: true,
       matchedCount: 0,

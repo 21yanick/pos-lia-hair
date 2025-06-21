@@ -781,7 +781,7 @@ export default function TransactionCenterPage() {
 
   // Transaction Click Handler
   const handleTransactionClick = (transaction: UnifiedTransaction) => {
-    console.log('Transaction Details:', transaction)
+    // console.log('Transaction Details:', transaction)
     // TODO: Open transaction details modal or navigate to details page
   }
 
@@ -798,7 +798,7 @@ export default function TransactionCenterPage() {
         }
       } else {
         // Fehler anzeigen
-        console.error('PDF Action failed:', result.error)
+        // console.error('PDF Action failed:', result.error)
         // TODO: Toast notification mit Fehler
       }
     } catch (error) {

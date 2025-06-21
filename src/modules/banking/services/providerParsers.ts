@@ -202,7 +202,7 @@ function parseTWINTRow(row: TWINTCsvRow, rowIndex: number): ProviderRecord {
   // Basic math validation (net = gross - fees, allowing for small rounding)
   const expectedNet = grossAmount - fees
   if (Math.abs(netAmount - expectedNet) > 0.02) {
-    console.warn(`TWINT amount mismatch at row ${rowIndex}: net=${netAmount}, expected=${expectedNet}`)
+    // console.warn(`TWINT amount mismatch at row ${rowIndex}: net=${netAmount}, expected=${expectedNet}`)
   }
   
   return {
@@ -339,7 +339,7 @@ function parseSumUpRow(row: SumUpCsvRow, rowIndex: number): ProviderRecord {
   // Basic math validation (net = gross - fees, allowing for small rounding)
   const expectedNet = grossAmount - fees
   if (Math.abs(netAmount - expectedNet) > 0.02) {
-    console.warn(`SumUp amount mismatch at row ${rowIndex}: net=${netAmount}, expected=${expectedNet}`)
+    // console.warn(`SumUp amount mismatch at row ${rowIndex}: net=${netAmount}, expected=${expectedNet}`)
   }
   
   return {

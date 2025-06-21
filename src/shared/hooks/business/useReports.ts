@@ -12,7 +12,7 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 
 // Import optimized service functions

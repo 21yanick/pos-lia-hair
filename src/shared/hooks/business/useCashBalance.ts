@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { getSwissDayRange } from '@/shared/utils/dateUtils'
 
 // Minimal types for cash operations
@@ -42,7 +42,7 @@ export function useCashBalance() {
       })
 
       if (error) {
-        console.error('Fehler beim Abrufen des Bargeld-Bestands:', error)
+        // console.error('Fehler beim Abrufen des Bargeld-Bestands:', error)
         throw error
       }
 
@@ -78,7 +78,7 @@ export function useCashBalance() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
+        // console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
         throw error
       }
 
@@ -95,7 +95,7 @@ export function useCashBalance() {
                 .single()
               
               if (saleError) {
-                console.error(`Failed to fetch sale data for ${movement.reference_id}:`, saleError)
+                // console.error(`Failed to fetch sale data for ${movement.reference_id}:`, saleError)
               }
               
               return {
@@ -145,7 +145,7 @@ export function useCashBalance() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
+        // console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
         throw error
       }
 

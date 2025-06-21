@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import {
   getItems,
@@ -88,11 +88,11 @@ export function useItems(): UseItemsReturn {
       try {
         const syncResult = await ensureUserExists(2)
         if (!syncResult.success && mounted) {
-          console.warn('User sync failed:', syncResult.error)
+          // console.warn('User sync failed:', syncResult.error)
         }
       } catch (syncError) {
         if (mounted) {
-          console.warn('User sync error:', syncError)
+          // console.warn('User sync error:', syncError)
         }
       }
     }
@@ -207,7 +207,7 @@ export function useItems(): UseItemsReturn {
       toast.success('Artikel erfolgreich hinzugefügt')
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('🟢 React Query: Item created')
+        // console.log('🟢 React Query: Item created')
       }
     },
     onSettled: () => {

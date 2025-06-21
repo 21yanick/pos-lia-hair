@@ -5,7 +5,7 @@ import { supabase } from '@/shared/lib/supabase/client'
 import { useDocuments } from '@/shared/hooks/business/useDocuments'
 import { useSales } from '@/shared/hooks/business/useSales'
 import { useExpenses } from '@/shared/hooks/business/useExpenses'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import type { UnifiedTransaction } from '../types/unifiedTransactions'
 
 export function usePdfActions() {
@@ -64,7 +64,7 @@ export function usePdfActions() {
 
     } catch (err: any) {
       const errorMessage = err.message || 'Fehler beim Öffnen des PDFs'
-      console.error('❌ PDF View Error:', err)
+      // console.error('❌ PDF View Error:', err)
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {
@@ -136,7 +136,7 @@ export function usePdfActions() {
 
     } catch (err: any) {
       const errorMessage = err.message || 'Fehler beim Generieren des PDFs'
-      console.error('❌ PDF Generation Error:', err)
+      // console.error('❌ PDF Generation Error:', err)
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {
@@ -203,7 +203,7 @@ export function usePdfActions() {
 
     } catch (err: any) {
       const errorMessage = err.message || 'Fehler beim Herunterladen des PDFs'
-      console.error('❌ PDF Download Error:', err)
+      // console.error('❌ PDF Download Error:', err)
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {
@@ -254,7 +254,7 @@ export function usePdfActions() {
             }
           }
         } catch (err) {
-          console.warn(`Fehler beim Laden von PDF ${transaction.receipt_number}:`, err)
+          // console.warn(`Fehler beim Laden von PDF ${transaction.receipt_number}:`, err)
         }
       }
 
@@ -275,7 +275,7 @@ export function usePdfActions() {
 
     } catch (err: any) {
       const errorMessage = err.message || 'Fehler beim Erstellen des ZIP-Archivs'
-      console.error('❌ Bulk PDF Download Error:', err)
+      // console.error('❌ Bulk PDF Download Error:', err)
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {

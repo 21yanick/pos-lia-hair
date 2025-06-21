@@ -88,7 +88,7 @@ export function SmartAppLogo({
       )}
       onClick={onClick}
       onError={(e) => {
-        console.warn('App logo failed to load:', logoUrl)
+        // console.warn('App logo failed to load:', logoUrl)
         // Hide broken image
         e.currentTarget.style.display = 'none'
       }}

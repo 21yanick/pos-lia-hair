@@ -8,7 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
 import { Badge } from "@/shared/components/ui/badge"
 import { searchSuppliers } from '@/shared/services/supplierServices'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier, SupplierSearchResult } from '@/shared/types/suppliers'
 

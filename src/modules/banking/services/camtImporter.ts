@@ -217,7 +217,7 @@ export async function executeCAMTImport(
       .insert(importSession)
     
     if (sessionError) {
-      console.warn('Failed to create import session:', sessionError)
+      // console.warn('Failed to create import session:', sessionError)
       // Don't fail the import if session creation fails
     }
     
@@ -250,7 +250,7 @@ export async function executeCAMTImport(
       
       await supabase.from('bank_import_sessions' as any).insert(failedSession)
     } catch (sessionError) {
-      console.warn('Failed to create failed import session:', sessionError)
+      // console.warn('Failed to create failed import session:', sessionError)
     }
     
     return {
@@ -381,7 +381,7 @@ export async function getImportHistory(bankAccountId: string) {
     .limit(20)
   
   if (error) {
-    console.error('Failed to fetch import history:', error)
+    // console.error('Failed to fetch import history:', error)
     return []
   }
   

@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import {
@@ -130,7 +130,7 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
     staleTime: cacheConfig.expenses.staleTime, // 5 minutes
     gcTime: cacheConfig.expenses.gcTime, // 10 minutes
     retry: (failureCount, error) => {
-      console.log('Query retry:', failureCount, error.message)
+      // console.log('Query retry:', failureCount, error.message)
       return failureCount < 3
     },
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),

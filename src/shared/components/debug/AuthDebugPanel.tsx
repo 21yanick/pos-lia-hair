@@ -34,7 +34,7 @@ export function AuthDebugPanel() {
         if (!error) {
           setDbUser(data);
         } else {
-          console.log('Fehler beim Abrufen des DB-Benutzers:', error);
+          // console.log('Fehler beim Abrufen des DB-Benutzers:', error);
         }
       }
     } catch (err: any) {
@@ -51,7 +51,7 @@ export function AuthDebugPanel() {
     try {
       setSyncing(true);
       
-      console.log('Synchronisiere Benutzer...');
+      // console.log('Synchronisiere Benutzer...');
       const { error } = await supabase
         .from('users')
         .upsert({
@@ -64,11 +64,11 @@ export function AuthDebugPanel() {
         });
         
       if (error) {
-        console.error('Synchronisierungsfehler:', error);
+        // console.error('Synchronisierungsfehler:', error);
         throw error;
       }
       
-      console.log('Benutzer erfolgreich synchronisiert, lade Daten neu...');
+      // console.log('Benutzer erfolgreich synchronisiert, lade Daten neu...');
       await loadUserData();
     } catch (err: any) {
       console.error('Fehler bei der Synchronisierung:', err);

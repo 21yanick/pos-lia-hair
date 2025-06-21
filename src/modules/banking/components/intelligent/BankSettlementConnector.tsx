@@ -69,7 +69,7 @@ export function BankSettlementConnector({
             // Use real calculated score for selected items too
             const realScore = highlightedScores.get(itemId) || 100
             
-            console.log(`🎯 Creating connection line for SELECTED item ${itemId}: realScore=${realScore}`)
+            // console.log(`🎯 Creating connection line for SELECTED item ${itemId}: realScore=${realScore}`)
             
             newLines.push({
               x1: bankX,
@@ -103,7 +103,7 @@ export function BankSettlementConnector({
             // Use actual calculated score or fallback to 75
             const actualScore = highlightedScores.get(itemId) || 75
             
-            console.log(`🔗 Creating connection line for highlighted item ${itemId}: score=${actualScore}`)
+            // console.log(`🔗 Creating connection line for highlighted item ${itemId}: score=${actualScore}`)
             
             newLines.push({
               x1: bankX,
@@ -151,7 +151,7 @@ export function BankSettlementConnector({
       return 'transparent'
     }
     
-    console.log(`🎨 Line color for confidence=${confidence}, selected=${isSelected}, highlighted=${isHighlighted}`)
+    // console.log(`🎨 Line color for confidence=${confidence}, selected=${isSelected}, highlighted=${isHighlighted}`)
     
     // Selected items get stronger colors
     if (isSelected) {

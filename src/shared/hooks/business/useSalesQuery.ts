@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import {
@@ -65,7 +65,7 @@ export function useSalesQuery(): UseSalesQueryReturn {
   const organizationId = currentOrganization?.id
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('🟢 Using React Query Sales Hook')
+    // console.log('🟢 Using React Query Sales Hook')
   }
 
   // ========================================
@@ -176,7 +176,7 @@ export function useSalesQuery(): UseSalesQueryReturn {
       toast.success('Verkauf erfolgreich erstellt')
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('🟢 React Query: Sale created:', data.sale.id)
+        // console.log('🟢 React Query: Sale created:', data.sale.id)
       }
     },
     onSettled: () => {

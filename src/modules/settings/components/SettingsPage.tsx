@@ -9,7 +9,7 @@ import {
   Users, 
   Wrench
 } from "lucide-react"
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 
 export function SettingsPage() {
   const { currentOrganization } = useOrganization()

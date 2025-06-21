@@ -1,7 +1,7 @@
 "use client"
 
 import { usePOS } from '../hooks/usePOS'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { ProductGrid } from './ProductGrid'
 import { ShoppingCart } from './ShoppingCart'
 import { PaymentDialog } from './PaymentDialog'

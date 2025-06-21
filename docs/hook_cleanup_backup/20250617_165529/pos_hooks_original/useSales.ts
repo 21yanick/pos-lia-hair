@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 
 // Typen für Verkäufe (ersetzt Transaktionen)
 export type Sale = Database['public']['Tables']['sales']['Row']

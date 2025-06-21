@@ -16,7 +16,7 @@ import {
 
 import { cn } from "@/shared/utils"
 import { useAuth } from "@/shared/hooks/auth/useAuth"
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
 import {
   Sidebar,

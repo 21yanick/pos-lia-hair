@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 
 interface SettingsHeaderProps {
   title: string

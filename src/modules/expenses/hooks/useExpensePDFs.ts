@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import type { DocumentWithDetails } from '@/shared/hooks/business/useDocuments'
 
 // 🛡️ SECURITY FIXED: useExpensePDFs Hook - Multi-Tenant Organization Security
@@ -10,16 +10,18 @@ import type { DocumentWithDetails } from '@/shared/hooks/business/useDocuments'
 // ✅ FIXED: All documents deletes now organization-scoped  
 // ✅ FIXED: Security guards prevent cross-tenant data access
 
+import { LRUCache } from '@/shared/utils/lruCache'
+
 export type ExpensePDF = DocumentWithDetails & {
   expenseId: string
 }
 
-// 🔄 GLOBAL CACHE: Shared across all hook instances for real-time sync
-let globalPdfsCache: Record<string, ExpensePDF[]> = {}
+// 🔄 GLOBAL CACHE: LRU Cache to prevent memory leaks (max 50 expense PDFs)
+const globalPdfsCache = new LRUCache<ExpensePDF[]>(50)
 const cacheSyncCallbacks = new Set<() => void>()
 
-function updateGlobalCache(newCache: Record<string, ExpensePDF[]>) {
-  globalPdfsCache = newCache
+function updateGlobalCache(expenseId: string, pdfs: ExpensePDF[]) {
+  globalPdfsCache.set(expenseId, pdfs)
   // Notify all hook instances about the cache change
   cacheSyncCallbacks.forEach(callback => callback())
 }
@@ -73,12 +75,13 @@ export function useExpensePDFs() {
   const loadExpensePDFs = useCallback(async (expenseId: string): Promise<ExpensePDF[]> => {
     // 🛡️ VALIDATION: Skip temporary IDs from optimistic updates
     if (expenseId.startsWith('temp-')) {
-      console.log('⏳ Skipping PDF load for temporary expense ID:', expenseId)
+      // console.log('⏳ Skipping PDF load for temporary expense ID:', expenseId)
       return []
     }
 
-    if (globalPdfsCache[expenseId]) {
-      return globalPdfsCache[expenseId]
+    const cached = globalPdfsCache.get(expenseId)
+    if (cached) {
+      return cached
     }
 
     try {
@@ -115,7 +118,7 @@ export function useExpensePDFs() {
         })
       )
 
-      updateGlobalCache({ ...globalPdfsCache, [expenseId]: enrichedPDFs })
+      updateGlobalCache(expenseId, enrichedPDFs)
       return enrichedPDFs
 
     } catch (err: any) {
@@ -133,7 +136,7 @@ export function useExpensePDFs() {
       return []
     }
     
-    return globalPdfsCache[expenseId] || []
+    return globalPdfsCache.get(expenseId) || []
   }, [localCacheVersion])
 
   const hasExpensePDFs = useCallback((expenseId: string): boolean => {
@@ -142,18 +145,18 @@ export function useExpensePDFs() {
       return false
     }
     
-    const cached = globalPdfsCache[expenseId]
+    const cached = globalPdfsCache.get(expenseId)
     return cached ? cached.length > 0 : false
   }, [localCacheVersion])
 
   const invalidateCache = useCallback((expenseId?: string) => {
     if (expenseId) {
-      const newCache = { ...globalPdfsCache }
-      delete newCache[expenseId]
-      updateGlobalCache(newCache)
+      globalPdfsCache.delete(expenseId)
     } else {
-      updateGlobalCache({})
+      globalPdfsCache.clear()
     }
+    // Notify all hook instances
+    cacheSyncCallbacks.forEach(callback => callback())
   }, [])
 
   const deleteExpensePDF = useCallback(async (documentId: string, expenseId: string) => {
@@ -181,7 +184,7 @@ export function useExpensePDFs() {
           .remove([docData.file_path])
 
         if (storageError) {
-          console.warn('Warnung: Datei konnte nicht aus Storage gelöscht werden:', storageError.message)
+          // console.warn('Warnung: Datei konnte nicht aus Storage gelöscht werden:', storageError.message)
         }
       }
 

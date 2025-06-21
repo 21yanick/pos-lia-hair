@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import type { 
   UnifiedTransaction, 
   TransactionSearchQuery, 
@@ -180,7 +180,7 @@ export function useUnifiedTransactions() {
       const { data, error: dbError } = await dbQuery
 
       if (dbError) {
-        console.error('❌ Fehler beim Laden der Transactions:', dbError)
+        // console.error('❌ Fehler beim Laden der Transactions:', dbError)
         throw dbError
       }
 
@@ -203,7 +203,7 @@ export function useUnifiedTransactions() {
 
     } catch (err: any) {
       const errorMessage = err.message || 'Fehler beim Laden der Transaktionen'
-      console.error('❌ useUnifiedTransactions Error:', err)
+      // console.error('❌ useUnifiedTransactions Error:', err)
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {

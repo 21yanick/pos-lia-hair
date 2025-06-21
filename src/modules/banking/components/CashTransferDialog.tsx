@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, ArrowUpToLine, ArrowDownToLine, AlertCircle } from "lucide-react"
 import { supabase } from "@/shared/lib/supabase/client"
 import { useCashBalance } from "@/shared/hooks/business/useCashBalance"
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 
 interface CashTransferDialogProps {
   isOpen: boolean
@@ -51,7 +51,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
       if (result.success) {
         setCashBalance(result.balance)
       } else {
-        console.error('Error fetching cash balance:', result.error)
+        // console.error('Error fetching cash balance:', result.error)
         setCashBalance(null)
       }
     } catch (err) {

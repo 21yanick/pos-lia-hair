@@ -20,7 +20,7 @@ import { Loader2, AlertCircle, DollarSign, CreditCard, Banknote } from 'lucide-r
 import { createOwnerTransaction, type OwnerTransactionInsert } from '../services/ownerTransactionsApi'
 import { supabase } from '@/shared/lib/supabase/client'
 import { getTodaySwissString } from '@/shared/utils/dateUtils'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 
 // =====================================================
 // COMPONENT INTERFACE
@@ -221,7 +221,7 @@ export function OwnerTransactionDialog({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
       setError(errorMessage)
-      console.error('Error creating owner transaction:', err)
+      // console.error('Error creating owner transaction:', err)
     } finally {
       setIsSubmitting(false)
     }

@@ -20,7 +20,7 @@ import {
 import { cn } from "@/shared/utils"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/shared/hooks/auth/useAuth"
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 
 const navItemsTemplate = [
   { name: "Dashboard", path: "/dashboard", icon: BarChart4 },

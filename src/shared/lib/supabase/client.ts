@@ -7,11 +7,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJ0eXAiOi
 
 // Runtime validation (development only)
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  console.log('🔍 Supabase Config:', {
-    url: supabaseUrl,
-    keyExists: !!supabaseAnonKey,
-    keyLength: supabaseAnonKey?.length
-  });
+  // console.log('🔍 Supabase Config:', {
+  //   url: supabaseUrl,
+  //   keyExists: !!supabaseAnonKey,
+  //   keyLength: supabaseAnonKey?.length
+  // });
 }
 
 export const supabase = createClient<Database>(

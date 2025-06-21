@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 
 export interface OrganizationStats {
   organizationUsersCount: number
@@ -34,19 +34,19 @@ export function useSystemStats() {
         throw new Error('Keine Organization ausgewählt.')
       }
 
-      console.log('Loading organization stats for:', currentOrganization.name)
+      // console.log('Loading organization stats for:', currentOrganization.name)
 
       // Check auth status first
       const { data: authData, error: authError } = await supabase.auth.getUser()
       if (authError) {
-        console.error('Auth error:', authError)
+        // console.error('Auth error:', authError)
         throw new Error('Authentifizierungsfehler: ' + authError.message)
       }
       if (!authData?.user) {
         throw new Error('Nicht angemeldet')
       }
 
-      console.log('User authenticated:', authData.user.email)
+      // console.log('User authenticated:', authData.user.email)
 
       // 🔒 SECURITY: Organization-scoped parallel queries
       const [orgUsersResult, itemsResult, salesResult, expensesResult] = await Promise.all([
@@ -73,28 +73,28 @@ export function useSystemStats() {
           .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
       ])
 
-      console.log('Organization Query results:', {
-        orgUsers: { count: orgUsersResult.count, error: orgUsersResult.error },
-        items: { count: itemsResult.count, error: itemsResult.error },
-        sales: { count: salesResult.count, error: salesResult.error },
-        expenses: { count: expensesResult.count, error: expensesResult.error }
-      })
+      // console.log('Organization Query results:', {
+      //   orgUsers: { count: orgUsersResult.count, error: orgUsersResult.error },
+      //   items: { count: itemsResult.count, error: itemsResult.error },
+      //   sales: { count: salesResult.count, error: salesResult.error },
+      //   expenses: { count: expensesResult.count, error: expensesResult.error }
+      // })
 
       // Check for errors (organization-scoped)
       if (orgUsersResult.error) {
-        console.error('Error fetching organization users count:', orgUsersResult.error)
+        // console.error('Error fetching organization users count:', orgUsersResult.error)
         throw orgUsersResult.error
       }
       if (itemsResult.error) {
-        console.error('Error fetching organization items count:', itemsResult.error)
+        // console.error('Error fetching organization items count:', itemsResult.error)
         throw itemsResult.error
       }
       if (salesResult.error) {
-        console.error('Error fetching organization sales count:', salesResult.error)
+        // console.error('Error fetching organization sales count:', salesResult.error)
         throw salesResult.error
       }
       if (expensesResult.error) {
-        console.error('Error fetching organization expenses count:', expensesResult.error)
+        // console.error('Error fetching organization expenses count:', expensesResult.error)
         throw expensesResult.error
       }
 
@@ -106,7 +106,7 @@ export function useSystemStats() {
         expensesCount: expensesResult.count || 0
       }
 
-      console.log('Final organization stats:', newStats)
+      // console.log('Final organization stats:', newStats)
       setStats(newStats)
 
     } catch (err: any) {

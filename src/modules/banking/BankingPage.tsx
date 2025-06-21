@@ -136,7 +136,7 @@ export function BankingPage() {
   const handleProviderImportSuccessLocal = async () => {
     // Refresh banking data to show new provider reports in Tab 1
     await handleProviderImportSuccess()
-    console.log('Banking data refreshed after provider import')
+    // console.log('Banking data refreshed after provider import')
   }
 
   // Owner Transaction handlers

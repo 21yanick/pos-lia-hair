@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { supabase } from '@/shared/lib/supabase/client'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 
@@ -96,14 +96,14 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       })
 
       if (error) {
-        console.error('Error loading cash balance:', error)
+        // console.error('Error loading cash balance:', error)
         throw new Error('Fehler beim Laden des Kassenstands')
       }
 
       const balance = data || 0
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('🟢 React Query: Cash balance loaded:', balance)
+        // console.log('🟢 React Query: Cash balance loaded:', balance)
       }
       
       return balance
@@ -143,7 +143,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
         .limit(50) // Latest 50 movements
 
       if (error) {
-        console.error('Error loading cash movements:', error)
+        // console.error('Error loading cash movements:', error)
         throw new Error('Fehler beim Laden der Kassenbewegungen')
       }
 
@@ -197,7 +197,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
         .single()
 
       if (error) {
-        console.error('Error creating cash movement:', error)
+        // console.error('Error creating cash movement:', error)
         throw new Error('Fehler beim Erstellen der Kassenbewegung')
       }
 
@@ -272,7 +272,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       toast.success(`${actionType} erfolgreich erstellt`)
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('🟢 React Query: Cash movement created:', data)
+        // console.log('🟢 React Query: Cash movement created:', data)
       }
     },
     onSettled: () => {

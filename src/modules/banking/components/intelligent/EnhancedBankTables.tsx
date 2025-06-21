@@ -141,12 +141,12 @@ export function EnhancedBankTables({
     const bankAmount = bankTransaction.amount
     const bankDate = new Date(bankTransaction.transaction_date)
     
-    console.log('🔍 Intelligent Banking Match Analysis:', {
-      id: bankTransactionId,
-      amount: bankAmount,
-      date: bankTransaction.transaction_date,
-      description: bankTransaction.description
-    })
+    // console.log('🔍 Intelligent Banking Match Analysis:', {
+    //   id: bankTransactionId,
+    //   amount: bankAmount,
+    //   date: bankTransaction.transaction_date,
+    //   description: bankTransaction.description
+    // })
     
     const potentialMatches: Array<{id: string, score: number, item: any, breakdown: any}> = []
 
@@ -162,23 +162,23 @@ export function EnhancedBankTables({
           breakdown: analysis
         })
         
-        console.log('💡 Intelligent Match Found:', {
-          item: {
-            id: item.id,
-            amount: item.amount,
-            date: item.date,
-            description: item.description,
-            type: item.item_type
-          },
-          scores: {
-            amount: analysis.scores.amountAccuracy,
-            date: analysis.scores.dateProximity,
-            description: analysis.scores.descriptionMatch,
-            final: analysis.finalScore
-          },
-          weights: analysis.weights,
-          calculation: analysis.calculation
-        })
+        // console.log('💡 Intelligent Match Found:', {
+        //   item: {
+        //     id: item.id,
+        //     amount: item.amount,
+        //     date: item.date,
+        //     description: item.description,
+        //     type: item.item_type
+        //   },
+        //   scores: {
+        //     amount: analysis.scores.amountAccuracy,
+        //     date: analysis.scores.dateProximity,
+        //     description: analysis.scores.descriptionMatch,
+        //     final: analysis.finalScore
+        //   },
+        //   weights: analysis.weights,
+        //   calculation: analysis.calculation
+        // })
       }
     })
     
@@ -187,13 +187,13 @@ export function EnhancedBankTables({
       .sort((a, b) => b.score - a.score)
       .slice(0, 3) // Top 3 matches
     
-    console.log('🎯 Top Intelligent Matches:', sortedMatches.map(m => ({
-      id: m.id,
-      finalScore: Math.round(m.score),
-      amount: m.item.amount,
-      description: m.item.description,
-      breakdown: `Amount:${m.breakdown.scores.amountAccuracy}% × Date:${m.breakdown.scores.dateProximity}% × Desc:${m.breakdown.scores.descriptionMatch}%`
-    })))
+    // console.log('🎯 Top Intelligent Matches:', sortedMatches.map(m => ({
+    //   id: m.id,
+    //   finalScore: Math.round(m.score),
+    //   amount: m.item.amount,
+    //   description: m.item.description,
+    //   breakdown: `Amount:${m.breakdown.scores.amountAccuracy}% × Date:${m.breakdown.scores.dateProximity}% × Desc:${m.breakdown.scores.descriptionMatch}%`
+    // })))
     
     // Create scores map
     const scores = new Map<string, number>()

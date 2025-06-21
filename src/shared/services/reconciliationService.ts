@@ -164,7 +164,7 @@ async function getProviderReconciliationData(startDate: string, endDate: string)
       .not('provider_report_id', 'is', null)
     
     if (matchedError) {
-      console.error('Error fetching matched sales:', matchedError)
+      // console.error('Error fetching matched sales:', matchedError)
       return {
         summary: { totalSales: 0, matchedSales: 0, unmatchedSales: 0, matchingRate: 0 },
         matches: [],
@@ -185,7 +185,7 @@ async function getProviderReconciliationData(startDate: string, endDate: string)
         .in('id', providerReportIds)
       
       if (reportsError) {
-        console.error('Error fetching provider reports:', reportsError)
+        // console.error('Error fetching provider reports:', reportsError)
       } else {
         providerReports = reports || []
       }
@@ -201,7 +201,7 @@ async function getProviderReconciliationData(startDate: string, endDate: string)
       .is('provider_report_id', null)
     
     if (unmatchedError) {
-      console.error('Error fetching unmatched sales:', unmatchedError)
+      // console.error('Error fetching unmatched sales:', unmatchedError)
       // Continue with empty array instead of throwing
     }
     
@@ -288,7 +288,7 @@ async function getBankReconciliationData(startDate: string, endDate: string) {
       .order('transaction_date', { ascending: false })
     
     if (allBankError) {
-      console.error('Error fetching all bank transactions:', allBankError)
+      // console.error('Error fetching all bank transactions:', allBankError)
       return {
         summary: { totalBankTransactions: 0, matchedTransactions: 0, unmatchedTransactions: 0, matchingRate: 0 },
         matches: [],
@@ -308,7 +308,7 @@ async function getBankReconciliationData(startDate: string, endDate: string) {
         .in('bank_transaction_id', bankTransactionIds)
 
       if (bankMatchError) {
-        console.error('Error fetching bank matches:', bankMatchError)
+        // console.error('Error fetching bank matches:', bankMatchError)
         // Continue with empty matches instead of failing
       } else {
         bankMatches = matchesData || []
@@ -748,7 +748,7 @@ async function getCashMovementsData(startDate: string, endDate: string): Promise
       .order('created_at', { ascending: true })
 
     if (error) {
-      console.error('Error loading cash movements:', error)
+      // console.error('Error loading cash movements:', error)
       return []
     }
 

@@ -19,7 +19,7 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import { ProfileAvatar } from './ProfileAvatar'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { useOrganizationSwitcher } from '@/shared/components/auth/OrganizationGuard'
 import type { OrganizationRole } from '@/shared/types/organizations'
 
@@ -53,10 +53,10 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
   }
 
   const handleOrganizationSwitch = async (orgId: string) => {
-    console.log('📺 PROFILE MENU - Organization switch requested:', orgId)
+    // console.log('📺 PROFILE MENU - Organization switch requested:', orgId)
     setIsOpen(false)
     await switchToOrganization(orgId)
-    console.log('📺 PROFILE MENU - Organization switch completed')
+    // console.log('📺 PROFILE MENU - Organization switch completed')
   }
 
   return (

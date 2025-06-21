@@ -36,7 +36,7 @@ export async function getBankAccounts(organizationId: string) {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching bank accounts:', error)
+    // console.error('Error fetching bank accounts:', error)
     return { data: [], error }
   }
 
@@ -66,7 +66,7 @@ export async function getUnmatchedSalesForProvider(organizationId: string) {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching unmatched sales:', error)
+    // console.error('Error fetching unmatched sales:', error)
     return { data: [], error }
   }
 
@@ -94,7 +94,7 @@ export async function getUnmatchedProviderReports(organizationId: string) {
     .order('transaction_date', { ascending: false })
 
   if (error) {
-    console.error('Error fetching unmatched provider reports:', error)
+    // console.error('Error fetching unmatched provider reports:', error)
     return { data: [], error }
   }
 
@@ -126,7 +126,7 @@ export async function getUnmatchedBankTransactions(organizationId: string) {
     .order('transaction_date', { ascending: false })
 
   if (error) {
-    console.error('Error fetching unmatched bank transactions:', error)
+    // console.error('Error fetching unmatched bank transactions:', error)
     return { data: [], error }
   }
 
@@ -151,7 +151,7 @@ export async function getAvailableForBankMatching(organizationId: string) {
     .order('date', { ascending: false })
 
   if (error) {
-    console.error('Error fetching available items for bank matching:', error)
+    // console.error('Error fetching available items for bank matching:', error)
     return { data: [], error }
   }
 

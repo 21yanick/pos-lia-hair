@@ -154,7 +154,7 @@ async function parseStatement(stmtElement: Element): Promise<CAMTStatement> {
       const entry = parseEntry(entryElement)
       entries.push(entry)
     } catch (error) {
-      console.warn(`Failed to parse entry: ${error}`)
+      // console.warn(`Failed to parse entry: ${error}`)
       // Continue with other entries
     }
   }

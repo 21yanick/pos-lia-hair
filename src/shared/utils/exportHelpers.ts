@@ -53,11 +53,11 @@ export async function exportMonthlyPDF(
     // Parallel loading von Business Settings und Reconciliation Data
     const [businessSettings, reconciliationData] = await Promise.all([
       getBusinessSettings().catch(err => {
-        console.warn('Failed to load business settings for PDF:', err)
+        // console.warn('Failed to load business settings for PDF:', err)
         return null
       }),
       getReconciliationData(selectedMonth).catch(err => {
-        console.warn('Failed to load reconciliation data for PDF:', err)
+        // console.warn('Failed to load reconciliation data for PDF:', err)
         return null
       })
     ])
@@ -94,7 +94,7 @@ export async function exportMonthlyPDF(
     
       
     if (uploadError) {
-      console.error('❌ Fehler beim Hochladen der Monthly PDF:', uploadError)
+      // console.error('❌ Fehler beim Hochladen der Monthly PDF:', uploadError)
         // Skip storage upload and database entry, go directly to download
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -135,7 +135,7 @@ export async function exportMonthlyPDF(
       .upsert(documentData)
     
     if (documentError) {
-      console.error('❌ Fehler beim Erstellen des Monthly Document-Eintrags:', documentError)
+      // console.error('❌ Fehler beim Erstellen des Monthly Document-Eintrags:', documentError)
       // Even if database entry fails, we can still open the uploaded file
       const { data: urlData } = supabase.storage
         .from('documents')
@@ -261,7 +261,7 @@ export async function exportMonthlyPDFWithReconciliation(
     
     // Nur Business Settings laden (reconciliationData bereits vorhanden)
     const businessSettings = await getBusinessSettings().catch(err => {
-      console.warn('Failed to load business settings for PDF:', err)
+      // console.warn('Failed to load business settings for PDF:', err)
       return null
     })
     
@@ -291,7 +291,7 @@ export async function exportMonthlyPDFWithReconciliation(
     
       
     if (uploadError) {
-      console.error('❌ Fehler beim Hochladen der Reconciliation PDF:', uploadError)
+      // console.error('❌ Fehler beim Hochladen der Reconciliation PDF:', uploadError)
       // Direct download fallback
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -331,7 +331,7 @@ export async function exportMonthlyPDFWithReconciliation(
       .upsert(documentData)
     
     if (documentError) {
-      console.error('❌ Fehler beim Erstellen des Document-Eintrags:', documentError)
+      // console.error('❌ Fehler beim Erstellen des Document-Eintrags:', documentError)
       // Still open the uploaded file
       const { data: urlData } = supabase.storage
         .from('documents')

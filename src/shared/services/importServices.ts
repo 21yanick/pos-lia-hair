@@ -444,7 +444,7 @@ export async function calculateDailySummariesForImport(
       .eq('report_date', date)
     
     if (updateError) {
-      console.warn(`Konnte Daily Summary Status nicht auf "closed" setzen für ${date}:`, updateError)
+      // console.warn(`Konnte Daily Summary Status nicht auf "closed" setzen für ${date}:`, updateError)
     }
     
     calculatedSummaries++
@@ -452,7 +452,7 @@ export async function calculateDailySummariesForImport(
   
   // Note: Expenses are imported separately and DO NOT create daily summaries
   // Expenses are tracked in monthly summaries and expense reports only
-  console.log(`✅ Daily Summaries erstellt: ${calculatedSummaries} (nur für Verkaufstage)`)
+  // console.log(`✅ Daily Summaries erstellt: ${calculatedSummaries} (nur für Verkaufstage)`)
   
   return calculatedSummaries
 }

@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 // ✅ GDPR-COMPLIANT: Local Inter Variable Font hosting
 import { ThemeProvider } from "@/shared/components/theme-provider"
 import { QueryProvider } from "@/shared/lib/react-query"
-import { OrganizationProvider } from "@/shared/contexts/OrganizationContext"
+import { OrganizationProvider } from "@/modules/organization"
 import { Toaster } from "@/shared/components/ui/sonner"
 import { inter } from "@/shared/styles/fonts"
 import "./globals.css"

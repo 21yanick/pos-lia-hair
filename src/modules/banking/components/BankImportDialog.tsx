@@ -25,7 +25,7 @@ import {
 import { previewCAMTFile, importCAMTFile } from '../services/camtImporter'
 import type { ImportPreviewData, ImportExecutionResult } from '../types/banking'
 import { formatDateForAPI } from '@/shared/utils/dateUtils'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 
 type ImportStep = 'upload' | 'preview' | 'confirm'
 

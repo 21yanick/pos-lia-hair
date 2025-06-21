@@ -24,7 +24,7 @@ import {
 } from '../services/bankingApi'
 import { getOwnerBalance, type OwnerBalance } from '../services/ownerTransactionsApi'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 
 // =====================================================
 // HOOK INTERFACE
@@ -145,7 +145,7 @@ export function useBankingData(): UseBankingDataReturn {
         throw new Error(`Accounts: ${accountsResult.error.message || 'Unknown error'}`)
       }
       if (ownerBalanceResult.error) {
-        console.warn('Owner Balance fetch failed:', ownerBalanceResult.error) // Non-critical, just warn
+        // console.warn('Owner Balance fetch failed:', ownerBalanceResult.error) // Non-critical, just warn
       }
 
       // Update state with proper null checks and type casting
@@ -174,7 +174,7 @@ export function useBankingData(): UseBankingDataReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error fetching banking data'
       setError(errorMessage)
-      console.error('Error fetching banking data:', err)
+      // console.error('Error fetching banking data:', err)
     } finally {
       setIsLoading(false)
     }
@@ -214,7 +214,7 @@ export function useBankingData(): UseBankingDataReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error creating match'
       setError(errorMessage)
-      console.error('Error creating provider match:', err)
+      // console.error('Error creating provider match:', err)
       return false
     }
   }
@@ -251,7 +251,7 @@ export function useBankingData(): UseBankingDataReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error creating match'
       setError(errorMessage)
-      console.error('Error creating bank match:', err)
+      // console.error('Error creating bank match:', err)
       return false
     }
   }

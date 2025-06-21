@@ -34,7 +34,7 @@ export function PageVisibilityHandler() {
     
     // Debounce to avoid multiple rapid calls
     debounceTimer.current = window.setTimeout(() => {
-      console.log('🔄 Tab refocused: Refreshing data queries...')
+      // console.log('🔄 Tab refocused: Refreshing data queries...')
       
       // 🎯 TARGETED INVALIDATION: Only invalidate data queries
       // Use actual query key patterns from queryKeys.ts

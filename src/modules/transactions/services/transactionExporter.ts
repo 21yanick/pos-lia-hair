@@ -258,6 +258,6 @@ export function exportTransactionsToExcel(
 ): void {
   // TODO: Implement Excel export with formatting
   // Für jetzt: Fallback zu CSV
-  console.warn('Excel Export noch nicht implementiert, verwende CSV Export')
+  // console.warn('Excel Export noch nicht implementiert, verwende CSV Export')
   exportTransactionsToCSV(transactions, filename?.replace('.xlsx', '.csv'))
 }

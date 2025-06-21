@@ -35,10 +35,10 @@ export function ConfirmationDialog({
 
   const handleDownloadPDF = () => {
     if (transactionResult?.receiptUrl) {
-      console.log('Opening PDF URL:', transactionResult.receiptUrl)
+      // console.log('Opening PDF URL:', transactionResult.receiptUrl)
       window.open(transactionResult.receiptUrl, '_blank')
     } else {
-      console.error('No receipt URL available:', transactionResult)
+      // console.error('No receipt URL available:', transactionResult)
       toast({
         title: "PDF nicht verfügbar",
         description: "Die Quittung konnte nicht erstellt werden.",

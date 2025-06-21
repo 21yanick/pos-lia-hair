@@ -60,7 +60,7 @@ export function ProductsPage() {
                               error?.includes('Forbidden');
     
     if (isPermissionError) {
-      console.log('Berechtigungsfehler erkannt, versuche Auth-Benutzer zu synchronisieren...');
+      // console.log('Berechtigungsfehler erkannt, versuche Auth-Benutzer zu synchronisieren...');
       
       // Wir öffnen schon vorher einen Dialog, um Benutzer zu informieren
       setSyncDialogOpen(true);

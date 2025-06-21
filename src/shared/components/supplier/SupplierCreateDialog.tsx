@@ -10,7 +10,7 @@ import { Textarea } from "@/shared/components/ui/textarea"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, AlertCircle } from "lucide-react"
 import { createSupplier } from '@/shared/services/supplierServices'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier, SupplierCategory, SupplierFormData } from '@/shared/types/suppliers'
 

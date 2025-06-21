@@ -53,7 +53,7 @@ export async function checkUserExists(userId: string): Promise<User | null> {
     .single()
   
   if (error && error.code !== 'PGRST116') { // PGRST116 = Not found
-    console.error('Error checking user existence:', error)
+    // console.error('Error checking user existence:', error)
     throw new Error('Fehler beim Prüfen der Benutzerdaten')
   }
   
@@ -78,7 +78,7 @@ export async function createUserFromAuth(authUser: any): Promise<User> {
     .single()
   
   if (error) {
-    console.error('Error creating user:', error)
+    // console.error('Error creating user:', error)
     throw new Error('Fehler beim Erstellen des Benutzers')
   }
   
@@ -95,7 +95,7 @@ export async function syncAuthUser(): Promise<SyncAuthUserResult> {
     const authUser = await getCurrentAuthUser()
     
     if (!authUser) {
-      console.error('No authenticated user found')
+      // console.error('No authenticated user found')
       return { 
         success: false, 
         error: 'Kein eingeloggter Benutzer gefunden' 
@@ -115,7 +115,7 @@ export async function syncAuthUser(): Promise<SyncAuthUserResult> {
     // Create new user if doesn't exist
     const newUser = await createUserFromAuth(authUser)
     
-    console.log('User successfully synchronized:', newUser.id)
+    // console.log('User successfully synchronized:', newUser.id)
     return { 
       success: true, 
       user: newUser 
@@ -189,7 +189,7 @@ export async function updateUserProfile(
       .single()
     
     if (error) {
-      console.error('Error updating user profile:', error)
+      // console.error('Error updating user profile:', error)
       throw error
     }
     
@@ -219,7 +219,7 @@ export async function getUserById(userId: string): Promise<User | null> {
       .single()
     
     if (error && error.code !== 'PGRST116') {
-      console.error('Error getting user by ID:', error)
+      // console.error('Error getting user by ID:', error)
       throw error
     }
     
@@ -259,7 +259,7 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
     const { error } = await supabase.auth.signOut()
     
     if (error) {
-      console.error('Error signing out:', error)
+      // console.error('Error signing out:', error)
       return { success: false, error: error.message }
     }
     

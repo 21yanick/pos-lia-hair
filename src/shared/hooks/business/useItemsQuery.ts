@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import {
   getItems,
@@ -72,7 +72,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
   const organizationId = currentOrganization?.id
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('🟢 Using React Query Items Hook')
+    // console.log('🟢 Using React Query Items Hook')
   }
 
   // ========================================
@@ -94,10 +94,10 @@ export function useItemsQuery(): UseItemsQueryReturn {
       try {
         const syncResult = await ensureUserExists(2)
         if (!syncResult.success) {
-          console.warn('User sync failed but continuing with items load:', syncResult.error)
+          // console.warn('User sync failed but continuing with items load:', syncResult.error)
         }
       } catch (syncError) {
-        console.warn('User sync error but continuing:', syncError)
+        // console.warn('User sync error but continuing:', syncError)
       }
 
       // Load items (this will throw if user doesn't have access)
@@ -189,7 +189,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
       toast.success('Artikel erfolgreich hinzugefügt')
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('🟢 React Query: Item created')
+        // console.log('🟢 React Query: Item created')
       }
     },
     onSettled: () => {

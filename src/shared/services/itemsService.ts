@@ -90,7 +90,7 @@ export async function getItems(organizationId: string): Promise<Item[]> {
     .order('name')
   
   if (error) {
-    console.error('Error loading items:', error)
+    // console.error('Error loading items:', error)
     throw new Error('Fehler beim Laden der Artikel')
   }
   
@@ -111,7 +111,7 @@ export async function getActiveItems(organizationId: string): Promise<Item[]> {
     .order('name')
   
   if (error) {
-    console.error('Error loading active items:', error)
+    // console.error('Error loading active items:', error)
     throw new Error('Fehler beim Laden der aktiven Artikel')
   }
   
@@ -133,7 +133,7 @@ export async function getFavoriteItems(organizationId: string): Promise<Item[]> 
     .order('name')
   
   if (error) {
-    console.error('Error loading favorite items:', error)
+    // console.error('Error loading favorite items:', error)
     throw new Error('Fehler beim Laden der Favoriten-Artikel')
   }
   
@@ -163,7 +163,7 @@ export async function searchItems(
   const { data, error } = await queryBuilder.order('name')
   
   if (error) {
-    console.error('Error searching items:', error)
+    // console.error('Error searching items:', error)
     throw new Error('Fehler bei der Artikel-Suche')
   }
   
@@ -197,7 +197,7 @@ export async function createItem(
       .single()
     
     if (error) {
-      console.error('Error creating item:', error)
+      // console.error('Error creating item:', error)
       throw error
     }
     
@@ -231,7 +231,7 @@ export async function updateItem(
       .single()
     
     if (error) {
-      console.error('Error updating item:', error)
+      // console.error('Error updating item:', error)
       throw error
     }
     
@@ -262,7 +262,7 @@ export async function deleteItem(
       .eq('organization_id', validOrgId) // Multi-tenant security
     
     if (error) {
-      console.error('Error deleting item:', error)
+      // console.error('Error deleting item:', error)
       throw error
     }
     
@@ -300,7 +300,7 @@ export async function toggleItemFavorite(
       .single()
     
     if (error) {
-      console.error('Error toggling favorite:', error)
+      // console.error('Error toggling favorite:', error)
       throw error
     }
     
@@ -334,7 +334,7 @@ export async function toggleItemActive(
       .single()
     
     if (error) {
-      console.error('Error toggling active status:', error)
+      // console.error('Error toggling active status:', error)
       throw error
     }
     
@@ -397,7 +397,7 @@ export async function getItemsCountByCategory(organizationId: string): Promise<R
     .eq('active', true)
   
   if (error) {
-    console.error('Error getting items count by category:', error)
+    // console.error('Error getting items count by category:', error)
     throw new Error('Fehler beim Laden der Kategorie-Statistiken')
   }
   

@@ -174,7 +174,7 @@ export async function getExpenses(organizationId: string, limit?: number): Promi
     const { data, error } = await query
 
     if (error) {
-      console.error('Error loading expenses:', error)
+      // console.error('Error loading expenses:', error)
       throw new Error(`Fehler beim Laden der Ausgaben: ${error.message}`)
     }
 
@@ -228,7 +228,7 @@ export async function getExpensesByDateRange(
       .order('payment_date', { ascending: false })
 
     if (error) {
-      console.error('Error loading expenses by date range:', error)
+      // console.error('Error loading expenses by date range:', error)
       throw new Error(`Fehler beim Laden der Ausgaben: ${error.message}`)
     }
 
@@ -285,7 +285,7 @@ export async function createExpense(
       .single()
 
     if (expenseError) {
-      console.error('Error creating expense:', expenseError)
+      // console.error('Error creating expense:', expenseError)
       throw new Error(`Fehler beim Erstellen der Ausgabe: ${expenseError.message}`)
     }
 
@@ -340,7 +340,7 @@ export async function updateExpense(
       .single()
 
     if (error) {
-      console.error('Error updating expense:', error)
+      // console.error('Error updating expense:', error)
       throw new Error(`Fehler beim Aktualisieren der Ausgabe: ${error.message}`)
     }
 
@@ -377,7 +377,7 @@ export async function deleteExpense(expenseId: string, organizationId: string): 
       .single()
 
     if (fetchError) {
-      console.error('Error fetching expense for deletion:', fetchError)
+      // console.error('Error fetching expense for deletion:', fetchError)
       throw new Error(`Ausgabe nicht gefunden: ${fetchError.message}`)
     }
 
@@ -389,7 +389,7 @@ export async function deleteExpense(expenseId: string, organizationId: string): 
       .eq('organization_id', validOrgId) // 🔒 Security: only own expenses
 
     if (deleteError) {
-      console.error('Error deleting expense:', deleteError)
+      // console.error('Error deleting expense:', deleteError)
       throw new Error(`Fehler beim Löschen der Ausgabe: ${deleteError.message}`)
     }
 
@@ -437,7 +437,7 @@ export async function uploadExpenseReceipt(
       .upload(filePath, file)
 
     if (uploadError) {
-      console.error('Error uploading file:', uploadError)
+      // console.error('Error uploading file:', uploadError)
       throw new Error(`Fehler beim Hochladen: ${uploadError.message}`)
     }
 
@@ -457,7 +457,7 @@ export async function uploadExpenseReceipt(
       .single()
 
     if (documentError) {
-      console.error('Error creating document record:', documentError)
+      // console.error('Error creating document record:', documentError)
       throw new Error(`Fehler beim Erstellen des Dokument-Eintrags: ${documentError.message}`)
     }
 
@@ -500,7 +500,7 @@ export async function replaceExpenseReceipt(
       .eq('organization_id', validOrgId) // 🔒 Security: Organization-scoped
 
     if (fetchError) {
-      console.error('Error fetching existing documents:', fetchError)
+      // console.error('Error fetching existing documents:', fetchError)
       throw new Error(`Fehler beim Laden vorhandener Dokumente: ${fetchError.message}`)
     }
 
@@ -513,7 +513,7 @@ export async function replaceExpenseReceipt(
             .remove([doc.file_path])
           
           if (storageError) {
-            console.warn('Warning: Could not delete old file:', storageError.message)
+            // console.warn('Warning: Could not delete old file:', storageError.message)
           }
         }
 
@@ -523,7 +523,7 @@ export async function replaceExpenseReceipt(
           .eq('id', doc.id)
 
         if (deleteError) {
-          console.warn('Warning: Could not delete old document record:', deleteError.message)
+          // console.warn('Warning: Could not delete old document record:', deleteError.message)
         }
       }
     }
@@ -538,7 +538,7 @@ export async function replaceExpenseReceipt(
       .upload(filePath, newFile)
 
     if (uploadError) {
-      console.error('Error uploading replacement file:', uploadError)
+      // console.error('Error uploading replacement file:', uploadError)
       throw new Error(`Fehler beim Hochladen: ${uploadError.message}`)
     }
 
@@ -562,7 +562,7 @@ export async function replaceExpenseReceipt(
       .single()
 
     if (documentError) {
-      console.error('Error creating new document record:', documentError)
+      // console.error('Error creating new document record:', documentError)
       throw new Error(`Fehler beim Erstellen des neuen Dokument-Eintrags: ${documentError.message}`)
     }
 
@@ -647,7 +647,7 @@ export async function generatePlaceholderReceipt(
       })
 
     if (uploadError) {
-      console.error('Error uploading placeholder PDF:', uploadError)
+      // console.error('Error uploading placeholder PDF:', uploadError)
       throw new Error(`Fehler beim Hochladen des PDFs: ${uploadError.message}`)
     }
 
@@ -667,7 +667,7 @@ export async function generatePlaceholderReceipt(
       .single()
 
     if (documentError) {
-      console.error('Error creating placeholder document record:', documentError)
+      // console.error('Error creating placeholder document record:', documentError)
       throw new Error(`Fehler beim Erstellen des Dokument-Eintrags: ${documentError.message}`)
     }
 

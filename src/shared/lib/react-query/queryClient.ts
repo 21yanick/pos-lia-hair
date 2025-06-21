@@ -181,17 +181,17 @@ if (process.env.NODE_ENV === 'development') {
   // Log query events
   queryClient.getQueryCache().subscribe((event) => {
     if (event.type === 'added') {
-      console.log('🔵 React Query: Query added:', event.query.queryKey)
+      // console.log('🔵 React Query: Query added:', event.query.queryKey)
     } else if (event.type === 'removed') {
-      console.log('🔴 React Query: Query removed:', event.query.queryKey)
+      // console.log('🔴 React Query: Query removed:', event.query.queryKey)
     } else if (event.type === 'updated') {
       const query = event.query
       if (query.state.status === 'loading') {
-        console.log('🟡 React Query: Query loading:', query.queryKey)
+        // console.log('🟡 React Query: Query loading:', query.queryKey)
       } else if (query.state.status === 'success') {
-        console.log('🟢 React Query: Query success:', query.queryKey)
+        // console.log('🟢 React Query: Query success:', query.queryKey)
       } else if (query.state.status === 'error') {
-        console.log('🔴 React Query: Query error:', query.queryKey, query.state.error)
+        // console.log('🔴 React Query: Query error:', query.queryKey, query.state.error)
       }
     }
   })

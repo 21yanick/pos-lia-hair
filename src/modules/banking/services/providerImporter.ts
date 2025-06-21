@@ -356,7 +356,7 @@ async function updateProviderImportSession(
     .eq('id', sessionId)
   
   if (error) {
-    console.error('Failed to update import session:', error)
+    // console.error('Failed to update import session:', error)
     // Don't throw - this is not critical for the import process
   }
 }

@@ -7,7 +7,7 @@ import Link from "next/link"
 import { Bell, Sun, Moon } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { ProfileMenu } from "@/shared/components/profile"
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 import { SidebarTrigger } from "@/shared/components/ui/sidebar"
 import { Separator } from "@/shared/components/ui/separator"
 

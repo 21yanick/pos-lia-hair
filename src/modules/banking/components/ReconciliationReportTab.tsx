@@ -111,7 +111,7 @@ export function ReconciliationReportTab() {
         .limit(10)
       
       if (error) {
-        console.error('Error loading generated reports:', error)
+        // console.error('Error loading generated reports:', error)
       } else {
         setGeneratedReports(documents || [])
       }
@@ -127,7 +127,7 @@ export function ReconciliationReportTab() {
         .createSignedUrl(document.file_path, 3600) // 1 hour
       
       if (error) {
-        console.error('Error creating signed URL:', error)
+        // console.error('Error creating signed URL:', error)
         setError('Fehler beim Öffnen des Berichts')
         return
       }

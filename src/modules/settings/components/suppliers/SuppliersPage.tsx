@@ -15,7 +15,7 @@ import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import { supabase } from "@/shared/lib/supabase/client"
 import type { Supplier, SupplierCategory } from '@/shared/types/suppliers'
 import Link from 'next/link'
-import { useOrganization } from "@/shared/contexts/OrganizationContext"
+import { useOrganization } from '@/modules/organization'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 
 interface SuppliersPageProps {

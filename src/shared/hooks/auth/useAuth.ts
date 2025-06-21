@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization, useOrganizationPermissions } from '@/modules/organization'
 import {
   User,
   AuthContextType,
@@ -19,10 +19,13 @@ export function useAuth(): AuthContextType {
   
   const {
     currentOrganization,
-    userRole,
-    hasPermission: orgHasPermission,
     loading: orgLoading,
   } = useOrganization()
+  
+  const {
+    userRole,
+    hasPermission: orgHasPermission,
+  } = useOrganizationPermissions()
 
   // Load current user
   const loadUser = useCallback(async () => {
@@ -42,7 +45,7 @@ export function useAuth(): AuthContextType {
         .single()
 
       if (dbError) {
-        console.error('Error loading user from database:', dbError)
+        // console.error('Error loading user from database:', dbError)
         // Fallback to auth user data
         setUser({
           id: authUser.id,
@@ -68,7 +71,7 @@ export function useAuth(): AuthContextType {
   // Sign out user
   const signOut = useCallback(async () => {
     try {
-      console.log('🚪 Starting logout process...')
+      // console.log('🚪 Starting logout process...')
       
       // Clear user state immediately for better UX
       setUser(null)
@@ -77,10 +80,10 @@ export function useAuth(): AuthContextType {
       const { error } = await supabase.auth.signOut()
       
       if (error) {
-        console.error('❌ Supabase logout error:', error)
+        // console.error('❌ Supabase logout error:', error)
         // Still continue with navigation even if logout partially failed
       } else {
-        console.log('✅ Supabase logout successful')
+        // console.log('✅ Supabase logout successful')
       }
       
       // Force navigation to login page (works better with org routes)
@@ -120,7 +123,7 @@ export function useAuth(): AuthContextType {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase, loadUser])
+  }, [loadUser])
 
   const isAuthenticated = !!user && !loading
 

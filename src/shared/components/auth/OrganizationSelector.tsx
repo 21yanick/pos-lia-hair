@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useOrganization } from '@/shared/contexts/OrganizationContext'
+import { useOrganization } from '@/modules/organization'
 import { useOrganizationSwitcher } from '@/shared/components/auth/OrganizationGuard'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
@@ -44,10 +44,10 @@ export function OrganizationSelector({
 
   const handleSwitchOrganization = async (organizationId: string) => {
     try {
-      console.log('📋 ORG SELECTOR - Switch requested:', organizationId)
+      // console.log('📋 ORG SELECTOR - Switch requested:', organizationId)
       setSwitching(organizationId)
       await switchToOrganization(organizationId)
-      console.log('📋 ORG SELECTOR - Switch completed')
+      // console.log('📋 ORG SELECTOR - Switch completed')
     } catch (err) {
       console.error('❌ ORG SELECTOR - Error switching organization:', err)
     } finally {
