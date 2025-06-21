@@ -189,13 +189,48 @@ export async function GET() {
 // 🖥️ SYSTEM HEALTH CHECKER
 async function checkSystemHealth(): Promise<SystemHealth> {
   const memoryUsage = process.memoryUsage()
-  const usedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024)
-  const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024)
+  
+  // 🔧 CONTAINER MEMORY (not just JS heap)
+  let totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024) // Fallback to heap
+  let usedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024)
+  
+  // Try to read container memory limits (Docker/Linux)
+  try {
+    const fs = await import('fs')
+    // Check cgroup v2 memory limit
+    try {
+      const memLimitBytes = await fs.promises.readFile('/sys/fs/cgroup/memory.max', 'utf8')
+      if (memLimitBytes.trim() !== 'max') {
+        const limitMB = Math.round(parseInt(memLimitBytes.trim()) / 1024 / 1024)
+        if (limitMB > 0 && limitMB < 10000) { // Reasonable limits (not system total)
+          totalMB = limitMB
+        }
+      }
+    } catch {
+      // Try cgroup v1 memory limit
+      try {
+        const memLimitBytes = await fs.promises.readFile('/sys/fs/cgroup/memory/memory.limit_in_bytes', 'utf8')
+        const limitMB = Math.round(parseInt(memLimitBytes.trim()) / 1024 / 1024)
+        if (limitMB > 0 && limitMB < 10000) { // Reasonable limits
+          totalMB = limitMB
+        }
+      } catch {
+        // Keep heap total as fallback
+      }
+    }
+    
+    // For used memory, use RSS (Resident Set Size) which includes all process memory
+    usedMB = Math.round(memoryUsage.rss / 1024 / 1024)
+    
+  } catch {
+    // Fallback to heap values if filesystem access fails
+  }
+  
   const percentage = Math.round((usedMB / totalMB) * 100)
   
-  // Memory thresholds
-  const memoryStatus = percentage > 90 ? 'critical' : 
-                      percentage > 75 ? 'warning' : 'healthy'
+  // Memory thresholds (more realistic for container memory)
+  const memoryStatus = percentage > 85 ? 'critical' : 
+                      percentage > 70 ? 'warning' : 'healthy'
 
   // Environment variables check
   const requiredVars = {
