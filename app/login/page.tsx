@@ -27,8 +27,6 @@ export default function LoginPage() {
     setError("")
     setIsLoading(true)
 
-    console.log('🔑 LOGIN START - Email:', email)
-
     try {
       // Echte Supabase-Authentifizierung
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -36,22 +34,17 @@ export default function LoginPage() {
         password,
       })
 
-      console.log('🔑 LOGIN RESPONSE - Success:', !!data.session, 'Error:', authError?.message)
-
       if (authError) {
-        console.log('❌ LOGIN ERROR:', authError.message)
         setError(authError.message || "Ungültiger Benutzername oder Passwort")
         return
       }
 
       if (data.session) {
-        console.log('✅ LOGIN SUCCESS - Redirecting to /organizations')
         setIsSuccess(true)
         
         // Simple redirect - Auth Guards will handle the rest
         router.push("/organizations")
       } else {
-        console.log('❌ LOGIN FAILED - No session returned')
         setError("Login fehlgeschlagen - keine Session")
       }
     } catch (err) {

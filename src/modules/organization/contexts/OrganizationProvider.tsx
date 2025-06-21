@@ -37,45 +37,29 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   
   // 🏢 ORGANIZATION LOGIC - Only runs if authenticated
   useEffect(() => {
-    console.log('🏢 ORG PROVIDER - State:', {
-      isAuthenticated,
-      authLoading,
-      isLoading,
-      membershipsCount: memberships?.length,
-      currentSlug,
-      pathname
-    })
-
     // Skip if auth is loading or user not authenticated
     if (authLoading || !isAuthenticated) {
-      console.log('🏢 ORG PROVIDER - Skipping (auth loading or not authenticated)')
       return
     }
     
     // Skip if organizations are loading
     if (isLoading) {
-      console.log('🏢 ORG PROVIDER - Loading organizations...')
       return
     }
     
     // Skip if error (Auth Guards will handle error states)
     if (error) {
-      console.log('🏢 ORG PROVIDER - Error loading organizations:', error.message)
       return
     }
     
     // Skip if no data
     if (!memberships) {
-      console.log('🏢 ORG PROVIDER - No memberships data')
       return
     }
-    
-    console.log('🏢 ORG PROVIDER - Processing org logic...')
     
     // Don't auto-navigate if user is already on create page
     // This prevents hot reload loops during development
     if (pathname === '/organizations/create') {
-      console.log('🏢 ORG PROVIDER - Already on create page, not redirecting')
       return
     }
     
@@ -84,10 +68,8 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       const membership = memberships.find(m => m.organization.slug === currentSlug)
       
       if (membership) {
-        console.log('🏢 ORG PROVIDER - Setting organization:', membership.organization.name)
         setOrganization(membership.organization, membership.role)
       } else {
-        console.log('🏢 ORG PROVIDER - Invalid slug, redirecting to selection')
         router.push('/organizations')
       }
       return
@@ -97,21 +79,14 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     if (pathname === '/') {
       // Only auto-redirect from root page
       if (memberships.length === 1) {
-        console.log('🏢 ORG PROVIDER - Single org, auto-navigating from root')
         navigateToOrganization(memberships[0].organization.slug)
       } else {
-        console.log('🏢 ORG PROVIDER - Multiple or no orgs, going to selection')
         router.push('/organizations')
       }
     } else if (pathname === '/organizations') {
       // On /organizations page, only auto-navigate if single org
       if (memberships.length === 1) {
-        console.log('🏢 ORG PROVIDER - Single org, auto-navigating from organizations to:', memberships[0].organization.slug)
         navigateToOrganization(memberships[0].organization.slug)
-      } else if (memberships.length === 0) {
-        console.log('🏢 ORG PROVIDER - No organizations, should show create option')
-      } else {
-        console.log('🏢 ORG PROVIDER - Multiple orgs, staying on selection page')
       }
       // For 0 or multiple orgs: stay on /organizations (let user choose)
     }
@@ -131,8 +106,6 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   // Handle auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      console.log('🏢 ORG PROVIDER - Auth state change:', event)
-      
       if (event === 'SIGNED_OUT') {
         clearOrganization()
       }

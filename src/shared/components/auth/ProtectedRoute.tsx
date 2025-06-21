@@ -34,10 +34,7 @@ export function ProtectedRoute({
   const router = useRouter()
 
   useEffect(() => {
-    console.log('🔒 PROTECTED ROUTE - Auth check:', { isAuthenticated, loading })
-    
     if (!loading && !isAuthenticated) {
-      console.log('🔒 PROTECTED ROUTE - User not authenticated, redirecting to:', redirectTo)
       router.push(redirectTo)
     }
   }, [isAuthenticated, loading, router, redirectTo])
@@ -56,7 +53,6 @@ export function ProtectedRoute({
 
   // Show content only if user IS authenticated
   if (isAuthenticated) {
-    console.log('🔒 PROTECTED ROUTE - User authenticated, showing content')
     return <>{children}</>
   }
 

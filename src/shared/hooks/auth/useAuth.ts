@@ -21,16 +21,12 @@ export function useAuth(): AuthContextType {
   // Load current user
   const loadUser = useCallback(async () => {
     try {
-      console.log('🔍 AUTH - Loading user...')
       const { data: { user: authUser }, error } = await supabase.auth.getUser()
       
       if (error || !authUser) {
-        console.log('🔍 AUTH - No auth user found:', error?.message || 'No user')
         setUser(null)
         return
       }
-
-      console.log('🔍 AUTH - Auth user found:', authUser.id, authUser.email)
 
       // Get user details from database
       const { data: dbUser, error: dbError } = await supabase
@@ -40,7 +36,6 @@ export function useAuth(): AuthContextType {
         .single()
 
       if (dbError) {
-        console.log('🔍 AUTH - DB user error, using fallback:', dbError.message)
         // Fallback to auth user data
         const fallbackUser = {
           id: authUser.id,
@@ -48,12 +43,9 @@ export function useAuth(): AuthContextType {
           name: authUser.user_metadata?.name,
           username: authUser.user_metadata?.username,
         }
-        console.log('🔍 AUTH - Setting fallback user:', fallbackUser)
         setUser(fallbackUser)
         return
       }
-
-      console.log('🔍 AUTH - Setting DB user:', dbUser)
       setUser({
         id: dbUser.id,
         email: dbUser.email,
@@ -97,18 +89,15 @@ export function useAuth(): AuthContextType {
   // Check if user has specific permission
   // NOTE: This is now a stub - permission checking should be done via useOrganizationPermissions
   const hasPermission = useCallback((permission: Permission): boolean => {
-    console.warn('🔍 AUTH - hasPermission is deprecated, use useOrganizationPermissions instead')
     return false
   }, [])
 
   // Initialize user on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('🔍 AUTH - Initializing auth...')
       setLoading(true)
       await loadUser()
       setLoading(false)
-      console.log('🔍 AUTH - Auth initialized')
     }
 
     initializeAuth()
@@ -116,36 +105,20 @@ export function useAuth(): AuthContextType {
 
   // Listen for auth state changes
   useEffect(() => {
-    console.log('🔍 AUTH - Setting up auth state change listener')
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔍 AUTH - State change event:', event, 'Session user:', session?.user?.email)
-      
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('🔍 AUTH - User signed in, reloading user data')
         await loadUser()
       } else if (event === 'SIGNED_OUT') {
-        console.log('🔍 AUTH - User signed out, clearing user')
         setUser(null)
       }
     })
 
     return () => {
-      console.log('🔍 AUTH - Cleaning up auth state change listener')
       subscription.unsubscribe()
     }
   }, [loadUser])
 
   const isAuthenticated = !!user && !loading
-
-  // Debug auth state
-  useEffect(() => {
-    console.log('🔍 AUTH - State update:', {
-      hasUser: !!user,
-      loading,
-      isAuthenticated,
-      userEmail: user?.email
-    })
-  }, [user, loading, isAuthenticated])
 
   return {
     user,
@@ -170,7 +143,6 @@ export function useAuthGuard() {
   }, [user, loading, router])
 
   const requireOrganization = useCallback(() => {
-    console.warn('🔍 AUTH GUARD - requireOrganization deprecated, use OrganizationRoute component instead')
     return true
   }, [])
 
@@ -186,8 +158,6 @@ export function useAuthGuard() {
 // Hook for permission-based rendering
 // NOTE: This hook is deprecated - use useOrganizationPermissions instead
 export function usePermissions() {
-  console.warn('🔍 PERMISSIONS - usePermissions is deprecated, use useOrganizationPermissions instead')
-  
   const can = useCallback((permission: Permission): boolean => {
     return false // Stub
   }, [])
@@ -222,7 +192,6 @@ export function useLegacyAuth() {
   }, [user])
 
   const getOrganizationId = useCallback(() => {
-    console.warn('🔍 LEGACY AUTH - getOrganizationId deprecated, use useOrganization instead')
     throw new Error('getOrganizationId is deprecated - use useOrganization hook instead')
   }, [])
 

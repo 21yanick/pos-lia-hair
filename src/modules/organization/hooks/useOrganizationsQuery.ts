@@ -9,17 +9,9 @@ export const ORGANIZATIONS_QUERY_KEY = ['organizations', 'user'] as const
 
 // Typsichere Funktion zum Laden der Organisationen
 async function fetchUserOrganizations(): Promise<OrganizationMembership[]> {
-  console.log('🔍 ORG QUERY - Fetching organizations...')
   const { data: userData, error: userError } = await supabase.auth.getUser()
   
-  console.log('🔍 ORG QUERY - Auth check:', {
-    hasUser: !!userData?.user,
-    userId: userData?.user?.id,
-    error: userError?.message
-  })
-  
   if (userError || !userData?.user) {
-    console.log('🔍 ORG QUERY - No user found, returning empty array')
     return []
   }
 
@@ -53,29 +45,18 @@ async function fetchUserOrganizations(): Promise<OrganizationMembership[]> {
     .order('joined_at', { ascending: true })
 
   if (error) {
-    console.log('🔍 ORG QUERY - Database error:', error.message)
     throw new Error(`Failed to load organizations: ${error.message}`)
   }
 
-  console.log('🔍 ORG QUERY - Database result:', {
-    count: data?.length || 0,
-    organizations: data?.map(m => m.organization?.name) || []
-  })
-
   // Type-sichere Transformation
-  const result = (data || []).map(membership => ({
+  return (data || []).map(membership => ({
     ...membership,
     organization: membership.organization as any // Supabase Typing Issue
   }))
-  
-  console.log('🔍 ORG QUERY - Final result:', result.length)
-  return result
 }
 
 // Hook mit optimalen React Query Settings
 export function useOrganizationsQuery(isAuthenticated?: boolean, authLoading?: boolean) {
-  console.log('🔍 ORG QUERY - Hook called:', { isAuthenticated, authLoading })
-  
   return useQuery({
     queryKey: ORGANIZATIONS_QUERY_KEY,
     queryFn: fetchUserOrganizations,

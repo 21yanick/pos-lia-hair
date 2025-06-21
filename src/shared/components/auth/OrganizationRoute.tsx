@@ -39,17 +39,8 @@ export function OrganizationRoute({
   const loading = authLoading || orgLoading
 
   useEffect(() => {
-    console.log('🏢 ORG ROUTE - Check:', { 
-      isAuthenticated, 
-      authLoading, 
-      orgLoading, 
-      slug,
-      orgsCount: userOrganizations?.length 
-    })
-    
     // Step 1: Check authentication first
     if (!authLoading && !isAuthenticated) {
-      console.log('🏢 ORG ROUTE - Not authenticated, redirecting to login')
       router.push('/login')
       return
     }
@@ -61,12 +52,9 @@ export function OrganizationRoute({
       )
       
       if (!hasAccess) {
-        console.log('🏢 ORG ROUTE - No access to org:', slug, 'redirecting to /organizations')
         router.push('/organizations')
         return
       }
-      
-      console.log('🏢 ORG ROUTE - Access granted to org:', slug)
     }
   }, [
     isAuthenticated, 
@@ -96,7 +84,6 @@ export function OrganizationRoute({
     )
     
     if (hasAccess) {
-      console.log('🏢 ORG ROUTE - Rendering org content for:', slug)
       return <>{children}</>
     }
   }

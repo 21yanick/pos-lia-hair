@@ -31,10 +31,7 @@ export function PublicRoute({
   const router = useRouter()
 
   useEffect(() => {
-    console.log('🔓 PUBLIC ROUTE - Auth check:', { isAuthenticated, loading })
-    
     if (!loading && isAuthenticated) {
-      console.log('🔓 PUBLIC ROUTE - User authenticated, redirecting to:', redirectTo)
       router.push(redirectTo)
     }
   }, [isAuthenticated, loading, router, redirectTo])
@@ -53,7 +50,6 @@ export function PublicRoute({
 
   // Show content only if user is NOT authenticated
   if (!isAuthenticated) {
-    console.log('🔓 PUBLIC ROUTE - User not authenticated, showing content')
     return <>{children}</>
   }
 
