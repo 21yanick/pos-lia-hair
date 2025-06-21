@@ -27,6 +27,19 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
+  // Authentication redirect logic: Non-authenticated users should go to login
+  if (!session) {
+    // Redirect to login for protected routes (root and organizations)
+    if (req.nextUrl.pathname === '/' || req.nextUrl.pathname === '/organizations') {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
+    
+    // Redirect to login for any org routes
+    if (req.nextUrl.pathname.startsWith('/org/')) {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
+  }
+
   // Multi-Tenant Architecture: Ensure users exist in database when accessing organization routes
   if (session && req.nextUrl.pathname.startsWith('/org/')) {
     try {
