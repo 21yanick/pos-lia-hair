@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 // ✅ GDPR-COMPLIANT: Local Inter Variable Font hosting
 import { ThemeProvider } from "@/shared/components/theme-provider"
 import { QueryProvider } from "@/shared/lib/react-query"
+import { OrganizationProvider } from "@/modules/organization"
 import { Toaster } from "@/shared/components/ui/sonner"
 import { inter } from "@/shared/styles/fonts"
 import "./globals.css"
@@ -13,8 +14,9 @@ export const metadata: Metadata = {
   generator: 'v0.dev'
 }
 
-// 🏗️ ARCHITECTURAL: Root Layout nur für globale Provider
-// OrganizationProvider wird in (app) Route Group eingebunden
+// 🏗️ CLIENT-SIDE AUTH ARCHITECTURE
+// OrganizationProvider läuft immer, aber macht nur Organization Logic
+// Auth Guards in Pages handhaben alle Auth Redirects
 export default function RootLayout({
   children,
 }: {
@@ -27,7 +29,9 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <QueryProvider>
-            {children}
+            <OrganizationProvider>
+              {children}
+            </OrganizationProvider>
             <Toaster />
           </QueryProvider>
         </ThemeProvider>

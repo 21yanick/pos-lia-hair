@@ -11,6 +11,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { supabase } from "@/shared/lib/supabase/client"
 import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
+import { PublicRoute } from "@/shared/components/auth"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -26,6 +27,8 @@ export default function LoginPage() {
     setError("")
     setIsLoading(true)
 
+    console.log('🔑 LOGIN START - Email:', email)
+
     try {
       // Echte Supabase-Authentifizierung
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -33,23 +36,26 @@ export default function LoginPage() {
         password,
       })
 
+      console.log('🔑 LOGIN RESPONSE - Success:', !!data.session, 'Error:', authError?.message)
+
       if (authError) {
+        console.log('❌ LOGIN ERROR:', authError.message)
         setError(authError.message || "Ungültiger Benutzername oder Passwort")
         return
       }
 
       if (data.session) {
+        console.log('✅ LOGIN SUCCESS - Redirecting to /organizations')
         setIsSuccess(true)
         
-        // Nach erfolgreichem Login: Redirect zu organizations
-        // OrganizationContext wird das intelligente Routing übernehmen
-        setTimeout(() => {
-          router.push("/organizations")
-          router.refresh()
-        }, 600)
+        // Simple redirect - Auth Guards will handle the rest
+        router.push("/organizations")
+      } else {
+        console.log('❌ LOGIN FAILED - No session returned')
+        setError("Login fehlgeschlagen - keine Session")
       }
     } catch (err) {
-      console.error("Login error:", err)
+      console.error("❌ LOGIN EXCEPTION:", err)
       setError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.")
     } finally {
       setIsLoading(false)
@@ -57,14 +63,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-background">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30 animate-gradient-shift" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,transparent_50%)] opacity-40" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--accent)_0%,transparent_50%)] opacity-30" />
-      
-      <Card className={`w-full max-w-md shadow-xl bg-card border-border/50 transition-all duration-600 hover:shadow-2xl transform-gpu relative z-10
-        ${isSuccess ? 'animate-card-flip scale-95 opacity-0' : 'animate-in fade-in-0 zoom-in-90'}`}>
+    <PublicRoute>
+      <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-background">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30 animate-gradient-shift" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,transparent_50%)] opacity-40" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--accent)_0%,transparent_50%)] opacity-30" />
+        
+        <Card className={`w-full max-w-md shadow-xl bg-card border-border/50 transition-all duration-600 hover:shadow-2xl transform-gpu relative z-10
+          ${isSuccess ? 'animate-card-flip scale-95 opacity-0' : 'animate-in fade-in-0 zoom-in-90'}`}>
         <CardHeader className="space-y-1 flex flex-col items-center pb-8">
           <div className="relative mb-6 transform transition-transform duration-300 hover:scale-105">
             <SmartAppLogo 
@@ -168,6 +175,7 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
+    </PublicRoute>
   )
 }
 

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
 import { supabase } from "@/shared/lib/supabase/client"
 import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
+import { PublicRoute } from "@/shared/components/auth"
 import Link from "next/link"
 
 export default function RegisterPage() {
@@ -243,7 +244,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-background">
+    <PublicRoute>
+      <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-background">
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30 animate-gradient-shift" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,transparent_50%)] opacity-40" />
@@ -548,5 +550,6 @@ export default function RegisterPage() {
         </form>
       </Card>
     </div>
+    </PublicRoute>
   )
 }

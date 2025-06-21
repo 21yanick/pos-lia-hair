@@ -67,7 +67,23 @@ export function OrganizationSelector({
     }
   }
 
-  if (loading || (userOrganizations.length === 1 && switching)) {
+  // Add debug logging for race condition investigation
+  console.log('📋 ORG SELECTOR - Render state:', {
+    loading,
+    userOrganizationsCount: userOrganizations.length,
+    switching,
+    organizations: userOrganizations.map(m => m.organization.name)
+  })
+
+  // Don't show loading skeleton if we have 1 org - let OrganizationProvider handle auto-redirect
+  if (loading && userOrganizations.length !== 1) {
+    console.log('📋 ORG SELECTOR - Showing loading skeleton (not single org)')
+    return <OrganizationSelectorSkeleton />
+  }
+  
+  // Show loading skeleton only when explicitly switching (clicking a card)
+  if (switching) {
+    console.log('📋 ORG SELECTOR - Showing loading skeleton (switching)')
     return <OrganizationSelectorSkeleton />
   }
 

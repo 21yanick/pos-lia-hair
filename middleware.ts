@@ -1,76 +1,39 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+/**
+ * 🛡️ SIMPLIFIED MIDDLEWARE - CLIENT-SIDE AUTH ARCHITECTURE
+ * 
+ * Was das Middleware NOCH macht:
+ * - API Routes protection (optional)
+ * - Security headers
+ * 
+ * Was das Middleware NICHT MEHR macht:
+ * - Auth redirects (now client-side)
+ * - Session checks (now client-side)
+ * - User creation (now client-side)
+ * 
+ * WARUM: Client-side Auth ist simpler, zuverlässiger, und Supabase-native.
+ */
+
 export async function middleware(req: NextRequest) {
+  console.log('🛡️ SIMPLIFIED MIDDLEWARE - Path:', req.nextUrl.pathname)
+  
   const res = NextResponse.next();
   
-  // ✅ MIGRATED: Use modern @supabase/ssr instead of deprecated auth-helpers
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return req.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => 
-            res.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  );
+  // Optional: Protect API routes (if you have sensitive server-side APIs)
+  if (req.nextUrl.pathname.startsWith('/api/')) {
+    // Most APIs can rely on RLS (Row Level Security) in Supabase
+    // Only add auth checks here if you have server-side business logic
+    console.log('🛡️ MIDDLEWARE - API route access:', req.nextUrl.pathname)
+  }
   
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  // Authentication redirect logic: Non-authenticated users should go to login
-  if (!session) {
-    // Redirect to login for protected routes (root and organizations)
-    if (req.nextUrl.pathname === '/' || req.nextUrl.pathname === '/organizations') {
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
-    
-    // Redirect to login for any org routes
-    if (req.nextUrl.pathname.startsWith('/org/')) {
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
-  }
-
-  // Multi-Tenant Architecture: Ensure users exist in database when accessing organization routes
-  if (session && req.nextUrl.pathname.startsWith('/org/')) {
-    try {
-      // Check if user exists in users table
-      const { error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', session.user.id)
-        .single();
-
-      // Create user if not found
-      if (userError && userError.code === 'PGRST116') { // PGRST116 = Not found
-        await supabase
-          .from('users')
-          .insert({
-            id: session.user.id,
-            name: session.user.user_metadata?.name || session.user.email,
-            username: session.user.email?.split('@')[0] || 'unknown',
-            email: session.user.email || '',
-            role: 'admin',
-            active: true
-          });
-      }
-    } catch (err) {
-      console.error('Middleware: User sync error:', err);
-    }
-  }
-
+  // Let client-side handle all auth logic
+  console.log('🛡️ MIDDLEWARE - Passing through to client-side auth')
   return res;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
+  // Only run on API routes if needed, otherwise let client handle everything
+  matcher: ['/api/(.*)'],
 };

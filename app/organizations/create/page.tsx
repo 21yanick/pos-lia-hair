@@ -2,11 +2,13 @@
 
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { ProtectedRoute } from '@/shared/components/auth'
 import { ArrowLeft, Building2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function CreateOrganizationPage() {
   return (
+    <ProtectedRoute>
     <div className="container mx-auto max-w-2xl p-6">
       <div className="mb-6">
         <Link href="/organizations">
@@ -58,5 +60,6 @@ export default function CreateOrganizationPage() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoute>
   )
 }

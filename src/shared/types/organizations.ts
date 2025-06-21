@@ -187,14 +187,12 @@ export interface User {
 
 export interface AuthContextType {
   user: User | null
-  currentOrganization: Organization | null
-  userRole: OrganizationRole | null
   loading: boolean
   isAuthenticated: boolean
   
   // Actions
   signOut: () => Promise<void>
-  hasPermission: (permission: Permission) => boolean
+  hasPermission: (permission: Permission) => boolean // Deprecated - use useOrganizationPermissions
 }
 
 // Default Organization Settings

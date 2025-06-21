@@ -1,5 +1,5 @@
 import type React from "react"
-import { OrganizationGuard } from "@/shared/components/auth/OrganizationGuard"
+import { OrganizationRoute } from "@/shared/components/auth"
 import { AppSidebar } from "@/shared/components/layout/app-sidebar"
 import { Header } from "@/shared/components/layout/header"
 import { SidebarAutoClose } from "@/shared/components/layout/sidebar-auto-close"
@@ -17,7 +17,7 @@ export default async function OrganizationLayout({
   const { slug } = await params
   
   return (
-    <OrganizationGuard slug={slug} requireOrganization={true}>
+    <OrganizationRoute>
       <SidebarProvider>
         <SidebarAutoClose />
         <AppSidebar />
@@ -28,6 +28,6 @@ export default async function OrganizationLayout({
           </div>
         </SidebarInset>
       </SidebarProvider>
-    </OrganizationGuard>
+    </OrganizationRoute>
   )
 }

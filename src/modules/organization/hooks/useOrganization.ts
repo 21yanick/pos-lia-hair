@@ -3,6 +3,7 @@
 import { useOrganizationStore } from './useOrganizationStore'
 import { useOrganizationsQuery, useRefreshOrganizations } from './useOrganizationsQuery'
 import { organizationService } from '../services/organizationService'
+import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { 
   CreateOrganizationData, 
   UpdateOrganizationData, 
@@ -13,7 +14,8 @@ import {
 // Macht die Migration einfacher - kann später entfernt werden
 export function useOrganization() {
   const { currentOrganization, userRole } = useOrganizationStore()
-  const { data: memberships = [], isLoading, error } = useOrganizationsQuery()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const { data: memberships = [], isLoading, error } = useOrganizationsQuery(isAuthenticated, authLoading)
   const refreshOrganizations = useRefreshOrganizations()
   
   // Wrapper Funktionen die nach dem Service Call refreshen
