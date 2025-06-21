@@ -64,7 +64,7 @@ ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 # Health check optimized for Coolify
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=100s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
 CMD ["node", "server.js"]
