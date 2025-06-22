@@ -4,8 +4,6 @@ import React, { useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { useOrganization } from '@/modules/organization'
-import { debugLogger } from '@/shared/utils/debugLogger'
-import { remoteDebugger } from '@/shared/utils/remoteDebug'
 
 interface OrganizationRouteProps {
   children: React.ReactNode
@@ -47,15 +45,6 @@ export function OrganizationRoute({
   
   // Debug state changes
   React.useEffect(() => {
-    debugLogger.trackState('OrganizationRoute', {
-      isAuthenticated,
-      authLoading,
-      orgLoading,
-      userOrganizationsCount: userOrganizations?.length,
-      currentOrganization: currentOrganization?.slug,
-      slug,
-      loading
-    })
   }, [isAuthenticated, authLoading, orgLoading, userOrganizations, currentOrganization, slug, loading])
 
   useEffect(() => {
@@ -93,9 +82,7 @@ export function OrganizationRoute({
       userOrganizations: !!userOrganizations,
       reason: authLoading ? 'auth' : (orgLoading && !userOrganizations ? 'org' : 'unknown')
     }
-    debugLogger.log('OrganizationRoute', 'SHOW_LOADING', loadingInfo)
-    remoteDebugger.log('OrganizationRoute', 'LOADING_SCREEN', loadingInfo)
-    
+  
     return fallback || (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -114,32 +101,17 @@ export function OrganizationRoute({
     const hasAccess = userOrganizations.some(
       membership => membership.organization.slug === slug
     )
-    
-    debugLogger.log('OrganizationRoute', 'ACCESS_CHECK', {
-      hasAccess,
-      slug,
-      currentOrgSlug: currentOrganization?.slug
-    })
-    
+      
     // If user has access and either:
     // - Organization is already set correctly
     // - Organization is being set (provider will handle it)
     if (hasAccess) {
       if (currentOrganization?.slug === slug || !currentOrganization) {
-        debugLogger.log('OrganizationRoute', 'RENDER_CHILDREN', {
-          currentOrgSlug: currentOrganization?.slug,
-          slug
-        })
         return <>{children}</>
       }
     }
   }
 
   // Will redirect via useEffect
-  debugLogger.log('OrganizationRoute', 'RENDER_NULL', {
-    isAuthenticated,
-    userOrganizations: !!userOrganizations,
-    slug
-  })
   return null
 }

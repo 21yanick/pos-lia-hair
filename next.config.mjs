@@ -22,6 +22,19 @@ const nextConfig = {
       'recharts'
     ],
   },
+  
+  // ✅ PDF VIEWER: Fix canvas node bindings for @react-pdf-viewer
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: false,
+        encoding: false,
+        'pdf-lib': false,
+      }
+    }
+    return config
+  },
   // ✅ PERFORMANCE: Enable built-in bundle optimization
   compress: true,
   poweredByHeader: false,
