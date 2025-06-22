@@ -62,15 +62,15 @@ export function DateRangePicker({
             size="sm"
             disabled={disabled}
             className={cn(
-              "justify-start text-left font-normal text-xs",
+              "justify-start text-left font-normal text-xs w-full max-w-full overflow-hidden",
               !dateRange && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {formatDisplayText()}
+            <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="truncate flex-1 min-w-0">{formatDisplayText()}</span>
             {dateRange?.from && (
               <X 
-                className="ml-auto h-4 w-4 hover:text-destructive" 
+                className="ml-2 h-4 w-4 hover:text-destructive flex-shrink-0" 
                 onClick={clearDateRange}
               />
             )}

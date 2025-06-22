@@ -165,55 +165,63 @@ export function BankingPage() {
   }, [])
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Banking</h1>
-        </div>
-        
-        {/* Action Buttons - Responsive Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-2 w-full lg:w-auto">
-          {/* Cash Transfer Buttons */}
+    <div className="container mx-auto p-4 sm:p-6 space-y-6">
+      {/* Header - Mobile Centered */}
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl font-bold">Banking</h1>
+      </div>
+      
+      {/* Action Buttons - Separated from Header */}
+      <div className="w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto lg:max-w-none lg:mx-0">
+          {/* Bank Transfer Buttons */}
           <Button
             onClick={() => openCashTransferDialog('to_bank')}
             variant="outline"
-            size="sm"
-            className="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground whitespace-nowrap"
+            className="h-14 sm:h-12 flex items-center justify-center gap-3 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground px-4 py-3 transition-all active:scale-95 group"
           >
-            <ArrowUpToLine className="h-4 w-4" />
-            <span className="hidden sm:inline">Geld in Bank einzahlen</span>
-            <span className="sm:hidden">Einzahlen</span>
+            <ArrowUpToLine className="h-5 w-5 flex-shrink-0 group-hover:animate-pulse" />
+            <div className="text-center sm:text-left">
+              <div className="text-sm font-semibold">Bank Einzahlung</div>
+              <div className="text-xs opacity-75">Geld in Bank einzahlen</div>
+            </div>
           </Button>
+          
           <Button
             onClick={() => openCashTransferDialog('from_bank')}
             variant="outline"
-            size="sm"
-            className="flex items-center gap-2 text-chart-3 border-chart-3 hover:bg-chart-3 hover:text-background whitespace-nowrap"
+            className="h-14 sm:h-12 flex items-center justify-center gap-3 text-chart-3 border-chart-3 hover:bg-chart-3 hover:text-background px-4 py-3 transition-all active:scale-95 group"
           >
-            <ArrowDownToLine className="h-4 w-4" />
-            <span className="hidden sm:inline">Geld von Bank abheben</span>
-            <span className="sm:hidden">Abheben</span>
+            <ArrowDownToLine className="h-5 w-5 flex-shrink-0 group-hover:animate-pulse" />
+            <div className="text-center sm:text-left">
+              <div className="text-sm font-semibold">Bank Abhebung</div>
+              <div className="text-xs opacity-75">Geld von Bank abheben</div>
+            </div>
           </Button>
           
           {/* Owner Transaction Buttons */}
           <Button 
             onClick={() => openOwnerTransactionDialog('deposit')}
             variant="outline"
-            size="sm"
-            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground whitespace-nowrap"
+            className="h-14 sm:h-12 flex items-center justify-center gap-3 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-4 py-3 transition-all active:scale-95 group"
           >
-            💰 <span className="hidden sm:inline">Geld ins Geschäft einzahlen</span>
-            <span className="sm:hidden">Geschäft +</span>
+            <span className="text-xl group-hover:animate-bounce">💰</span>
+            <div className="text-center sm:text-left">
+              <div className="text-sm font-semibold">Geschäft Einzahlung</div>
+              <div className="text-xs opacity-75">Geld ins Geschäft</div>
+            </div>
           </Button>
+          
           <Button 
             onClick={() => openOwnerTransactionDialog('withdrawal')}
             variant="outline"
-            size="sm"
-            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground whitespace-nowrap"
+            className="h-14 sm:h-12 flex items-center justify-center gap-3 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground px-4 py-3 transition-all active:scale-95 group"
           >
-            💸 <span className="hidden sm:inline">Geld aus Geschäft entnehmen</span>
-            <span className="sm:hidden">Geschäft -</span>
+            <span className="text-xl group-hover:animate-bounce">💸</span>
+            <div className="text-center sm:text-left">
+              <div className="text-sm font-semibold">Geschäft Entnahme</div>
+              <div className="text-xs opacity-75">Geld aus Geschäft</div>
+            </div>
           </Button>
         </div>
       </div>
@@ -319,20 +327,23 @@ export function BankingPage() {
         </Card>
       </div>
 
-      {/* Three-Tab System */}
+      {/* Three-Tab System - Mobile Optimized */}
       <Tabs defaultValue="provider" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="provider">
-            <CreditCard className="h-4 w-4 mr-2" />
-            Provider-Gebühren
+        <TabsList className="grid w-full grid-cols-3 h-12 sm:h-10">
+          <TabsTrigger value="provider" className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm">
+            <CreditCard className="h-4 w-4 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Provider-Gebühren</span>
+            <span className="sm:hidden font-medium">Provider</span>
           </TabsTrigger>
-          <TabsTrigger value="bank">
-            <Building2 className="h-4 w-4 mr-2" />
-            Bank-Abgleich
+          <TabsTrigger value="bank" className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm">
+            <Building2 className="h-4 w-4 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Bank-Abgleich</span>
+            <span className="sm:hidden font-medium">Bank</span>
           </TabsTrigger>
-          <TabsTrigger value="report">
-            <FileBarChart className="h-4 w-4 mr-2" />
-            Abgleich-Bericht
+          <TabsTrigger value="report" className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm">
+            <FileBarChart className="h-4 w-4 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Abgleich-Bericht</span>
+            <span className="sm:hidden font-medium">Bericht</span>
           </TabsTrigger>
         </TabsList>
 

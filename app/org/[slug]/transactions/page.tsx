@@ -1,7 +1,7 @@
-import CleanTransactionPage from '@/src/modules/transactions/components/CleanTransactionPage'
+import TransactionPage from '@/src/modules/transactions/components/TransactionPage'
 
 export default function TransactionsPage() {
-  return <CleanTransactionPage />
+  return <TransactionPage />
 }
 
 export const metadata = {

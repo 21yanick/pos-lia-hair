@@ -73,8 +73,8 @@ const QuickFilters = ({
   // Zeit-Filter (nur einer aktiv)
   const dateFilters = [
     { preset: 'today' as QuickFilterPreset, label: 'Heute' },
-    { preset: 'this_week' as QuickFilterPreset, label: 'Diese Woche' },
-    { preset: 'this_month' as QuickFilterPreset, label: 'Dieser Monat' },
+    { preset: 'this_week' as QuickFilterPreset, label: 'Woche' },
+    { preset: 'this_month' as QuickFilterPreset, label: 'Monat' },
   ]
 
   // Typ-Filter (kombinierbar)
@@ -124,9 +124,9 @@ const QuickFilters = ({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-4 overflow-hidden">
       {/* Zeit-Filter Gruppe */}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 justify-center sm:justify-start min-w-0">
         {dateFilters.map(({ preset, label }) => (
           <Button
             key={preset}
@@ -138,18 +138,21 @@ const QuickFilters = ({
             {label}
           </Button>
         ))}
-        <DateRangePicker
-          dateRange={dateRange}
-          onDateRangeChange={onDateRangeChange}
-          placeholder="Zeitraum"
-        />
+        <div className="w-full sm:w-auto max-w-[200px]">
+          <DateRangePicker
+            dateRange={dateRange}
+            onDateRangeChange={onDateRangeChange}
+            placeholder="Zeitraum"
+            className="w-full"
+          />
+        </div>
       </div>
       
-      {/* Trennlinie */}
-      <div className="h-6 w-px bg-border" />
+      {/* Trennlinie - nur auf Desktop */}
+      <div className="hidden sm:block h-6 w-px bg-border" />
       
       {/* Typ-Filter Gruppe */}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 justify-center sm:justify-start min-w-0">
         {typeFilters.map(({ preset, label }) => (
           <Button
             key={preset}
@@ -163,11 +166,11 @@ const QuickFilters = ({
         ))}
       </div>
       
-      {/* Trennlinie */}
-      <div className="h-6 w-px bg-border" />
+      {/* Trennlinie - nur auf Desktop */}
+      <div className="hidden sm:block h-6 w-px bg-border" />
       
       {/* Status-Filter Gruppe */}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 justify-center sm:justify-start min-w-0">
         {statusFilters.map(({ preset, label }) => (
           <Button
             key={preset}
@@ -430,8 +433,8 @@ const getTypeCode = (transactionType: string): string => {
   }
 }
 
-// Main Clean Transaction Page Component
-export default function CleanTransactionPage() {
+// Main Transaction Page Component
+export default function TransactionPage() {
   // State
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([])
@@ -559,13 +562,13 @@ export default function CleanTransactionPage() {
     dateRange
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-4 py-6 sm:px-6 space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Transaction Center</h1>
-          <p className="text-muted-foreground">
-            Übersicht und Verwaltung aller Transaktionen
+          <h1 className="text-2xl sm:text-3xl font-bold">Transaktionen</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Übersicht und Verwaltung
           </p>
         </div>
         
@@ -575,23 +578,26 @@ export default function CleanTransactionPage() {
             size="sm" 
             onClick={loadAllTransactions}
             disabled={loading}
+            className="flex-1 sm:flex-none"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Aktualisieren
+            <span className="hidden sm:inline">Aktualisieren</span>
+            <span className="sm:hidden">Refresh</span>
           </Button>
           
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
             <Download className="w-4 h-4 mr-2" />
-            Export
+            <span className="hidden sm:inline">Export</span>
+            <span className="sm:hidden">CSV</span>
           </Button>
         </div>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-full overflow-hidden">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Transaktionen</CardTitle>
+            <CardTitle className="text-sm font-medium truncate">Total Transaktionen</CardTitle>
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -623,34 +629,34 @@ export default function CleanTransactionPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.withPdf}</div>
             <p className="text-xs text-muted-foreground">
-              von {stats.pdfStats.totalRequired} erforderlich
+              von {stats.pdfStats.totalRequired} nötig
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unabgeglichen</CardTitle>
+            <CardTitle className="text-sm font-medium truncate">Unabgeglichen</CardTitle>
             <Clock className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.byStatus.unmatched}</div>
             <p className="text-xs text-muted-foreground">
-              Banking ausstehend
+              Banking offen
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Search and Filters */}
-      <Card>
-        <CardContent className="p-6 space-y-4">
+      <Card className="overflow-hidden">
+        <CardContent className="p-6 space-y-4 overflow-hidden">
           {/* Search Bar */}
-          <div className="flex items-center gap-2">
+          <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Suche nach Belegnummer (VK2025000082) oder Beschreibung (Haarschnitt)..."
+                placeholder="VK2025000082 oder Beschreibung suchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -661,7 +667,7 @@ export default function CleanTransactionPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleClearAllFilters}
-                className="text-xs"
+                className="text-xs w-full sm:w-auto"
               >
                 Alle Filter löschen
               </Button>
@@ -717,8 +723,8 @@ export default function CleanTransactionPage() {
             </div>
           ) : (
             <>
-              {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
+              {/* Desktop Table View - nur auf sehr großen Bildschirmen */}
+              <div className="hidden xl:block overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
@@ -934,8 +940,8 @@ export default function CleanTransactionPage() {
               </table>
             </div>
 
-            {/* Mobile Card View */}
-            <div className="lg:hidden space-y-3">
+            {/* Mobile Card View - alle Bildschirme unter xl */}
+            <div className="xl:hidden space-y-3">
               {transactions.map((transaction) => (
                 <div key={transaction.id} className="border border-border rounded-lg p-4 space-y-3">
                   {/* Header Row */}

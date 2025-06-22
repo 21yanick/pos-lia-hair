@@ -232,21 +232,22 @@ export function ExpensesPage() {
   const stats = calculateExpenseStats()
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 py-6 sm:px-6 space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="space-y-4 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ausgaben</h1>
-          <p className="text-muted-foreground">
-            Verwalten Sie Ihre Geschäftsausgaben und Lieferantenrechnungen
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ausgaben</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Geschäftsausgaben verwalten
           </p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              Neue Ausgabe
+              <span className="hidden sm:inline">Neue Ausgabe</span>
+              <span className="sm:hidden">Hinzufügen</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
@@ -456,10 +457,10 @@ export function ExpensesPage() {
       </div>
 
       {/* Statistiken */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full max-w-full overflow-hidden">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gesamtausgaben</CardTitle>
+            <CardTitle className="text-sm font-medium truncate">Gesamtausgaben</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">CHF {stats.totalAmount.toFixed(2)}</div>
@@ -479,7 +480,7 @@ export function ExpensesPage() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Überweisungen</CardTitle>
+            <CardTitle className="text-sm font-medium truncate">Überweisungen</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">CHF {stats.totalBank.toFixed(2)}</div>
@@ -489,7 +490,7 @@ export function ExpensesPage() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Größte Kategorie</CardTitle>
+            <CardTitle className="text-sm font-medium truncate">Größte Kategorie</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -506,24 +507,24 @@ export function ExpensesPage() {
       </div>
 
       {/* Filter */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Filter</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4" />
+        <CardContent className="overflow-hidden">
+          <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4">
+            <div className="flex items-center space-x-2 flex-1 sm:flex-none sm:min-w-0">
+              <Search className="h-4 w-4 flex-shrink-0" />
               <Input
                 placeholder="Suchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64"
+                className="w-full sm:w-64 min-w-0"
               />
             </div>
             
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Alle Kategorien" />
               </SelectTrigger>
               <SelectContent>
@@ -535,7 +536,7 @@ export function ExpensesPage() {
             </Select>
             
             <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Alle Zahlungsarten" />
               </SelectTrigger>
               <SelectContent>
@@ -549,11 +550,11 @@ export function ExpensesPage() {
       </Card>
 
       {/* Ausgaben Liste */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Ausgaben</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-hidden">
           {loading ? (
             <div className="text-center py-4">Lade Ausgaben...</div>
           ) : filteredExpenses.length === 0 ? (
@@ -561,80 +562,88 @@ export function ExpensesPage() {
               Keine Ausgaben gefunden
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 w-full max-w-full overflow-hidden">
               {filteredExpenses.map((expense) => (
-                <div key={expense.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1 flex-1">
-                      <h3 className="font-medium">{expense.description}</h3>
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <Badge variant="outline">
+                <div key={expense.id} className="border rounded-lg p-4 w-full max-w-full overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 w-full max-w-full overflow-hidden">
+                    <div className="space-y-2 flex-1 min-w-0 max-w-full overflow-hidden">
+                      <h3 className="font-medium text-base leading-tight break-words" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
+                        {expense.description}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground max-w-full overflow-hidden">
+                        <Badge variant="outline" className="text-xs truncate max-w-32 flex-shrink-0">
                           {EXPENSE_CATEGORIES[expense.category as ExpenseCategory]}
                         </Badge>
-                        <Badge variant={expense.payment_method === 'cash' ? 'default' : 'secondary'}>
+                        <Badge variant={expense.payment_method === 'cash' ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
                           {expense.payment_method === 'cash' ? 'Bar' : 'Bank'}
                         </Badge>
-                        <span>{formatDateForDisplay(expense.payment_date)}</span>
+                        <span className="text-xs flex-shrink-0">{formatDateForDisplay(expense.payment_date)}</span>
                       </div>
                       {/* Supplier Display - prioritize supplier relation over supplier_name */}
                       {expense.supplier ? (
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          <span>Lieferant:</span>
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground max-w-full overflow-hidden">
+                          <span className="text-xs flex-shrink-0">Lieferant:</span>
+                          <Badge variant="outline" className="text-xs max-w-48 truncate flex-shrink-0">
                             {expense.supplier.name}
                           </Badge>
                           {expense.supplier.category && (
-                            <span className="text-xs opacity-60">
+                            <span className="text-xs opacity-60 max-w-32 truncate hidden sm:inline flex-shrink-0">
                               ({SUPPLIER_CATEGORIES[expense.supplier.category as keyof typeof SUPPLIER_CATEGORIES] || expense.supplier.category})
                             </span>
                           )}
                         </div>
                       ) : expense.supplier_name && (
-                        <p className="text-sm text-muted-foreground">
-                          <span>Lieferant:</span> {expense.supplier_name}
-                        </p>
+                        <div className="text-sm text-muted-foreground max-w-full overflow-hidden">
+                          <span className="text-xs">Lieferant: </span>
+                          <span className="break-words text-xs" style={{wordBreak: 'break-word'}}>{expense.supplier_name}</span>
+                        </div>
                       )}
                       {expense.invoice_number && (
-                        <p className="text-sm text-muted-foreground">Rechnung: {expense.invoice_number}</p>
+                        <div className="text-sm text-muted-foreground max-w-full overflow-hidden">
+                          <span className="text-xs">Rechnung: </span>
+                          <span className="break-words text-xs" style={{wordBreak: 'break-word'}}>{expense.invoice_number}</span>
+                        </div>
                       )}
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <ExpensePDFActions 
-                        expense={expense}
-                      />
-                      <ExpenseActions
-                        expense={expense}
-                        onUpdate={updateExpense}
-                        onDelete={deleteExpense}
-                        onReplaceReceipt={replaceExpenseReceipt}
-                        onDuplicate={(expense) => {
-                          // Duplizieren: Dialog mit vorausgefüllten Daten öffnen
-                          setFormData({
-                            amount: expense.amount.toString(),
-                            description: `${expense.description} (Kopie)`,
-                            category: expense.category as ExpenseCategory,
-                            payment_method: expense.payment_method as 'bank' | 'cash',
-                            payment_date: formatDateForAPI(new Date()),
-                            invoice_number: '',
-                            notes: expense.notes || ''
-                          })
-                          if (expense.supplier) {
-                            setSelectedSupplier(expense.supplier)
-                          } else if (expense.supplier_name) {
-                            setSelectedSupplier({
-                              id: '',
-                              name: expense.supplier_name,
-                              category: 'other',
-                              is_active: true,
-                              created_at: '',
-                              organization_id: ''
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 flex-shrink-0 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 justify-end sm:justify-start">
+                        <ExpensePDFActions 
+                          expense={expense}
+                        />
+                        <ExpenseActions
+                          expense={expense}
+                          onUpdate={updateExpense}
+                          onDelete={deleteExpense}
+                          onReplaceReceipt={replaceExpenseReceipt}
+                          onDuplicate={(expense) => {
+                            // Duplizieren: Dialog mit vorausgefüllten Daten öffnen
+                            setFormData({
+                              amount: expense.amount.toString(),
+                              description: `${expense.description} (Kopie)`,
+                              category: expense.category as ExpenseCategory,
+                              payment_method: expense.payment_method as 'bank' | 'cash',
+                              payment_date: formatDateForAPI(new Date()),
+                              invoice_number: '',
+                              notes: expense.notes || ''
                             })
-                          }
-                          setIsDialogOpen(true)
-                        }}
-                      />
-                      <div className="text-right">
-                        <div className="text-lg font-bold">CHF {expense.amount.toFixed(2)}</div>
+                            if (expense.supplier) {
+                              setSelectedSupplier(expense.supplier)
+                            } else if (expense.supplier_name) {
+                              setSelectedSupplier({
+                                id: '',
+                                name: expense.supplier_name,
+                                category: 'other',
+                                is_active: true,
+                                created_at: '',
+                                organization_id: ''
+                              })
+                            }
+                            setIsDialogOpen(true)
+                          }}
+                        />
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-lg font-bold whitespace-nowrap">CHF {expense.amount.toFixed(2)}</div>
                       </div>
                     </div>
                   </div>
