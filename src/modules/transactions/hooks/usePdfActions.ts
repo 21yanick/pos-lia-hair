@@ -55,7 +55,7 @@ export function usePdfActions() {
 
       // Get signed URL
       const pdfUrl = await getStorageUrl(doc.file_path)
-      if (!pdfUrl) {
+      if (!pdfUrl || pdfUrl === '') {
         toast.error('PDF konnte nicht geladen werden')
         return false
       }

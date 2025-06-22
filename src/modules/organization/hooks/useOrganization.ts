@@ -20,6 +20,9 @@ export function useOrganization() {
   const { data: memberships = [], isLoading, error } = useOrganizationsQuery(isAuthenticated, authLoading)
   const refreshOrganizations = useRefreshOrganizations()
   
+  // Distinguish between "loading organizations" and "no organization selected"
+  const loading = isLoading || (authLoading && !currentOrganization)
+  
   // Wrapper Funktionen die nach dem Service Call refreshen
   const createOrganization = async (data: CreateOrganizationData) => {
     const org = await organizationService.createOrganization(data)
@@ -73,7 +76,7 @@ export function useOrganization() {
     currentOrganization,
     userOrganizations: memberships,
     userRole,
-    loading: isLoading,
+    loading,
     error: error?.message || null,
     
     // Actions

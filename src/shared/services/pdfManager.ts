@@ -14,7 +14,6 @@ interface PdfWindow {
 
 class PdfManager {
   private openPdfs = new Map<string, PdfWindow>()
-  private currentModal: HTMLDivElement | null = null
   
   constructor() {
     if (typeof window !== 'undefined') {
@@ -50,6 +49,13 @@ class PdfManager {
    */
   private openDesktop(id: string, url: string): void {
     try {
+      // Validate URL
+      if (!url || url.trim() === '') {
+        console.error('[PDFManager] Invalid PDF URL provided')
+        toast.error('PDF URL ungültig')
+        return
+      }
+      
       const pdfWindow = window.open(url, `pdf_${id}`, 'width=800,height=600')
       
       if (pdfWindow) {
@@ -85,97 +91,57 @@ class PdfManager {
   }
 
   /**
-   * Mobile: Open in modal with iframe
+   * Mobile: Open in new tab (keeps app alive)
    */
   private openMobile(id: string, url: string): void {
     try {
-      // Create modal container
-      const modal = document.createElement('div')
-      modal.className = 'fixed inset-0 z-50 bg-black/90 flex flex-col'
-      modal.style.touchAction = 'none' // Prevent scroll issues
-      
-      // Create header
-      const header = document.createElement('div')
-      header.className = 'flex items-center justify-between p-4 bg-background border-b'
-      header.innerHTML = `
-        <h3 class="font-semibold">PDF Dokument</h3>
-        <button class="p-2 hover:bg-muted rounded-lg transition-colors">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      `
-      
-      // Create iframe container
-      const iframeContainer = document.createElement('div')
-      iframeContainer.className = 'flex-1 overflow-hidden'
-      
-      // Create iframe
-      const iframe = document.createElement('iframe')
-      iframe.src = url
-      iframe.className = 'w-full h-full border-0'
-      iframe.style.touchAction = 'auto' // Allow pinch-zoom in iframe
-      
-      // Handle iOS specific issues
-      if (deviceDetection.isIOS()) {
-        // iOS needs special handling for PDFs
-        iframe.style.webkitOverflowScrolling = 'touch'
-        iframe.setAttribute('scrolling', 'yes')
+      // Validate URL
+      if (!url || url.trim() === '') {
+        console.error('[PDFManager] Invalid PDF URL provided')
+        toast.error('PDF URL ungültig')
+        return
       }
       
-      // Assemble modal
-      iframeContainer.appendChild(iframe)
-      modal.appendChild(header)
-      modal.appendChild(iframeContainer)
+      // Open PDF in new tab for all mobile browsers
+      // This keeps the React app alive and maintains all state
+      const win = window.open(url, '_blank')
       
-      // Close handler
-      const closeButton = header.querySelector('button')
-      const closeModal = () => {
-        document.body.removeChild(modal)
-        document.body.style.overflow = ''
-        this.openPdfs.delete(id)
-        this.currentModal = null
+      if (win) {
+        // Track the window
+        this.openPdfs.set(id, {
+          id,
+          window: win,
+          url,
+          openedAt: new Date()
+        })
+      } else {
+        // Popup blocked - fallback to download
+        this.downloadPdf(url, id)
       }
-      
-      closeButton?.addEventListener('click', closeModal)
-      
-      // Prevent body scroll
-      document.body.style.overflow = 'hidden'
-      
-      // Add to DOM
-      document.body.appendChild(modal)
-      this.currentModal = modal
-      
-      // Track
-      this.openPdfs.set(id, {
-        id,
-        iframe,
-        url,
-        openedAt: new Date()
-      })
-      
-      // Auto-close after 30 minutes on mobile
-      setTimeout(() => {
-        if (document.body.contains(modal)) {
-          closeModal()
-        }
-      }, 30 * 60 * 1000)
-      
     } catch (error) {
       console.error('Error opening PDF on mobile:', error)
+      // Fallback to download on any error
+      this.downloadPdf(url, id)
+    }
+  }
+  
+  /**
+   * Download PDF as fallback
+   */
+  private downloadPdf(url: string, id: string): void {
+    try {
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `dokument_${id}.pdf`
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
       
-      // Fallback: Direct navigation
-      if (deviceDetection.canOpenPDFInline()) {
-        window.location.href = url
-      } else {
-        // Last resort: download
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `document_${id}.pdf`
-        link.click()
-        toast.info('PDF wird heruntergeladen...')
-      }
+      toast.info('PDF wird heruntergeladen...')
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('PDF konnte nicht geöffnet werden')
     }
   }
 
@@ -190,11 +156,7 @@ class PdfManager {
       pdf.window.close()
     }
     
-    if (pdf.iframe && this.currentModal) {
-      document.body.removeChild(this.currentModal)
-      document.body.style.overflow = ''
-      this.currentModal = null
-    }
+    // No more iframe/modal cleanup needed for mobile
     
     this.openPdfs.delete(id)
   }
@@ -210,12 +172,7 @@ class PdfManager {
       }
     })
     
-    // Close modal if exists
-    if (this.currentModal && document.body.contains(this.currentModal)) {
-      document.body.removeChild(this.currentModal)
-      document.body.style.overflow = ''
-      this.currentModal = null
-    }
+    // No modal cleanup needed anymore
     
     this.openPdfs.clear()
   }
@@ -247,7 +204,7 @@ class PdfManager {
       return !pdf.window.closed
     }
     
-    return pdf.iframe !== undefined && this.currentModal !== null
+    return false // Mobile PDFs are handled via navigation/download now
   }
 }
 

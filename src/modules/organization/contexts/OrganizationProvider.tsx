@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useOrganizationStore } from '../hooks/useOrganizationStore'
 import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
@@ -14,117 +14,100 @@ interface OrganizationProviderProps {
 }
 
 /**
- * 🏢 SIMPLIFIED ORGANIZATION PROVIDER - CLIENT-SIDE AUTH ARCHITECTURE
+ * FIXED ORGANIZATION PROVIDER
  * 
- * Was dieser Provider MACHT:
- * - Organization State Management
- * - Organization Selection Logic
- * - Auto-navigation zwischen Organizations
- * 
- * Was dieser Provider NICHT MEHR macht:
- * - Auth Redirects (handled by Auth Guards)
- * - Error Pages (handled by Auth Guards)
- * - Loading States für Full Page (handled by Auth Guards)
- * 
- * RESULTAT: Viel sauberer, einfacher, keine Race Conditions.
+ * Klare Trennung der Verantwortlichkeiten:
+ * 1. Organization Selection aus URL
+ * 2. State Persistence
+ * 3. Navigation Logic
  */
 export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { setOrganization, clearOrganization, currentOrganization } = useOrganizationStore()
-  const { data: memberships, isLoading, error } = useOrganizationsQuery(isAuthenticated, authLoading)
-  const { currentSlug, navigateToOrganization, navigateToOrganizationSelection } = useOrganizationNavigation()
-  
-  // Track if we've restored state
-  const hasRestoredState = useRef(false)
+  const { data: memberships, isLoading } = useOrganizationsQuery(isAuthenticated, authLoading)
+  const { currentSlug, navigateToOrganization } = useOrganizationNavigation()
   
   // Save organization state when it changes
   useEffect(() => {
     if (currentOrganization) {
+      console.log('[OrganizationProvider] Saving organization:', currentOrganization.slug)
       organizationPersistence.save(currentOrganization.id, currentOrganization.slug)
     }
   }, [currentOrganization])
   
-  // Restore organization state on mount
+  // Main organization selection logic
   useEffect(() => {
-    if (hasRestoredState.current) return
-    if (authLoading || !isAuthenticated || isLoading) return
-    if (!memberships || memberships.length === 0) return
-    
-    const persisted = organizationPersistence.load()
-    if (persisted) {
-      const membership = memberships.find(m => m.organization.id === persisted.id)
-      if (membership) {
-        hasRestoredState.current = true
-        console.log('Restoring organization:', membership.organization.name)
-        setOrganization(membership.organization, membership.role)
-      }
-    }
-  }, [authLoading, isAuthenticated, isLoading, memberships, setOrganization])
-  
-  // 🏢 ORGANIZATION LOGIC - Only runs if authenticated
-  useEffect(() => {
-    // Skip if auth is loading or user not authenticated
-    if (authLoading || !isAuthenticated) {
+    // Skip if still loading
+    if (authLoading || !isAuthenticated || isLoading || !memberships) {
       return
     }
     
-    // Skip if organizations are loading
-    if (isLoading) {
-      return
-    }
-    
-    // Skip if error (Auth Guards will handle error states)
-    if (error) {
-      return
-    }
-    
-    // Skip if no data
-    if (!memberships) {
-      return
-    }
-    
-    // Don't auto-navigate if user is already on create page
-    // This prevents hot reload loops during development
+    // Special case: organization create page
     if (pathname === '/organizations/create') {
       return
     }
     
-    // Case 1: URL has slug (org-specific page)
+    // PRIORITY 1: URL has organization slug
     if (currentSlug) {
-      const membership = memberships.find(m => m.organization.slug === currentSlug)
-      
-      if (membership) {
-        setOrganization(membership.organization, membership.role)
-      } else {
-        router.push('/organizations')
+      // Check if we need to set/update the organization
+      if (currentOrganization?.slug !== currentSlug) {
+        const membership = memberships.find(m => m.organization.slug === currentSlug)
+        if (membership) {
+          console.log('[OrganizationProvider] Setting organization from URL:', currentSlug)
+          setOrganization(membership.organization, membership.role)
+        } else {
+          // Invalid slug - redirect to selection
+          console.log('[OrganizationProvider] Invalid slug, redirecting to /organizations')
+          router.push('/organizations')
+        }
       }
       return
     }
     
-    // Case 2: No URL slug, decide where to navigate
-    if (pathname === '/') {
-      // Only auto-redirect from root page
-      if (memberships.length === 1) {
-        navigateToOrganization(memberships[0].organization.slug)
-      } else {
-        router.push('/organizations')
-      }
-    } else if (pathname === '/organizations') {
-      // On /organizations page, only auto-navigate if single org
-      if (memberships.length === 1) {
-        navigateToOrganization(memberships[0].organization.slug)
-      }
-      // For 0 or multiple orgs: stay on /organizations (let user choose)
+    // PRIORITY 2: No URL slug - need to handle navigation
+    
+    // If we already have an organization selected, navigate to it
+    if (currentOrganization) {
+      console.log('[OrganizationProvider] Navigating to current organization:', currentOrganization.slug)
+      navigateToOrganization(currentOrganization.slug)
+      return
     }
+    
+    // No organization selected - try to restore from persistence
+    const persisted = organizationPersistence.load()
+    if (persisted) {
+      const membership = memberships.find(m => m.organization.id === persisted.id)
+      if (membership) {
+        console.log('[OrganizationProvider] Restored from persistence:', membership.organization.slug)
+        setOrganization(membership.organization, membership.role)
+        navigateToOrganization(membership.organization.slug)
+        return
+      }
+    }
+    
+    // No persistence or invalid - handle auto-selection
+    if (memberships.length === 1) {
+      // Single organization - auto select and navigate
+      const { organization, role } = memberships[0]
+      console.log('[OrganizationProvider] Auto-selecting single organization:', organization.slug)
+      setOrganization(organization, role)
+      navigateToOrganization(organization.slug)
+    } else if (memberships.length > 1 && pathname === '/') {
+      // Multiple organizations and on root - go to selection
+      console.log('[OrganizationProvider] Multiple organizations, redirecting to selection')
+      router.push('/organizations')
+    }
+    // If already on /organizations, let user choose
   }, [
-    isAuthenticated,
+    // Dependencies
     authLoading,
-    currentSlug,
-    memberships,
+    isAuthenticated,
     isLoading,
-    error,
+    memberships,
+    currentSlug,
+    currentOrganization,
     pathname,
     setOrganization,
     router,
@@ -143,6 +126,5 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     return () => subscription.unsubscribe()
   }, [clearOrganization])
   
-  // Simple pass-through - Auth Guards handle loading/error states
   return <>{children}</>
 }

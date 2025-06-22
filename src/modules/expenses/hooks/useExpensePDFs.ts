@@ -68,7 +68,7 @@ export function useExpensePDFs() {
       return urlData.signedUrl
     } catch (err) {
       console.error("Fehler beim Abrufen der Storage URL:", err)
-      return ""
+      return null
     }
   }
 

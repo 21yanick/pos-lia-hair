@@ -31,12 +31,17 @@ export function OrganizationRoute({
   fallback
 }: OrganizationRouteProps) {
   const { isAuthenticated, loading: authLoading } = useAuth()
-  const { userOrganizations, loading: orgLoading } = useOrganization()
+  const { userOrganizations, loading: orgLoading, currentOrganization } = useOrganization()
   const router = useRouter()
   const params = useParams()
   
   const slug = params?.slug as string
-  const loading = authLoading || orgLoading
+  
+  // Only show loading if:
+  // 1. Auth is still loading
+  // 2. Organizations are being fetched for the first time
+  // 3. We have organizations but none selected yet (while provider is setting it)
+  const loading = authLoading || (orgLoading && !userOrganizations)
 
   useEffect(() => {
     // Step 1: Check authentication first
@@ -77,14 +82,22 @@ export function OrganizationRoute({
     )
   }
 
-  // Show content only if all checks pass
+  // Show content if:
+  // 1. User is authenticated
+  // 2. We have organizations loaded
+  // 3. Current organization matches the URL slug OR organization is being set
   if (isAuthenticated && userOrganizations && slug) {
     const hasAccess = userOrganizations.some(
       membership => membership.organization.slug === slug
     )
     
+    // If user has access and either:
+    // - Organization is already set correctly
+    // - Organization is being set (provider will handle it)
     if (hasAccess) {
-      return <>{children}</>
+      if (currentOrganization?.slug === slug || !currentOrganization) {
+        return <>{children}</>
+      }
     }
   }
 

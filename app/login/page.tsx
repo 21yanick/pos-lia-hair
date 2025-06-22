@@ -69,24 +69,27 @@ export default function LoginPage() {
           <div className="relative mb-6 transform transition-transform duration-300 hover:scale-105">
             <SmartAppLogo 
               size="xl"
-              alt="SwissPOS Logo"
+              alt="Nexus Logo"
               className="drop-shadow-lg w-32 h-32"
               fallback={
-                <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg border border-primary/20 relative">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">Swiss</div>
-                    <div className="text-lg font-semibold text-primary/80">POS</div>
-                  </div>
-                  <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-sm" />
+                <div className="relative w-32 h-32 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                  {/* Horizontale Verbindungslinie */}
+                  <div className="absolute w-16 h-0.5 bg-gradient-to-r from-slate-400 to-slate-600 dark:from-slate-500 dark:to-slate-300"></div>
+                  {/* Vertikale Verbindungslinie */}
+                  <div className="absolute h-16 w-0.5 bg-gradient-to-b from-slate-400 to-slate-600 dark:from-slate-500 dark:to-slate-300"></div>
+                  {/* Zentrale Nexus Node */}
+                  <div className="relative z-10 w-3 h-3 bg-blue-500 rounded-full shadow-lg ring-2 ring-blue-200 dark:ring-blue-400"></div>
+                  {/* Nexus Text */}
+                  <div className="absolute bottom-3 text-sm font-bold text-slate-700 dark:text-slate-300 tracking-wider">NEXUS</div>
                 </div>
               }
             />
           </div>
           <CardTitle className="text-3xl font-bold text-center">
-            SwissPOS
+            Nexus
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground/80 mt-2">
-            POS & Business Management
+            Business Connection Platform
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

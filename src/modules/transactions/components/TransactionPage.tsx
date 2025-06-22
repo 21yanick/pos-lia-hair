@@ -565,30 +565,37 @@ export default function TransactionPage() {
               {hasActiveFilters ? 'Keine Transaktionen gefunden' : 'Noch keine Transaktionen vorhanden'}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3">
-                      <Checkbox
-                        checked={selectedTransactions.length === transactions.length}
-                        onCheckedChange={(checked) => 
-                          setSelectedTransactions(checked ? transactions.map(tx => tx.id) : [])
-                        }
-                      />
-                    </th>
-                    <th className="text-left p-3">Typ</th>
-                    <th className="text-left p-3">Beleg Nr.</th>
-                    <th className="text-left p-3">Datum</th>
-                    <th className="text-left p-3">Beschreibung</th>
-                    <th className="text-right p-3">Betrag</th>
-                    <th className="text-center p-3">PDF</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b hover:bg-muted/50">
-                      <td className="p-3">
+            <div className="space-y-4 w-full max-w-full overflow-hidden">
+              {/* Bulk Select Header */}
+              <div className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={selectedTransactions.length === transactions.length}
+                    onCheckedChange={(checked) => 
+                      setSelectedTransactions(checked ? transactions.map(tx => tx.id) : [])
+                    }
+                  />
+                  <span className="text-sm font-medium">
+                    {selectedTransactions.length > 0 ? 
+                      `${selectedTransactions.length} ausgewählt` : 
+                      'Alle auswählen'
+                    }
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground hidden sm:block">
+                  {transactions.length} Transaktionen
+                </div>
+              </div>
+
+              {/* Transaction Cards */}
+              {transactions.map((transaction) => (
+                <div key={transaction.id} className="border rounded-lg p-4 w-full max-w-full overflow-hidden hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 w-full max-w-full overflow-hidden">
+                    
+                    {/* Main Content */}
+                    <div className="space-y-2 flex-1 min-w-0 max-w-full overflow-hidden">
+                      {/* Top Row - Checkbox, Type, Receipt Number */}
+                      <div className="flex items-center gap-3 flex-wrap">
                         <Checkbox
                           checked={selectedTransactions.includes(transaction.id)}
                           onCheckedChange={(checked) => {
@@ -598,37 +605,52 @@ export default function TransactionPage() {
                               setSelectedTransactions(selectedTransactions.filter(id => id !== transaction.id))
                             }
                           }}
+                          className="flex-shrink-0"
                         />
-                      </td>
-                      <td className="p-3">
                         <TransactionTypeBadge typeCode={getTypeCode(transaction.transaction_type)} />
-                      </td>
-                      <td className="p-3 font-mono text-sm">
-                        {transaction.receipt_number || '—'}
-                      </td>
-                      <td className="p-3 text-sm">
-                        {formatDateForDisplay(transaction.transaction_date)}
-                      </td>
-                      <td className="p-3">
-                        <div className="text-sm">
-                          {transaction.description || 'Keine Beschreibung'}
-                        </div>
-                      </td>
-                      <td className="p-3 text-right font-medium">
-                        <span className={transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          {formatCurrency(transaction.amount)}
+                        {transaction.receipt_number && (
+                          <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-1 rounded flex-shrink-0">
+                            {transaction.receipt_number}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          {formatDateForDisplay(transaction.transaction_date)}
                         </span>
-                      </td>
-                      <td className="p-3">
+                      </div>
+                      
+                      {/* Description */}
+                      <h3 className="font-medium text-base leading-tight break-words" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
+                        {transaction.description || 'Keine Beschreibung'}
+                      </h3>
+                      
+                      {/* Meta Info */}
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground max-w-full overflow-hidden">
+                        <span className="text-xs flex-shrink-0">
+                          {formatTimeForDisplay(transaction.transaction_date)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Right Side - Amount and Actions */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-shrink-0 min-w-0">
+                      {/* PDF Action */}
+                      <div className="flex items-center justify-end sm:justify-start">
                         <PdfStatusIcon
                           transaction={transaction}
                           onPdfAction={handlePdfAction}
                         />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                      
+                      {/* Amount */}
+                      <div className="text-right flex-shrink-0">
+                        <div className={`text-lg font-bold whitespace-nowrap ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(transaction.amount)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
