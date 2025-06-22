@@ -93,26 +93,18 @@ export const deviceDetection = {
 
   /**
    * Get optimal PDF opening strategy for current browser
+   * IMPORTANT: Always use new-tab for mobile to keep React app alive
    */
   getPDFStrategy(): 'direct-navigation' | 'new-tab' | 'download' {
     if (typeof window === 'undefined') return 'download'
     
-    // Android Chrome: Direct navigation works best
-    if (this.isAndroidChrome()) {
-      return 'direct-navigation'
-    }
-    
-    // iOS: New tab
-    if (this.isIOS()) {
+    // Mobile: ALWAYS new tab to keep React app alive
+    // Direct navigation (window.location.href) kills the entire app
+    if (this.isMobile()) {
       return 'new-tab'
     }
     
-    // Desktop/Other: New tab
-    if (!this.isMobile()) {
-      return 'new-tab'
-    }
-    
-    // Mobile fallback: Try new tab first, then download
+    // Desktop: New tab
     return 'new-tab'
   },
 

@@ -93,7 +93,7 @@ class PdfManager {
   }
 
   /**
-   * Mobile: Use optimal strategy per browser
+   * Mobile: ALWAYS use new tab to keep app alive
    */
   private openMobile(id: string, url: string): void {
     try {
@@ -104,22 +104,16 @@ class PdfManager {
         return
       }
       
-      const strategy = deviceDetection.getPDFStrategy()
+      remoteDebugger.log('PDFManager', 'MOBILE_STRATEGY', 'FORCE_NEW_TAB - Keep app alive!')
       
-      switch (strategy) {
-        case 'direct-navigation':
-          this.openDirectNavigation(id, url)
-          break
-        case 'new-tab':
-          this.openNewTab(id, url)
-          break
-        case 'download':
-        default:
-          this.downloadPdf(url, id)
-          break
-      }
+      // ALWAYS use new tab for mobile to keep React app alive
+      // Even if Android Chrome might prefer direct navigation,
+      // keeping the app alive is more important than optimal UX
+      this.openNewTab(id, url)
+      
     } catch (error) {
       console.error('Error opening PDF on mobile:', error)
+      remoteDebugger.log('PDFManager', 'MOBILE_ERROR', error)
       this.downloadPdf(url, id)
     }
   }
@@ -179,12 +173,32 @@ class PdfManager {
   }
 
   /**
-   * New tab approach (iOS, Desktop)
+   * New tab approach (iOS, Desktop, Mobile)
    */
   private openNewTab(id: string, url: string): void {
-    const win = window.open(url, '_blank')
+    remoteDebugger.log('PDFManager', 'NEW_TAB_ATTEMPT', { id, isMobile: deviceDetection.isMobile() })
+    
+    // Try different window.open strategies for better mobile compatibility
+    let win: Window | null = null
+    
+    // Strategy 1: Standard new tab
+    win = window.open(url, '_blank')
+    
+    // Strategy 2: If blocked, try with noopener/noreferrer
+    if (!win) {
+      remoteDebugger.log('PDFManager', 'NEW_TAB_RETRY', 'Trying with noopener')
+      win = window.open(url, '_blank', 'noopener,noreferrer')
+    }
+    
+    // Strategy 3: If still blocked, try with minimal features
+    if (!win) {
+      remoteDebugger.log('PDFManager', 'NEW_TAB_RETRY', 'Trying with minimal features')
+      win = window.open(url, '_blank', 'width=800,height=600')
+    }
     
     if (win) {
+      remoteDebugger.log('PDFManager', 'NEW_TAB_SUCCESS', 'PDF opened in new tab')
+      
       // Track the window
       this.openPdfs.set(id, {
         id,
@@ -192,8 +206,20 @@ class PdfManager {
         url,
         openedAt: new Date()
       })
+      
+      // Show user feedback for mobile
+      if (deviceDetection.isMobile()) {
+        toast.info('PDF wird in neuem Tab geöffnet')
+      }
     } else {
-      // Popup blocked - fallback to download
+      remoteDebugger.log('PDFManager', 'NEW_TAB_BLOCKED', 'All window.open attempts failed')
+      
+      // Show user instructions for unblocking
+      if (deviceDetection.isMobile()) {
+        toast.error('Pop-ups blockiert. Bitte in Browser-Einstellungen erlauben.')
+      }
+      
+      // Fallback to download
       this.downloadPdf(url, id)
     }
   }
@@ -203,18 +229,50 @@ class PdfManager {
    */
   private downloadPdf(url: string, id: string): void {
     try {
+      remoteDebugger.log('PDFManager', 'DOWNLOAD_FALLBACK', { id })
+      
       const link = document.createElement('a')
       link.href = url
       link.download = `dokument_${id}.pdf`
       link.style.display = 'none'
+      link.setAttribute('target', '_blank')
+      
       document.body.appendChild(link)
+      
+      // Add click event listener to detect if download started
+      let downloadStarted = false
+      link.addEventListener('click', () => {
+        downloadStarted = true
+        remoteDebugger.log('PDFManager', 'DOWNLOAD_TRIGGERED', 'Download link clicked')
+      })
+      
       link.click()
       document.body.removeChild(link)
       
-      toast.info('PDF wird heruntergeladen...')
+      // Show appropriate feedback
+      if (deviceDetection.isMobile()) {
+        toast.info('PDF wird heruntergeladen. Prüfen Sie den Downloads-Ordner.')
+      } else {
+        toast.info('PDF wird heruntergeladen...')
+      }
+      
+      // If click didn't work, show manual instructions
+      setTimeout(() => {
+        if (!downloadStarted) {
+          remoteDebugger.log('PDFManager', 'DOWNLOAD_FAILED', 'Automatic download failed')
+          toast.error('Download fehlgeschlagen. Bitte PDF-URL direkt öffnen.')
+        }
+      }, 1000)
+      
     } catch (error) {
+      remoteDebugger.log('PDFManager', 'DOWNLOAD_ERROR', error)
       console.error('Error downloading PDF:', error)
       toast.error('PDF konnte nicht geöffnet werden')
+      
+      // Last resort: show URL to user
+      if (url && url.length < 200) {
+        console.log('PDF URL for manual access:', url)
+      }
     }
   }
 
