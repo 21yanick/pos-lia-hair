@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import Link from "next/link"
-import { Bell, Sun, Moon } from "lucide-react"
+import { Sun, Moon } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { ProfileMenu } from "@/shared/components/profile"
 import { useOrganization } from '@/modules/organization'
@@ -118,10 +118,6 @@ export function Header() {
             />
           </button>
         )}
-
-        <Button variant="ghost" size="icon" aria-label="Notifications">
-          <Bell size={20} />
-        </Button>
 
         <ProfileMenu />
       </div>
