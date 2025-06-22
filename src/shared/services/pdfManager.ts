@@ -1,5 +1,5 @@
 /**
- * PDF Manager with mobile optimization
+ * Enhanced PDF Manager with Direct Link Approach for Android Chrome
  */
 import { deviceDetection } from '@/shared/utils/deviceDetection'
 import { toast } from 'sonner'
@@ -33,14 +33,14 @@ class PdfManager {
   }
 
   /**
-   * Open PDF - mobile optimized
+   * Open PDF - Enhanced mobile approach
    */
   open(id: string, url: string): void {
     // Close existing PDF for same ID
     this.close(id)
     
     if (deviceDetection.isMobile()) {
-      this.openMobile(id, url)
+      this.openMobileEnhanced(id, url)
     } else {
       this.openDesktop(id, url)
     }
@@ -93,9 +93,9 @@ class PdfManager {
   }
 
   /**
-   * Mobile: ALWAYS use new tab to keep app alive
+   * Enhanced Mobile PDF Opening - Direct Link Approach
    */
-  private openMobile(id: string, url: string): void {
+  private openMobileEnhanced(id: string, url: string): void {
     try {
       // Validate URL
       if (!url || url.trim() === '') {
@@ -104,128 +104,106 @@ class PdfManager {
         return
       }
       
-      remoteDebugger.log('PDFManager', 'MOBILE_STRATEGY', 'FORCE_NEW_TAB - Keep app alive!')
+      remoteDebugger.log('PDFManager', 'MOBILE_ENHANCED_START', { id, isAndroid: deviceDetection.isAndroid() })
       
-      // ALWAYS use new tab for mobile to keep React app alive
-      // Even if Android Chrome might prefer direct navigation,
-      // keeping the app alive is more important than optimal UX
-      this.openNewTab(id, url)
+      // Strategy 1: Create invisible link and click it (most reliable on mobile)
+      this.createAndClickLink(id, url)
       
     } catch (error) {
       console.error('Error opening PDF on mobile:', error)
-      remoteDebugger.log('PDFManager', 'MOBILE_ERROR', error)
+      remoteDebugger.log('PDFManager', 'MOBILE_ENHANCED_ERROR', error)
       this.downloadPdf(url, id)
     }
   }
 
   /**
-   * Direct navigation (Android Chrome)
+   * Create and click a link - most reliable method for mobile
    */
-  private openDirectNavigation(id: string, url: string): void {
-    remoteDebugger.log('PDFManager', 'DIRECT_NAVIGATION_START', { id, url: url.substring(0, 100) + '...' })
+  private createAndClickLink(id: string, url: string): void {
+    remoteDebugger.log('PDFManager', 'CREATE_LINK_APPROACH', { id })
     
-    // Save current state for return navigation
-    const currentUrl = window.location.href
-    const currentTitle = document.title
+    // Create a temporary link element
+    const link = document.createElement('a')
+    link.href = url
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    link.style.display = 'none'
     
-    remoteDebugger.log('PDFManager', 'BACKUP_CURRENT_STATE', { currentUrl, currentTitle })
+    // Add to DOM
+    document.body.appendChild(link)
     
-    // Store return information
-    sessionStorage.setItem('pdf_return_url', currentUrl)
-    sessionStorage.setItem('pdf_return_title', currentTitle)
-    sessionStorage.setItem('pdf_return_timestamp', Date.now().toString())
-    
-    // Force organization state persistence before navigation
-    if (typeof window !== 'undefined' && (window as any).__organization_store) {
-      const orgStore = (window as any).__organization_store
-      if (orgStore.getState) {
-        const state = orgStore.getState()
-        const orgState = {
-          hasCurrentOrg: !!state.currentOrganization,
-          orgSlug: state.currentOrganization?.slug,
-          userRole: state.userRole
-        }
-        remoteDebugger.log('PDFManager', 'ORG_STORE_STATE', orgState)
-        
-        if (state.currentOrganization) {
-          // Include both organization and user role
-          const backupData = {
-            ...state.currentOrganization,
-            userRole: state.userRole
-          }
-          sessionStorage.setItem('pdf_org_backup', JSON.stringify(backupData))
-          remoteDebugger.log('PDFManager', 'ORG_BACKUP_SAVED', { slug: backupData.slug })
-        }
-      }
-    }
-    
-    remoteDebugger.log('PDFManager', 'NAVIGATE_TO_PDF', 'Leaving app...')
-    
-    // Navigate directly to PDF
-    window.location.href = url
-    
-    // Track as opened
+    // Track attempt
     this.openPdfs.set(id, {
       id,
       url,
       openedAt: new Date()
     })
+    
+    // Click the link
+    try {
+      link.click()
+      remoteDebugger.log('PDFManager', 'LINK_CLICKED', 'Direct link clicked')
+      
+      // Show user feedback
+      toast.info('PDF wird geöffnet...')
+      
+      // Remove link after click
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link)
+        }
+      }, 100)
+      
+    } catch (error) {
+      remoteDebugger.log('PDFManager', 'LINK_CLICK_FAILED', error)
+      document.body.removeChild(link)
+      
+      // Fallback to window.open
+      this.fallbackWindowOpen(id, url)
+    }
   }
 
   /**
-   * New tab approach (iOS, Desktop, Mobile)
+   * Fallback to window.open with multiple strategies
    */
-  private openNewTab(id: string, url: string): void {
-    remoteDebugger.log('PDFManager', 'NEW_TAB_ATTEMPT', { id, isMobile: deviceDetection.isMobile() })
+  private fallbackWindowOpen(id: string, url: string): void {
+    remoteDebugger.log('PDFManager', 'FALLBACK_WINDOW_OPEN', { id })
     
-    // Try different window.open strategies for better mobile compatibility
     let win: Window | null = null
     
-    // Strategy 1: Standard new tab
-    win = window.open(url, '_blank')
+    // Try different window.open strategies
+    const strategies = [
+      () => window.open(url, '_blank'),
+      () => window.open(url, '_blank', 'noopener,noreferrer'),
+      () => window.open(url, '_blank', 'width=800,height=600')
+    ]
     
-    // Strategy 2: If blocked, try with noopener/noreferrer
-    if (!win) {
-      remoteDebugger.log('PDFManager', 'NEW_TAB_RETRY', 'Trying with noopener')
-      win = window.open(url, '_blank', 'noopener,noreferrer')
-    }
-    
-    // Strategy 3: If still blocked, try with minimal features
-    if (!win) {
-      remoteDebugger.log('PDFManager', 'NEW_TAB_RETRY', 'Trying with minimal features')
-      win = window.open(url, '_blank', 'width=800,height=600')
-    }
-    
-    if (win) {
-      remoteDebugger.log('PDFManager', 'NEW_TAB_SUCCESS', 'PDF opened in new tab')
-      
-      // Track the window
-      this.openPdfs.set(id, {
-        id,
-        window: win,
-        url,
-        openedAt: new Date()
-      })
-      
-      // Show user feedback for mobile
-      if (deviceDetection.isMobile()) {
-        toast.info('PDF wird in neuem Tab geöffnet')
+    for (let i = 0; i < strategies.length && !win; i++) {
+      try {
+        win = strategies[i]()
+        if (win) {
+          remoteDebugger.log('PDFManager', 'WINDOW_OPEN_SUCCESS', `Strategy ${i + 1} worked`)
+          toast.info('PDF wird in neuem Tab geöffnet')
+          return
+        }
+      } catch (error) {
+        remoteDebugger.log('PDFManager', 'WINDOW_OPEN_FAILED', `Strategy ${i + 1} failed: ${error}`)
       }
-    } else {
-      remoteDebugger.log('PDFManager', 'NEW_TAB_BLOCKED', 'All window.open attempts failed')
-      
-      // Show user instructions for unblocking
-      if (deviceDetection.isMobile()) {
-        toast.error('Pop-ups blockiert. Bitte in Browser-Einstellungen erlauben.')
-      }
-      
-      // Fallback to download
-      this.downloadPdf(url, id)
     }
+    
+    // All window.open strategies failed
+    remoteDebugger.log('PDFManager', 'ALL_WINDOW_OPEN_FAILED', 'Falling back to download')
+    
+    // Show user instructions
+    toast.error('Pop-ups blockiert. PDF wird heruntergeladen.')
+    
+    // Final fallback: download
+    this.downloadPdf(url, id)
   }
+
   
   /**
-   * Download PDF as fallback
+   * Download PDF as final fallback
    */
   private downloadPdf(url: string, id: string): void {
     try {
@@ -235,44 +213,17 @@ class PdfManager {
       link.href = url
       link.download = `dokument_${id}.pdf`
       link.style.display = 'none'
-      link.setAttribute('target', '_blank')
       
       document.body.appendChild(link)
-      
-      // Add click event listener to detect if download started
-      let downloadStarted = false
-      link.addEventListener('click', () => {
-        downloadStarted = true
-        remoteDebugger.log('PDFManager', 'DOWNLOAD_TRIGGERED', 'Download link clicked')
-      })
-      
       link.click()
       document.body.removeChild(link)
       
-      // Show appropriate feedback
-      if (deviceDetection.isMobile()) {
-        toast.info('PDF wird heruntergeladen. Prüfen Sie den Downloads-Ordner.')
-      } else {
-        toast.info('PDF wird heruntergeladen...')
-      }
-      
-      // If click didn't work, show manual instructions
-      setTimeout(() => {
-        if (!downloadStarted) {
-          remoteDebugger.log('PDFManager', 'DOWNLOAD_FAILED', 'Automatic download failed')
-          toast.error('Download fehlgeschlagen. Bitte PDF-URL direkt öffnen.')
-        }
-      }, 1000)
+      toast.info('PDF wird heruntergeladen...')
       
     } catch (error) {
       remoteDebugger.log('PDFManager', 'DOWNLOAD_ERROR', error)
       console.error('Error downloading PDF:', error)
       toast.error('PDF konnte nicht geöffnet werden')
-      
-      // Last resort: show URL to user
-      if (url && url.length < 200) {
-        console.log('PDF URL for manual access:', url)
-      }
     }
   }
 
