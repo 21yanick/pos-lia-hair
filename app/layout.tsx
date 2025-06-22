@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/shared/components/theme-provider"
 import { QueryProvider } from "@/shared/lib/react-query"
 import { OrganizationProvider } from "@/modules/organization"
 import { Toaster } from "@/shared/components/ui/sonner"
-import { MobileDebugPanel } from "@/shared/components/debug/MobileDebugPanel"
+import { EnterprisePDFProvider } from "@/shared/components/pdf/EnterprisePDFProvider"
 import { inter } from "@/shared/styles/fonts"
 import "./globals.css"
 
@@ -31,10 +31,11 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <QueryProvider>
             <OrganizationProvider>
-              {children}
+              <EnterprisePDFProvider>
+                {children}
+              </EnterprisePDFProvider>
             </OrganizationProvider>
             <Toaster />
-            <MobileDebugPanel />
           </QueryProvider>
         </ThemeProvider>
       </body>
