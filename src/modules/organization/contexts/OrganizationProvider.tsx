@@ -9,6 +9,8 @@ import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { supabase } from '@/shared/lib/supabase/client'
 import { organizationPersistence } from '@/shared/services/organizationPersistence'
 import { pdfReturnHandler } from '@/shared/utils/pdfReturnHandler'
+import { debugLogger } from '@/shared/utils/debugLogger'
+import { remoteDebugger } from '@/shared/utils/remoteDebug'
 
 interface OrganizationProviderProps {
   children: React.ReactNode
@@ -26,10 +28,27 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const { data: memberships, isLoading } = useOrganizationsQuery(isAuthenticated, authLoading)
   const { currentSlug, navigateToOrganization } = useOrganizationNavigation()
   
+  // Debug state changes
+  React.useEffect(() => {
+    const state = {
+      isAuthenticated,
+      authLoading,
+      isLoading,
+      currentSlug,
+      currentOrganization: currentOrganization?.slug,
+      membershipsCount: memberships?.length,
+      pathname
+    }
+    debugLogger.trackState('OrganizationProvider', state)
+    remoteDebugger.log('OrganizationProvider', 'STATE_CHANGE', state)
+  }, [isAuthenticated, authLoading, isLoading, currentSlug, currentOrganization, memberships, pathname])
+  
   // Initialize PDF return handler FIRST (before any other effects)
   useEffect(() => {
+    remoteDebugger.log('OrganizationProvider', 'MOUNT', 'Initializing PDF return handler')
     // Run PDF return check immediately on mount
-    pdfReturnHandler.checkAndRestore()
+    const wasRestored = pdfReturnHandler.checkAndRestore()
+    remoteDebugger.log('OrganizationProvider', 'PDF_RETURN_CHECK', { wasRestored })
     pdfReturnHandler.initialize()
   }, [])
   
@@ -77,7 +96,15 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   
   // PDF Return restoration (highest priority)
   useEffect(() => {
+    debugLogger.log('OrganizationProvider', 'PDF_RESTORE_EFFECT', {
+      isAuthenticated,
+      authLoading,
+      isLoading,
+      membershipsCount: memberships?.length
+    })
+    
     if (!isAuthenticated || authLoading || isLoading || !memberships) {
+      debugLogger.log('OrganizationProvider', 'PDF_RESTORE_SKIP', 'Not ready yet')
       return
     }
     
@@ -85,14 +112,24 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     const pdfRestoreFlag = sessionStorage.getItem('pdf_restore_flag')
     const pdfRestoreOrg = sessionStorage.getItem('pdf_restore_organization')
     
+    debugLogger.log('OrganizationProvider', 'PDF_RESTORE_FLAGS', {
+      pdfRestoreFlag,
+      hasPdfRestoreOrg: !!pdfRestoreOrg
+    })
+    
     if (pdfRestoreFlag === 'true' && pdfRestoreOrg) {
-      console.log('[OrganizationProvider] Processing PDF return restoration')
+      debugLogger.log('OrganizationProvider', 'PDF_RESTORE_START', 'Processing PDF return restoration')
       try {
         const orgData = JSON.parse(pdfRestoreOrg)
         const membership = memberships.find(m => m.organization.id === orgData.id)
         
+        debugLogger.log('OrganizationProvider', 'PDF_RESTORE_DATA', {
+          orgData: orgData.slug,
+          foundMembership: !!membership
+        })
+        
         if (membership) {
-          console.log('[OrganizationProvider] Restored organization from PDF return:', membership.organization.slug)
+          debugLogger.log('OrganizationProvider', 'PDF_RESTORE_SUCCESS', membership.organization.slug)
           // Use the role from backup if available, otherwise from membership
           const role = orgData.userRole || membership.role
           setOrganization(membership.organization, role)
@@ -106,15 +143,17 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
           
           // Navigate to correct URL if needed
           if (!pathname.includes(`/org/${membership.organization.slug}`)) {
+            debugLogger.log('OrganizationProvider', 'PDF_RESTORE_NAVIGATE', membership.organization.slug)
             navigateToOrganization(membership.organization.slug)
           }
           return
         }
       } catch (error) {
-        console.error('Failed to restore from PDF return:', error)
+        debugLogger.log('OrganizationProvider', 'PDF_RESTORE_ERROR', error)
       }
       
       // Clean up even if failed
+      debugLogger.log('OrganizationProvider', 'PDF_RESTORE_CLEANUP', 'Cleaning up after failed restore')
       sessionStorage.removeItem('pdf_restore_flag')
       sessionStorage.removeItem('pdf_restore_organization')
       pdfReturnHandler.clearReturnInfo()

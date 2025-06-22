@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/shared/components/theme-provider"
 import { QueryProvider } from "@/shared/lib/react-query"
 import { OrganizationProvider } from "@/modules/organization"
 import { Toaster } from "@/shared/components/ui/sonner"
+import { MobileDebugPanel } from "@/shared/components/debug/MobileDebugPanel"
 import { inter } from "@/shared/styles/fonts"
 import "./globals.css"
 
@@ -33,6 +34,7 @@ export default function RootLayout({
               {children}
             </OrganizationProvider>
             <Toaster />
+            <MobileDebugPanel />
           </QueryProvider>
         </ThemeProvider>
       </body>

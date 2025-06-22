@@ -3,6 +3,8 @@
  */
 import { deviceDetection } from '@/shared/utils/deviceDetection'
 import { toast } from 'sonner'
+import { debugLogger } from '@/shared/utils/debugLogger'
+import { remoteDebugger } from '@/shared/utils/remoteDebug'
 
 interface PdfWindow {
   id: string
@@ -126,9 +128,13 @@ class PdfManager {
    * Direct navigation (Android Chrome)
    */
   private openDirectNavigation(id: string, url: string): void {
+    remoteDebugger.log('PDFManager', 'DIRECT_NAVIGATION_START', { id, url: url.substring(0, 100) + '...' })
+    
     // Save current state for return navigation
     const currentUrl = window.location.href
     const currentTitle = document.title
+    
+    remoteDebugger.log('PDFManager', 'BACKUP_CURRENT_STATE', { currentUrl, currentTitle })
     
     // Store return information
     sessionStorage.setItem('pdf_return_url', currentUrl)
@@ -140,6 +146,13 @@ class PdfManager {
       const orgStore = (window as any).__organization_store
       if (orgStore.getState) {
         const state = orgStore.getState()
+        const orgState = {
+          hasCurrentOrg: !!state.currentOrganization,
+          orgSlug: state.currentOrganization?.slug,
+          userRole: state.userRole
+        }
+        remoteDebugger.log('PDFManager', 'ORG_STORE_STATE', orgState)
+        
         if (state.currentOrganization) {
           // Include both organization and user role
           const backupData = {
@@ -147,10 +160,12 @@ class PdfManager {
             userRole: state.userRole
           }
           sessionStorage.setItem('pdf_org_backup', JSON.stringify(backupData))
-          console.log('[PDFManager] Backed up organization state:', backupData.slug)
+          remoteDebugger.log('PDFManager', 'ORG_BACKUP_SAVED', { slug: backupData.slug })
         }
       }
     }
+    
+    remoteDebugger.log('PDFManager', 'NAVIGATE_TO_PDF', 'Leaving app...')
     
     // Navigate directly to PDF
     window.location.href = url
