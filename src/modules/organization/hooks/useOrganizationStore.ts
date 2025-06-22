@@ -14,15 +14,24 @@ interface OrganizationStore {
 }
 
 // Minimaler, fokussierter Store für Organisation State
-export const useOrganizationStore = create<OrganizationStore>((set) => ({
-  currentOrganization: null,
-  userRole: null,
-  
-  setOrganization: (org, role) => {
-    set({ currentOrganization: org, userRole: role })
-  },
-  
-  clearOrganization: () => {
-    set({ currentOrganization: null, userRole: null })
+export const useOrganizationStore = create<OrganizationStore>((set, get) => {
+  const store = {
+    currentOrganization: null,
+    userRole: null,
+    
+    setOrganization: (org, role) => {
+      set({ currentOrganization: org, userRole: role })
+    },
+    
+    clearOrganization: () => {
+      set({ currentOrganization: null, userRole: null })
+    }
   }
-}))
+  
+  // Make store globally accessible for pdfManager
+  if (typeof window !== 'undefined') {
+    (window as any).__organization_store = { getState: get, setState: set }
+  }
+  
+  return store
+})

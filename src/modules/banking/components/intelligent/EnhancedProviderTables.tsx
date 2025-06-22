@@ -251,89 +251,107 @@ export function EnhancedProviderTables({
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
         {/* Left: Enhanced POS Sales */}
         <Card>
           <CardHeader>
             <CardTitle>POS Sales (Brutto)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {showMatches && <TableHead className="w-12">Match</TableHead>}
-                  <TableHead>Datum</TableHead>
-                  <TableHead>Betrag</TableHead>
-                  <TableHead>Kunde</TableHead>
-                  <TableHead>Methode</TableHead>
-                  {showMatches && <TableHead>Confidence</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i}>
-                      {showMatches && <TableCell><Skeleton className="h-4 w-4" /></TableCell>}
-                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      {showMatches && <TableCell><Skeleton className="h-4 w-16" /></TableCell>}
-                    </TableRow>
-                  ))
-                ) : unmatchedSales.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={showMatches ? 6 : 4} className="text-center text-muted-foreground py-8">
-                      No unmatched sales found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  unmatchedSales.map((sale) => {
-                    const confidence = getSaleConfidence(sale.id)
-                    const hasMatch = confidence !== null
-                    const matchedProvider = hasMatch ? matchCandidates.find(c => c.sale.id === sale.id)?.providerReport : null
-                    
-                    return (
-                      <TableRow 
-                        key={sale.id}
-                        data-sale-id={sale.id}
-                        className={`cursor-pointer transition-colors ${
-                          selectedSale === sale.id 
-                            ? 'bg-accent border-l-4 border-primary' 
-                            : hasMatch 
-                              ? 'hover:bg-chart-2/5' 
-                              : 'hover:bg-muted/30'
-                        } ${hasMatch ? 'bg-chart-2/10' : ''}`}
-                        onClick={() => onSaleSelect(sale.id)}
-                      >
-                        {showMatches && (
-                          <TableCell>
-                            {hasMatch && matchedProvider && (
-                              <Checkbox
-                                checked={selectedMatches.includes(`${sale.id}-${matchedProvider.id}`)}
-                                onCheckedChange={() => handleMatchSelect(sale.id, matchedProvider.id)}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            )}
-                          </TableCell>
-                        )}
-                        <TableCell>{formatDateForDisplay(sale.created_at)}</TableCell>
-                        <TableCell>{sale.total_amount.toFixed(2)} CHF</TableCell>
-                        <TableCell>{sale.customer_name || 'Walk-in'}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{sale.payment_display}</Badge>
-                        </TableCell>
-                        {showMatches && (
-                          <TableCell>
-                            {confidence !== null && getConfidenceBadge(confidence)}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    )
-                  })
-                )}
-              </TableBody>
-            </Table>
+            {isLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {showMatches && <Skeleton className="h-4 w-4" />}
+                        <Skeleton className="h-5 w-8" />
+                      </div>
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-6 w-16" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-16" />
+                        {showMatches && <Skeleton className="h-4 w-16" />}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : unmatchedSales.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No unmatched sales found
+              </div>
+            ) : (
+              <div className="space-y-4 w-full max-w-full overflow-hidden">
+                {unmatchedSales.map((sale) => {
+                  const confidence = getSaleConfidence(sale.id)
+                  const hasMatch = confidence !== null
+                  const matchedProvider = hasMatch ? matchCandidates.find(c => c.sale.id === sale.id)?.providerReport : null
+                  
+                  return (
+                    <div 
+                      key={sale.id}
+                      data-sale-id={sale.id}
+                      className={`border rounded-lg p-4 w-full max-w-full overflow-hidden cursor-pointer transition-colors ${
+                        selectedSale === sale.id 
+                          ? 'bg-accent border-l-4 border-primary' 
+                          : hasMatch 
+                            ? 'hover:bg-chart-2/5 bg-chart-2/10' 
+                            : 'hover:bg-muted/30'
+                      }`}
+                      onClick={() => onSaleSelect(sale.id)}
+                    >
+                      {/* Header Row */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {showMatches && hasMatch && matchedProvider && (
+                            <Checkbox
+                              checked={selectedMatches.includes(`${sale.id}-${matchedProvider.id}`)}
+                              onCheckedChange={() => handleMatchSelect(sale.id, matchedProvider.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-shrink-0"
+                            />
+                          )}
+                          <TransactionTypeBadge typeCode="VK" />
+                        </div>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          {formatDateForDisplay(sale.created_at)}
+                        </span>
+                      </div>
+                      
+                      {/* Main Content */}
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <h3 className="font-medium break-words flex-1 min-w-0" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
+                            {sale.customer_name || 'Walk-in'}
+                          </h3>
+                          <div className="text-lg font-bold text-green-600 flex-shrink-0">
+                            {sale.total_amount.toFixed(2)} CHF
+                          </div>
+                        </div>
+                        
+                        {/* Payment Method + Confidence */}
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant="outline" className="flex-shrink-0">
+                            {sale.payment_display}
+                          </Badge>
+                          {showMatches && confidence !== null && (
+                            <div className="flex-shrink-0">
+                              {getConfidenceBadge(confidence)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -343,92 +361,108 @@ export function EnhancedProviderTables({
             <CardTitle>Provider Settlements (Netto + Gebühren)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {showMatches && <TableHead className="w-12">Match</TableHead>}
-                  <TableHead>Datum</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Brutto</TableHead>
-                  <TableHead>Gebühren</TableHead>
-                  <TableHead>Netto</TableHead>
-                  {showMatches && <TableHead>Confidence</TableHead>}
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i}>
-                      {showMatches && <TableCell><Skeleton className="h-4 w-4" /></TableCell>}
-                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      {showMatches && <TableCell><Skeleton className="h-4 w-16" /></TableCell>}
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : unmatchedProviderReports.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={showMatches ? 8 : 7} className="text-center text-muted-foreground py-8">
-                      No unmatched provider reports found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  unmatchedProviderReports.map((report) => {
-                    const confidence = getProviderConfidence(report.id)
-                    const hasMatch = confidence !== null
-                    const matchedSale = hasMatch ? matchCandidates.find(c => c.providerReport.id === report.id)?.sale : null
-                    
-                    return (
-                      <TableRow 
-                        key={report.id}
-                        data-provider-id={report.id}
-                        className={`cursor-pointer transition-colors ${
-                          selectedProvider === report.id 
-                            ? 'bg-accent border-l-4 border-primary' 
-                            : hasMatch 
-                              ? 'hover:bg-chart-2/5' 
-                              : 'hover:bg-muted/30'
-                        } ${hasMatch ? 'bg-chart-2/10' : ''}`}
-                        onClick={() => onProviderSelect(report.id)}
-                      >
-                        {showMatches && (
-                          <TableCell>
-                            {hasMatch && matchedSale && (
-                              <Checkbox
-                                checked={selectedMatches.includes(`${matchedSale.id}-${report.id}`)}
-                                onCheckedChange={() => handleMatchSelect(matchedSale.id, report.id)}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            )}
-                          </TableCell>
-                        )}
-                        <TableCell>{formatDateForDisplay(report.transaction_date)}</TableCell>
-                        <TableCell>
-                          <Badge variant={report.provider === 'twint' ? 'default' : 'secondary'}>
+            {isLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {showMatches && <Skeleton className="h-4 w-4" />}
+                        <Skeleton className="h-5 w-12" />
+                      </div>
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-6 w-24" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-16" />
+                        {showMatches && <Skeleton className="h-4 w-16" />}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : unmatchedProviderReports.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No unmatched provider reports found
+              </div>
+            ) : (
+              <div className="space-y-4 w-full max-w-full overflow-hidden">
+                {unmatchedProviderReports.map((report) => {
+                  const confidence = getProviderConfidence(report.id)
+                  const hasMatch = confidence !== null
+                  const matchedSale = hasMatch ? matchCandidates.find(c => c.providerReport.id === report.id)?.sale : null
+                  
+                  return (
+                    <div 
+                      key={report.id}
+                      data-provider-id={report.id}
+                      className={`border rounded-lg p-4 w-full max-w-full overflow-hidden cursor-pointer transition-colors ${
+                        selectedProvider === report.id 
+                          ? 'bg-accent border-l-4 border-primary' 
+                          : hasMatch 
+                            ? 'hover:bg-chart-2/5 bg-chart-2/10' 
+                            : 'hover:bg-muted/30'
+                      }`}
+                      onClick={() => onProviderSelect(report.id)}
+                    >
+                      {/* Header Row */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {showMatches && hasMatch && matchedSale && (
+                            <Checkbox
+                              checked={selectedMatches.includes(`${matchedSale.id}-${report.id}`)}
+                              onCheckedChange={() => handleMatchSelect(matchedSale.id, report.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-shrink-0"
+                            />
+                          )}
+                          <Badge 
+                            variant={report.provider === 'twint' ? 'default' : 'secondary'}
+                            className="flex-shrink-0"
+                          >
                             {report.provider_display}
                           </Badge>
-                        </TableCell>
-                        <TableCell>{report.gross_amount.toFixed(2)}</TableCell>
-                        <TableCell>{report.fees.toFixed(2)}</TableCell>
-                        <TableCell>{report.net_amount.toFixed(2)}</TableCell>
-                        {showMatches && (
-                          <TableCell>
-                            {confidence !== null && getConfidenceBadge(confidence)}
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <Badge variant="outline">Pending</Badge>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-                )}
-              </TableBody>
-            </Table>
+                        </div>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          {formatDateForDisplay(report.transaction_date)}
+                        </span>
+                      </div>
+                      
+                      {/* Amount Breakdown */}
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm text-muted-foreground">Brutto → Netto</span>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-lg font-bold">
+                              {report.gross_amount.toFixed(2)} → {report.net_amount.toFixed(2)} CHF
+                            </div>
+                            <div className="text-xs text-red-600">
+                              Gebühren: {report.fees.toFixed(2)} CHF
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Status + Confidence */}
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant="outline" className="flex-shrink-0">
+                            Pending
+                          </Badge>
+                          {showMatches && confidence !== null && (
+                            <div className="flex-shrink-0">
+                              {getConfidenceBadge(confidence)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

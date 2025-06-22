@@ -91,7 +91,7 @@ class PdfManager {
   }
 
   /**
-   * Mobile: Open in new tab (keeps app alive)
+   * Mobile: Use optimal strategy per browser
    */
   private openMobile(id: string, url: string): void {
     try {
@@ -102,25 +102,74 @@ class PdfManager {
         return
       }
       
-      // Open PDF in new tab for all mobile browsers
-      // This keeps the React app alive and maintains all state
-      const win = window.open(url, '_blank')
+      const strategy = deviceDetection.getPDFStrategy()
       
-      if (win) {
-        // Track the window
-        this.openPdfs.set(id, {
-          id,
-          window: win,
-          url,
-          openedAt: new Date()
-        })
-      } else {
-        // Popup blocked - fallback to download
-        this.downloadPdf(url, id)
+      switch (strategy) {
+        case 'direct-navigation':
+          this.openDirectNavigation(id, url)
+          break
+        case 'new-tab':
+          this.openNewTab(id, url)
+          break
+        case 'download':
+        default:
+          this.downloadPdf(url, id)
+          break
       }
     } catch (error) {
       console.error('Error opening PDF on mobile:', error)
-      // Fallback to download on any error
+      this.downloadPdf(url, id)
+    }
+  }
+
+  /**
+   * Direct navigation (Android Chrome)
+   */
+  private openDirectNavigation(id: string, url: string): void {
+    // Save current state for return navigation
+    const currentUrl = window.location.href
+    const currentTitle = document.title
+    
+    // Store return information
+    sessionStorage.setItem('pdf_return_url', currentUrl)
+    sessionStorage.setItem('pdf_return_title', currentTitle)
+    sessionStorage.setItem('pdf_return_timestamp', Date.now().toString())
+    
+    // Force organization state persistence before navigation
+    if (typeof window !== 'undefined' && (window as any).__organization_store) {
+      const orgStore = (window as any).__organization_store
+      if (orgStore.getState && orgStore.getState().currentOrganization) {
+        sessionStorage.setItem('pdf_org_backup', JSON.stringify(orgStore.getState().currentOrganization))
+      }
+    }
+    
+    // Navigate directly to PDF
+    window.location.href = url
+    
+    // Track as opened
+    this.openPdfs.set(id, {
+      id,
+      url,
+      openedAt: new Date()
+    })
+  }
+
+  /**
+   * New tab approach (iOS, Desktop)
+   */
+  private openNewTab(id: string, url: string): void {
+    const win = window.open(url, '_blank')
+    
+    if (win) {
+      // Track the window
+      this.openPdfs.set(id, {
+        id,
+        window: win,
+        url,
+        openedAt: new Date()
+      })
+    } else {
+      // Popup blocked - fallback to download
       this.downloadPdf(url, id)
     }
   }

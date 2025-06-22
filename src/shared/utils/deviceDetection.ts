@@ -34,6 +34,33 @@ export const deviceDetection = {
   },
 
   /**
+   * Check if running on Android
+   */
+  isAndroid(): boolean {
+    if (typeof window === 'undefined') return false
+    
+    const userAgent = window.navigator.userAgent.toLowerCase()
+    return /android/.test(userAgent)
+  },
+
+  /**
+   * Check if running Chrome browser
+   */
+  isChrome(): boolean {
+    if (typeof window === 'undefined') return false
+    
+    const userAgent = window.navigator.userAgent.toLowerCase()
+    return /chrome/.test(userAgent) && !/edge|edg|opr/.test(userAgent)
+  },
+
+  /**
+   * Check if running Chrome on Android
+   */
+  isAndroidChrome(): boolean {
+    return this.isAndroid() && this.isChrome()
+  },
+
+  /**
    * Check if running in standalone mode (PWA)
    */
   isStandalone(): boolean {
@@ -49,15 +76,44 @@ export const deviceDetection = {
   canOpenPDFInline(): boolean {
     if (typeof window === 'undefined') return false
     
-    // iOS Safari has issues with PDF viewing
+    // iOS Safari has issues with PDF viewing in new tabs
     if (this.isIOS()) {
       return false
     }
     
-    // Check if browser has PDF plugin
-    const hasPDFPlugin = navigator.mimeTypes['application/pdf']
+    // Android Chrome: Use direct navigation for better reliability
+    if (this.isAndroidChrome()) {
+      return true
+    }
     
+    // Other browsers: Check for PDF plugin
+    const hasPDFPlugin = navigator.mimeTypes['application/pdf']
     return hasPDFPlugin !== undefined
+  },
+
+  /**
+   * Get optimal PDF opening strategy for current browser
+   */
+  getPDFStrategy(): 'direct-navigation' | 'new-tab' | 'download' {
+    if (typeof window === 'undefined') return 'download'
+    
+    // Android Chrome: Direct navigation works best
+    if (this.isAndroidChrome()) {
+      return 'direct-navigation'
+    }
+    
+    // iOS: New tab
+    if (this.isIOS()) {
+      return 'new-tab'
+    }
+    
+    // Desktop/Other: New tab
+    if (!this.isMobile()) {
+      return 'new-tab'
+    }
+    
+    // Mobile fallback: Try new tab first, then download
+    return 'new-tab'
   },
 
   /**

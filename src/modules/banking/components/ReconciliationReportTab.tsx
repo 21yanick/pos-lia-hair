@@ -459,7 +459,7 @@ export function ReconciliationReportTab() {
           </div>
 
           {/* Quick Preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
             {/* Provider Issues */}
             <Card>
               <CardHeader>
@@ -468,7 +468,7 @@ export function ReconciliationReportTab() {
                   Offene und abgeglichene Verkäufe
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 max-h-96 overflow-y-auto">
+              <CardContent className="space-y-3 max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto">
                 {/* ALL unmatched sales */}
                 {reconciliationData.providerReconciliation.unmatchedSales.map((sale, index) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border-l-4 border-red-500">
@@ -510,7 +510,7 @@ export function ReconciliationReportTab() {
                   Bank-Transaktionen Status
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 max-h-96 overflow-y-auto">
+              <CardContent className="space-y-3 max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto">
                 {/* ALL unmatched bank transactions */}
                 {reconciliationData.bankReconciliation.unmatchedBankTransactions.map((tx, index) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border-l-4 border-red-500">
