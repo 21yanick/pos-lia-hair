@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import { useDocuments } from '@/shared/hooks/business/useDocuments'
 import { useSales } from '@/shared/hooks/business/useSales'
@@ -19,10 +19,16 @@ export function usePdfActions() {
   const updateTransaction = useUpdateTransaction()
   const generatePdfMutation = useGeneratePdf()
 
+  // Track if action is in progress to prevent double execution
+  const actionInProgress = useRef(false)
+  
   /**
    * View PDF with proper resource management
    */
   const viewPdf = useCallback(async (transaction: UnifiedTransaction) => {
+    // Prevent double execution on mobile
+    if (actionInProgress.current) return false
+    actionInProgress.current = true
     if (!currentOrganization) {
       toast.error('Keine Organization ausgewählt')
       return false
@@ -61,6 +67,11 @@ export function usePdfActions() {
     } catch (err) {
       toast.error('Fehler beim Öffnen des PDFs')
       return false
+    } finally {
+      // Release lock after short delay to prevent double tap
+      setTimeout(() => {
+        actionInProgress.current = false
+      }, 500)
     }
   }, [currentOrganization, getStorageUrl])
 
@@ -68,8 +79,13 @@ export function usePdfActions() {
    * Generate missing PDF
    */
   const generatePdf = useCallback(async (transaction: UnifiedTransaction) => {
+    // Prevent double execution on mobile
+    if (actionInProgress.current) return false
+    actionInProgress.current = true
+    
     if (!currentOrganization) {
       toast.error('Keine Organization ausgewählt')
+      actionInProgress.current = false
       return false
     }
 
@@ -128,6 +144,11 @@ export function usePdfActions() {
     } catch (err: any) {
       toast.error(err.message || 'Fehler beim Generieren', { id: toastId })
       return false
+    } finally {
+      // Release lock after short delay
+      setTimeout(() => {
+        actionInProgress.current = false
+      }, 500)
     }
   }, [currentOrganization, createReceiptPDF, generatePlaceholderReceipt, generatePdfMutation])
 

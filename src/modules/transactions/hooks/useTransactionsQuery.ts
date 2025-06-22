@@ -111,6 +111,13 @@ export function useTransactionsQuery(query: TransactionSearchQuery = {}) {
     enabled: !!currentOrganization,
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    
+    // Mobile optimization: refetch when window regains focus
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    
+    // Keep previous data while fetching
+    keepPreviousData: true,
   })
 }
 

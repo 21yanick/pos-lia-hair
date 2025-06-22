@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Button } from '@/shared/components/ui/button'
@@ -176,7 +176,7 @@ const TransactionTypeBadge = ({ typeCode }: { typeCode: string }) => {
   )
 }
 
-// PDF Status Icon
+// PDF Status Icon with mobile optimization
 const PdfStatusIcon = ({ 
   transaction, 
   onPdfAction 
@@ -184,18 +184,21 @@ const PdfStatusIcon = ({
   transaction: UnifiedTransaction
   onPdfAction?: (transaction: UnifiedTransaction) => void
 }) => {
+  const [isProcessing, setIsProcessing] = useState(false)
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const getPdfIconConfig = (status: string) => {
     switch (status) {
       case 'available':
         return {
-          icon: <FileText className="w-4 h-4 text-green-600 cursor-pointer hover:text-green-700" />,
-          tooltip: 'PDF verfügbar - Klicken zum Öffnen',
+          icon: <FileText className="w-4 h-4 text-green-600" />,
+          tooltip: 'PDF verfügbar - Tippen zum Öffnen',
           clickable: true
         }
       case 'missing':
         return {
-          icon: <FileText className="w-4 h-4 text-red-500 cursor-pointer hover:text-red-600" />,
-          tooltip: 'PDF fehlt - Klicken zum Generieren',
+          icon: <FileText className="w-4 h-4 text-red-500" />,
+          tooltip: 'PDF fehlt - Tippen zum Generieren',
           clickable: true
         }
       case 'not_needed':
@@ -215,20 +218,58 @@ const PdfStatusIcon = ({
 
   const iconConfig = getPdfIconConfig(transaction.pdf_status || 'missing')
 
-  const handleClick = () => {
-    if (iconConfig.clickable && onPdfAction) {
-      onPdfAction(transaction)
+  const handleClick = useCallback(() => {
+    if (!iconConfig.clickable || !onPdfAction || isProcessing) return
+
+    // Debounce for mobile double-tap prevention
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current)
     }
+
+    clickTimeoutRef.current = setTimeout(() => {
+      setIsProcessing(true)
+      onPdfAction(transaction)
+      
+      // Reset processing state after action
+      setTimeout(() => {
+        setIsProcessing(false)
+      }, 1000)
+    }, 100)
+  }, [iconConfig.clickable, onPdfAction, transaction, isProcessing])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  if (isProcessing) {
+    return (
+      <div className="flex justify-center p-2">
+        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
   return (
-    <div 
-      title={iconConfig.tooltip} 
+    <button
+      type="button"
+      disabled={!iconConfig.clickable}
       onClick={handleClick}
-      className="flex justify-center"
+      className={`
+        p-2 -m-2 rounded-lg transition-colors touch-manipulation
+        ${iconConfig.clickable 
+          ? 'hover:bg-muted active:bg-muted/80 cursor-pointer' 
+          : 'cursor-default'
+        }
+      `}
+      title={iconConfig.tooltip}
     >
       {iconConfig.icon}
-    </div>
+    </button>
   )
 }
 
