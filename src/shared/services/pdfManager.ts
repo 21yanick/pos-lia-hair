@@ -138,8 +138,17 @@ class PdfManager {
     // Force organization state persistence before navigation
     if (typeof window !== 'undefined' && (window as any).__organization_store) {
       const orgStore = (window as any).__organization_store
-      if (orgStore.getState && orgStore.getState().currentOrganization) {
-        sessionStorage.setItem('pdf_org_backup', JSON.stringify(orgStore.getState().currentOrganization))
+      if (orgStore.getState) {
+        const state = orgStore.getState()
+        if (state.currentOrganization) {
+          // Include both organization and user role
+          const backupData = {
+            ...state.currentOrganization,
+            userRole: state.userRole
+          }
+          sessionStorage.setItem('pdf_org_backup', JSON.stringify(backupData))
+          console.log('[PDFManager] Backed up organization state:', backupData.slug)
+        }
       }
     }
     

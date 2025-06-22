@@ -26,8 +26,10 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const { data: memberships, isLoading } = useOrganizationsQuery(isAuthenticated, authLoading)
   const { currentSlug, navigateToOrganization } = useOrganizationNavigation()
   
-  // Initialize PDF return handler
+  // Initialize PDF return handler FIRST (before any other effects)
   useEffect(() => {
+    // Run PDF return check immediately on mount
+    pdfReturnHandler.checkAndRestore()
     pdfReturnHandler.initialize()
   }, [])
   
@@ -73,10 +75,62 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     }
   }, [currentSlug, pathname, isAuthenticated, authLoading, isLoading, memberships]) // Removed currentOrganization to prevent loops
   
+  // PDF Return restoration (highest priority)
+  useEffect(() => {
+    if (!isAuthenticated || authLoading || isLoading || !memberships) {
+      return
+    }
+    
+    // Check for PDF return flag
+    const pdfRestoreFlag = sessionStorage.getItem('pdf_restore_flag')
+    const pdfRestoreOrg = sessionStorage.getItem('pdf_restore_organization')
+    
+    if (pdfRestoreFlag === 'true' && pdfRestoreOrg) {
+      console.log('[OrganizationProvider] Processing PDF return restoration')
+      try {
+        const orgData = JSON.parse(pdfRestoreOrg)
+        const membership = memberships.find(m => m.organization.id === orgData.id)
+        
+        if (membership) {
+          console.log('[OrganizationProvider] Restored organization from PDF return:', membership.organization.slug)
+          // Use the role from backup if available, otherwise from membership
+          const role = orgData.userRole || membership.role
+          setOrganization(membership.organization, role)
+          
+          // Clean up PDF restore flags
+          sessionStorage.removeItem('pdf_restore_flag')
+          sessionStorage.removeItem('pdf_restore_organization')
+          
+          // Also clean up PDF return info since we successfully restored
+          pdfReturnHandler.clearReturnInfo()
+          
+          // Navigate to correct URL if needed
+          if (!pathname.includes(`/org/${membership.organization.slug}`)) {
+            navigateToOrganization(membership.organization.slug)
+          }
+          return
+        }
+      } catch (error) {
+        console.error('Failed to restore from PDF return:', error)
+      }
+      
+      // Clean up even if failed
+      sessionStorage.removeItem('pdf_restore_flag')
+      sessionStorage.removeItem('pdf_restore_organization')
+      pdfReturnHandler.clearReturnInfo()
+    }
+  }, [isAuthenticated, authLoading, isLoading, memberships, pathname])
+  
   // Initial organization setup (separate effect, only when no slug in URL)
   useEffect(() => {
     if (!isAuthenticated || authLoading || isLoading || !memberships || currentSlug) {
       return // Skip if URL has slug (handled by URL effect above)
+    }
+    
+    // Skip if PDF restoration is pending
+    const pdfRestoreFlag = sessionStorage.getItem('pdf_restore_flag')
+    if (pdfRestoreFlag === 'true') {
+      return // PDF restoration will handle this
     }
     
     // If we have organization but no URL slug, navigate to it
@@ -87,22 +141,6 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     
     // No current organization - try to restore from persistence
     if (!currentOrganization) {
-      // First check for PDF return restoration
-      const pdfRestored = sessionStorage.getItem('restored_organization')
-      if (pdfRestored) {
-        try {
-          const orgData = JSON.parse(pdfRestored)
-          const membership = memberships.find(m => m.organization.id === orgData.id)
-          if (membership) {
-            setOrganization(membership.organization, membership.role)
-            sessionStorage.removeItem('restored_organization')
-            return
-          }
-        } catch (error) {
-          console.error('Failed to restore from PDF return:', error)
-        }
-      }
-      
       // Try normal persistence
       const persisted = organizationPersistence.load()
       if (persisted) {

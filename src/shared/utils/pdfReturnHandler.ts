@@ -34,28 +34,55 @@ export const pdfReturnHandler = {
       return false
     }
     
+    console.log('[PDFReturnHandler] Detected PDF return - restoring state')
+    
     // We're returning from PDF - restore organization state if available
     if (orgBackup && typeof window !== 'undefined') {
       try {
         const orgData = JSON.parse(orgBackup)
+        console.log('[PDFReturnHandler] Restoring organization:', orgData.slug)
+        
+        // Store for OrganizationProvider to pick up
+        sessionStorage.setItem('pdf_restore_organization', orgBackup)
+        sessionStorage.setItem('pdf_restore_flag', 'true')
         
         // Try to restore to Zustand store if available
         if ((window as any).__organization_store) {
           const orgStore = (window as any).__organization_store
-          if (orgStore.getState && orgStore.setState) {
-            orgStore.setState({ currentOrganization: orgData })
+          if (orgStore.setState) {
+            console.log('[PDFReturnHandler] Restoring to Zustand store')
+            orgStore.setState({ 
+              currentOrganization: orgData,
+              userRole: orgData.userRole || null
+            })
           }
         }
         
-        // Also store in persistence for backup
-        sessionStorage.setItem('restored_organization', orgBackup)
+        // Force navigation to correct URL if needed
+        const currentUrl = window.location.href
+        const expectedUrl = `/org/${orgData.slug}`
+        
+        // If we're on a PDF URL or not on the correct org URL, redirect
+        if (this.isPDFUrl(currentUrl) || !currentUrl.includes(expectedUrl)) {
+          console.log('[PDFReturnHandler] Redirecting from PDF back to app:', expectedUrl)
+          
+          // Try to restore to the exact page user was on
+          const returnUrl = sessionStorage.getItem('pdf_return_url')
+          if (returnUrl && returnUrl.includes(expectedUrl)) {
+            window.location.href = returnUrl
+          } else {
+            // Fallback to dashboard
+            window.location.href = `${expectedUrl}/dashboard`
+          }
+        }
+        
       } catch (error) {
         console.error('Failed to restore organization state:', error)
       }
     }
     
-    // Clear return info after successful restoration
-    this.clearReturnInfo()
+    // Don't clear return info here - let OrganizationProvider handle it
+    // This ensures the restore flags are available for React effects
     
     return true
   },
