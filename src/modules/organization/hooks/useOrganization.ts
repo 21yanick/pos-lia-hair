@@ -7,13 +7,15 @@ import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { 
   CreateOrganizationData, 
   UpdateOrganizationData, 
-  InviteUserData 
+  InviteUserData,
+  Permission,
+  ROLE_PERMISSIONS
 } from '@/shared/types/organizations'
 
 // Kompatibilitäts-Hook der die alte API nachbildet
 // Macht die Migration einfacher - kann später entfernt werden
 export function useOrganization() {
-  const { currentOrganization, userRole } = useOrganizationStore()
+  const { currentOrganization, userRole, setOrganization } = useOrganizationStore()
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { data: memberships = [], isLoading, error } = useOrganizationsQuery(isAuthenticated, authLoading)
   const refreshOrganizations = useRefreshOrganizations()
@@ -50,6 +52,22 @@ export function useOrganization() {
     }
   }
   
+  // Switch to a different organization
+  const switchOrganization = async (organizationId: string) => {
+    const membership = memberships.find(m => m.organization.id === organizationId)
+    if (!membership) {
+      throw new Error('Organization not found or access denied')
+    }
+    setOrganization(membership.organization, membership.role)
+  }
+  
+  // Check if user has a specific permission
+  const hasPermission = (permission: Permission): boolean => {
+    if (!userRole) return false
+    const permissions = ROLE_PERMISSIONS[userRole]
+    return permissions.includes(permission)
+  }
+  
   return {
     // State
     currentOrganization,
@@ -59,7 +77,9 @@ export function useOrganization() {
     error: error?.message || null,
     
     // Actions
+    switchOrganization,
     refreshOrganizations,
+    hasPermission,
     createOrganization,
     updateOrganization,
     deleteOrganization,

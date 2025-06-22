@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useOrganizationStore } from '../hooks/useOrganizationStore'
 import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
 import { useOrganizationNavigation } from '../hooks/useOrganizationNavigation'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { supabase } from '@/shared/lib/supabase/client'
+import { organizationPersistence } from '@/shared/services/organizationPersistence'
 
 interface OrganizationProviderProps {
   children: React.ReactNode
@@ -31,9 +32,36 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated, loading: authLoading } = useAuth()
-  const { setOrganization, clearOrganization } = useOrganizationStore()
+  const { setOrganization, clearOrganization, currentOrganization } = useOrganizationStore()
   const { data: memberships, isLoading, error } = useOrganizationsQuery(isAuthenticated, authLoading)
   const { currentSlug, navigateToOrganization, navigateToOrganizationSelection } = useOrganizationNavigation()
+  
+  // Track if we've restored state
+  const hasRestoredState = useRef(false)
+  
+  // Save organization state when it changes
+  useEffect(() => {
+    if (currentOrganization) {
+      organizationPersistence.save(currentOrganization.id, currentOrganization.slug)
+    }
+  }, [currentOrganization])
+  
+  // Restore organization state on mount
+  useEffect(() => {
+    if (hasRestoredState.current) return
+    if (authLoading || !isAuthenticated || isLoading) return
+    if (!memberships || memberships.length === 0) return
+    
+    const persisted = organizationPersistence.load()
+    if (persisted) {
+      const membership = memberships.find(m => m.organization.id === persisted.id)
+      if (membership) {
+        hasRestoredState.current = true
+        console.log('Restoring organization:', membership.organization.name)
+        setOrganization(membership.organization, membership.role)
+      }
+    }
+  }, [authLoading, isAuthenticated, isLoading, memberships, setOrganization])
   
   // 🏢 ORGANIZATION LOGIC - Only runs if authenticated
   useEffect(() => {
@@ -108,6 +136,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearOrganization()
+        organizationPersistence.clear()
       }
     })
     

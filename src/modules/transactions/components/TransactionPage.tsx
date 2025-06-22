@@ -1,23 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-
-// Simple debounce hook
-const useDebounce = (value: string, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value)
-  
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-    
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
-  
-  return debouncedValue
-}
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Button } from '@/shared/components/ui/button'
@@ -38,27 +21,27 @@ import {
   Info
 } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
-import { useUnifiedTransactions } from '../hooks/useUnifiedTransactions'
+import { useTransactionsQuery, useInvalidateTransactions } from '../hooks/useTransactionsQuery'
+import { usePdfActions } from '../hooks/usePdfActions'
+import { useDebounce } from '../hooks/useDebounce'
 import { 
   type TransactionSearchQuery, 
   type QuickFilterPreset,
-  type UnifiedTransaction,
-  type PdfStatus 
+  type UnifiedTransaction
 } from '../types/unifiedTransactions'
 import { formatCurrency } from '@/shared/utils'
 import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
 import { DateRangePicker } from './DateRangePicker'
-import { BulkOperationsPanel } from './BulkOperationsPanel'
-import { usePdfActions } from '../hooks/usePdfActions'
+import { toast } from 'sonner'
 
-// Multi-Filter State Interface
+// Filter State
 interface ActiveFilters {
   dateFilter: QuickFilterPreset | null
   typeFilters: QuickFilterPreset[]
   statusFilters: QuickFilterPreset[]
 }
 
-// Quick Filter Buttons Component - Simplified & Theme Compliant
+// Quick Filters Component
 const QuickFilters = ({ 
   activeFilters,
   onFiltersChange,
@@ -70,24 +53,20 @@ const QuickFilters = ({
   dateRange?: DateRange
   onDateRangeChange: (dateRange: DateRange | undefined) => void
 }) => {
-  // Zeit-Filter (nur einer aktiv)
   const dateFilters = [
     { preset: 'today' as QuickFilterPreset, label: 'Heute' },
     { preset: 'this_week' as QuickFilterPreset, label: 'Woche' },
     { preset: 'this_month' as QuickFilterPreset, label: 'Monat' },
   ]
 
-  // Typ-Filter (kombinierbar)
   const typeFilters = [
     { preset: 'sales_only' as QuickFilterPreset, label: 'Verkäufe' },
     { preset: 'expenses_only' as QuickFilterPreset, label: 'Ausgaben' },
   ]
 
-  // Status-Filter (kombinierbar)
   const statusFilters = [
     { preset: 'with_pdf' as QuickFilterPreset, label: 'Mit PDF' },
     { preset: 'without_pdf' as QuickFilterPreset, label: 'Ohne PDF' },
-    { preset: 'unmatched_only' as QuickFilterPreset, label: 'Unabgeglichen' },
   ]
 
   const handleDateFilterClick = (preset: QuickFilterPreset) => {
@@ -124,9 +103,9 @@ const QuickFilters = ({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-4 overflow-hidden">
-      {/* Zeit-Filter Gruppe */}
-      <div className="flex flex-wrap gap-1 justify-center sm:justify-start min-w-0">
+    <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-4">
+      {/* Date Filters */}
+      <div className="flex flex-wrap gap-1">
         {dateFilters.map(({ preset, label }) => (
           <Button
             key={preset}
@@ -138,21 +117,15 @@ const QuickFilters = ({
             {label}
           </Button>
         ))}
-        <div className="w-full sm:w-auto max-w-[200px]">
-          <DateRangePicker
-            dateRange={dateRange}
-            onDateRangeChange={onDateRangeChange}
-            placeholder="Zeitraum"
-            className="w-full"
-          />
-        </div>
+        <DateRangePicker
+          dateRange={dateRange}
+          onDateRangeChange={onDateRangeChange}
+          placeholder="Zeitraum"
+        />
       </div>
       
-      {/* Trennlinie - nur auf Desktop */}
-      <div className="hidden sm:block h-6 w-px bg-border" />
-      
-      {/* Typ-Filter Gruppe */}
-      <div className="flex flex-wrap gap-1 justify-center sm:justify-start min-w-0">
+      {/* Type Filters */}
+      <div className="flex flex-wrap gap-1">
         {typeFilters.map(({ preset, label }) => (
           <Button
             key={preset}
@@ -166,11 +139,8 @@ const QuickFilters = ({
         ))}
       </div>
       
-      {/* Trennlinie - nur auf Desktop */}
-      <div className="hidden sm:block h-6 w-px bg-border" />
-      
-      {/* Status-Filter Gruppe */}
-      <div className="flex flex-wrap gap-1 justify-center sm:justify-start min-w-0">
+      {/* Status Filters */}
+      <div className="flex flex-wrap gap-1">
         {statusFilters.map(({ preset, label }) => (
           <Button
             key={preset}
@@ -187,14 +157,14 @@ const QuickFilters = ({
   )
 }
 
-// Transaction Type Badge Component - Theme Compliant
+// Transaction Type Badge
 const TransactionTypeBadge = ({ typeCode }: { typeCode: string }) => {
   const getBadgeVariant = (code: string) => {
     switch (code) {
-      case 'VK': return 'default'     // Verkäufe
-      case 'AG': return 'destructive' // Ausgaben
-      case 'CM': return 'secondary'   // Cash Movements
-      case 'BT': return 'outline'     // Bank Transactions
+      case 'VK': return 'default'
+      case 'AG': return 'destructive'
+      case 'CM': return 'secondary'
+      case 'BT': return 'outline'
       default: return 'outline'
     }
   }
@@ -206,131 +176,15 @@ const TransactionTypeBadge = ({ typeCode }: { typeCode: string }) => {
   )
 }
 
-// Transaction Status Icon Component - Clean separation
-const TransactionStatusIcon = ({ transaction }: { transaction: UnifiedTransaction }) => {
-  const getTransactionStatus = () => {
-    const { status, transaction_type } = transaction
-    
-    switch (status) {
-      case 'completed':
-        return {
-          icon: <CheckCircle2 className="w-4 h-4 text-green-600" />,
-          tooltip: transaction_type === 'sale' ? 'Verkauf abgeschlossen' :
-                  transaction_type === 'expense' ? 'Ausgabe bezahlt' :
-                  transaction_type === 'cash_movement' ? 'Kassenbewegung abgeschlossen' :
-                  'Abgeschlossen'
-        }
-      case 'cancelled':
-        return {
-          icon: <XCircle className="w-4 h-4 text-red-500" />,
-          tooltip: 'Storniert'
-        }
-      case 'refunded':
-        return {
-          icon: <XCircle className="w-4 h-4 text-orange-500" />,
-          tooltip: 'Rückerstattung'
-        }
-      case 'matched':
-        return {
-          icon: <CheckCircle2 className="w-4 h-4 text-green-600" />,
-          tooltip: 'Bank-Transaktion verarbeitet'
-        }
-      case 'unmatched':
-        return {
-          icon: <Clock className="w-4 h-4 text-amber-500" />,
-          tooltip: 'Bank-Transaktion ausstehend'
-        }
-      default:
-        return {
-          icon: <Clock className="w-4 h-4 text-muted-foreground" />,
-          tooltip: `Status: ${status}`
-        }
-    }
-  }
-  
-  const statusConfig = getTransactionStatus()
-  
-  return (
-    <div title={statusConfig.tooltip} className="flex justify-center">
-      {statusConfig.icon}
-    </div>
-  )
-}
-
-// Banking Status Icon Component - Clean separation
-const BankingStatusIcon = ({ transaction }: { transaction: UnifiedTransaction }) => {
-  const getBankingStatus = () => {
-    const { banking_status } = transaction
-    
-    if (!banking_status) {
-      return {
-        icon: <div className="w-4 h-4 text-muted-foreground">—</div>,
-        tooltip: 'Kein Banking-Abgleich erforderlich'
-      }
-    }
-    
-    switch (banking_status) {
-      case 'unmatched':
-        return {
-          icon: <Clock className="w-4 h-4 text-amber-500" />,
-          tooltip: 'Banking-Abgleich ausstehend'
-        }
-      case 'provider_matched':
-        return {
-          icon: <AlertCircle className="w-4 h-4 text-blue-500" />,
-          tooltip: 'Provider abgeglichen, Banking ausstehend'
-        }
-      case 'bank_matched':
-        return {
-          icon: <CheckCircle2 className="w-4 h-4 text-green-600" />,
-          tooltip: 'Bank abgeglichen'
-        }
-      case 'fully_matched':
-        return {
-          icon: <CheckCircle2 className="w-4 h-4 text-green-600" />,
-          tooltip: 'Vollständig abgeglichen'
-        }
-      case 'matched':
-        return {
-          icon: <CheckCircle2 className="w-4 h-4 text-green-600" />,
-          tooltip: 'Abgeglichen'
-        }
-      default:
-        return {
-          icon: <AlertCircle className="w-4 h-4 text-muted-foreground" />,
-          tooltip: `Banking Status: ${banking_status}`
-        }
-    }
-  }
-  
-  const statusConfig = getBankingStatus()
-  
-  return (
-    <div title={statusConfig.tooltip} className="flex justify-center">
-      {statusConfig.icon}
-    </div>
-  )
-}
-
-// PDF Status Icon Component - Theme Compliant
+// PDF Status Icon
 const PdfStatusIcon = ({ 
   transaction, 
   onPdfAction 
 }: { 
   transaction: UnifiedTransaction
-  onPdfAction?: (transaction: UnifiedTransaction) => Promise<void>
+  onPdfAction?: (transaction: UnifiedTransaction) => void
 }) => {
-  const [isLoading, setIsLoading] = useState(false)
-
-  const getPdfIconConfig = (status: PdfStatus, loading: boolean) => {
-    if (loading) {
-      return {
-        icon: <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>,
-        tooltip: 'PDF wird verarbeitet...',
-        clickable: false
-      }
-    }
-
+  const getPdfIconConfig = (status: string) => {
     switch (status) {
       case 'available':
         return {
@@ -343,12 +197,6 @@ const PdfStatusIcon = ({
           icon: <FileText className="w-4 h-4 text-red-500 cursor-pointer hover:text-red-600" />,
           tooltip: 'PDF fehlt - Klicken zum Generieren',
           clickable: true
-        }
-      case 'generating':
-        return {
-          icon: <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>,
-          tooltip: 'PDF wird generiert...',
-          clickable: false
         }
       case 'not_needed':
         return {
@@ -365,18 +213,11 @@ const PdfStatusIcon = ({
     }
   }
 
-  const iconConfig = getPdfIconConfig(transaction.pdf_status, isLoading)
+  const iconConfig = getPdfIconConfig(transaction.pdf_status || 'missing')
 
-  const handleClick = async () => {
-    if (!iconConfig.clickable || !onPdfAction || isLoading) return
-
-    try {
-      setIsLoading(true)
-      await onPdfAction(transaction)
-    } catch (error) {
-      console.error('PDF action failed:', error)
-    } finally {
-      setIsLoading(false)
+  const handleClick = () => {
+    if (iconConfig.clickable && onPdfAction) {
+      onPdfAction(transaction)
     }
   }
 
@@ -391,49 +232,51 @@ const PdfStatusIcon = ({
   )
 }
 
-// Payment Method Badge - Theme Compliant
-const PaymentMethodBadge = ({ paymentMethod }: { paymentMethod: string | null }) => {
-  if (!paymentMethod) return <span className="text-muted-foreground text-sm">—</span>
-  
-  const getPaymentMethodDisplay = (method: string) => {
-    const methods: Record<string, string> = {
-      cash: 'Bargeld',
-      twint: 'TWINT',
-      sumup: 'SumUp',
-      card: 'Karte',
-      bank: 'Bank'
-    }
-    return methods[method.toLowerCase()] || method
-  }
-
-  const getPaymentMethodVariant = (method: string) => {
-    switch (method.toLowerCase()) {
-      case 'cash': return 'secondary'
-      case 'twint': return 'default'
-      case 'sumup': return 'outline'
-      default: return 'outline'
-    }
-  }
-
-  return (
-    <Badge variant={getPaymentMethodVariant(paymentMethod)} className="text-xs">
-      {getPaymentMethodDisplay(paymentMethod)}
-    </Badge>
-  )
-}
-
-// Get transaction type code for badge
+// Helper functions
 const getTypeCode = (transactionType: string): string => {
   switch (transactionType) {
     case 'sale': return 'VK'
-    case 'expense': return 'AG'  
+    case 'expense': return 'AG'
     case 'cash_movement': return 'CM'
     case 'bank_transaction': return 'BT'
     default: return '??'
   }
 }
 
-// Main Transaction Page Component
+const getQuickFilterQuery = (preset: QuickFilterPreset): Partial<TransactionSearchQuery> => {
+  const today = new Date().toISOString().split('T')[0]
+  const thisWeekStart = new Date()
+  thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay())
+  const thisMonthStart = new Date()
+  thisMonthStart.setDate(1)
+  
+  switch (preset) {
+    case 'today':
+      return { dateFrom: today, dateTo: today }
+    case 'this_week':
+      return { 
+        dateFrom: thisWeekStart.toISOString().split('T')[0], 
+        dateTo: today 
+      }
+    case 'this_month':
+      return { 
+        dateFrom: thisMonthStart.toISOString().split('T')[0], 
+        dateTo: today 
+      }
+    case 'with_pdf':
+      return { hasPdf: true }
+    case 'without_pdf':
+      return { hasPdf: false }
+    case 'sales_only':
+      return { transactionTypes: ['sale'] }
+    case 'expenses_only':
+      return { transactionTypes: ['expense'] }
+    default:
+      return {}
+  }
+}
+
+// Main Component
 export default function TransactionPage() {
   // State
   const [searchQuery, setSearchQuery] = useState('')
@@ -445,104 +288,84 @@ export default function TransactionPage() {
   })
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
-  // Debounced search for performance
+  // Debounced search
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
-  // Hooks
-  const {
-    transactions,
-    stats,
-    loading,
-    error,
-    loadTransactions,
-    getQuickFilterQuery,
-    loadAllTransactions
-  } = useUnifiedTransactions()
-  
-  const pdfActions = usePdfActions()
-
-  // Load all transactions on mount
-  useEffect(() => {
-    loadAllTransactions()
-  }, [loadAllTransactions])
-
-  // Execute search/filter when query or filters change
-  useEffect(() => {
-    const executeQuery = async () => {
-      // Build combined query from search, filters, and date range
-      let query: TransactionSearchQuery = {}
-      
-      // Add search term - intelligent detection
-      if (debouncedSearchQuery.trim()) {
-        const trimmedQuery = debouncedSearchQuery.trim()
-        
-        // Check if it looks like a receipt number pattern
-        if (trimmedQuery.match(/^(VK|AG|CM|BT)/i) || trimmedQuery.match(/^\d+$/)) {
-          // Receipt number: starts with VK/AG/CM/BT OR contains only digits
-          query.receiptNumber = trimmedQuery
-        } else {
-          // Otherwise search in description
-          query.description = trimmedQuery
-        }
+  // Build query
+  const query = useMemo<TransactionSearchQuery>(() => {
+    let q: TransactionSearchQuery = {}
+    
+    // Search
+    if (debouncedSearchQuery.trim()) {
+      const trimmed = debouncedSearchQuery.trim()
+      if (trimmed.match(/^(VK|AG|CM|BT)/i) || trimmed.match(/^\d+$/)) {
+        q.receiptNumber = trimmed
+      } else {
+        q.description = trimmed
       }
-      
-      // Add date filter
-      if (activeFilters.dateFilter) {
-        const dateQuery = getQuickFilterQuery(activeFilters.dateFilter)
-        query = { ...query, ...dateQuery }
-      }
-      
-      // Add date range
-      if (dateRange?.from && dateRange?.to) {
-        query.dateFrom = dateRange.from.toISOString().split('T')[0]
-        query.dateTo = dateRange.to.toISOString().split('T')[0]
-      }
-      
-      // Apply individual filters
-      if (activeFilters.typeFilters.length > 0) {
-        for (const preset of activeFilters.typeFilters) {
-          const filterQuery = getQuickFilterQuery(preset)
-          query = { ...query, ...filterQuery }
-        }
-      }
-      
-      if (activeFilters.statusFilters.length > 0) {
-        for (const preset of activeFilters.statusFilters) {
-          const filterQuery = getQuickFilterQuery(preset)
-          query = { ...query, ...filterQuery }
-        }
-      }
-      
-      // Execute query
-      await loadTransactions(query)
     }
     
-    executeQuery()
-  }, [debouncedSearchQuery, activeFilters, dateRange, loadTransactions, getQuickFilterQuery])
+    // Date filter
+    if (activeFilters.dateFilter) {
+      Object.assign(q, getQuickFilterQuery(activeFilters.dateFilter))
+    }
+    
+    // Date range
+    if (dateRange?.from && dateRange?.to) {
+      q.dateFrom = dateRange.from.toISOString().split('T')[0]
+      q.dateTo = dateRange.to.toISOString().split('T')[0]
+    }
+    
+    // Type filters
+    if (activeFilters.typeFilters.length > 0) {
+      for (const preset of activeFilters.typeFilters) {
+        Object.assign(q, getQuickFilterQuery(preset))
+      }
+    }
+    
+    // Status filters
+    if (activeFilters.statusFilters.length > 0) {
+      for (const preset of activeFilters.statusFilters) {
+        Object.assign(q, getQuickFilterQuery(preset))
+      }
+    }
+    
+    return q
+  }, [debouncedSearchQuery, activeFilters, dateRange])
 
-  // Multi-select handlers
-  const handleTransactionSelect = (transactionId: string) => {
-    setSelectedTransactions(prev => 
-      prev.includes(transactionId) 
-        ? prev.filter(id => id !== transactionId)
-        : [...prev, transactionId]
-    )
+  // React Query
+  const { data: transactions = [], isLoading, error, refetch } = useTransactionsQuery(query)
+  const { invalidateAll } = useInvalidateTransactions()
+  const pdfActions = usePdfActions()
+
+  // Stats
+  const stats = useMemo(() => {
+    const s = {
+      total: transactions.length,
+      byType: { sale: 0, expense: 0 },
+      withPdf: 0,
+      withoutPdf: 0,
+      totalAmount: 0
+    }
+
+    transactions.forEach(tx => {
+      if (tx.transaction_type === 'sale') s.byType.sale++
+      else if (tx.transaction_type === 'expense') s.byType.expense++
+      
+      if (tx.has_pdf) s.withPdf++
+      else s.withoutPdf++
+      
+      s.totalAmount += tx.amount || 0
+    })
+
+    return s
+  }, [transactions])
+
+  // Handlers
+  const handlePdfAction = async (transaction: UnifiedTransaction) => {
+    await pdfActions.handlePdfAction(transaction)
   }
 
-  const handleSelectAll = () => {
-    setSelectedTransactions(transactions.map(tx => tx.id))
-  }
-
-  const handleClearSelection = () => {
-    setSelectedTransactions([])
-  }
-
-  // Get selected transaction objects
-  const getSelectedTransactionObjects = () => {
-    return transactions.filter(tx => selectedTransactions.includes(tx.id))
-  }
-
-  // Clear all filters
   const handleClearAllFilters = () => {
     setSearchQuery('')
     setActiveFilters({
@@ -551,53 +374,57 @@ export default function TransactionPage() {
       statusFilters: []
     })
     setDateRange(undefined)
-    loadAllTransactions()
   }
 
-  // Check if any filters are active
-  const hasActiveFilters = searchQuery.trim() || 
+  const hasActiveFilters = searchQuery || 
     activeFilters.dateFilter || 
     activeFilters.typeFilters.length > 0 || 
     activeFilters.statusFilters.length > 0 ||
     dateRange
 
+  // Render
   return (
-    <div className="container mx-auto px-4 py-6 sm:px-6 space-y-4 sm:space-y-6 max-w-full overflow-hidden">
+    <div className="container mx-auto px-4 py-6 space-y-6">
       {/* Header */}
-      <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Transaktionen</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Übersicht und Verwaltung
-          </p>
+          <h1 className="text-3xl font-bold">Transaktionen</h1>
+          <p className="text-muted-foreground">Übersicht und Verwaltung</p>
         </div>
         
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={loadAllTransactions}
-            disabled={loading}
-            className="flex-1 sm:flex-none"
+            onClick={() => refetch()}
+            disabled={isLoading}
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Aktualisieren</span>
-            <span className="sm:hidden">Refresh</span>
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Aktualisieren
           </Button>
           
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <Download className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Export</span>
-            <span className="sm:hidden">CSV</span>
-          </Button>
+          {selectedTransactions.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const selected = transactions.filter(tx => selectedTransactions.includes(tx.id))
+                await pdfActions.downloadMultiplePdfs(selected)
+                setSelectedTransactions([])
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              PDFs ({selectedTransactions.length})
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-full overflow-hidden">
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium truncate">Total Transaktionen</CardTitle>
+            <CardTitle className="text-sm font-medium">Total</CardTitle>
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -615,9 +442,16 @@ export default function TransactionPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.byType.sale}</div>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(stats.amountByType.sale)}
-            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ausgaben</CardTitle>
+            <XCircle className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.byType.expense}</div>
           </CardContent>
         </Card>
         
@@ -629,34 +463,21 @@ export default function TransactionPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.withPdf}</div>
             <p className="text-xs text-muted-foreground">
-              von {stats.pdfStats.totalRequired} nötig
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium truncate">Unabgeglichen</CardTitle>
-            <Clock className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.byStatus.unmatched}</div>
-            <p className="text-xs text-muted-foreground">
-              Banking offen
+              von {stats.withPdf + stats.withoutPdf}
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Search and Filters */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-6 space-y-4 overflow-hidden">
+      <Card>
+        <CardContent className="p-6 space-y-4">
           {/* Search Bar */}
-          <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2">
+          <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="VK2025000082 oder Beschreibung suchen..."
+                placeholder="Suchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -667,9 +488,8 @@ export default function TransactionPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleClearAllFilters}
-                className="text-xs w-full sm:w-auto"
               >
-                Alle Filter löschen
+                Filter löschen
               </Button>
             )}
           </div>
@@ -684,171 +504,44 @@ export default function TransactionPage() {
         </CardContent>
       </Card>
 
-      {/* Bulk Operations Panel */}
-      {selectedTransactions.length > 0 && (
-        <BulkOperationsPanel
-          selectedTransactions={getSelectedTransactionObjects()}
-          onClearSelection={handleClearSelection}
-          onBulkComplete={() => {
-            handleClearSelection()
-            loadAllTransactions()
-          }}
-        />
-      )}
-
       {/* Transaction Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Transaktionen</span>
-            {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>}
-          </CardTitle>
+          <CardTitle>Transaktionen</CardTitle>
           {transactions.length > 0 && (
             <CardDescription>
-              Zeige {transactions.length} Transaktionen
+              {transactions.length} Einträge
             </CardDescription>
           )}
         </CardHeader>
         <CardContent>
           {error ? (
-            <div className="text-center py-8">
-              <div className="text-destructive">Fehler beim Laden der Transaktionen</div>
-              <p className="text-sm text-muted-foreground mt-2">{error}</p>
+            <div className="text-center py-8 text-destructive">
+              Fehler beim Laden der Transaktionen
             </div>
           ) : transactions.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-muted-foreground">
-                {hasActiveFilters ? 'Keine Transaktionen gefunden' : 'Noch keine Transaktionen vorhanden'}
-              </div>
+            <div className="text-center py-8 text-muted-foreground">
+              {hasActiveFilters ? 'Keine Transaktionen gefunden' : 'Noch keine Transaktionen vorhanden'}
             </div>
           ) : (
-            <>
-              {/* Desktop Table View - nur auf sehr großen Bildschirmen */}
-              <div className="hidden xl:block overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3">
-                        <Checkbox
-                          checked={selectedTransactions.length === transactions.length}
-                          onCheckedChange={(checked) => 
-                            checked ? handleSelectAll() : handleClearSelection()
-                          }
-                        />
-                      </th>
-                      <th className="text-left p-3">Typ</th>
-                      <th className="text-left p-3">Beleg Nr.</th>
-                      <th className="text-left p-3">Datum</th>
-                      <th className="text-left p-3">Zeit</th>
-                      <th className="text-left p-3">Beschreibung</th>
-                      <th className="text-right p-3">Betrag</th>
-                      <th className="text-left p-3">Zahlung</th>
-                      <th className="text-right p-3">Gebühren</th>
-                      <th className="text-center p-3">
-                        <div className="flex items-center justify-center gap-1">
-                          Transaktion
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground">
-                                <Info className="h-3 w-3" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64 p-3" align="center">
-                              <div className="space-y-2">
-                              <h4 className="font-semibold text-sm">Transaktions-Status</h4>
-                              <div className="space-y-1 text-xs">
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle2 className="w-3 h-3 text-green-600" />
-                                  <span>Abgeschlossen</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <XCircle className="w-3 h-3 text-red-500" />
-                                  <span>Storniert</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <XCircle className="w-3 h-3 text-orange-500" />
-                                  <span>Rückerstattung</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-3 h-3 text-amber-500" />
-                                  <span>Ausstehend</span>
-                                </div>
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3">
+                      <Checkbox
+                        checked={selectedTransactions.length === transactions.length}
+                        onCheckedChange={(checked) => 
+                          setSelectedTransactions(checked ? transactions.map(tx => tx.id) : [])
+                        }
+                      />
                     </th>
-                    <th className="text-center p-3">
-                      <div className="flex items-center justify-center gap-1">
-                        Banking
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground">
-                              <Info className="h-3 w-3" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-72 p-3" align="center">
-                            <div className="space-y-2">
-                              <h4 className="font-semibold text-sm">Banking-Abgleich</h4>
-                              <div className="space-y-1 text-xs">
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle2 className="w-3 h-3 text-green-600" />
-                                  <span>Vollständig abgeglichen</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <AlertCircle className="w-3 h-3 text-blue-500" />
-                                  <span>Provider abgeglichen, Banking ausstehend</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-3 h-3 text-amber-500" />
-                                  <span>Banking-Abgleich ausstehend</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="w-3 h-3 text-muted-foreground text-center">—</span>
-                                  <span>Kein Abgleich erforderlich</span>
-                                </div>
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </th>
-                    <th className="text-center p-3">
-                      <div className="flex items-center justify-center gap-1">
-                        PDF
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground">
-                              <Info className="h-3 w-3" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64 p-3" align="center">
-                            <div className="space-y-2">
-                              <h4 className="font-semibold text-sm">PDF-Status</h4>
-                              <div className="space-y-1 text-xs">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="w-3 h-3 text-green-600" />
-                                  <span>PDF verfügbar (klickbar)</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <FileText className="w-3 h-3 text-red-500" />
-                                  <span>PDF fehlt (klicken zum Generieren)</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 border border-blue-600 rounded-full animate-spin"></div>
-                                  <span>PDF wird generiert...</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="w-3 h-3 text-muted-foreground text-center">—</span>
-                                  <span>Kein PDF erforderlich</span>
-                                </div>
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </th>
+                    <th className="text-left p-3">Typ</th>
+                    <th className="text-left p-3">Beleg Nr.</th>
+                    <th className="text-left p-3">Datum</th>
+                    <th className="text-left p-3">Beschreibung</th>
+                    <th className="text-right p-3">Betrag</th>
+                    <th className="text-center p-3">PDF</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -857,81 +550,38 @@ export default function TransactionPage() {
                       <td className="p-3">
                         <Checkbox
                           checked={selectedTransactions.includes(transaction.id)}
-                          onCheckedChange={() => handleTransactionSelect(transaction.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTransactions([...selectedTransactions, transaction.id])
+                            } else {
+                              setSelectedTransactions(selectedTransactions.filter(id => id !== transaction.id))
+                            }
+                          }}
                         />
                       </td>
                       <td className="p-3">
                         <TransactionTypeBadge typeCode={getTypeCode(transaction.transaction_type)} />
                       </td>
-                      <td className="p-3">
-                        <div className="font-mono text-sm">
-                          {transaction.receipt_number || '—'}
-                        </div>
+                      <td className="p-3 font-mono text-sm">
+                        {transaction.receipt_number || '—'}
+                      </td>
+                      <td className="p-3 text-sm">
+                        {formatDateForDisplay(transaction.transaction_date)}
                       </td>
                       <td className="p-3">
                         <div className="text-sm">
-                          {formatDateForDisplay(transaction.transaction_date)}
+                          {transaction.description || 'Keine Beschreibung'}
                         </div>
                       </td>
-                      <td className="p-3">
-                        <div className="text-sm text-muted-foreground">
-                          {formatTimeForDisplay(transaction.transaction_date)}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="max-w-xs">
-                          <div className="text-sm font-medium truncate">
-                            {transaction.description || 'Keine Beschreibung'}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className={`font-medium ${
-                          transaction.transaction_type === 'sale' || transaction.transaction_type === 'cash_movement' 
-                            ? transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
-                            : 'text-red-600'
-                        }`}>
+                      <td className="p-3 text-right font-medium">
+                        <span className={transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}>
                           {formatCurrency(transaction.amount)}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <PaymentMethodBadge paymentMethod={transaction.payment_method} />
-                      </td>
-                      <td className="p-3 text-right">
-                        {transaction.payment_method && transaction.payment_method !== 'cash' && transaction.transaction_type === 'sale' ? (
-                          <div className="text-sm">
-                            {transaction.has_real_provider_fees && transaction.provider_fee ? (
-                              // Echte Provider Fees
-                              <div className="flex items-center gap-1 justify-end">
-                                <span className="font-medium text-orange-600">
-                                  -CHF {transaction.provider_fee.toFixed(2)}
-                                </span>
-                                <span className="text-xs text-green-600" title="Echte Gebühren">✓</span>
-                              </div>
-                            ) : (
-                              // Geschätzte Provider Fees
-                              <span className="text-amber-600" title="Geschätzte Gebühren">
-                                ~CHF {(transaction.amount * (transaction.payment_method === 'twint' ? 0.016 : 0.0186)).toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <TransactionStatusIcon transaction={transaction} />
-                      </td>
-                      <td className="p-3">
-                        <BankingStatusIcon transaction={transaction} />
+                        </span>
                       </td>
                       <td className="p-3">
                         <PdfStatusIcon
                           transaction={transaction}
-                          onPdfAction={async (tx) => {
-                            await pdfActions.handlePdfAction(tx)
-                            await loadAllTransactions() // UI nach PDF-Generierung aktualisieren
-                          }}
+                          onPdfAction={handlePdfAction}
                         />
                       </td>
                     </tr>
@@ -939,79 +589,6 @@ export default function TransactionPage() {
                 </tbody>
               </table>
             </div>
-
-            {/* Mobile Card View - alle Bildschirme unter xl */}
-            <div className="xl:hidden space-y-3">
-              {transactions.map((transaction) => (
-                <div key={transaction.id} className="border border-border rounded-lg p-4 space-y-3">
-                  {/* Header Row */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <Checkbox
-                        checked={selectedTransactions.includes(transaction.id)}
-                        onCheckedChange={() => handleTransactionSelect(transaction.id)}
-                        className="mt-1 flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <TransactionTypeBadge typeCode={getTypeCode(transaction.transaction_type)} />
-                          {transaction.receipt_number && (
-                            <span className="font-mono text-xs text-muted-foreground">
-                              {transaction.receipt_number}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="font-medium text-sm leading-tight mb-1">
-                          {transaction.description || 'Keine Beschreibung'}
-                        </h3>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{formatDateForDisplay(transaction.transaction_date)}</span>
-                          <span>•</span>
-                          <span>{formatTimeForDisplay(transaction.transaction_date)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0 ml-3">
-                      <div className={`font-bold text-lg ${
-                        transaction.transaction_type === 'sale' || transaction.transaction_type === 'cash_movement' 
-                          ? transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
-                          : 'text-red-600'
-                      }`}>
-                        {formatCurrency(transaction.amount)}
-                      </div>
-                      {transaction.payment_method && transaction.payment_method !== 'cash' && transaction.transaction_type === 'sale' && (
-                        <div className="text-xs text-orange-600 mt-1">
-                          Gebühr: {transaction.has_real_provider_fees && transaction.provider_fee ? (
-                            `-CHF ${transaction.provider_fee.toFixed(2)}`
-                          ) : (
-                            `~CHF ${(transaction.amount * (transaction.payment_method === 'twint' ? 0.016 : 0.0186)).toFixed(2)}`
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Details Row */}
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <div className="flex items-center gap-3">
-                      <PaymentMethodBadge paymentMethod={transaction.payment_method} />
-                      <div className="flex items-center gap-1">
-                        <TransactionStatusIcon transaction={transaction} />
-                        <BankingStatusIcon transaction={transaction} />
-                        <PdfStatusIcon
-                          transaction={transaction}
-                          onPdfAction={async (tx) => {
-                            await pdfActions.handlePdfAction(tx)
-                            await loadAllTransactions()
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            </>
           )}
         </CardContent>
       </Card>
