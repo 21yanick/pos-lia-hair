@@ -1,6 +1,7 @@
 "use client"
 
-import { CheckCircle, Download, Mail } from "lucide-react"
+import { useState } from "react"
+import { CheckCircle, Download, QrCode } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog"
 import { useToast } from "@/shared/hooks/core/useToast"
+import { QRCodeDialog } from "./QRCodeDialog"
 import type { PaymentMethod, TransactionResult } from "@/shared/hooks/business/usePOSState"
 
 interface ConfirmationDialogProps {
@@ -32,6 +34,7 @@ export function ConfirmationDialog({
   onClose,
 }: ConfirmationDialogProps) {
   const { toast } = useToast()
+  const [showQRCode, setShowQRCode] = useState(false)
 
   const handleDownloadPDF = () => {
     if (transactionResult?.receiptUrl) {
@@ -47,11 +50,16 @@ export function ConfirmationDialog({
     }
   }
 
-  const handleEmailSend = () => {
-    toast({
-      title: "E-Mail-Versand",
-      description: "Diese Funktion ist noch nicht implementiert.",
-    })
+  const handleQRCodeShow = () => {
+    if (transactionResult?.receiptUrl) {
+      setShowQRCode(true)
+    } else {
+      toast({
+        title: "QR-Code nicht verfügbar",
+        description: "Die Quittung konnte nicht erstellt werden.",
+        variant: "destructive",
+      })
+    }
   }
 
   const getPaymentMethodLabel = (method: PaymentMethod | null) => {
@@ -120,10 +128,10 @@ export function ConfirmationDialog({
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={handleEmailSend}
+                  onClick={handleQRCodeShow}
                 >
-                  <Mail className="mr-2 h-4 w-4" />
-                  E-Mail
+                  <QrCode className="mr-2 h-4 w-4" />
+                  QR-Code
                 </Button>
               </div>
             </div>
@@ -139,6 +147,15 @@ export function ConfirmationDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* QR Code Dialog */}
+      {transactionResult?.receiptUrl && (
+        <QRCodeDialog
+          isOpen={showQRCode}
+          receiptUrl={transactionResult.receiptUrl}
+          onClose={() => setShowQRCode(false)}
+        />
+      )}
     </Dialog>
   )
 }
