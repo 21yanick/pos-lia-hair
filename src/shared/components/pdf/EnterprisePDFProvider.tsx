@@ -7,6 +7,7 @@ import { pdfManager } from '@/shared/services/pdfManager'
 interface PDFModalData {
   id: string
   url: string
+  originalUrl?: string  // Fallback URL for download/external actions
   title?: string
 }
 
@@ -60,6 +61,7 @@ export function EnterprisePDFProvider({ children }: EnterprisePDFProviderProps) 
       <EnterprisePDFViewer
         isOpen={!!pdfModal}
         pdfUrl={pdfModal?.url || ''}
+        originalUrl={pdfModal?.originalUrl}
         title={pdfModal?.title}
         onClose={handleClosePDF}
       />

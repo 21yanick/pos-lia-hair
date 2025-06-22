@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { X, Download, ExternalLink, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { supabase } from '@/shared/lib/supabase/client'
 
 // Dynamic imports to avoid build issues with canvas node bindings
 // import { Viewer, Worker } from '@react-pdf-viewer/core'
@@ -12,6 +13,7 @@ import { X, Download, ExternalLink, ZoomIn, ZoomOut, RotateCcw } from 'lucide-re
 interface EnterprisePDFViewerProps {
   isOpen: boolean
   pdfUrl: string
+  originalUrl?: string  // Fallback URL for download/external actions
   onClose: () => void
   title?: string
 }
@@ -19,6 +21,7 @@ interface EnterprisePDFViewerProps {
 export function EnterprisePDFViewer({ 
   isOpen, 
   pdfUrl, 
+  originalUrl,
   onClose, 
   title = 'PDF Dokument' 
 }: EnterprisePDFViewerProps) {
@@ -26,6 +29,7 @@ export function EnterprisePDFViewer({
   const [error, setError] = useState<string | null>(null)
   const [zoom, setZoom] = useState(100)
   const [isPackageReady, setIsPackageReady] = useState(false)
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
 
   // Skip dynamic imports during build to avoid canvas node binding issues
   useEffect(() => {
@@ -48,18 +52,70 @@ export function EnterprisePDFViewer({
     checkPackages()
   }, [])
 
+  // Enterprise PDF Loading with Authentication
   useEffect(() => {
-    if (isOpen && pdfUrl) {
+    if (!isOpen || !pdfUrl) return
+
+    const fetchPDF = async () => {
       setIsLoading(true)
       setError(null)
+      
+      try {
+        // Check if this is an API proxy URL (needs auth)
+        if (pdfUrl.startsWith('/api/pdf/')) {
+          // Get auth token following existing patterns
+          const { data: { session } } = await supabase.auth.getSession()
+          
+          if (!session?.access_token) {
+            throw new Error('Authentication required')
+          }
+
+          // Fetch PDF with Authorization header
+          const response = await fetch(pdfUrl, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+          })
+
+          if (!response.ok) {
+            throw new Error(`Failed to load PDF: ${response.statusText}`)
+          }
+
+          // Convert to blob and create URL
+          const blob = await response.blob()
+          const blobUrl = URL.createObjectURL(blob)
+          setPdfBlobUrl(blobUrl)
+        } else {
+          // Direct URL (originalUrl fallback)
+          setPdfBlobUrl(pdfUrl)
+        }
+        
+        setIsLoading(false)
+      } catch (error) {
+        console.error('[EnterprisePDFViewer] PDF loading failed:', error)
+        setError(error instanceof Error ? error.message : 'Failed to load PDF')
+        setIsLoading(false)
+      }
+    }
+
+    fetchPDF()
+
+    // Cleanup blob URL on unmount
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl)
+      }
     }
   }, [isOpen, pdfUrl])
 
   const handleDownload = async () => {
+    // Use originalUrl for download if available, fallback to pdfUrl
+    const downloadUrl = originalUrl || pdfUrl
+    
     try {
       // Create download link
       const link = document.createElement('a')
-      link.href = pdfUrl
+      link.href = downloadUrl
       link.download = `${title}.pdf`
       link.style.display = 'none'
       
@@ -69,12 +125,14 @@ export function EnterprisePDFViewer({
     } catch (error) {
       console.error('Download failed:', error)
       // Fallback: open in new tab
-      window.open(pdfUrl, '_blank')
+      window.open(downloadUrl, '_blank')
     }
   }
 
   const handleExternalOpen = () => {
-    window.open(pdfUrl, '_blank')
+    // Use originalUrl for external if available, fallback to pdfUrl
+    const externalUrl = originalUrl || pdfUrl
+    window.open(externalUrl, '_blank')
   }
 
   const handleEscapeKey = (e: KeyboardEvent) => {
@@ -149,7 +207,7 @@ export function EnterprisePDFViewer({
             )}
 
             <iframe
-              src={pdfUrl}
+              src={pdfBlobUrl || ''}
               className="w-full h-full border-0"
               onLoad={() => setIsLoading(false)}
               onError={() => {
@@ -192,6 +250,7 @@ export function EnterprisePDFViewer({
     <EnhancedPDFViewer
       isOpen={isOpen}
       pdfUrl={pdfUrl}
+      originalUrl={originalUrl}
       onClose={onClose}
       title={title}
     />
@@ -202,11 +261,33 @@ export function EnterprisePDFViewer({
 function EnhancedPDFViewer({ 
   isOpen, 
   pdfUrl, 
+  originalUrl,
   onClose, 
   title 
 }: EnterprisePDFViewerProps) {
   // This will be implemented once packages are available
   // const defaultLayoutPluginInstance = defaultLayoutPlugin()
+
+  const handleDownload = async () => {
+    const downloadUrl = originalUrl || pdfUrl
+    try {
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `${title}.pdf`
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error('Download failed:', error)
+      window.open(downloadUrl, '_blank')
+    }
+  }
+
+  const handleExternalOpen = () => {
+    const externalUrl = originalUrl || pdfUrl
+    window.open(externalUrl, '_blank')
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-90">
@@ -218,7 +299,7 @@ function EnhancedPDFViewer({
           </h3>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.open(pdfUrl, '_blank')}
+              onClick={handleDownload}
               className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
               title="Herunterladen"
             >
@@ -226,7 +307,7 @@ function EnhancedPDFViewer({
             </button>
 
             <button
-              onClick={() => window.open(pdfUrl, '_blank')}
+              onClick={handleExternalOpen}
               className="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
               title="Extern öffnen"
             >

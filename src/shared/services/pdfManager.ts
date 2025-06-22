@@ -8,6 +8,7 @@
 interface PDFModalData {
   id: string
   url: string
+  originalUrl?: string  // Fallback URL for download/external actions
   title?: string
 }
 
@@ -25,10 +26,10 @@ class EnterprisePdfManager {
   }
 
   /**
-   * Open PDF in modal - Enterprise approach
+   * Open PDF in modal - Enterprise approach with API proxy
    * 
    * BEFORE: window.open() / window.location.href → App dies
-   * AFTER:  showModal() → App stays alive
+   * AFTER:  showModal() with proxy URL → App stays alive
    */
   open(id: string, url: string, title?: string): void {
     // Validate inputs
@@ -47,10 +48,14 @@ class EnterprisePdfManager {
     // Close any existing PDF
     this.close(id)
 
-    // Show PDF in modal
+    // Use API proxy URL for iframe preview, keep original for fallbacks
+    const proxyUrl = `/api/pdf/${id}`
+    
+    // Show PDF in modal with both URLs
     this.modalHandler({
       id,
-      url,
+      url: proxyUrl,        // Primary: API proxy for iframe
+      originalUrl: url,     // Fallback: Original signed URL for download/external
       title: title || `PDF Dokument ${id}`
     })
 
