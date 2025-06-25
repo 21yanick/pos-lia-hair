@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { supabase } from '@/shared/lib/supabase/client'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 
@@ -69,7 +69,7 @@ interface UseCashMovementsQueryReturn {
  * - Multi-tenant security
  */
 export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
   
   const organizationId = currentOrganization?.id

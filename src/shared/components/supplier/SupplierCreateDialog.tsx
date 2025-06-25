@@ -10,7 +10,7 @@ import { Textarea } from "@/shared/components/ui/textarea"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, AlertCircle } from "lucide-react"
 import { createSupplier } from '@/shared/services/supplierServices'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier, SupplierCategory, SupplierFormData } from '@/shared/types/suppliers'
 
@@ -29,7 +29,7 @@ export function SupplierCreateDialog({
   initialName = "",
   userId
 }: SupplierCreateDialogProps) {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   

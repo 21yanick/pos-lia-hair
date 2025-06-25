@@ -1,204 +1,101 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-// REMOVED: useOrganization import to break circular dependency
-// Organization data should be accessed via useOrganization hook separately
-import {
-  User,
-  AuthContextType,
-  Permission,
-  Organization,
-  OrganizationRole,
-} from '@/shared/types/organizations'
+import type { User } from '@supabase/supabase-js'
 
-export function useAuth(): AuthContextType {
+interface AuthReturn {
+  user: User | null
+  loading: boolean
+  isAuthenticated: boolean
+  signOut: () => Promise<void>
+}
+
+/**
+ * Simplified Auth Hook - Core Authentication Only
+ * 
+ * BEFORE: 170+ lines with complex DB loading, deprecated hooks
+ * AFTER:  ~40 lines focused only on auth state
+ * 
+ * Changes:
+ * - Uses Supabase User directly (no DB user table queries)
+ * - Stable useEffect without complex callbacks  
+ * - Mounted flag prevents memory leaks
+ * - Removed deprecated permission/organization logic
+ */
+export function useAuth(): AuthReturn {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
-  // Load current user
-  const loadUser = useCallback(async () => {
-    try {
-      const { data: { user: authUser }, error } = await supabase.auth.getUser()
-      
-      if (error || !authUser) {
-        setUser(null)
-        return
-      }
+  useEffect(() => {
+    let mounted = true
 
-      // Get user details from database
-      const { data: dbUser, error: dbError } = await supabase
-        .from('users')
-        .select('id, name, username, email')
-        .eq('id', authUser.id)
-        .single()
-
-      if (dbError) {
-        // Fallback to auth user data
-        const fallbackUser = {
-          id: authUser.id,
-          email: authUser.email || '',
-          name: authUser.user_metadata?.name,
-          username: authUser.user_metadata?.username,
+    // Initial user load
+    const initAuth = async () => {
+      try {
+        const { data: { user: authUser }, error } = await supabase.auth.getUser()
+        
+        if (mounted) {
+          setUser(error ? null : authUser)
+          setLoading(false)
         }
-        setUser(fallbackUser)
-        return
+      } catch (error) {
+        console.error('🔍 AUTH - Initial load error:', error)
+        if (mounted) {
+          setUser(null)
+          setLoading(false)
+        }
       }
-      setUser({
-        id: dbUser.id,
-        email: dbUser.email,
-        name: dbUser.name,
-        username: dbUser.username,
-      })
-    } catch (err) {
-      console.error('🔍 AUTH - Error in loadUser:', err)
-      setUser(null)
-    }
-  }, [])
-
-  // Sign out user
-  const signOut = useCallback(async () => {
-    try {
-      // console.log('🚪 Starting logout process...')
-      
-      // Clear user state immediately for better UX
-      setUser(null)
-      
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut()
-      
-      if (error) {
-        // console.error('❌ Supabase logout error:', error)
-        // Still continue with navigation even if logout partially failed
-      } else {
-        // console.log('✅ Supabase logout successful')
-      }
-      
-      // Force navigation to login page (works better with org routes)
-      window.location.href = '/login'
-      
-    } catch (error) {
-      console.error('❌ Error signing out:', error)
-      // Force navigation even on error
-      window.location.href = '/login'
-    }
-  }, [])
-
-  // Check if user has specific permission
-  // NOTE: This is now a stub - permission checking should be done via useOrganizationPermissions
-  const hasPermission = useCallback((permission: Permission): boolean => {
-    return false
-  }, [])
-
-  // Initialize user on mount
-  useEffect(() => {
-    const initializeAuth = async () => {
-      setLoading(true)
-      await loadUser()
-      setLoading(false)
     }
 
-    initializeAuth()
-  }, [loadUser])
+    initAuth()
 
-  // Listen for auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        await loadUser()
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null)
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (mounted) {
+        setUser(session?.user ?? null)
+        if (!loading) setLoading(false) // Only set loading false if not already false
       }
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
-  }, [loadUser])
+  }, []) // No dependencies - stable effect
 
-  const isAuthenticated = !!user && !loading
+  // Simple sign out
+  const signOut = async (): Promise<void> => {
+    try {
+      setUser(null) // Immediate UI update
+      await supabase.auth.signOut()
+      // Force navigation for clean state
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('❌ Sign out error:', error)
+      // Force navigation even on error
+      window.location.href = '/login'
+    }
+  }
 
   return {
     user,
     loading,
-    isAuthenticated,
-    signOut,
-    hasPermission, // Deprecated - use useOrganizationPermissions instead
+    isAuthenticated: !!user && !loading,
+    signOut
   }
 }
 
-// Hook for auth-protected operations
+/**
+ * Simple Auth Guard Hook - Replaces complex useAuthGuard
+ */
 export function useAuthGuard() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-
-  const requireAuth = useCallback(() => {
-    if (!loading && !user) {
-      router.push('/login')
-      return false
-    }
-    return true
-  }, [user, loading, router])
-
-  const requireOrganization = useCallback(() => {
-    return true
-  }, [])
-
+  const { user, loading, isAuthenticated } = useAuth()
+  
   return {
     user,
-    isAuthenticated: !!user,
-    isReady: !loading && !!user,
-    requireAuth,
-    requireOrganization, // Deprecated
-  }
-}
-
-// Hook for permission-based rendering
-// NOTE: This hook is deprecated - use useOrganizationPermissions instead
-export function usePermissions() {
-  const can = useCallback((permission: Permission): boolean => {
-    return false // Stub
-  }, [])
-
-  return {
-    can,
-    isOwner: false,
-    isAdmin: false, 
-    isStaff: false,
-    role: undefined,
-    organization: undefined,
-  }
-}
-
-// Legacy compatibility hook for existing code
-export function useLegacyAuth() {
-  const { user } = useAuth()
-
-  // This provides the same interface as the old direct supabase calls
-  // to ease migration of existing business hooks
-  const getUserData = useCallback(async () => {
-    if (!user) {
-      throw new Error('Nicht angemeldet. Bitte melden Sie sich an.')
-    }
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-      },
-    }
-  }, [user])
-
-  const getOrganizationId = useCallback(() => {
-    throw new Error('getOrganizationId is deprecated - use useOrganization hook instead')
-  }, [])
-
-  return {
-    getUserData,
-    getOrganizationId, // Deprecated
-    user,
-    organization: undefined, // Deprecated
+    loading,
+    isAuthenticated,
+    isReady: !loading && !!user
   }
 }

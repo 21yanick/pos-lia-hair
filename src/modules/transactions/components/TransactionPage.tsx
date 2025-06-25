@@ -33,6 +33,7 @@ import { formatCurrency } from '@/shared/utils'
 import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
 import { DateRangePicker } from './DateRangePicker'
 import { toast } from 'sonner'
+import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
 
 // Filter State
 interface ActiveFilters {
@@ -154,25 +155,6 @@ const QuickFilters = ({
         ))}
       </div>
     </div>
-  )
-}
-
-// Transaction Type Badge
-const TransactionTypeBadge = ({ typeCode }: { typeCode: string }) => {
-  const getBadgeVariant = (code: string) => {
-    switch (code) {
-      case 'VK': return 'default'
-      case 'AG': return 'destructive'
-      case 'CM': return 'secondary'
-      case 'BT': return 'outline'
-      default: return 'outline'
-    }
-  }
-
-  return (
-    <Badge variant={getBadgeVariant(typeCode)} className="font-mono text-xs">
-      {typeCode}
-    </Badge>
   )
 }
 

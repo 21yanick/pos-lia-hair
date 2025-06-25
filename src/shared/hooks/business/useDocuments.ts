@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/supabase'
 import { generateDocumentDisplayName } from '@/shared/utils/documentHelpers'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 // Typen für Dokumente
 export type Document = Database['public']['Tables']['documents']['Row']
@@ -57,7 +57,7 @@ export function useDocuments() {
   })
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // Hilfsfunktion für Storage URL (GEFIXT: Kein doppeltes documents/ Prefix)
   const getStorageUrl = async (filePath: string) => {

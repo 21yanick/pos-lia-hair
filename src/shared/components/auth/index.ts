@@ -15,11 +15,7 @@ export {
   useConditionalRender 
 } from './PermissionGuard'
 
-// 🏢 Legacy Organization Guards (will be replaced by new system)
-export { 
-  OrganizationGuard, 
-  useOrganizationRoute, 
-  useOrganizationSwitcher 
-} from './OrganizationGuard'
+// 🏢 Organization Components (simplified)
+// OrganizationGuard replaced by URL-based routing
 
 export { OrganizationSelector } from './OrganizationSelector'

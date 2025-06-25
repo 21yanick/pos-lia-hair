@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, ArrowUpToLine, ArrowDownToLine, AlertCircle } from "lucide-react"
 import { supabase } from "@/shared/lib/supabase/client"
 import { useCashBalance } from "@/shared/hooks/business/useCashBalance"
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 interface CashTransferDialogProps {
   isOpen: boolean
@@ -31,7 +31,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
   const { getCurrentCashBalance } = useCashBalance()
   
   // 🔒 Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   const isToBank = direction === 'to_bank'
 

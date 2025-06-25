@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import type { UnifiedTransaction, TransactionSearchQuery, PdfStatus, PdfRequirement } from '../types/unifiedTransactions'
 
 /**
@@ -54,7 +54,7 @@ const transactionKeys = {
  * Hook for fetching transactions with React Query
  */
 export function useTransactionsQuery(query: TransactionSearchQuery = {}) {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   
   return useQuery({
     queryKey: transactionKeys.list(query),
@@ -126,7 +126,7 @@ export function useTransactionsQuery(query: TransactionSearchQuery = {}) {
  */
 export function useUpdateTransaction() {
   const queryClient = useQueryClient()
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   return useMutation({
     mutationFn: async (transactionId: string) => {

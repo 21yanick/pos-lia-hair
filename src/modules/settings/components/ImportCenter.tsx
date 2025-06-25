@@ -19,11 +19,11 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react"
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SettingsHeader } from "@/shared/components/settings/SettingsHeader"
 
 export function ImportCenter() {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   
   // 🔗 Helper: Organization-aware URL builder
   const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path

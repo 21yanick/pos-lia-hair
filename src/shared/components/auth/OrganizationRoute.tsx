@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 interface OrganizationRouteProps {
   children: React.ReactNode
@@ -31,7 +31,7 @@ export function OrganizationRoute({
   fallback
 }: OrganizationRouteProps) {
   const { isAuthenticated, loading: authLoading } = useAuth()
-  const { userOrganizations, loading: orgLoading, currentOrganization } = useOrganization()
+  const { memberships: userOrganizations, loading: orgLoading, currentOrganization } = useCurrentOrganization()
   const router = useRouter()
   const params = useParams()
   
@@ -43,9 +43,7 @@ export function OrganizationRoute({
   // 3. We have organizations but none selected yet (while provider is setting it)
   const loading = authLoading || (orgLoading && !userOrganizations)
   
-  // Debug state changes
-  React.useEffect(() => {
-  }, [isAuthenticated, authLoading, orgLoading, userOrganizations, currentOrganization, slug, loading])
+  // Removed debug useEffect - no longer needed
 
   useEffect(() => {
     // Step 1: Check authentication first

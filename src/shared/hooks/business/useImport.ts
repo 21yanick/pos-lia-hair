@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from 'react'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 // Import Types
 import type { 
@@ -40,7 +40,7 @@ export function useImport() {
   })
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization, user } = useOrganization()
+  const { currentOrganization, user } = useCurrentOrganization()
 
   const updateProgress = useCallback((progress: number, phase: string) => {
     setState(prev => ({

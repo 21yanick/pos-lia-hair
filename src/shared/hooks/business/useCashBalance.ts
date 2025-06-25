@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { getSwissDayRange } from '@/shared/utils/dateUtils'
 
 // Minimal types for cash operations
@@ -26,7 +26,7 @@ export function useCashBalance() {
   const [error, setError] = useState<string | null>(null)
   
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // Get current cash balance (organization-scoped)
   const getCurrentCashBalance = async () => {

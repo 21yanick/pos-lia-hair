@@ -25,7 +25,7 @@ import {
 import { previewCAMTFile, importCAMTFile } from '../services/camtImporter'
 import type { ImportPreviewData, ImportExecutionResult } from '../types/banking'
 import { formatDateForAPI } from '@/shared/utils/dateUtils'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 type ImportStep = 'upload' | 'preview' | 'confirm'
 
@@ -56,7 +56,7 @@ export function BankImportDialog({
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // 🔒 Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   
   const [state, setState] = useState<ImportState>({
     step: 'upload',

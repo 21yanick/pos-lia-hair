@@ -9,10 +9,10 @@ import {
   Users, 
   Wrench
 } from "lucide-react"
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 export function SettingsPage() {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   
   // 🔗 Helper: Organization-aware URL builder
   const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path

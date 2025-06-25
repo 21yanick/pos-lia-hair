@@ -7,13 +7,13 @@ import Link from "next/link"
 import { Sun, Moon } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { ProfileMenu } from "@/shared/components/profile"
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SidebarTrigger } from "@/shared/components/ui/sidebar"
 import { Separator } from "@/shared/components/ui/separator"
 
 export function Header() {
   const pathname = usePathname()
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 

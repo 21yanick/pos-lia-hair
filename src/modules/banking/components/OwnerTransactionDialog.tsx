@@ -20,7 +20,7 @@ import { Loader2, AlertCircle, DollarSign, CreditCard, Banknote } from 'lucide-r
 import { createOwnerTransaction, type OwnerTransactionInsert } from '../services/ownerTransactionsApi'
 import { supabase } from '@/shared/lib/supabase/client'
 import { getTodaySwissString } from '@/shared/utils/dateUtils'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 // =====================================================
 // COMPONENT INTERFACE
@@ -127,7 +127,7 @@ export function OwnerTransactionDialog({
   const [userId, setUserId] = useState<string | null>(null)
   
   // 🔒 Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   
   // Get current user
   useEffect(() => {

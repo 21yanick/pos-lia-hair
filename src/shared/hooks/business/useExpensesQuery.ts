@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import {
@@ -78,7 +78,7 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
   // Organization Context & State
   // ========================================
   
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
   const { createExpenseCashMovement } = useCashMovements()
   const [currentExpense, setCurrentExpense] = useState<ExpenseWithSupplier | null>(null)

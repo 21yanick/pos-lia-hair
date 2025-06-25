@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useOrganization } from '@/modules/organization'
-import { useOrganizationSwitcher } from '@/shared/components/auth/OrganizationGuard'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
@@ -38,21 +38,14 @@ export function OrganizationSelector({
   showCreateButton = true,
   onCreateNew,
 }: OrganizationSelectorProps) {
-  const { userOrganizations, loading, error } = useOrganization()
-  const { switchToOrganization } = useOrganizationSwitcher()
+  const { memberships, loading, error } = useCurrentOrganization()
+  const router = useRouter()
   const [switching, setSwitching] = useState<string | null>(null)
 
-  const handleSwitchOrganization = async (organizationId: string) => {
-    try {
-      // console.log('📋 ORG SELECTOR - Switch requested:', organizationId)
-      setSwitching(organizationId)
-      await switchToOrganization(organizationId)
-      // console.log('📋 ORG SELECTOR - Switch completed')
-    } catch (err) {
-      console.error('❌ ORG SELECTOR - Error switching organization:', err)
-    } finally {
-      setSwitching(null)
-    }
+  // Simple organization switching - URL-based (PLANNED APPROACH)
+  const handleSwitchOrganization = (orgSlug: string) => {
+    setSwitching(orgSlug)
+    router.push(`/org/${orgSlug}/dashboard`)
   }
 
   // Auto-redirect is now handled by OrganizationContext for better performance
@@ -67,8 +60,8 @@ export function OrganizationSelector({
     }
   }
 
-  // Don't show loading skeleton if we have 1 org - let OrganizationProvider handle auto-redirect
-  if (loading && userOrganizations.length !== 1) {
+  // Show loading skeleton while loading organizations
+  if (loading && memberships.length !== 1) {
     return <OrganizationSelectorSkeleton />
   }
   
@@ -112,7 +105,7 @@ export function OrganizationSelector({
         <p className="text-muted-foreground mt-2">{description}</p>
       </div>
 
-      {userOrganizations.length === 0 ? (
+      {memberships.length === 0 ? (
         <div className="text-center py-12">
           <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Keine Organisationen gefunden</h3>
@@ -137,13 +130,13 @@ export function OrganizationSelector({
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {userOrganizations.map(({ organization, role }) => (
+            {memberships.map(({ organization, role }) => (
               <OrganizationCard
                 key={organization.id}
                 organization={organization}
                 role={role}
-                isLoading={switching === organization.id}
-                onSelect={() => handleSwitchOrganization(organization.id)}
+                isLoading={switching === organization.slug}
+                onSelect={() => handleSwitchOrganization(organization.slug)}
               />
             ))}
           </div>

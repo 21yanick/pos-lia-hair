@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import {
   getItems,
@@ -66,7 +66,7 @@ interface UseItemsReturn {
 export type { Item, ItemInsert, ItemUpdate }
 
 export function useItems(): UseItemsReturn {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
   
   // Local state for legacy compatibility

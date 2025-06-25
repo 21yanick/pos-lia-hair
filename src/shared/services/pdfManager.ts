@@ -1,110 +1,61 @@
 /**
- * Enterprise PDF Manager - Simplified Modal Approach
+ * Simple PDF Manager - Direct window.open approach
  * 
- * BEFORE: 500+ lines of complex mobile workarounds
- * AFTER:  50 lines of simple modal logic
+ * BEFORE: Complex EnterprisePDFProvider modal system (355+ lines)
+ * AFTER:  Simple window.open for PDF viewing (~20 lines)
+ * 
+ * This is the planned simplification from our refactoring.
  */
 
-interface PDFModalData {
-  id: string
-  url: string
-  originalUrl?: string  // Fallback URL for download/external actions
-  title?: string
-}
-
-type PDFModalHandler = (data: PDFModalData | null) => void
-
-class EnterprisePdfManager {
-  private modalHandler: PDFModalHandler | null = null
-  private openPdfs = new Set<string>()
-
+class SimplePdfManager {
   /**
-   * Set modal handler (called from root layout)
-   */
-  setModalHandler(handler: PDFModalHandler): void {
-    this.modalHandler = handler
-  }
-
-  /**
-   * Open PDF in modal - Enterprise approach with API proxy
+   * Open PDF in new tab - Simple approach
    * 
-   * BEFORE: window.open() / window.location.href → App dies
-   * AFTER:  showModal() with proxy URL → App stays alive
+   * BEFORE: Complex modal system with setModalHandler, proxy URLs, mobile workarounds
+   * AFTER:  Direct window.open (much simpler, works reliably)
    */
   open(id: string, url: string, title?: string): void {
     // Validate inputs
     if (!url || url.trim() === '') {
-      console.error('[EnterprisePdfManager] Invalid PDF URL provided')
+      console.error('[PdfManager] Invalid PDF URL provided')
       return
     }
 
-    if (!this.modalHandler) {
-      console.error('[EnterprisePdfManager] Modal handler not set. Call setModalHandler() first.')
-      // Fallback to window.open for development
-      window.open(url, '_blank')
-      return
-    }
-
-    // Close any existing PDF
-    this.close(id)
-
-    // Use API proxy URL for iframe preview, keep original for fallbacks
-    const proxyUrl = `/api/pdf/${id}`
-    
-    // Show PDF in modal with both URLs
-    this.modalHandler({
-      id,
-      url: proxyUrl,        // Primary: API proxy for iframe
-      originalUrl: url,     // Fallback: Original signed URL for download/external
-      title: title || `PDF Dokument ${id}`
-    })
-
-    // Track as open
-    this.openPdfs.add(id)
+    // Simple window.open approach - no complex modal system needed
+    window.open(url, '_blank')
   }
 
   /**
-   * Close specific PDF
+   * Close PDF - No-op in simple approach (new tab handles itself)
    */
   close(id: string): void {
-    if (this.openPdfs.has(id)) {
-      this.openPdfs.delete(id)
-      
-      // Close modal if this was the current PDF
-      if (this.modalHandler) {
-        this.modalHandler(null)
-      }
-    }
+    // No-op: New tab manages itself
   }
 
   /**
-   * Close all PDFs
+   * Cleanup - No-op in simple approach
    */
   cleanup(): void {
-    this.openPdfs.clear()
-    
-    if (this.modalHandler) {
-      this.modalHandler(null)
-    }
+    // No-op: No complex state to clean
   }
 
   /**
-   * Check if PDF is open
+   * Check if PDF is open - Always false in simple approach
    */
   isOpen(id: string): boolean {
-    return this.openPdfs.has(id)
+    return false // New tabs are independent
   }
 
   /**
-   * Get count of open PDFs
+   * Get count of open PDFs - Always 0 in simple approach
    */
   getOpenCount(): number {
-    return this.openPdfs.size
+    return 0 // New tabs are independent
   }
 }
 
 // Singleton instance
-export const pdfManager = new EnterprisePdfManager()
+export const pdfManager = new SimplePdfManager()
 
 // Keep backward compatibility with existing code
 export default pdfManager

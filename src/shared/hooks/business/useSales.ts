@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import {
@@ -61,7 +61,7 @@ interface UseSalesReturn {
 }
 
 export function useSales(): UseSalesReturn {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
   const { createSaleCashMovement, reverseCashMovement } = useCashMovements()
   

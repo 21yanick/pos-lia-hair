@@ -128,11 +128,11 @@ export async function deleteOwnerTransaction(id: string) {
 
 export async function getOwnerBalance(userId: string): Promise<{ data: OwnerBalance | null, error: any }> {
   try {
-    // Call the PostgreSQL function
-    const { data, error } = await supabase
-      .rpc('get_owner_loan_balance', { user_uuid: userId })
-
-    if (error) throw error
+    // TODO: PostgreSQL RPC function 'get_owner_loan_balance' needs to be created in Supabase
+    // Temporarily skip RPC call to avoid 502 errors
+    // const { data, error } = await supabase
+    //   .rpc('get_owner_loan_balance', { user_uuid: userId })
+    // if (error) throw error
 
     // Get detailed breakdown for UI
     const [depositsResult, expensesResult, withdrawalsResult] = await Promise.all([

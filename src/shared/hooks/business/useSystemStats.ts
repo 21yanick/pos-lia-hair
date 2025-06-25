@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 export interface OrganizationStats {
   organizationUsersCount: number
@@ -22,7 +22,7 @@ export function useSystemStats() {
   const [error, setError] = useState<string | null>(null)
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   const loadStats = async () => {
     try {

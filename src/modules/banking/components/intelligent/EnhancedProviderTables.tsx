@@ -14,6 +14,7 @@ import { getProviderMatchSuggestions, executeAutoProviderMatch } from '../../ser
 import type { ProviderMatchCandidate } from '../../services/matchingTypes'
 import { ProviderMatchConnector } from './ProviderMatchConnector'
 import { formatDateForDisplay } from '@/shared/utils/dateUtils'
+import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
 
 interface EnhancedProviderTablesProps {
   selectedSale: string | null

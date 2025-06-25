@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import type { 
   UnifiedTransaction, 
   TransactionSearchQuery, 
@@ -36,7 +36,7 @@ export function useUnifiedTransactions() {
   })
   
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // Quick Filter Presets zu SearchQuery konvertieren
   const getQuickFilterQuery = useCallback((preset: QuickFilterPreset): Partial<TransactionSearchQuery> => {

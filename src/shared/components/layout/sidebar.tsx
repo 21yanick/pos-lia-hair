@@ -20,7 +20,7 @@ import {
 import { cn } from "@/shared/utils"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/shared/hooks/auth/useAuth"
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 const navItemsTemplate = [
   { name: "Dashboard", path: "/dashboard", icon: BarChart4 },
@@ -37,7 +37,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const { signOut } = useAuth()
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // Create organization-aware navigation items
   const navItems = navItemsTemplate.map(item => ({

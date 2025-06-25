@@ -5,14 +5,14 @@ import { supabase } from '@/shared/lib/supabase/client'
 import { useDocuments } from '@/shared/hooks/business/useDocuments'
 import { useSales } from '@/shared/hooks/business/useSales'
 import { useExpenses } from '@/shared/hooks/business/useExpenses'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useUpdateTransaction, useGeneratePdf } from './useTransactionsQuery'
 import { pdfManager } from '@/shared/services/pdfManager'
 import { toast } from 'sonner'
 import type { UnifiedTransaction } from '../types/unifiedTransactions'
 
 export function usePdfActions() {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const { getStorageUrl } = useDocuments()
   const { createReceiptPDF } = useSales()
   const { generatePlaceholderReceipt } = useExpenses()

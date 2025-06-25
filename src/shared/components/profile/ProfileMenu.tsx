@@ -19,8 +19,8 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import { ProfileAvatar } from './ProfileAvatar'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
-import { useOrganization } from '@/modules/organization'
-import { useOrganizationSwitcher } from '@/shared/components/auth/OrganizationGuard'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useRouter } from 'next/navigation'
 import type { OrganizationRole } from '@/shared/types/organizations'
 
 // Role display configuration
@@ -36,9 +36,15 @@ interface ProfileMenuProps {
 
 export function ProfileMenu({ className }: ProfileMenuProps) {
   const { user, userRole, signOut } = useAuth()
-  const { currentOrganization, userOrganizations } = useOrganization()
-  const { switchToOrganization } = useOrganizationSwitcher()
+  const { currentOrganization, memberships: userOrganizations } = useCurrentOrganization()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+
+  // Simple organization switching - URL-based (PLANNED APPROACH)
+  const switchToOrganization = (orgSlug: string) => {
+    router.push(`/org/${orgSlug}/dashboard`)
+    setIsOpen(false)
+  }
 
   if (!user || !currentOrganization) {
     return null
@@ -52,11 +58,9 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
     await signOut()
   }
 
-  const handleOrganizationSwitch = async (orgId: string) => {
-    // console.log('📺 PROFILE MENU - Organization switch requested:', orgId)
-    setIsOpen(false)
-    await switchToOrganization(orgId)
-    // console.log('📺 PROFILE MENU - Organization switch completed')
+  const handleOrganizationSwitch = (orgSlug: string) => {
+    // Simple URL-based organization switching (PLANNED APPROACH)
+    switchToOrganization(orgSlug)
   }
 
   return (
@@ -141,7 +145,7 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
                   .map(membership => (
                     <DropdownMenuItem
                       key={membership.organization.id}
-                      onClick={() => handleOrganizationSwitch(membership.organization.id)}
+                      onClick={() => handleOrganizationSwitch(membership.organization.slug)}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center space-x-2">

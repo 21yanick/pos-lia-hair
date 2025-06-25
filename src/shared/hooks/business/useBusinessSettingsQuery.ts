@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import {
   getBusinessSettings,
   upsertBusinessSettings,
@@ -57,7 +57,7 @@ interface UseBusinessSettingsQueryReturn {
 }
 
 export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
   
   const organizationId = currentOrganization?.id

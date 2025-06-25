@@ -1,7 +1,7 @@
 "use client"
 
 import { usePOS } from '../hooks/usePOS'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { ProductGrid } from './ProductGrid'
 import { ShoppingCart } from './ShoppingCart'
 import { PaymentDialog } from './PaymentDialog'
@@ -10,7 +10,7 @@ import { EditPriceDialog } from './EditPriceDialog'
 import { DeleteConfirmDialog } from './DeleteConfirmDialog'
 
 export function POSPage() {
-  const { currentOrganization, loading } = useOrganization()
+  const { currentOrganization, loading } = useCurrentOrganization()
   const pos = usePOS()
 
   // Wait for organization to load before showing POS

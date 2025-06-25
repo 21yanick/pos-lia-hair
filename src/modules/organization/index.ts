@@ -1,16 +1,14 @@
-// Zentrale Export-Datei für das Organization Module
+// Organization Module - Simplified after refactoring
 
-// Provider
-export { OrganizationProvider } from './contexts/OrganizationProvider'
-
-// Hooks
-export { useOrganizationStore } from './hooks/useOrganizationStore'
+// React Query hooks (still used)
 export { useOrganizationsQuery, useRefreshOrganizations, ORGANIZATIONS_QUERY_KEY } from './hooks/useOrganizationsQuery'
-export { useOrganizationNavigation } from './hooks/useOrganizationNavigation'
-export { useOrganizationPermissions } from './hooks/useOrganizationPermissions'
 
-// Services
+// Services (still used)
 export { organizationService } from './services/organizationService'
 
-// Kompatibilitäts-Hook für einfache Migration
-export { useOrganization } from './hooks/useOrganization'
+// Legacy hooks removed:
+// - OrganizationProvider → replaced by URL-based selection
+// - useOrganizationStore → replaced by useCurrentOrganization  
+// - useOrganizationNavigation → replaced by simple router.push
+// - useOrganization → replaced by useCurrentOrganization
+// - useOrganizationPermissions → moved to shared/hooks/auth/

@@ -12,7 +12,7 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 
 // Import optimized service functions
@@ -105,7 +105,7 @@ interface UseReportsQueryReturn {
  * - Smart invalidation strategies
  */
 export function useReports(): UseReportsQueryReturn {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
   
   const organizationId = currentOrganization?.id

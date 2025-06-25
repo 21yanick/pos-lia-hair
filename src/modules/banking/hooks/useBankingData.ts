@@ -24,7 +24,7 @@ import {
 } from '../services/bankingApi'
 import { getOwnerBalance, type OwnerBalance } from '../services/ownerTransactionsApi'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 // =====================================================
 // HOOK INTERFACE
@@ -86,7 +86,7 @@ export function useBankingData(): UseBankingDataReturn {
   const [error, setError] = useState<string | null>(null)
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // =====================================================
   // DATA FETCHING

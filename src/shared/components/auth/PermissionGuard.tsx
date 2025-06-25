@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { usePermissions } from '@/shared/hooks/auth/useAuth'
+import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
 import { Permission, OrganizationRole } from '@/shared/types/organizations'
 
 interface PermissionGuardProps {
@@ -27,7 +27,7 @@ export function PermissionGuard({
   requireAll = false,
   fallback = null,
 }: PermissionGuardProps) {
-  const { can, role: userRole } = usePermissions()
+  const { can, role: userRole } = useOrganizationPermissions()
 
   // Check single permission
   if (permission && !can(permission)) {
@@ -70,7 +70,7 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ children, minRole, fallback = null }: RoleGuardProps) {
-  const { role } = usePermissions()
+  const { role } = useOrganizationPermissions()
 
   const roleHierarchy: Record<OrganizationRole, number> = {
     staff: 1,
@@ -97,7 +97,7 @@ interface OwnerGuardProps {
 }
 
 export function OwnerGuard({ children, fallback = null }: OwnerGuardProps) {
-  const { isOwner } = usePermissions()
+  const { isOwner } = useOrganizationPermissions()
 
   if (!isOwner) {
     return <>{fallback}</>
@@ -115,7 +115,7 @@ interface AdminGuardProps {
 }
 
 export function AdminGuard({ children, fallback = null }: AdminGuardProps) {
-  const { isAdmin } = usePermissions()
+  const { isAdmin } = useOrganizationPermissions()
 
   if (!isAdmin) {
     return <>{fallback}</>
@@ -161,7 +161,7 @@ export function FeatureGuard({ children, feature, fallback = null }: FeatureGuar
  * Conditional Render Hook
  */
 export function useConditionalRender() {
-  const { can, isOwner, isAdmin, isStaff, role } = usePermissions()
+  const { can, isOwner, isAdmin, isStaff, role } = useOrganizationPermissions()
 
   const renderIf = (condition: boolean, component: React.ReactNode, fallback?: React.ReactNode) => {
     return condition ? component : (fallback || null)

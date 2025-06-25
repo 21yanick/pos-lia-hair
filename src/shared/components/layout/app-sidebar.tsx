@@ -16,7 +16,7 @@ import {
 
 import { cn } from "@/shared/utils"
 import { useAuth } from "@/shared/hooks/auth/useAuth"
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
 import {
   Sidebar,
@@ -46,7 +46,7 @@ const navItemsTemplate = [
 export function AppSidebar() {
   const pathname = usePathname()
   const { signOut } = useAuth()
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const { state } = useSidebar()
 
   // Create organization-aware navigation items

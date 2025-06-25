@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import type { DocumentWithDetails } from '@/shared/hooks/business/useDocuments'
 
 // 🛡️ SECURITY FIXED: useExpensePDFs Hook - Multi-Tenant Organization Security
@@ -32,7 +32,7 @@ export function useExpensePDFs() {
   const [localCacheVersion, setLocalCacheVersion] = useState(0)
   
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // 🔄 SYNC: Register for global cache updates
   useEffect(() => {

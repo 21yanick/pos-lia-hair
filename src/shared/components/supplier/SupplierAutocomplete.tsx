@@ -8,7 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
 import { Badge } from "@/shared/components/ui/badge"
 import { searchSuppliers } from '@/shared/services/supplierServices'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier, SupplierSearchResult } from '@/shared/types/suppliers'
 
@@ -27,7 +27,7 @@ export function SupplierAutocomplete({
   placeholder = "Lieferant suchen...",
   className
 }: SupplierAutocompleteProps) {
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
   const [suppliers, setSuppliers] = useState<SupplierSearchResult[]>([])

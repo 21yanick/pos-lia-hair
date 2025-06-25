@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from 'react'
 import { useBusinessSettings } from './useBusinessSettings'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import { upsertBusinessSettings } from '@/shared/services/businessSettingsService'
 import type { SupplierCategory } from '@/shared/types/suppliers'
@@ -15,7 +15,7 @@ export function useSupplierCategories() {
   const error = null // useBusinessSettings doesn't provide error, so we set it to null
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // Kombinierte Kategorien: Default + Custom
   const categories = useMemo(() => {

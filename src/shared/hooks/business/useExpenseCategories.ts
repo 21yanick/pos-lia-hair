@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from 'react'
 import { useBusinessSettings } from './useBusinessSettings'
-import { useOrganization } from '@/modules/organization'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { DEFAULT_EXPENSE_CATEGORIES } from '@/shared/types/expenses'
 import { upsertBusinessSettings } from '@/shared/services/businessSettingsService'
 
@@ -11,7 +11,7 @@ export function useExpenseCategories() {
   const error = null // useBusinessSettings doesn't provide error, so we set it to null
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization } = useOrganization()
+  const { currentOrganization } = useCurrentOrganization()
 
   // Kombinierte Kategorien: Default + Custom
   const categories = useMemo(() => {
