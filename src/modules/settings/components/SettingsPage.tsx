@@ -7,15 +7,21 @@ import {
   Upload, 
   Settings as SettingsIcon, 
   Users, 
+  UserCheck,
   Wrench
 } from "lucide-react"
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
 
 export function SettingsPage() {
-  const { currentOrganization } = useCurrentOrganization()
+  const { currentOrganization, memberships } = useCurrentOrganization()
+  const { can, role, isAdmin, isOwner } = useOrganizationPermissions()
   
   // 🔗 Helper: Organization-aware URL builder
   const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
+  
+  // Permission check - only admins and owners can manage team
+  const canManageTeam = can('settings.manage_users') || isAdmin || isOwner
   
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -26,7 +32,7 @@ export function SettingsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         
         {/* Import-Funktionen */}
         <Card className="hover:shadow-lg transition-shadow">
@@ -158,6 +164,35 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Team Verwaltung - nur für Admins/Owners */}
+        {canManageTeam && (
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <UserCheck className="h-5 w-5 text-primary" />
+                <CardTitle>Team Verwaltung</CardTitle>
+              </div>
+              <CardDescription>
+                Team-Mitglieder einladen und Berechtigungen verwalten
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  • Neue Mitglieder einladen
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  • Rollen und Berechtigungen
+                </p>
+                <Button asChild className="w-full mt-4">
+                  <Link href={getOrgUrl("/settings/team")}>
+                    Team verwalten
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       </div>
     </div>
