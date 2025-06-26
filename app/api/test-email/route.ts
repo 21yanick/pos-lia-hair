@@ -1,10 +1,15 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST() {
   try {
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json({ 
+        error: 'RESEND_API_KEY nicht konfiguriert' 
+      }, { status: 500 });
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const { data, error } = await resend.emails.send({
       from: 'Lia Hair POS <noreply@lia-hair.ch>',
       to: ['bullenmarkt@pm.me'],
