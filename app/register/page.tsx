@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from 'next/navigation'
 import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
@@ -23,7 +23,7 @@ interface InvitationInfo {
   email: string;
 }
 
-export default function RegisterPage() {
+function RegisterForm() {
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get('invite')
   
@@ -292,322 +292,334 @@ export default function RegisterPage() {
   }
 
   return (
-    <PublicRoute>
-      <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-background">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30 animate-gradient-shift" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,transparent_50%)] opacity-40" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--accent)_0%,transparent_50%)] opacity-30" />
-        
-        <Card className={`w-full max-w-2xl shadow-xl bg-card border-border/50 transition-all duration-600 hover:shadow-2xl transform-gpu relative z-10
-          ${success ? 'animate-card-flip scale-95 opacity-0' : 'animate-in fade-in-0 zoom-in-90'}`}>
-          <CardHeader className="space-y-1 flex flex-col items-center pb-6">
-            <div className="relative mb-4 transform transition-transform duration-300 hover:scale-105">
-              <SmartAppLogo 
-                size="lg"
-                alt="Lia Hair Logo"
-                className="drop-shadow-lg w-24 h-24"
-                fallback={
-                  <div className="relative w-24 h-24 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">LH</div>
-                  </div>
-                }
-              />
-            </div>
-            <CardTitle className="text-2xl font-bold text-center">
-              Lia Hair POS
-            </CardTitle>
-            <CardDescription className="text-center text-muted-foreground/80">
-              {invitationInfo 
-                ? `Einladung zu ${invitationInfo.organizationName}`
-                : "Neues Konto für Salon Management erstellen"
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-background">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30 animate-gradient-shift" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,transparent_50%)] opacity-40" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--accent)_0%,transparent_50%)] opacity-30" />
+      
+      <Card className={`w-full max-w-2xl shadow-xl bg-card border-border/50 transition-all duration-600 hover:shadow-2xl transform-gpu relative z-10
+        ${success ? 'animate-card-flip scale-95 opacity-0' : 'animate-in fade-in-0 zoom-in-90'}`}>
+        <CardHeader className="space-y-1 flex flex-col items-center pb-6">
+          <div className="relative mb-4 transform transition-transform duration-300 hover:scale-105">
+            <SmartAppLogo 
+              size="lg"
+              alt="Lia Hair Logo"
+              className="drop-shadow-lg w-24 h-24"
+              fallback={
+                <div className="relative w-24 h-24 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">LH</div>
+                </div>
               }
-            </CardDescription>
-          </CardHeader>
+            />
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">
+            Lia Hair POS
+          </CardTitle>
+          <CardDescription className="text-center text-muted-foreground/80">
+            {invitationInfo 
+              ? `Einladung zu ${invitationInfo.organizationName}`
+              : "Neues Konto für Salon Management erstellen"
+            }
+          </CardDescription>
+        </CardHeader>
 
-          <form onSubmit={handleRegister}>
-            <CardContent className="space-y-6">
-              {isValidatingInvite && (
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 text-blue-600 rounded-lg text-sm backdrop-blur-sm animate-pulse">
-                  Einladung wird validiert...
-                </div>
-              )}
-
-              {error && (
-                <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm backdrop-blur-sm animate-in fade-in-0 slide-in-from-top-2">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-600 rounded-lg text-sm backdrop-blur-sm animate-in fade-in-0 slide-in-from-top-2">
-                  Registrierung erfolgreich! Sie werden weitergeleitet...
-                </div>
-              )}
-
-              {invitationInfo && (
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <h3 className="font-semibold text-blue-800 dark:text-blue-200">Einladungsdetails</h3>
-                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                    <strong>{invitationInfo.invitedByName}</strong> hat Sie zu <strong>{invitationInfo.organizationName}</strong> als <strong>{invitationInfo.role === 'staff' ? 'Mitarbeiter' : invitationInfo.role === 'admin' ? 'Administrator' : 'Inhaber'}</strong> eingeladen.
-                  </p>
-                </div>
-              )}
-
-              {/* User Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Persönliche Daten</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium text-foreground/90">
-                      Vollständiger Name *
-                    </Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="h-11 transition-all duration-200"
-                      placeholder="Max Mustermann"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-foreground/90">
-                      E-Mail-Adresse *
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-11 transition-all duration-200"
-                      placeholder="max@example.ch"
-                      autoComplete="email"
-                      disabled={!!invitationInfo} // Disable if email comes from invitation
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium text-foreground/90">
-                      Passwort *
-                    </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 transition-all duration-200"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground/90">
-                      Passwort bestätigen *
-                    </Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="h-11 transition-all duration-200"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                      required
-                    />
-                  </div>
-                </div>
+        <form onSubmit={handleRegister}>
+          <CardContent className="space-y-6">
+            {isValidatingInvite && (
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 text-blue-600 rounded-lg text-sm backdrop-blur-sm animate-pulse">
+                Einladung wird validiert...
               </div>
+            )}
 
-              {/* Organization Selection - Only show if no invitation */}
-              {!invitationInfo && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Organisation</h3>
-                  
-                  <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="create">Neue Organisation erstellen</TabsTrigger>
-                      <TabsTrigger value="join">Mit Einladungslink beitreten</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="create" className="space-y-4 mt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="orgName" className="text-sm font-medium text-foreground/90">
-                            Organisationsname *
-                          </Label>
-                          <Input
-                            id="orgName"
-                            type="text"
-                            value={orgName}
-                            onChange={(e) => handleOrgNameChange(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="Mein Friseursalon"
-                            required={tabValue === "create"}
-                          />
-                        </div>
+            {error && (
+              <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm backdrop-blur-sm animate-in fade-in-0 slide-in-from-top-2">
+                {error}
+              </div>
+            )}
 
-                        <div className="space-y-2">
-                          <Label htmlFor="orgSlug" className="text-sm font-medium text-foreground/90">
-                            URL-Name *
-                          </Label>
-                          <Input
-                            id="orgSlug"
-                            type="text"
-                            value={orgSlug}
-                            onChange={(e) => setOrgSlug(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="mein-salon"
-                            required={tabValue === "create"}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Wird für URLs verwendet: /org/{orgSlug || "ihr-salon"}/dashboard
-                          </p>
-                        </div>
-                      </div>
+            {success && (
+              <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-600 rounded-lg text-sm backdrop-blur-sm animate-in fade-in-0 slide-in-from-top-2">
+                Registrierung erfolgreich! Sie werden weitergeleitet...
+              </div>
+            )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="orgDisplayName" className="text-sm font-medium text-foreground/90">
-                            Anzeigename
-                          </Label>
-                          <Input
-                            id="orgDisplayName"
-                            type="text"
-                            value={orgDisplayName}
-                            onChange={(e) => setOrgDisplayName(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="Offizieller Firmenname"
-                          />
-                        </div>
+            {invitationInfo && (
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <h3 className="font-semibold text-blue-800 dark:text-blue-200">Einladungsdetails</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  <strong>{invitationInfo.invitedByName}</strong> hat Sie zu <strong>{invitationInfo.organizationName}</strong> als <strong>{invitationInfo.role === 'staff' ? 'Mitarbeiter' : invitationInfo.role === 'admin' ? 'Administrator' : 'Inhaber'}</strong> eingeladen.
+                </p>
+              </div>
+            )}
 
-                        <div className="space-y-2">
-                          <Label htmlFor="orgEmail" className="text-sm font-medium text-foreground/90">
-                            Geschäfts-E-Mail
-                          </Label>
-                          <Input
-                            id="orgEmail"
-                            type="email"
-                            value={orgEmail}
-                            onChange={(e) => setOrgEmail(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="info@salon.ch"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="orgPhone" className="text-sm font-medium text-foreground/90">
-                            Telefon
-                          </Label>
-                          <Input
-                            id="orgPhone"
-                            type="tel"
-                            value={orgPhone}
-                            onChange={(e) => setOrgPhone(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="+41 XX XXX XX XX"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="orgAddress" className="text-sm font-medium text-foreground/90">
-                            Adresse
-                          </Label>
-                          <Input
-                            id="orgAddress"
-                            type="text"
-                            value={orgAddress}
-                            onChange={(e) => setOrgAddress(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="Musterstrasse 123"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="orgCity" className="text-sm font-medium text-foreground/90">
-                            Ort
-                          </Label>
-                          <Input
-                            id="orgCity"
-                            type="text"
-                            value={orgCity}
-                            onChange={(e) => setOrgCity(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="Zürich"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="orgPostalCode" className="text-sm font-medium text-foreground/90">
-                            PLZ
-                          </Label>
-                          <Input
-                            id="orgPostalCode"
-                            type="text"
-                            value={orgPostalCode}
-                            onChange={(e) => setOrgPostalCode(e.target.value)}
-                            className="h-11 transition-all duration-200"
-                            placeholder="8000"
-                          />
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="join" className="space-y-4 mt-4">
-                      <div className="text-center p-8 border-2 border-dashed border-muted-foreground/20 rounded-lg">
-                        <p className="text-muted-foreground">
-                          Um einer bestehenden Organisation beizutreten, benötigen Sie einen Einladungslink.
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Dieser Link wurde Ihnen per E-Mail zugesandt oder von Ihrem Administrator bereitgestellt.
-                        </p>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              )}
-            </CardContent>
-
-            <CardFooter className="flex flex-col space-y-4 pb-8">
-              <Button 
-                type="submit" 
-                className="w-full h-11 font-medium shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary" 
-                disabled={isLoading || isValidatingInvite}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                    Wird registriert...
-                  </span>
-                ) : invitationInfo ? (
-                  "Einladung annehmen"
-                ) : (
-                  "Konto erstellen"
-                )}
-              </Button>
+            {/* User Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Persönliche Daten</h3>
               
-              <div className="text-center text-sm text-muted-foreground">
-                Haben Sie bereits ein Konto?{" "}
-                <Link href="/login" className="text-primary hover:underline font-medium">
-                  Hier anmelden
-                </Link>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium text-foreground/90">
+                    Vollständiger Name *
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-11 transition-all duration-200"
+                    placeholder="Max Mustermann"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-foreground/90">
+                    E-Mail-Adresse *
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-11 transition-all duration-200"
+                    placeholder="max@example.ch"
+                    autoComplete="email"
+                    disabled={!!invitationInfo} // Disable if email comes from invitation
+                    required
+                  />
+                </div>
               </div>
-            </CardFooter>
-          </form>
-        </Card>
-      </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-foreground/90">
+                    Passwort *
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-11 transition-all duration-200"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground/90">
+                    Passwort bestätigen *
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-11 transition-all duration-200"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Organization Selection - Only show if no invitation */}
+            {!invitationInfo && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Organisation</h3>
+                
+                <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="create">Neue Organisation erstellen</TabsTrigger>
+                    <TabsTrigger value="join">Mit Einladungslink beitreten</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="create" className="space-y-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="orgName" className="text-sm font-medium text-foreground/90">
+                          Organisationsname *
+                        </Label>
+                        <Input
+                          id="orgName"
+                          type="text"
+                          value={orgName}
+                          onChange={(e) => handleOrgNameChange(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="Mein Friseursalon"
+                          required={tabValue === "create"}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="orgSlug" className="text-sm font-medium text-foreground/90">
+                          URL-Name *
+                        </Label>
+                        <Input
+                          id="orgSlug"
+                          type="text"
+                          value={orgSlug}
+                          onChange={(e) => setOrgSlug(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="mein-salon"
+                          required={tabValue === "create"}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Wird für URLs verwendet: /org/{orgSlug || "ihr-salon"}/dashboard
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="orgDisplayName" className="text-sm font-medium text-foreground/90">
+                          Anzeigename
+                        </Label>
+                        <Input
+                          id="orgDisplayName"
+                          type="text"
+                          value={orgDisplayName}
+                          onChange={(e) => setOrgDisplayName(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="Offizieller Firmenname"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="orgEmail" className="text-sm font-medium text-foreground/90">
+                          Geschäfts-E-Mail
+                        </Label>
+                        <Input
+                          id="orgEmail"
+                          type="email"
+                          value={orgEmail}
+                          onChange={(e) => setOrgEmail(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="info@salon.ch"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="orgPhone" className="text-sm font-medium text-foreground/90">
+                          Telefon
+                        </Label>
+                        <Input
+                          id="orgPhone"
+                          type="tel"
+                          value={orgPhone}
+                          onChange={(e) => setOrgPhone(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="+41 XX XXX XX XX"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="orgAddress" className="text-sm font-medium text-foreground/90">
+                          Adresse
+                        </Label>
+                        <Input
+                          id="orgAddress"
+                          type="text"
+                          value={orgAddress}
+                          onChange={(e) => setOrgAddress(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="Musterstrasse 123"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="orgCity" className="text-sm font-medium text-foreground/90">
+                          Ort
+                        </Label>
+                        <Input
+                          id="orgCity"
+                          type="text"
+                          value={orgCity}
+                          onChange={(e) => setOrgCity(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="Zürich"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="orgPostalCode" className="text-sm font-medium text-foreground/90">
+                          PLZ
+                        </Label>
+                        <Input
+                          id="orgPostalCode"
+                          type="text"
+                          value={orgPostalCode}
+                          onChange={(e) => setOrgPostalCode(e.target.value)}
+                          className="h-11 transition-all duration-200"
+                          placeholder="8000"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="join" className="space-y-4 mt-4">
+                    <div className="text-center p-8 border-2 border-dashed border-muted-foreground/20 rounded-lg">
+                      <p className="text-muted-foreground">
+                        Um einer bestehenden Organisation beizutreten, benötigen Sie einen Einladungslink.
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Dieser Link wurde Ihnen per E-Mail zugesandt oder von Ihrem Administrator bereitgestellt.
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+          </CardContent>
+
+          <CardFooter className="flex flex-col space-y-4 pb-8">
+            <Button 
+              type="submit" 
+              className="w-full h-11 font-medium shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary" 
+              disabled={isLoading || isValidatingInvite}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  Wird registriert...
+                </span>
+              ) : invitationInfo ? (
+                "Einladung annehmen"
+              ) : (
+                "Konto erstellen"
+              )}
+            </Button>
+            
+            <div className="text-center text-sm text-muted-foreground">
+              Haben Sie bereits ein Konto?{" "}
+              <Link href="/login" className="text-primary hover:underline font-medium">
+                Hier anmelden
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <PublicRoute>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }>
+        <RegisterForm />
+      </Suspense>
     </PublicRoute>
   )
 }
