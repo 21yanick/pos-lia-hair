@@ -2,7 +2,13 @@ import { Resend } from 'resend';
 import { InviteUserEmail } from '@/src/emails/InviteUserEmail';
 import { WelcomeEmail } from '@/src/emails/WelcomeEmail';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only when needed to prevent build-time errors
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY environment variable is required');
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 interface SendInviteEmailProps {
   to: string;
@@ -35,6 +41,7 @@ export class EmailService {
     const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/register?invite=${inviteToken}`;
     
     try {
+      const resend = getResendClient();
       const { data, error } = await resend.emails.send({
         from: `${organizationName} <einladung@lia-hair.ch>`,
         to: [to],
@@ -72,6 +79,7 @@ export class EmailService {
     const dashboardLink = `${process.env.NEXT_PUBLIC_APP_URL}/org/${organizationSlug}/dashboard`;
     
     try {
+      const resend = getResendClient();
       const { data, error } = await resend.emails.send({
         from: `Lia Hair POS <willkommen@lia-hair.ch>`,
         to: [to],
@@ -103,6 +111,7 @@ export class EmailService {
    */
   static async sendTestEmail(to: string) {
     try {
+      const resend = getResendClient();
       const { data, error } = await resend.emails.send({
         from: 'Lia Hair POS <test@lia-hair.ch>',
         to: [to],
