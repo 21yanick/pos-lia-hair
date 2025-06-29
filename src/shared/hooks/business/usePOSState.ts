@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { CartItem } from './useSales'
+import type { Customer } from '@/shared/services/customerService'
 
 // Typen für Zahlungsmethoden
 export type PaymentMethod = 'cash' | 'twint' | 'sumup'
@@ -37,6 +38,9 @@ export function usePOSState() {
   const [cashReceived, setCashReceived] = useState("")
   const [editPrice, setEditPrice] = useState("")
 
+  // 🆕 Customer-State
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+
   // Transaktionsergebnis
   const [transactionResult, setTransactionResult] = useState<TransactionResult | null>(null)
 
@@ -46,6 +50,7 @@ export function usePOSState() {
     setIsPaymentDialogOpen(false)
     setSelectedPaymentMethod(null)
     setCashReceived("")
+    // Note: Customer bleibt ausgewählt für nächste Transaktion
   }
 
   const openConfirmationDialog = () => setIsConfirmationDialogOpen(true)
@@ -75,6 +80,7 @@ export function usePOSState() {
     setSelectedPaymentMethod(null)
     setCashReceived("")
     setTransactionResult(null)
+    setSelectedCustomer(null) // 🆕 Customer zurücksetzen
     closeConfirmationDialog()
   }
 
@@ -113,6 +119,10 @@ export function usePOSState() {
     setCashReceived,
     editPrice,
     setEditPrice,
+
+    // 🆕 Customer States
+    selectedCustomer,
+    setSelectedCustomer,
 
     // Transaction Result
     transactionResult,

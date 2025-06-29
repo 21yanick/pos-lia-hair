@@ -12,6 +12,7 @@ import {
   Settings,
   CreditCard,
   FileText,
+  Users,
 } from "lucide-react"
 
 import { cn } from "@/shared/utils"
@@ -39,6 +40,7 @@ const navItemsTemplate = [
   { name: "Transaktionen", path: "/transactions", icon: FileText },
   { name: "Kassenbuch", path: "/cash-register", icon: BookOpen },
   { name: "Produkte", path: "/products", icon: Package },  
+  { name: "Kunden", path: "/customers", icon: Users },  
   { name: "Ausgaben", path: "/expenses", icon: FileIcon },
   { name: "Einstellungen", path: "/settings", icon: Settings },
 ]

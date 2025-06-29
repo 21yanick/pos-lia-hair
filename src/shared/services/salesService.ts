@@ -42,6 +42,8 @@ export type CreateSaleData = {
   notes?: string | null
   items: CartItem[]
   received_amount?: number  // Nur für Bargeld-Zahlungen: Erhaltener Betrag
+  customer_id?: string | null  // 🆕 Customer Integration
+  customer_name?: string | null  // 🆕 Fallback für neue Kunden
 }
 
 export type CreateSaleResult = {
@@ -110,6 +112,7 @@ export async function createSale(
       notes: data.notes || null,
       user_id: userId,
       organization_id: validOrgId,
+      customer_id: data.customer_id || null,  // 🆕 Customer Integration
     }
     
     // console.log('🚨 CRITICAL DEBUG: About to insert sale with data:', saleData)
@@ -129,7 +132,8 @@ export async function createSale(
     const saleItems: SaleItemInsert[] = data.items.map(item => ({
       sale_id: sale.id,
       item_id: item.id,
-      price: item.price,
+      price: item.price,  // Unit price per item
+      quantity: item.quantity,
       notes: null,
       user_id: userId,
       organization_id: validOrgId

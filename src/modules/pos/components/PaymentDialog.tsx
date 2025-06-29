@@ -17,6 +17,8 @@ import {
 } from "@/shared/components/ui/dialog"
 import type { PaymentMethod } from "@/shared/hooks/business/usePOSState"
 import type { CartItem, CreateSaleData } from "@/shared/hooks/business/useSales"
+import type { Customer } from "@/shared/services/customerService"
+import { CustomerAutocomplete } from "@/shared/components/customer"
 
 interface PaymentDialogProps {
   isOpen: boolean
@@ -25,8 +27,10 @@ interface PaymentDialogProps {
   selectedPaymentMethod: PaymentMethod | null
   cashReceived: string
   loading: boolean
+  selectedCustomer: Customer | null  // 🆕 Customer Selection
   onPaymentMethodChange: (method: PaymentMethod) => void
   onCashReceivedChange: (amount: string) => void
+  onCustomerChange: (customer: Customer | null) => void  // 🆕 Customer Handler
   onPayment: (data: CreateSaleData) => void
   onClose: () => void
 }
@@ -38,8 +42,10 @@ export function PaymentDialog({
   selectedPaymentMethod,
   cashReceived,
   loading,
+  selectedCustomer,  // 🆕 Customer Selection
   onPaymentMethodChange,
   onCashReceivedChange,
+  onCustomerChange,  // 🆕 Customer Handler
   onPayment,
   onClose,
 }: PaymentDialogProps) {
@@ -62,7 +68,9 @@ export function PaymentDialog({
       total_amount: cartTotal,
       payment_method: selectedPaymentMethod,
       items: cartItems,
-      received_amount: selectedPaymentMethod === 'cash' ? parseFloat(cashReceived) || cartTotal : undefined
+      received_amount: selectedPaymentMethod === 'cash' ? parseFloat(cashReceived) || cartTotal : undefined,
+      customer_id: selectedCustomer?.id || null,  // 🆕 Customer Integration
+      customer_name: selectedCustomer?.name || null  // 🆕 Customer Name
     }
 
     onPayment(saleData)
@@ -88,6 +96,21 @@ export function PaymentDialog({
         </DialogHeader>
 
         <div className="py-6 space-y-6">
+          {/* 🆕 Customer Selection */}
+          <div>
+            <Label className="text-base font-semibold mb-4 block">
+              Kunde (optional)
+            </Label>
+            <CustomerAutocomplete
+              value={selectedCustomer}
+              onSelect={onCustomerChange}
+              placeholder="Kunde suchen oder erstellen..."
+              className="w-full"
+            />
+          </div>
+
+          <Separator />
+
           {/* Zahlungsmethoden */}
           <div>
             <Label className="text-base font-semibold mb-4 block">Zahlungsmethode wählen</Label>

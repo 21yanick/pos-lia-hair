@@ -109,6 +109,47 @@ export const queryKeys = {
       optimized: (orgId: string) => [...queryKeys.business.items.all(orgId), 'optimized'] as const,
     },
     
+    // 🆕 Customer Management
+    customers: {
+      all: (orgId: string) => [...queryKeys.business.all(orgId), 'customers'] as const,
+      lists: (orgId: string) => [...queryKeys.business.customers.all(orgId), 'list'] as const,
+      list: (orgId: string, filters?: any) => [
+        ...queryKeys.business.customers.lists(orgId), 
+        filters
+      ] as const,
+      active: (orgId: string) => [...queryKeys.business.customers.lists(orgId), 'active'] as const,
+      search: (orgId: string, query: string) => [
+        ...queryKeys.business.customers.lists(orgId), 
+        'search',
+        query
+      ] as const,
+      details: (orgId: string) => [...queryKeys.business.customers.all(orgId), 'detail'] as const,
+      detail: (orgId: string, customerId: string) => [
+        ...queryKeys.business.customers.details(orgId), 
+        customerId
+      ] as const,
+      withNotes: (orgId: string, customerId: string) => [
+        ...queryKeys.business.customers.detail(orgId, customerId), 
+        'notes'
+      ] as const,
+      notes: (orgId: string, customerId: string) => [
+        ...queryKeys.business.customers.detail(orgId, customerId), 
+        'notes-only'
+      ] as const,
+      sales: (orgId: string, customerId: string) => [
+        ...queryKeys.business.customers.detail(orgId, customerId), 
+        'sales'
+      ] as const,
+      lastVisit: (orgId: string, customerId: string) => [
+        ...queryKeys.business.customers.detail(orgId, customerId), 
+        'last-visit'
+      ] as const,
+      salesStats: (orgId: string, customerId: string) => [
+        ...queryKeys.business.customers.detail(orgId, customerId), 
+        'sales-stats'
+      ] as const,
+    },
+    
     // Expenses & Financial Operations
     expenses: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'expenses'] as const,

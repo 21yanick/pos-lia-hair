@@ -208,8 +208,10 @@ export function usePOS() {
       selectedPaymentMethod: posState.selectedPaymentMethod,
       cashReceived: posState.cashReceived,
       loading: sales.loading,
+      selectedCustomer: posState.selectedCustomer,  // 🆕 Customer Selection
       onPaymentMethodChange: posState.setSelectedPaymentMethod,
       onCashReceivedChange: posState.setCashReceived,
+      onCustomerChange: posState.setSelectedCustomer,  // 🆕 Customer Handler
       onPayment: handlePayment,
       onClose: posState.closePaymentDialog
     },
