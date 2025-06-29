@@ -4,6 +4,11 @@ import { de } from 'date-fns/locale'
 // Schweizer Zeitzone
 const SWISS_TIMEZONE = 'Europe/Zurich'
 
+// Swiss locale configuration
+// Note: date-fns doesn't have a specific Swiss locale, but Switzerland 
+// in the German-speaking region uses German date formats with Swiss timezone
+export { de as swissLocale }
+
 /**
  * Erstellt ein Datum in Schweizer Zeitzone
  */
@@ -277,4 +282,214 @@ export function getLastDayOfMonth(date: Date): Date {
   const lastDay = new Date(year, month, 0).getDate() // 0. Tag des nächsten Monats = letzter Tag des aktuellen Monats
   
   return createSwissDateForDay(year, month, lastDay)
+}
+
+// ========================================
+// Appointment-Specific Utilities (Phase 3)
+// ========================================
+
+/**
+ * Generate time slots for appointment booking
+ */
+export function generateTimeSlots(
+  startHour: number, 
+  endHour: number, 
+  intervalMinutes: number = 15
+): string[] {
+  const slots: string[] = []
+  
+  for (let hour = startHour; hour < endHour; hour++) {
+    for (let minute = 0; minute < 60; minute += intervalMinutes) {
+      slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`)
+    }
+  }
+  
+  return slots
+}
+
+/**
+ * Calculate appointment end time based on start time and duration
+ */
+export function calculateAppointmentEnd(
+  startTime: string, 
+  durationMinutes: number
+): string {
+  const [hours, minutes] = startTime.split(':').map(Number)
+  const startDate = new Date()
+  startDate.setHours(hours, minutes, 0, 0)
+  
+  const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+  return `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`
+}
+
+/**
+ * Check if a time slot conflicts with existing appointments
+ */
+export function isTimeSlotAvailable(
+  slotStart: string,
+  slotEnd: string,
+  existingAppointments: { start_time: string; end_time: string }[]
+): boolean {
+  return !existingAppointments.some(apt => 
+    // Time overlap check: (start1 < end2) AND (start2 < end1)
+    (slotStart < apt.end_time && apt.start_time < slotEnd)
+  )
+}
+
+/**
+ * Get week range (Monday to Sunday) for a given date
+ */
+export function getWeekRange(date: Date): { start: Date; end: Date } {
+  const swissDate = createSwissDate(date)
+  
+  // Get Monday of this week (Monday = 1, Sunday = 0)
+  const dayOfWeek = swissDate.getDay()
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Handle Sunday (0) as last day
+  
+  const monday = new Date(swissDate)
+  monday.setDate(swissDate.getDate() + diff)
+  
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  
+  return {
+    start: monday,
+    end: sunday
+  }
+}
+
+/**
+ * Get array of dates for the week containing the given date
+ */
+export function getWeekDays(date: Date): Date[] {
+  const { start } = getWeekRange(date)
+  const days: Date[] = []
+  
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(start)
+    day.setDate(start.getDate() + i)
+    days.push(day)
+  }
+  
+  return days
+}
+
+/**
+ * Combine date and time strings into a full Date object
+ */
+export function combineDateTime(dateStr: string, timeStr: string): Date {
+  // dateStr: YYYY-MM-DD, timeStr: HH:mm
+  return new Date(`${dateStr}T${timeStr}:00`)
+}
+
+/**
+ * Format time for display (HH:mm from HH:mm:ss)
+ */
+export function formatTimeShort(timeStr: string): string {
+  // Handle both HH:mm and HH:mm:ss formats
+  const parts = timeStr.split(':')
+  return `${parts[0]}:${parts[1]}`
+}
+
+/**
+ * Parse time string to minutes since midnight
+ */
+export function timeToMinutes(timeStr: string): number {
+  const [hours, minutes] = timeStr.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+/**
+ * Convert minutes since midnight to time string
+ */
+export function minutesToTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+}
+
+/**
+ * Check if appointment is today
+ */
+export function isAppointmentToday(appointmentDate: string): boolean {
+  const today = formatDateForAPI(new Date())
+  return appointmentDate === today
+}
+
+/**
+ * Check if appointment is in the future
+ */
+export function isAppointmentFuture(appointmentDate: string, appointmentTime: string): boolean {
+  const appointmentDateTime = combineDateTime(appointmentDate, appointmentTime)
+  return appointmentDateTime > new Date()
+}
+
+/**
+ * Get relative time description for appointment
+ */
+export function getAppointmentTimeStatus(appointmentDate: string, appointmentTime: string): string {
+  const appointmentDateTime = combineDateTime(appointmentDate, appointmentTime)
+  const now = new Date()
+  const diffMs = appointmentDateTime.getTime() - now.getTime()
+  const diffHours = diffMs / (1000 * 60 * 60)
+  
+  if (diffMs < 0) {
+    return 'Vergangen'
+  } else if (diffHours < 1) {
+    const diffMinutes = Math.floor(diffMs / (1000 * 60))
+    return `In ${diffMinutes} Min`
+  } else if (diffHours < 24) {
+    return `In ${Math.floor(diffHours)} Std`
+  } else {
+    const diffDays = Math.floor(diffHours / 24)
+    return `In ${diffDays} Tag${diffDays !== 1 ? 'en' : ''}`
+  }
+}
+
+/**
+ * Get default business hours for time slot generation
+ */
+export function getDefaultBusinessHours(): { start: number; end: number } {
+  return {
+    start: 9,  // 9:00
+    end: 18    // 18:00 (6 PM)
+  }
+}
+
+/**
+ * Validate time format (HH:mm)
+ */
+export function isValidTimeFormat(timeStr: string): boolean {
+  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+  return timeRegex.test(timeStr)
+}
+
+/**
+ * Validate appointment date (not in the past, reasonable future)
+ */
+export function isValidAppointmentDate(dateStr: string): boolean {
+  const date = new Date(dateStr)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0) // Start of today
+  
+  const maxFuture = new Date()
+  maxFuture.setFullYear(maxFuture.getFullYear() + 1) // 1 year in future
+  
+  return date >= today && date <= maxFuture
+}
+
+/**
+ * Sort appointments by date and time
+ */
+export function sortAppointments<T extends { appointment_date: string; start_time: string }>(
+  appointments: T[]
+): T[] {
+  return appointments.sort((a, b) => {
+    // First by date
+    const dateCompare = a.appointment_date.localeCompare(b.appointment_date)
+    if (dateCompare !== 0) return dateCompare
+    
+    // Then by time
+    return a.start_time.localeCompare(b.start_time)
+  })
 }

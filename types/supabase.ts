@@ -311,6 +311,99 @@ export type Database = {
           }
         ]
       }
+      appointments: {
+        Row: {
+          id: string
+          appointment_date: string
+          start_time: string
+          end_time: string
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          item_id: string
+          status: 'scheduled' | 'completed' | 'cancelled'
+          notes: string | null
+          estimated_price: number | null
+          organization_id: string
+          created_at: string | null
+          created_by: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          appointment_date: string
+          start_time: string
+          end_time: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          item_id: string
+          status?: 'scheduled' | 'completed' | 'cancelled'
+          notes?: string | null
+          estimated_price?: number | null
+          organization_id: string
+          created_at?: string | null
+          created_by?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          appointment_date?: string
+          start_time?: string
+          end_time?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          item_id?: string
+          status?: 'scheduled' | 'completed' | 'cancelled'
+          notes?: string | null
+          estimated_price?: number | null
+          organization_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "auth.users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "auth.users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       sale_items: {
         Row: {
           id: string

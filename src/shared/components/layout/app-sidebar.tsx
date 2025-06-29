@@ -13,6 +13,7 @@ import {
   CreditCard,
   FileText,
   Users,
+  Calendar,
 } from "lucide-react"
 
 import { cn } from "@/shared/utils"
@@ -36,6 +37,7 @@ import {
 const navItemsTemplate = [
   { name: "Dashboard", path: "/dashboard", icon: BarChart4 },
   { name: "Verkauf", path: "/pos", icon: ShoppingCart },
+  { name: "Termine", path: "/appointments", icon: Calendar },
   { name: "Banking", path: "/banking", icon: CreditCard },
   { name: "Transaktionen", path: "/transactions", icon: FileText },
   { name: "Kassenbuch", path: "/cash-register", icon: BookOpen },

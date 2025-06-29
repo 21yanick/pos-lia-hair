@@ -150,6 +150,50 @@ export const queryKeys = {
       ] as const,
     },
     
+    // 🆕 Appointment Management (Phase 3)
+    appointments: {
+      all: (orgId: string) => [...queryKeys.business.all(orgId), 'appointments'] as const,
+      lists: (orgId: string) => [...queryKeys.business.appointments.all(orgId), 'list'] as const,
+      list: (orgId: string, filters?: any) => [
+        ...queryKeys.business.appointments.lists(orgId), 
+        filters
+      ] as const,
+      byDate: (orgId: string, date: string) => [
+        ...queryKeys.business.appointments.lists(orgId), 
+        'byDate',
+        date
+      ] as const,
+      byDateRange: (orgId: string, startDate: string, endDate: string) => [
+        ...queryKeys.business.appointments.lists(orgId), 
+        'dateRange',
+        startDate,
+        endDate
+      ] as const,
+      byCustomer: (orgId: string, customerId: string) => [
+        ...queryKeys.business.appointments.lists(orgId), 
+        'customer',
+        customerId
+      ] as const,
+      byStatus: (orgId: string, status: string) => [
+        ...queryKeys.business.appointments.lists(orgId), 
+        'status',
+        status
+      ] as const,
+      details: (orgId: string) => [...queryKeys.business.appointments.all(orgId), 'detail'] as const,
+      detail: (orgId: string, appointmentId: string) => [
+        ...queryKeys.business.appointments.details(orgId), 
+        appointmentId
+      ] as const,
+      conflicts: (orgId: string, date: string, startTime: string, endTime: string, excludeId?: string) => [
+        ...queryKeys.business.appointments.all(orgId), 
+        'conflicts',
+        date,
+        startTime,
+        endTime,
+        excludeId
+      ] as const,
+    },
+    
     // Expenses & Financial Operations
     expenses: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'expenses'] as const,
