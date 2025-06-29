@@ -40,6 +40,10 @@ export function ProductsPage() {
     default_price: "",
     is_favorite: false,
     active: true,
+    // Service-specific fields
+    duration_minutes: "",
+    requires_booking: true,
+    booking_buffer_minutes: "0",
   })
 
   // Zeige Fehler an und versuche automatische Synchronisierung
@@ -84,6 +88,25 @@ export function ProductsPage() {
     }
   }, [error, toast, syncAuthUser])
 
+  // Reset service fields when type changes
+  useEffect(() => {
+    if (formData.type === 'product') {
+      setFormData(prev => ({
+        ...prev,
+        duration_minutes: "",
+        requires_booking: false,
+        booking_buffer_minutes: "0",
+      }))
+    } else if (formData.type === 'service' && !formData.duration_minutes) {
+      setFormData(prev => ({
+        ...prev,
+        duration_minutes: "60",
+        requires_booking: true,
+        booking_buffer_minutes: "0",
+      }))
+    }
+  }, [formData.type])
+
   const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesFilter =
@@ -104,6 +127,10 @@ export function ProductsPage() {
         default_price: item.default_price.toString(),
         is_favorite: item.is_favorite ?? false,
         active: item.active ?? true,
+        // Service-specific fields
+        duration_minutes: item.duration_minutes?.toString() ?? "",
+        requires_booking: item.requires_booking ?? true,
+        booking_buffer_minutes: item.booking_buffer_minutes?.toString() ?? "0",
       })
     } else {
       setCurrentItem(null)
@@ -113,6 +140,10 @@ export function ProductsPage() {
         default_price: "",
         is_favorite: false,
         active: true,
+        // Service-specific fields with defaults
+        duration_minutes: "60", // Default 1 hour for new services
+        requires_booking: true,
+        booking_buffer_minutes: "0",
       })
     }
     setIsDialogOpen(true)
@@ -128,6 +159,12 @@ export function ProductsPage() {
         default_price: parseFloat(formData.default_price),
         is_favorite: formData.is_favorite,
         active: formData.active,
+        // Service-specific fields
+        duration_minutes: formData.type === 'service' && formData.duration_minutes ? 
+          parseInt(formData.duration_minutes) : null,
+        requires_booking: formData.type === 'service' ? formData.requires_booking : false,
+        booking_buffer_minutes: formData.type === 'service' && formData.booking_buffer_minutes ? 
+          parseInt(formData.booking_buffer_minutes) : 0,
       }
 
       if (currentItem) {
@@ -315,6 +352,7 @@ export function ProductsPage() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Typ</TableHead>
+              <TableHead>Service Details</TableHead>
               <TableHead className="text-right">Preis (CHF)</TableHead>
               <TableHead>Favorit</TableHead>
               <TableHead>Status</TableHead>
@@ -324,7 +362,7 @@ export function ProductsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   <div className="flex justify-center items-center">
                     <Loader2 size={24} className="animate-spin mr-2" />
                     <span>Daten werden geladen...</span>
@@ -333,7 +371,7 @@ export function ProductsPage() {
               </TableRow>
             ) : filteredItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Keine Einträge gefunden.
                 </TableCell>
               </TableRow>
@@ -345,6 +383,24 @@ export function ProductsPage() {
                     <Badge variant={item.type === "service" ? "default" : "secondary"}>
                       {item.type === "service" ? "Dienstleistung" : "Produkt"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {item.type === "service" ? (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">
+                          {item.duration_minutes}min
+                        </div>
+                        <div className="flex gap-1">
+                          {item.requires_booking && (
+                            <Badge variant="outline" className="text-xs">
+                              Buchbar
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     {item.default_price != null ? item.default_price.toFixed(2) : '0.00'}
@@ -412,6 +468,19 @@ export function ProductsPage() {
                       </Badge>
                     )}
                   </div>
+                  {/* Service details for mobile */}
+                  {item.type === "service" && (
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <Badge variant="outline" className="text-xs">
+                        {item.duration_minutes}min
+                      </Badge>
+                      {item.requires_booking && (
+                        <Badge variant="outline" className="text-xs">
+                          Buchbar
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right flex-shrink-0 ml-4">
                   <div className="text-xl font-bold">
@@ -515,6 +584,56 @@ export function ProductsPage() {
               />
             </div>
 
+            {/* Service-specific fields */}
+            {formData.type === 'service' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="duration_minutes">Dauer (Minuten) *</Label>
+                  <Input
+                    id="duration_minutes"
+                    type="number"
+                    min="5"
+                    max="480"
+                    placeholder="z.B. 60"
+                    value={formData.duration_minutes}
+                    onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Standard-Dauer für diesen Service (5-480 Minuten)
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="requires_booking">Im Buchungssystem verfügbar</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Service kann für Termine gebucht werden
+                    </p>
+                  </div>
+                  <Switch
+                    id="requires_booking"
+                    checked={formData.requires_booking}
+                    onCheckedChange={(checked) => setFormData({ ...formData, requires_booking: checked })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="booking_buffer_minutes">Pufferzeit (Minuten)</Label>
+                  <Input
+                    id="booking_buffer_minutes"
+                    type="number"
+                    min="0"
+                    max="60"
+                    placeholder="0"
+                    value={formData.booking_buffer_minutes}
+                    onChange={(e) => setFormData({ ...formData, booking_buffer_minutes: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Zusätzliche Zeit zwischen Terminen (0-60 Minuten)
+                  </p>
+                </div>
+              </>
+            )}
 
             <div className="flex items-center justify-between">
               <Label htmlFor="is_favorite">Als Favorit markieren</Label>
@@ -541,7 +660,8 @@ export function ProductsPage() {
             </Button>
             <Button 
               onClick={handleSaveItem} 
-              disabled={isSubmitting || !formData.name || !formData.default_price}
+              disabled={isSubmitting || !formData.name || !formData.default_price || 
+                       (formData.type === 'service' && !formData.duration_minutes)}
             >
               {isSubmitting ? (
                 <>

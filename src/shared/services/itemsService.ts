@@ -63,6 +63,48 @@ export function validateOrganizationId(organizationId: string | undefined): stri
 }
 
 /**
+ * Validate service-specific fields
+ */
+export function validateServiceData(itemData: ItemInsert | ItemUpdate): void {
+  if (itemData.type === 'service') {
+    // Services must have duration_minutes
+    if (!itemData.duration_minutes || itemData.duration_minutes <= 0) {
+      throw new Error('Services müssen eine gültige Dauer (in Minuten) haben.')
+    }
+    
+    // Validate reasonable duration (5 minutes to 8 hours)
+    if (itemData.duration_minutes < 5 || itemData.duration_minutes > 480) {
+      throw new Error('Service-Dauer muss zwischen 5 und 480 Minuten liegen.')
+    }
+  } else if (itemData.type === 'product') {
+    // Products should not have service-specific fields
+    if (itemData.duration_minutes !== null && itemData.duration_minutes !== undefined) {
+      throw new Error('Produkte dürfen keine Service-Dauer haben.')
+    }
+  }
+}
+
+/**
+ * Apply service defaults for new items
+ */
+export function applyServiceDefaults(itemData: ItemInsert): ItemInsert {
+  if (itemData.type === 'service') {
+    return {
+      ...itemData,
+      requires_booking: itemData.requires_booking ?? true, // Services require booking by default
+      booking_buffer_minutes: itemData.booking_buffer_minutes ?? 0 // No buffer by default
+    }
+  }
+  
+  return {
+    ...itemData,
+    duration_minutes: null,
+    requires_booking: false,
+    booking_buffer_minutes: 0
+  }
+}
+
+/**
  * Get current user ID with validation
  */
 export async function getCurrentUserId(): Promise<string> {
@@ -184,9 +226,13 @@ export async function createItem(
   try {
     const validOrgId = validateOrganizationId(organizationId)
     
+    // Apply service defaults and validate
+    const itemWithDefaults = applyServiceDefaults(itemData)
+    validateServiceData(itemWithDefaults)
+    
     // Prepare data with organization_id
     const completeItemData = {
-      ...itemData,
+      ...itemWithDefaults,
       organization_id: validOrgId
     }
     
@@ -221,6 +267,11 @@ export async function updateItem(
   try {
     const validOrgId = validateOrganizationId(organizationId)
     const { id, ...updateData } = itemUpdate
+    
+    // Validate service data if type is being updated or service fields are modified
+    if (updateData.type || updateData.duration_minutes !== undefined) {
+      validateServiceData(itemUpdate)
+    }
     
     const { data, error } = await supabase
       .from('items')
