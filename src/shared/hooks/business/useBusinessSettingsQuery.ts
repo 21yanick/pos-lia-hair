@@ -8,12 +8,28 @@ import {
   upsertBusinessSettings,
   uploadLogo,
   deleteLogo,
-  validateBusinessSettings
+  validateBusinessSettings,
+  updateWorkingHours,
+  updateBookingRules,
+  updateDisplayPreferences,
+  updateVacationPeriods,
+  addVacationPeriod,
+  removeVacationPeriod,
+  isOrganizationOpen,
+  getWorkingHoursForDay,
+  generateAvailableTimeSlots,
+  validateWorkingHours,
+  validateVacationPeriod
 } from '@/shared/services/businessSettingsService'
 import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 import type { 
   BusinessSettings, 
-  BusinessSettingsFormData 
+  BusinessSettingsFormData,
+  WorkingHours,
+  BookingRules,
+  DisplayPreferences,
+  VacationPeriod,
+  DayWorkingHours
 } from '@/shared/types/businessSettings'
 
 /**
@@ -40,12 +56,25 @@ interface UseBusinessSettingsQueryReturn {
   isFetching: boolean
   isSuccess: boolean
   
-  // Actions
+  // General Actions
   updateSettings: (data: BusinessSettingsFormData) => Promise<void>
   uploadCompanyLogo: (file: File) => Promise<void>
   deleteCompanyLogo: () => Promise<void>
   uploadAppLogo: (file: File, theme: 'light' | 'dark') => Promise<void>
   deleteAppLogo: (theme: 'light' | 'dark') => Promise<void>
+  
+  // Appointment Settings Actions
+  updateWorkingHours: (workingHours: WorkingHours) => Promise<void>
+  updateBookingRules: (bookingRules: BookingRules) => Promise<void>
+  updateDisplayPreferences: (displayPreferences: DisplayPreferences) => Promise<void>
+  updateVacationPeriods: (vacationPeriods: VacationPeriod[]) => Promise<void>
+  addVacationPeriod: (vacation: VacationPeriod) => Promise<void>
+  removeVacationPeriod: (index: number) => Promise<void>
+  
+  // Business Logic Helpers
+  isOrganizationOpen: (date: Date, time: string) => Promise<boolean>
+  getWorkingHoursForDay: (date: Date) => Promise<DayWorkingHours | null>
+  generateAvailableTimeSlots: (date: Date) => Promise<string[]>
   
   // Utilities
   getFormattedAddress: () => string
@@ -367,6 +396,152 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
   })
 
   // ========================================
+  // Appointment Settings Mutations
+  // ========================================
+  
+  const updateWorkingHoursMutation = useMutation({
+    mutationFn: updateWorkingHours,
+    onMutate: async (newWorkingHours) => {
+      if (!organizationId) return
+      await queryClient.cancelQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      
+      const previousSettings = queryClient.getQueryData(queryKeys.business.settings.detail(organizationId))
+      queryClient.setQueryData(
+        queryKeys.business.settings.detail(organizationId),
+        (old: BusinessSettings | null) => old ? { ...old, working_hours: newWorkingHours } : null
+      )
+      return { previousSettings }
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousSettings && organizationId) {
+        queryClient.setQueryData(queryKeys.business.settings.detail(organizationId), context.previousSettings)
+      }
+      toast.error('Fehler beim Speichern der Arbeitszeiten')
+    },
+    onSuccess: () => {
+      toast.success('Arbeitszeiten erfolgreich gespeichert')
+    },
+    onSettled: () => {
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      }
+    }
+  })
+
+  const updateBookingRulesMutation = useMutation({
+    mutationFn: updateBookingRules,
+    onMutate: async (newBookingRules) => {
+      if (!organizationId) return
+      await queryClient.cancelQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      
+      const previousSettings = queryClient.getQueryData(queryKeys.business.settings.detail(organizationId))
+      queryClient.setQueryData(
+        queryKeys.business.settings.detail(organizationId),
+        (old: BusinessSettings | null) => old ? { ...old, booking_rules: newBookingRules } : null
+      )
+      return { previousSettings }
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousSettings && organizationId) {
+        queryClient.setQueryData(queryKeys.business.settings.detail(organizationId), context.previousSettings)
+      }
+      toast.error('Fehler beim Speichern der Buchungsregeln')
+    },
+    onSuccess: () => {
+      toast.success('Buchungsregeln erfolgreich gespeichert')
+    },
+    onSettled: () => {
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      }
+    }
+  })
+
+  const updateDisplayPreferencesMutation = useMutation({
+    mutationFn: updateDisplayPreferences,
+    onMutate: async (newDisplayPreferences) => {
+      if (!organizationId) return
+      await queryClient.cancelQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      
+      const previousSettings = queryClient.getQueryData(queryKeys.business.settings.detail(organizationId))
+      queryClient.setQueryData(
+        queryKeys.business.settings.detail(organizationId),
+        (old: BusinessSettings | null) => old ? { ...old, display_preferences: newDisplayPreferences } : null
+      )
+      return { previousSettings }
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousSettings && organizationId) {
+        queryClient.setQueryData(queryKeys.business.settings.detail(organizationId), context.previousSettings)
+      }
+      toast.error('Fehler beim Speichern der Anzeigeeinstellungen')
+    },
+    onSuccess: () => {
+      toast.success('Anzeigeeinstellungen erfolgreich gespeichert')
+    },
+    onSettled: () => {
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      }
+    }
+  })
+
+  const updateVacationPeriodsMutation = useMutation({
+    mutationFn: updateVacationPeriods,
+    onMutate: async (newVacationPeriods) => {
+      if (!organizationId) return
+      await queryClient.cancelQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      
+      const previousSettings = queryClient.getQueryData(queryKeys.business.settings.detail(organizationId))
+      queryClient.setQueryData(
+        queryKeys.business.settings.detail(organizationId),
+        (old: BusinessSettings | null) => old ? { ...old, vacation_periods: newVacationPeriods } : null
+      )
+      return { previousSettings }
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousSettings && organizationId) {
+        queryClient.setQueryData(queryKeys.business.settings.detail(organizationId), context.previousSettings)
+      }
+      toast.error('Fehler beim Speichern der Urlaubszeiten')
+    },
+    onSuccess: () => {
+      toast.success('Urlaubszeiten erfolgreich gespeichert')
+    },
+    onSettled: () => {
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      }
+    }
+  })
+
+  const addVacationPeriodMutation = useMutation({
+    mutationFn: addVacationPeriod,
+    onSuccess: () => {
+      toast.success('Urlaubszeit erfolgreich hinzugefügt')
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      }
+    },
+    onError: () => {
+      toast.error('Fehler beim Hinzufügen der Urlaubszeit')
+    }
+  })
+
+  const removeVacationPeriodMutation = useMutation({
+    mutationFn: removeVacationPeriod,
+    onSuccess: () => {
+      toast.success('Urlaubszeit erfolgreich entfernt')
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.business.settings.detail(organizationId) })
+      }
+    },
+    onError: () => {
+      toast.error('Fehler beim Entfernen der Urlaubszeit')
+    }
+  })
+
+  // ========================================
   // Utility Functions
   // ========================================
   const getFormattedAddress = () => {
@@ -397,7 +572,10 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
     // Data & States
     settings: settings || null,
     loading,
-    saving: updateMutation.isPending,
+    saving: updateMutation.isPending || updateWorkingHoursMutation.isPending || 
+            updateBookingRulesMutation.isPending || updateDisplayPreferencesMutation.isPending ||
+            updateVacationPeriodsMutation.isPending || addVacationPeriodMutation.isPending ||
+            removeVacationPeriodMutation.isPending,
     uploading: uploadLogoMutation.isPending || deleteLogoMutation.isPending || 
                uploadAppLogoMutation.isPending || deleteAppLogoMutation.isPending,
     error: error as Error | null,
@@ -407,13 +585,26 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
     isFetching,
     isSuccess,
     
-    // Actions
+    // General Actions
     updateSettings: updateMutation.mutateAsync,
     uploadCompanyLogo: uploadLogoMutation.mutateAsync,
     deleteCompanyLogo: deleteLogoMutation.mutateAsync,
     uploadAppLogo: (file: File, theme: 'light' | 'dark') => 
       uploadAppLogoMutation.mutateAsync({ file, theme }),
     deleteAppLogo: deleteAppLogoMutation.mutateAsync,
+    
+    // Appointment Settings Actions
+    updateWorkingHours: updateWorkingHoursMutation.mutateAsync,
+    updateBookingRules: updateBookingRulesMutation.mutateAsync,
+    updateDisplayPreferences: updateDisplayPreferencesMutation.mutateAsync,
+    updateVacationPeriods: updateVacationPeriodsMutation.mutateAsync,
+    addVacationPeriod: addVacationPeriodMutation.mutateAsync,
+    removeVacationPeriod: removeVacationPeriodMutation.mutateAsync,
+    
+    // Business Logic Helpers
+    isOrganizationOpen,
+    getWorkingHoursForDay,
+    generateAvailableTimeSlots,
     
     // Utilities
     getFormattedAddress,

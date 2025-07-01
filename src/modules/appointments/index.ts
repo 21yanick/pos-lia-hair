@@ -11,9 +11,8 @@
 // Main Components
 export { AppointmentsPage } from './components/AppointmentsPage'
 
-// Calendar Components  
-export { AgendaView } from './components/calendar/AgendaView'
-export { SimpleWeekView } from './components/calendar/SimpleWeekView'
+// NEW: Phase 2 Calendar Components (clean replacement)
+export * from './components/calendar'
 
 // Dialog Components
 export { AppointmentDialog } from './components/AppointmentDialog'
@@ -32,6 +31,11 @@ export {
   useDeleteAppointment,
   useAppointmentActions
 } from './hooks/useAppointments'
+
+// Settings Components
+export { BusinessHoursConfig } from './components/settings/BusinessHoursConfig'
+export { VacationManager } from './components/settings/VacationManager'
+export { BookingRulesConfig } from './components/settings/BookingRulesConfig'
 
 // Re-export service types for convenience
 export type {

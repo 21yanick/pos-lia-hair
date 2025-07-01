@@ -114,6 +114,54 @@ export function formatTimeForDisplay(date: Date | string): string {
 }
 
 /**
+ * Formatiert Monat und Jahr für Anzeige (Januar 2025)
+ */
+export function formatMonthYear(date: Date | string): string {
+  const inputDate = typeof date === 'string' ? new Date(date) : date
+  return format(inputDate, 'MMMM yyyy', { locale: de })
+}
+
+/**
+ * Formatiert Wochentag für Anzeige (Dienstag)
+ */
+export function formatWeekdayName(date: Date | string): string {
+  const inputDate = typeof date === 'string' ? new Date(date) : date
+  return format(inputDate, 'EEEE', { locale: de })
+}
+
+/**
+ * Formatiert vollständiges Datum ohne Wochentag (1. Juli 2025)
+ */
+export function formatFullDate(date: Date | string): string {
+  const inputDate = typeof date === 'string' ? new Date(date) : date
+  return format(inputDate, 'd. MMMM yyyy', { locale: de })
+}
+
+/**
+ * Formatiert Wochentag mit vollständigem Datum (Dienstag, 1. Juli 2025)
+ */
+export function formatWeekdayFullDate(date: Date | string): string {
+  const inputDate = typeof date === 'string' ? new Date(date) : date
+  return format(inputDate, 'EEEE, d. MMMM yyyy', { locale: de })
+}
+
+/**
+ * Formatiert Jahr-Monat für Vergleiche (2025-07)
+ */
+export function formatYearMonth(date: Date | string): string {
+  const inputDate = typeof date === 'string' ? new Date(date) : date
+  return format(inputDate, 'yyyy-MM')
+}
+
+/**
+ * Formatiert Zeit im 24h Format (HH:mm)
+ */
+export function formatTimeShort24h(date: Date | string): string {
+  const inputDate = typeof date === 'string' ? new Date(date) : date
+  return format(inputDate, 'HH:mm')
+}
+
+/**
  * Aktuelles Schweizer Datum (ohne Zeit)
  */
 export function getTodaySwiss(): Date {

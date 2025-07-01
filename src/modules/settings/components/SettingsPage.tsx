@@ -8,7 +8,8 @@ import {
   Settings as SettingsIcon, 
   Users, 
   UserCheck,
-  Wrench
+  Wrench,
+  Calendar
 } from "lucide-react"
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
@@ -158,6 +159,40 @@ export function SettingsPage() {
               <Button asChild className="w-full mt-4">
                 <Link href={getOrgUrl("/settings/business")}>
                   Firma konfigurieren
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Termin-Einstellungen */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              <CardTitle>Termine</CardTitle>
+            </div>
+            <CardDescription>
+              Geschäftszeiten, Urlaubszeiten und Buchungsregeln
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                • Arbeitszeiten & Pausen
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • Urlaubszeiten verwalten
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • Buchungsregeln & Timeline
+              </p>
+              <p className="text-sm text-muted-foreground">
+                • Kalender-Anzeige-Optionen
+              </p>
+              <Button asChild className="w-full mt-4">
+                <Link href={getOrgUrl("/appointments/settings")}>
+                  Termine konfigurieren
                 </Link>
               </Button>
             </div>

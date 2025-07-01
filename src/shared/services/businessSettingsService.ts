@@ -2,7 +2,16 @@
 // CRUD operations for company data and configuration (Multi-Tenant)
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { BusinessSettings, BusinessSettingsFormData } from '@/shared/types/businessSettings'
+import type { 
+  BusinessSettings, 
+  BusinessSettingsFormData,
+  WorkingHours,
+  BookingRules,
+  DisplayPreferences,
+  VacationPeriod,
+  WeekDay,
+  DayWorkingHours
+} from '@/shared/types/businessSettings'
 
 // Helper function to get current organization ID
 async function getCurrentOrganizationId(): Promise<string> {
@@ -266,4 +275,312 @@ export function resolveLogoUrl(logoUrl: string | undefined): string | undefined 
   
   // Return original URL in production or client-side contexts
   return logoUrl
+}
+
+// =================================
+// Appointment Settings Operations
+// =================================
+
+/**
+ * Update working hours for the organization
+ */
+export async function updateWorkingHours(workingHours: WorkingHours): Promise<BusinessSettings> {
+  try {
+    const organizationId = await getCurrentOrganizationId()
+    
+    const { data, error } = await supabase
+      .from('business_settings')
+      .update({
+        working_hours: workingHours
+      })
+      .eq('organization_id', organizationId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error updating working hours:', error)
+    throw error
+  }
+}
+
+/**
+ * Update booking rules for the organization
+ */
+export async function updateBookingRules(bookingRules: BookingRules): Promise<BusinessSettings> {
+  try {
+    const organizationId = await getCurrentOrganizationId()
+    
+    const { data, error } = await supabase
+      .from('business_settings')
+      .update({
+        booking_rules: bookingRules
+      })
+      .eq('organization_id', organizationId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error updating booking rules:', error)
+    throw error
+  }
+}
+
+/**
+ * Update display preferences for the organization
+ */
+export async function updateDisplayPreferences(displayPreferences: DisplayPreferences): Promise<BusinessSettings> {
+  try {
+    const organizationId = await getCurrentOrganizationId()
+    
+    const { data, error } = await supabase
+      .from('business_settings')
+      .update({
+        display_preferences: displayPreferences
+      })
+      .eq('organization_id', organizationId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error updating display preferences:', error)
+    throw error
+  }
+}
+
+/**
+ * Update vacation periods for the organization
+ */
+export async function updateVacationPeriods(vacationPeriods: VacationPeriod[]): Promise<BusinessSettings> {
+  try {
+    const organizationId = await getCurrentOrganizationId()
+    
+    const { data, error } = await supabase
+      .from('business_settings')
+      .update({
+        vacation_periods: vacationPeriods
+      })
+      .eq('organization_id', organizationId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error updating vacation periods:', error)
+    throw error
+  }
+}
+
+/**
+ * Add a new vacation period
+ */
+export async function addVacationPeriod(vacationPeriod: VacationPeriod): Promise<BusinessSettings> {
+  try {
+    const currentSettings = await getBusinessSettings()
+    if (!currentSettings) {
+      throw new Error('Business settings not found')
+    }
+    
+    const updatedVacationPeriods = [...(currentSettings.vacation_periods || []), vacationPeriod]
+    return await updateVacationPeriods(updatedVacationPeriods)
+  } catch (error) {
+    console.error('Error adding vacation period:', error)
+    throw error
+  }
+}
+
+/**
+ * Remove a vacation period by index
+ */
+export async function removeVacationPeriod(index: number): Promise<BusinessSettings> {
+  try {
+    const currentSettings = await getBusinessSettings()
+    if (!currentSettings) {
+      throw new Error('Business settings not found')
+    }
+    
+    const updatedVacationPeriods = (currentSettings.vacation_periods || []).filter((_, i) => i !== index)
+    return await updateVacationPeriods(updatedVacationPeriods)
+  } catch (error) {
+    console.error('Error removing vacation period:', error)
+    throw error
+  }
+}
+
+// =================================
+// Business Logic Helper Functions
+// =================================
+
+/**
+ * Check if organization is open on a specific date and time
+ */
+export async function isOrganizationOpen(date: Date, time: string): Promise<boolean> {
+  try {
+    const settings = await getBusinessSettings()
+    if (!settings?.working_hours) return false
+    
+    // Get day of week
+    const weekdays: WeekDay[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    const dayOfWeek = weekdays[date.getDay()]
+    const dayHours = settings.working_hours[dayOfWeek]
+    
+    // Check if day is closed
+    if (dayHours.closed) return false
+    
+    // Check if time is within working hours
+    if (time < dayHours.start || time >= dayHours.end) return false
+    
+    // Check break times
+    const isInBreak = dayHours.breaks.some(breakTime => 
+      time >= breakTime.start && time < breakTime.end
+    )
+    if (isInBreak) return false
+    
+    // Check vacation periods
+    const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
+    const isOnVacation = (settings.vacation_periods || []).some(vacation =>
+      dateStr >= vacation.start && dateStr <= vacation.end
+    )
+    if (isOnVacation) return false
+    
+    return true
+  } catch (error) {
+    console.error('Error checking organization hours:', error)
+    return false
+  }
+}
+
+/**
+ * Get working hours for a specific day
+ */
+export async function getWorkingHoursForDay(date: Date): Promise<DayWorkingHours | null> {
+  try {
+    const settings = await getBusinessSettings()
+    if (!settings?.working_hours) return null
+    
+    const weekdays: WeekDay[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    const dayOfWeek = weekdays[date.getDay()]
+    
+    return settings.working_hours[dayOfWeek]
+  } catch (error) {
+    console.error('Error getting working hours for day:', error)
+    return null
+  }
+}
+
+/**
+ * Generate available time slots for a specific date
+ */
+export async function generateAvailableTimeSlots(date: Date): Promise<string[]> {
+  try {
+    const settings = await getBusinessSettings()
+    if (!settings?.working_hours || !settings?.booking_rules) return []
+    
+    const dayHours = await getWorkingHoursForDay(date)
+    if (!dayHours || dayHours.closed) return []
+    
+    const slots: string[] = []
+    const { slotInterval } = settings.booking_rules
+    
+    // Parse start and end times
+    const [startHour, startMinute] = dayHours.start.split(':').map(Number)
+    const [endHour, endMinute] = dayHours.end.split(':').map(Number)
+    
+    let currentTime = startHour * 60 + startMinute // Convert to minutes
+    const endTime = endHour * 60 + endMinute
+    
+    while (currentTime < endTime) {
+      const hours = Math.floor(currentTime / 60)
+      const minutes = currentTime % 60
+      const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+      
+      // Check if time is not during a break
+      const isInBreak = dayHours.breaks.some(breakTime => 
+        timeStr >= breakTime.start && timeStr < breakTime.end
+      )
+      
+      if (!isInBreak) {
+        slots.push(timeStr)
+      }
+      
+      currentTime += slotInterval
+    }
+    
+    return slots
+  } catch (error) {
+    console.error('Error generating time slots:', error)
+    return []
+  }
+}
+
+// =================================
+// Validation Functions
+// =================================
+
+/**
+ * Validate working hours configuration
+ */
+export function validateWorkingHours(workingHours: WorkingHours): {
+  isValid: boolean
+  errors: Record<string, string>
+} {
+  const errors: Record<string, string> = {}
+  
+  const weekdays: WeekDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  
+  weekdays.forEach(day => {
+    const dayHours = workingHours[day]
+    
+    if (!dayHours.closed) {
+      // Validate time format and range
+      if (dayHours.start >= dayHours.end) {
+        errors[`${day}_hours`] = `${day}: Start time must be before end time`
+      }
+      
+      // Validate breaks
+      dayHours.breaks.forEach((breakTime, index) => {
+        if (breakTime.start >= breakTime.end) {
+          errors[`${day}_break_${index}`] = `${day}: Break start must be before break end`
+        }
+        
+        if (breakTime.start < dayHours.start || breakTime.end > dayHours.end) {
+          errors[`${day}_break_${index}_range`] = `${day}: Break must be within working hours`
+        }
+      })
+    }
+  })
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  }
+}
+
+/**
+ * Validate vacation period
+ */
+export function validateVacationPeriod(vacation: VacationPeriod): {
+  isValid: boolean
+  errors: Record<string, string>
+} {
+  const errors: Record<string, string> = {}
+  
+  if (!vacation.reason.trim()) {
+    errors.reason = 'Reason is required'
+  }
+  
+  if (vacation.start > vacation.end) {
+    errors.dates = 'Start date must be before or equal to end date'
+  }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  }
 }
