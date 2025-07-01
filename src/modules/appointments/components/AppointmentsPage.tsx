@@ -19,7 +19,7 @@ import {
   DayTimelineSkeleton,
   useAppointmentCalendar 
 } from './calendar'
-import { AppointmentDialog } from './AppointmentDialog'
+import { QuickBookingDialog } from './dialogs'
 import { AppointmentDetailDialog } from './AppointmentDetailDialog'
 
 export function AppointmentsPage() {
@@ -208,8 +208,20 @@ export function AppointmentsPage() {
       {/* Mobile Floating Add Button */}
       <Button 
         onClick={() => {
-          // TODO: Open QuickBookingDialog when ready
-          console.log('Quick booking for:', selectedDate)
+          // Open QuickBookingDialog with current date and default time
+          const defaultTimeSlot = {
+            start: '09:00',
+            end: '10:00',
+            date: selectedDate
+          }
+          // Simulate slot click to open dialog
+          handleSlotClick({
+            time: defaultTimeSlot.start,
+            date: defaultTimeSlot.date,
+            status: 'available',
+            duration: 60,
+            isClickable: true
+          })
         }}
         className="lg:hidden fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg z-50"
         size="icon"
@@ -217,14 +229,19 @@ export function AppointmentsPage() {
         <Plus className="h-6 w-6" />
       </Button>
 
-      {/* New Appointment Dialog (for slot clicks) */}
-      <AppointmentDialog
+      {/* Quick Booking Dialog (for slot clicks) */}
+      <QuickBookingDialog
         isOpen={isBookingDialogOpen && !!selectedSlot}
         onClose={closeDialogs}
         onSuccess={() => {
           closeDialogs()
           // React Query will refetch data automatically
         }}
+        initialTimeSlot={selectedSlot ? {
+          start: selectedSlot.time,
+          end: selectedSlot.time, // Will be calculated in dialog
+          date: selectedSlot.date
+        } : undefined}
         initialDate={selectedDate}
       />
       
