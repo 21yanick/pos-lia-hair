@@ -131,6 +131,18 @@ const config: Config = {
   				'draft-foreground': 'var(--status-draft-foreground)',
   				corrected: 'var(--status-corrected)',
   				'corrected-foreground': 'var(--status-corrected-foreground)'
+  			},
+  			appointment: {
+  				scheduled: 'var(--appointment-scheduled)',
+  				'scheduled-foreground': 'var(--appointment-scheduled-foreground)',
+  				confirmed: 'var(--appointment-confirmed)',
+  				'confirmed-foreground': 'var(--appointment-confirmed-foreground)',
+  				pending: 'var(--appointment-pending)',
+  				'pending-foreground': 'var(--appointment-pending-foreground)',
+  				completed: 'var(--appointment-completed)',
+  				'completed-foreground': 'var(--appointment-completed-foreground)',
+  				cancelled: 'var(--appointment-cancelled)',
+  				'cancelled-foreground': 'var(--appointment-cancelled-foreground)'
   			}
   		},
   		borderRadius: {

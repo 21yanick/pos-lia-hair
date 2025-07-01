@@ -155,54 +155,31 @@ function determineSlotStatus(time: string, dayHours: DayWorkingHours | null): Sl
 }
 
 /**
- * Get appointments that overlap with a specific hour using precise minute-level detection
+ * Get appointments that START in a specific hour
  * 
- * This implements true time overlap detection like Google Calendar, Outlook, etc.
- * An appointment appears in all hours it overlaps, even partially.
+ * Fixed: Only return appointments that start in this hour to prevent duplicates.
+ * Multi-hour appointments will be rendered with correct height from their start hour.
  * 
  * Examples:
  * - 09:15-09:45 → shows in hour 9 only
- * - 09:45-10:15 → shows in hour 9 AND hour 10  
- * - 09:30-11:30 → shows in hours 9, 10, AND 11
+ * - 09:45-10:15 → shows in hour 9 only (starts at 9:45)
+ * - 09:30-11:30 → shows in hour 9 only (starts at 9:30)
  */
 function getAppointmentsForHour(appointments: AppointmentBlock[], hour: number): AppointmentBlock[] {
   // Define hour boundaries in minutes since midnight
   const hourStartMinutes = hour * 60        // e.g., hour 9 = 540 minutes (09:00)
   const hourEndMinutes = (hour + 1) * 60    // e.g., hour 9 = 600 minutes (10:00)
   
-  console.log(`🔍 Timeline Debug - Checking appointments for hour ${hour}:`, {
-    hour,
-    hourRange: `${hour}:00 - ${hour + 1}:00`,
-    hourStartMinutes,
-    hourEndMinutes,
-    appointmentsToCheck: appointments.length,
-    appointments: appointments.map(apt => `${apt.customerName} ${apt.startTime}-${apt.endTime}`)
-  })
-  
   const filteredAppointments = appointments.filter(appointment => {
     // Convert appointment times to minutes since midnight
-    const appointmentStartMinutes = timeToMinutes(appointment.startTime)  // e.g., "09:15" = 555
-    const appointmentEndMinutes = timeToMinutes(appointment.endTime)      // e.g., "09:45" = 585
+    const appointmentStartMinutes = timeToMinutes(appointment.startTime)
     
-    // True overlap detection: intervals overlap if start1 < end2 AND start2 < end1
-    // Appointment overlaps with hour if: appointmentStart < hourEnd AND hourStart < appointmentEnd
-    const hasOverlap = appointmentStartMinutes < hourEndMinutes && 
-                      hourStartMinutes < appointmentEndMinutes
+    // Only include appointments that START in this hour
+    // This prevents multi-hour appointments from appearing in multiple hours
+    const startsInThisHour = appointmentStartMinutes >= hourStartMinutes && 
+                            appointmentStartMinutes < hourEndMinutes
     
-    console.log(`  ➡️ ${appointment.customerName} ${appointment.startTime}-${appointment.endTime}:`, {
-      appointmentStartMinutes,
-      appointmentEndMinutes,
-      condition1: `${appointmentStartMinutes} < ${hourEndMinutes} = ${appointmentStartMinutes < hourEndMinutes}`,
-      condition2: `${hourStartMinutes} < ${appointmentEndMinutes} = ${hourStartMinutes < appointmentEndMinutes}`,
-      hasOverlap
-    })
-    
-    return hasOverlap
-  })
-  
-  console.log(`✅ Hour ${hour} final result:`, {
-    matchingAppointments: filteredAppointments.length,
-    appointments: filteredAppointments.map(apt => `${apt.customerName} ${apt.startTime}-${apt.endTime}`)
+    return startsInThisHour
   })
   
   return filteredAppointments
@@ -246,7 +223,8 @@ function getBreakReason(time: string, dayHours: DayWorkingHours | null): string 
 }
 
 /**
- * Calculate appointment position and height for absolute positioning
+ * Calculate appointment position and height for positioning within the hour
+ * Fixed: Position relative to the hour where appointment starts
  */
 export function calculateAppointmentPosition(
   appointment: AppointmentBlock,
@@ -257,10 +235,10 @@ export function calculateAppointmentPosition(
   const endMinutes = parseTimeToMinutes(appointment.endTime)
   const duration = endMinutes - startMinutes
   
-  // Calculate position within the hour
-  const startHour = Math.floor(startMinutes / 60)
+  // Calculate position within the starting hour
   const minutesIntoHour = startMinutes % 60
   
+  // Position relative to the current hour (where appointment starts)
   const top = (minutesIntoHour / 60) * hourHeight
   const height = (duration / 60) * hourHeight
   

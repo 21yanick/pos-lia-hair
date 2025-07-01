@@ -141,22 +141,10 @@ export const useCreateAppointment = (organizationId: string) => {
       return result.data
     },
     onSuccess: (newAppointment) => {
-      // Invalidate all appointment queries for this organization
+      // Only invalidate queries - remove optimistic update to prevent duplicates
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.appointments.all(organizationId)
       })
-      
-      // Optimistically update specific date query if possible
-      const appointmentDate = newAppointment.appointment_date
-      queryClient.setQueryData(
-        queryKeys.business.appointments.byDate(organizationId, appointmentDate),
-        (oldData: Appointment[] | undefined) => {
-          if (!oldData) return [newAppointment]
-          return [...oldData, newAppointment].sort((a, b) => 
-            a.start_time.localeCompare(b.start_time)
-          )
-        }
-      )
       
       // Invalidate customer appointments if customer linked
       if (newAppointment.customer_id) {

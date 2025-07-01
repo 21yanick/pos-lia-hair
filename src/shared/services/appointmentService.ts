@@ -154,16 +154,6 @@ export async function getAppointments(
   // Format date consistently with Hook Query Key (Swiss timezone)
   const dateStr = formatDateForAPI(date)
   
-  // Debug: Check for date formatting issues
-  const utcDateStr = date.toISOString().split('T')[0]
-  console.log('🐛 getAppointments Debug:', {
-    inputDate: date,
-    swissDateStr: dateStr,
-    utcDateStr: utcDateStr,
-    dateMatch: dateStr === utcDateStr,
-    organizationId: validOrgId
-  })
-  
   // Use the new appointments_with_services view for easier querying
   const { data, error } = await supabase
     .from('appointments_with_services')
@@ -175,13 +165,6 @@ export async function getAppointments(
     .eq('appointment_date', dateStr)
     .order('start_time')
   
-  console.log('🐛 Query Result:', {
-    hasData: !!data,
-    dataLength: data?.length || 0,
-    hasError: !!error,
-    error: error,
-    queryParams: { organizationId: validOrgId, appointment_date: dateStr }
-  })
   
   if (error) {
     console.error('Error loading appointments:', error)

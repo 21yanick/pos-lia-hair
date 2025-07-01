@@ -88,7 +88,7 @@ export const SLOT_CONFIG = {
     description: 'Gebucht'
   },
   break: {
-    className: 'bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300',
+    className: 'bg-warning/10 border border-warning/20 text-warning-foreground',
     description: 'Pause'
   },
   closed: {
@@ -96,7 +96,7 @@ export const SLOT_CONFIG = {
     description: 'Geschlossen'
   },
   buffer: {
-    className: 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300',
+    className: 'bg-primary/10 border border-primary/20 text-primary-foreground',
     description: 'Pufferzeit'
   }
 } as const

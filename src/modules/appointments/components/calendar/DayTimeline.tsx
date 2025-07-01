@@ -112,10 +112,6 @@ export function DayTimeline({
         duration: calculateDurationFromTimes(apt.start_time, apt.end_time)
       }
       
-      // Debug customer name issue (reduced)
-      if (process.env.NODE_ENV === 'development' && apt.customer_name) {
-        console.log('🐛 Converting:', apt.customer_name, `${apt.start_time}-${apt.end_time}`)
-      }
       
       return appointment
     })
@@ -370,7 +366,7 @@ function TimeSlotComponent({
       title={slot.breakReason || config.description}
     >
       {slot.status === 'break' && slot.breakReason && (
-        <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Pause</span>
+        <span className="text-xs font-medium text-warning-foreground">Pause</span>
       )}
     </div>
   )
@@ -399,11 +395,11 @@ function AppointmentBlockComponent({
   const isCompact = appointment.duration <= COMPACT_THRESHOLD
   
   const statusColors = {
-    confirmed: 'bg-[hsl(var(--appointment-confirmed))] text-[hsl(var(--appointment-confirmed-foreground))] border-[hsl(var(--appointment-confirmed))]/20',
-    scheduled: 'bg-[hsl(var(--appointment-scheduled))] text-[hsl(var(--appointment-scheduled-foreground))] border-[hsl(var(--appointment-scheduled))]/20',
-    pending: 'bg-[hsl(var(--appointment-pending))] text-[hsl(var(--appointment-pending-foreground))] border-[hsl(var(--appointment-pending))]/20', 
-    cancelled: 'bg-[hsl(var(--appointment-cancelled))] text-[hsl(var(--appointment-cancelled-foreground))] border-[hsl(var(--appointment-cancelled))]/20',
-    completed: 'bg-[hsl(var(--appointment-completed))] text-[hsl(var(--appointment-completed-foreground))] border-[hsl(var(--appointment-completed))]/20'
+    confirmed: 'bg-appointment-confirmed text-appointment-confirmed-foreground border-appointment-confirmed/20',
+    scheduled: 'bg-appointment-scheduled text-appointment-scheduled-foreground border-appointment-scheduled/20',
+    pending: 'bg-appointment-pending text-appointment-pending-foreground border-appointment-pending/20', 
+    cancelled: 'bg-appointment-cancelled text-appointment-cancelled-foreground border-appointment-cancelled/20',
+    completed: 'bg-appointment-completed text-appointment-completed-foreground border-appointment-completed/20'
   }
   
   const customerName = appointment.customerName || appointment.title || 'Unbekannt'
@@ -412,9 +408,8 @@ function AppointmentBlockComponent({
   return (
     <div
       className={cn(
-        'absolute left-0 right-2 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:z-10 pointer-events-auto',
-        statusColors[appointment.status || 'scheduled'],
-        'border'
+        'absolute left-0 right-2 rounded-lg cursor-pointer pointer-events-auto border shadow-lg z-10',
+        statusColors[appointment.status || 'scheduled']
       )}
       style={{
         top: position.top,
@@ -498,11 +493,11 @@ function CurrentTimeIndicator({
     >
       {/* Current Time Line */}
       <div className="flex items-center">
-        <div className="bg-red-500 text-white text-xs px-1 rounded-sm mr-2">
+        <div className="bg-destructive text-destructive-foreground text-xs px-1 rounded-sm mr-2">
           {currentTime}
         </div>
-        <div className="flex-1 h-0.5 bg-red-500"></div>
-        <div className="w-2 h-2 bg-red-500 rounded-full -mr-1"></div>
+        <div className="flex-1 h-0.5 bg-destructive"></div>
+        <div className="w-2 h-2 bg-destructive rounded-full -mr-1"></div>
       </div>
     </div>
   )
