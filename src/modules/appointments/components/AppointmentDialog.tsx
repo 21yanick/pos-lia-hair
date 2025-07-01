@@ -160,13 +160,20 @@ export function AppointmentDialog({
         appointment_date: formatDateForAPI(selectedDate),
         start_time: selectedTimeSlot.start,
         end_time: selectedTimeSlot.end,
-        item_id: selectedService.id,
         customer_id: selectedCustomer?.id || null,
         customer_name: isWalkIn ? walkInCustomer.name : selectedCustomer?.name || '',
         customer_phone: isWalkIn ? walkInCustomer.phone || null : selectedCustomer?.phone || null,
         notes: notes.trim() || null,
         estimated_price: selectedService.default_price || null,
-        status: 'scheduled'
+        status: 'scheduled',
+        organization_id: currentOrganization.id,
+        // Multi-service structure: array of services
+        services: [{
+          item_id: selectedService.id,
+          service_price: selectedService.default_price || null,
+          service_duration_minutes: selectedService.duration_minutes || null,
+          sort_order: 1
+        }]
       }
 
       await createAppointment.mutateAsync(appointmentData)

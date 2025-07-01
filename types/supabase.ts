@@ -320,7 +320,6 @@ export type Database = {
           customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
-          item_id: string
           status: 'scheduled' | 'completed' | 'cancelled'
           notes: string | null
           estimated_price: number | null
@@ -338,7 +337,6 @@ export type Database = {
           customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
-          item_id: string
           status?: 'scheduled' | 'completed' | 'cancelled'
           notes?: string | null
           estimated_price?: number | null
@@ -356,7 +354,6 @@ export type Database = {
           customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
-          item_id?: string
           status?: 'scheduled' | 'completed' | 'cancelled'
           notes?: string | null
           estimated_price?: number | null
@@ -372,13 +369,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items"
             referencedColumns: ["id"]
           },
           {
@@ -400,6 +390,57 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "auth.users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      appointment_services: {
+        Row: {
+          id: string
+          appointment_id: string
+          item_id: string
+          service_price: number | null
+          service_duration_minutes: number | null
+          service_notes: string | null
+          sort_order: number
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          appointment_id: string
+          item_id: string
+          service_price?: number | null
+          service_duration_minutes?: number | null
+          service_notes?: string | null
+          sort_order?: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          appointment_id?: string
+          item_id?: string
+          service_price?: number | null
+          service_duration_minutes?: number | null
+          service_notes?: string | null
+          sort_order?: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
             referencedColumns: ["id"]
           }
         ]
@@ -1103,6 +1144,60 @@ export type Database = {
           days_ago: number | null
         }
         Relationships: []
+      }
+      appointments_with_services: {
+        Row: {
+          // All fields from appointments table
+          id: string
+          appointment_date: string
+          start_time: string
+          end_time: string
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          status: 'scheduled' | 'completed' | 'cancelled'
+          notes: string | null
+          estimated_price: number | null
+          organization_id: string
+          created_at: string | null
+          created_by: string | null
+          updated_at: string | null
+          updated_by: string | null
+          // Additional view fields
+          services: Json | null // JSON array of services with their details
+          total_price: number | null
+          total_duration_minutes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "auth.users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "auth.users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Functions: {

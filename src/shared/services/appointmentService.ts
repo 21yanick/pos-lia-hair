@@ -24,7 +24,12 @@ import { formatDateForAPI } from '@/shared/utils/dateUtils'
 // ========================================
 
 export type Appointment = Database['public']['Tables']['appointments']['Row']
-export type AppointmentInsert = Omit<Database['public']['Tables']['appointments']['Insert'], 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>
+// Types for the new multi-service structure using proper Database types
+export type AppointmentServiceInsert = Database['public']['Tables']['appointment_services']['Insert']
+
+export type AppointmentInsert = Database['public']['Tables']['appointments']['Insert'] & {
+  services: AppointmentServiceInsert[] // Array of services for this appointment
+}
 export type AppointmentUpdate = Partial<Omit<Database['public']['Tables']['appointments']['Update'], 'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'>> & { id: string }
 
 export type AppointmentQueryResult = {
@@ -251,7 +256,7 @@ export async function getAppointmentById(
 }
 
 /**
- * Create a new appointment
+ * Create a new appointment with multiple services
  */
 export async function createAppointment(
   appointmentData: AppointmentInsert,
@@ -260,15 +265,25 @@ export async function createAppointment(
   try {
     const validOrgId = validateOrganizationId(organizationId)
     
+    // Extract services from appointment data
+    const { services, ...appointmentWithoutServices } = appointmentData
+    
     // Validate data
-    validateAppointmentData(appointmentData)
+    validateAppointmentData(appointmentWithoutServices)
+    
+    if (!services || services.length === 0) {
+      return {
+        success: false,
+        error: 'Mindestens ein Service muss ausgewählt werden.'
+      }
+    }
     
     // Check for conflicts
     const hasConflict = await checkTimeSlotConflict(
       validOrgId,
-      appointmentData.appointment_date,
-      appointmentData.start_time,
-      appointmentData.end_time
+      appointmentWithoutServices.appointment_date,
+      appointmentWithoutServices.start_time,
+      appointmentWithoutServices.end_time
     )
     
     if (hasConflict) {
@@ -281,31 +296,75 @@ export async function createAppointment(
     // Get current user
     const currentUserId = await getCurrentUserId()
     
-    // Prepare data with audit fields
+    // Calculate total price from services
+    const totalPrice = services.reduce((sum, service) => {
+      return sum + (service.service_price || 0)
+    }, 0)
+    
+    // Prepare appointment data (without services)
     const completeAppointmentData = {
-      ...appointmentData,
+      ...appointmentWithoutServices,
       organization_id: validOrgId,
-      status: appointmentData.status || 'scheduled',
+      status: appointmentWithoutServices.status || 'scheduled',
+      estimated_price: totalPrice,
       created_by: currentUserId,
       updated_by: currentUserId
     }
     
-    const { data, error } = await supabase
+    // Start transaction - create appointment first
+    const { data: createdAppointment, error: appointmentError } = await supabase
       .from('appointments')
       .insert(completeAppointmentData)
-      .select(`
-        *,
-        customer:customers(id, name, phone, email),
-        service:items!item_id(id, name, default_price, duration_minutes)
-      `)
+      .select('*')
       .single()
     
-    if (error) {
-      console.error('Error creating appointment:', error)
-      throw error
+    if (appointmentError) {
+      console.error('Error creating appointment:', appointmentError)
+      throw appointmentError
     }
     
-    return { success: true, data }
+    // Then create appointment services
+    const appointmentServices = services.map((service, index) => ({
+      appointment_id: createdAppointment.id,
+      item_id: service.item_id,
+      service_price: service.service_price,
+      service_duration_minutes: service.service_duration_minutes,
+      service_notes: service.service_notes,
+      sort_order: service.sort_order || index + 1
+    }))
+    
+    const { error: servicesError } = await supabase
+      .from('appointment_services')
+      .insert(appointmentServices)
+    
+    if (servicesError) {
+      // Rollback - delete the appointment if services failed
+      await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', createdAppointment.id)
+      
+      console.error('Error creating appointment services:', servicesError)
+      throw servicesError
+    }
+    
+    // Fetch the complete appointment with services using the view
+    const { data: completeAppointment, error: fetchError } = await supabase
+      .from('appointments_with_services')
+      .select(`
+        *,
+        customer:customers(id, name, phone, email)
+      `)
+      .eq('id', createdAppointment.id)
+      .single()
+    
+    if (fetchError) {
+      console.error('Error fetching complete appointment:', fetchError)
+      // Return basic appointment data if view fetch fails
+      return { success: true, data: createdAppointment }
+    }
+    
+    return { success: true, data: completeAppointment }
   } catch (err: any) {
     console.error('Error in createAppointment:', err)
     return { 
