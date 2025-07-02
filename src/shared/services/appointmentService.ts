@@ -422,16 +422,13 @@ export async function updateAppointment(
 }
 
 /**
- * Cancel an appointment (sets status to cancelled)
+ * Cancel an appointment (deletes it - ultra clean approach)
  */
 export async function cancelAppointment(
   appointmentId: string,
   organizationId: string
-): Promise<AppointmentMutationResult> {
-  return updateAppointment(
-    { id: appointmentId, status: 'cancelled' },
-    organizationId
-  )
+): Promise<AppointmentDeleteResult> {
+  return deleteAppointment(appointmentId, organizationId)
 }
 
 /**
@@ -486,7 +483,6 @@ export async function checkTimeSlotConflict(
     .select('id')
     .eq('organization_id', validOrgId)
     .eq('appointment_date', date)
-    .neq('status', 'cancelled')
     .or(`and(start_time.lt.${endTime},end_time.gt.${startTime})`) // Time overlap check
   
   if (excludeAppointmentId) {
