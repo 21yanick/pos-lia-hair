@@ -16,9 +16,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  RefreshCw,
   Download,
-  Info
+  Info,
+  Users
 } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 import { useTransactionsQuery, useInvalidateTransactions } from '../hooks/useTransactionsQuery'
@@ -34,6 +34,7 @@ import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateU
 import { DateRangePicker } from './DateRangePicker'
 import { toast } from 'sonner'
 import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
+import { CustomerAssignDialog } from './CustomerAssignDialog'
 
 // Filter State
 interface ActiveFilters {
@@ -310,6 +311,10 @@ export default function TransactionPage() {
     statusFilters: []
   })
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  
+  // Customer Assignment Dialog State
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
+  const [selectedTransactionForCustomer, setSelectedTransactionForCustomer] = useState<UnifiedTransaction | null>(null)
 
   // Debounced search
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
@@ -357,7 +362,7 @@ export default function TransactionPage() {
   }, [debouncedSearchQuery, activeFilters, dateRange])
 
   // React Query
-  const { data: transactions = [], isLoading, error, refetch } = useTransactionsQuery(query)
+  const { data: transactions = [], isLoading, error } = useTransactionsQuery(query)
   const { invalidateAll } = useInvalidateTransactions()
   const pdfActions = usePdfActions()
 
@@ -389,6 +394,11 @@ export default function TransactionPage() {
     await pdfActions.handlePdfAction(transaction)
   }
 
+  const handleCustomerAssign = (transaction: UnifiedTransaction) => {
+    setSelectedTransactionForCustomer(transaction)
+    setCustomerDialogOpen(true)
+  }
+
   const handleClearAllFilters = () => {
     setSearchQuery('')
     setActiveFilters({
@@ -415,32 +425,22 @@ export default function TransactionPage() {
           <p className="text-muted-foreground">Übersicht und Verwaltung</p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => refetch()}
-            disabled={isLoading}
+        {/* Bulk Actions */}
+        {selectedTransactions.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const selected = transactions.filter(tx => selectedTransactions.includes(tx.id))
+              await pdfActions.downloadMultiplePdfs(selected)
+              setSelectedTransactions([])
+            }}
+            className="flex-shrink-0"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Aktualisieren
+            <Download className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">PDFs </span>({selectedTransactions.length})
           </Button>
-          
-          {selectedTransactions.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                const selected = transactions.filter(tx => selectedTransactions.includes(tx.id))
-                await pdfActions.downloadMultiplePdfs(selected)
-                setSelectedTransactions([])
-              }}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              PDFs ({selectedTransactions.length})
-            </Button>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -610,24 +610,47 @@ export default function TransactionPage() {
                         <span className="text-xs flex-shrink-0">
                           {formatTimeForDisplay(transaction.transaction_date)}
                         </span>
+                        {/* Customer Badge */}
+                        {transaction.customer_name && (
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 max-w-32 sm:max-w-none">
+                            <span className="truncate">
+                              👤 {transaction.customer_name}
+                            </span>
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     
                     {/* Right Side - Amount and Actions */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-shrink-0 min-w-0">
-                      {/* PDF Action */}
-                      <div className="flex items-center justify-end sm:justify-start">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-shrink-0">
+                      {/* Amount - mobile first */}
+                      <div className="text-right order-1 sm:order-2 flex-shrink-0">
+                        <div className={`text-lg font-bold whitespace-nowrap ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(transaction.amount)}
+                        </div>
+                      </div>
+                      
+                      {/* Actions - mobile second */}
+                      <div className="flex items-center justify-end order-2 sm:order-1 sm:justify-start flex-shrink-0">
+                        {/* PDF Action */}
                         <PdfStatusIcon
                           transaction={transaction}
                           onPdfAction={handlePdfAction}
                         />
-                      </div>
-                      
-                      {/* Amount */}
-                      <div className="text-right flex-shrink-0">
-                        <div className={`text-lg font-bold whitespace-nowrap ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(transaction.amount)}
-                        </div>
+                        
+                        {/* Customer Action - nur für Sales */}
+                        {transaction.transaction_type === 'sale' && (
+                          <button
+                            type="button"
+                            onClick={() => handleCustomerAssign(transaction)}
+                            className="p-2 rounded-lg transition-colors touch-manipulation hover:bg-muted active:bg-muted/80 cursor-pointer flex-shrink-0"
+                            title={transaction.customer_name ? `Kunde: ${transaction.customer_name}` : 'Kunde zuweisen'}
+                          >
+                            <Users 
+                              className={`h-4 w-4 ${transaction.customer_name ? 'text-primary' : 'text-muted-foreground'}`} 
+                            />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -637,6 +660,20 @@ export default function TransactionPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Customer Assignment Dialog */}
+      {selectedTransactionForCustomer && (
+        <CustomerAssignDialog
+          transaction={selectedTransactionForCustomer}
+          open={customerDialogOpen}
+          onOpenChange={(open) => {
+            setCustomerDialogOpen(open)
+            if (!open) {
+              setSelectedTransactionForCustomer(null)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

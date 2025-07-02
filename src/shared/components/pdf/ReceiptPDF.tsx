@@ -71,7 +71,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     padding: 15,
     borderRadius: 4,
+    marginBottom: 20,
+  },
+  
+  // Customer Section
+  customerSection: {
+    backgroundColor: '#e8f4fd',
+    padding: 15,
+    borderRadius: 4,
     marginBottom: 30,
+    borderWidth: 1,
+    borderColor: '#3498db',
+  },
+  customerLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 5,
+  },
+  customerName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#3498db',
   },
   receiptInfoRow: {
     flexDirection: 'row',
@@ -314,6 +335,14 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
             <Text style={styles.receiptInfoLabel}>Uhrzeit:</Text>
             <Text style={styles.receiptInfoValue}>{formattedTime}</Text>
           </View>
+        </View>
+
+        {/* Customer Section */}
+        <View style={styles.customerSection}>
+          <Text style={styles.customerLabel}>Kunde:</Text>
+          <Text style={styles.customerName}>
+            {sale.customer_name || 'Laufkundschaft'}
+          </Text>
         </View>
 
         {/* Items Section */}

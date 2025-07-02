@@ -24,6 +24,10 @@ export interface UnifiedTransaction {
   user_id: string
   description: string
   
+  // Customer Information (only for sales)
+  customer_id: string | null
+  customer_name: string | null
+  
   // PDF/Document Status
   document_id: string | null
   has_pdf: boolean

@@ -113,6 +113,7 @@ export async function createSale(
       user_id: userId,
       organization_id: validOrgId,
       customer_id: data.customer_id || null,  // 🆕 Customer Integration
+      customer_name: data.customer_name || null,  // 🆕 Customer Name for Receipt
     }
     
     // console.log('🚨 CRITICAL DEBUG: About to insert sale with data:', saleData)
