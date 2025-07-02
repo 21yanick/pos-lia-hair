@@ -93,7 +93,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
       ])
       setHasChanges(false)
     } catch (error) {
-      console.error('Error saving booking rules:', error)
+      // Error handling delegated to UI layer
     }
   }
 
@@ -129,7 +129,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-primary" />
             <div>
@@ -141,12 +141,13 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
           </div>
           
           {hasChanges && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleReset}>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="sm" onClick={handleReset} className="flex-1 sm:flex-initial">
                 <RotateCcw className="h-4 w-4 mr-2" />
-                Zurücksetzen
+                <span className="sm:hidden">Reset</span>
+                <span className="hidden sm:inline">Zurücksetzen</span>
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={saving}>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="flex-1 sm:flex-initial">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Speichern...' : 'Speichern'}
               </Button>
@@ -306,28 +307,6 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </Select>
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium">Automatische Bestätigung</Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Sollen neue Buchungen automatisch bestätigt werden?
-                </p>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={bookingRules.autoConfirm}
-                    onCheckedChange={(checked) => updateBookingRule('autoConfirm', checked)}
-                  />
-                  <span className="text-sm font-medium">
-                    {bookingRules.autoConfirm ? 'Aktiviert' : 'Deaktiviert'}
-                  </span>
-                </div>
-                <Badge variant={bookingRules.autoConfirm ? 'default' : 'secondary'}>
-                  {bookingRules.autoConfirm ? 'Auto-Bestätigung' : 'Manuelle Prüfung'}
-                </Badge>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -390,46 +369,6 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </Select>
             </div>
 
-            {/* Display Options */}
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium">Wochenenden anzeigen</Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Sollen Samstag und Sonntag im Kalender angezeigt werden?
-                </p>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={displayPreferences.showWeekends}
-                    onCheckedChange={(checked) => updateDisplayPreference('showWeekends', checked)}
-                  />
-                  <span className="text-sm font-medium">
-                    {displayPreferences.showWeekends ? 'Anzeigen' : 'Ausblenden'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium">Geschlossene Tage anzeigen</Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Sollen geschlossene Tage in der Timeline angezeigt werden?
-                </p>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={displayPreferences.showClosedDays}
-                    onCheckedChange={(checked) => updateDisplayPreference('showClosedDays', checked)}
-                  />
-                  <span className="text-sm font-medium">
-                    {displayPreferences.showClosedDays ? 'Anzeigen' : 'Ausblenden'}
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -464,16 +403,8 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
                 <span className="font-medium">{bookingRules.bufferMinutes} Min</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Auto-Bestätigung:</span>
-                <span className="font-medium">{bookingRules.autoConfirm ? 'Ja' : 'Nein'}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-muted-foreground">Timeline:</span>
                 <span className="font-medium">{displayPreferences.timelineStart} - {displayPreferences.timelineEnd}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Wochenenden:</span>
-                <span className="font-medium">{displayPreferences.showWeekends ? 'Anzeigen' : 'Ausblenden'}</span>
               </div>
             </div>
           </div>

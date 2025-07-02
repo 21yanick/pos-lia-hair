@@ -96,6 +96,7 @@ export function MonthGrid({
           <DaysGrid 
             monthData={monthWithBusinessLogic} 
             onDayClick={onDayClick}
+            onMonthChange={onMonthChange}
           />
         </div>
       </CardContent>
@@ -201,10 +202,12 @@ function WeekdayHeader() {
  */
 function DaysGrid({ 
   monthData, 
-  onDayClick 
+  onDayClick,
+  onMonthChange 
 }: { 
   monthData: MonthData
   onDayClick?: (date: Date) => void
+  onMonthChange?: (date: Date) => void
 }) {
   // Split days into weeks for proper grid layout
   const weeks: CalendarDay[][] = []
@@ -220,7 +223,8 @@ function DaysGrid({
             <DayCell 
               key={day.date.getTime()} 
               day={day} 
-              onClick={onDayClick}
+              onDayClick={onDayClick}
+              onMonthChange={onMonthChange}
             />
           ))}
         </div>
@@ -234,23 +238,31 @@ function DaysGrid({
  */
 function DayCell({ 
   day, 
-  onClick 
+  onDayClick,
+  onMonthChange 
 }: { 
   day: CalendarDay
-  onClick?: (date: Date) => void
+  onDayClick?: (date: Date) => void
+  onMonthChange?: (date: Date) => void
 }) {
   const config = DAY_INDICATOR_CONFIG[day.status]
   
   const handleClick = () => {
-    if (day.isClickable && onClick) {
-      onClick(day.date)
+    if (!day.isClickable) return
+    
+    if (day.status === 'other-month') {
+      // Navigate to the clicked month
+      onMonthChange?.(day.date)
+    } else {
+      // All days (including closed/vacation) navigate to timeline
+      onDayClick?.(day.date)
     }
   }
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (day.isClickable && (e.key === 'Enter' || e.key === ' ') && onClick) {
+    if (day.isClickable && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
-      onClick(day.date)
+      handleClick()
     }
   }
   

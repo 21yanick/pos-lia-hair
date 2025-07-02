@@ -41,15 +41,15 @@ export interface MonthGridProps {
  */
 export const DAY_INDICATOR_CONFIG = {
   today: {
-    className: 'bg-primary text-primary-foreground ring-2 ring-primary/50 font-semibold',
+    className: 'bg-primary text-primary-foreground ring-2 ring-primary/50 font-semibold border border-primary/20',
     description: 'Heute'
   },
   available: {
-    className: 'bg-muted/30 text-foreground hover:bg-muted/60 transition-colors cursor-pointer',
+    className: 'bg-muted/60 text-foreground hover:bg-muted/80 transition-colors cursor-pointer border border-border/40',
     description: 'Verfügbar'
   },
   booked: {
-    className: 'bg-secondary text-secondary-foreground font-medium cursor-pointer hover:bg-secondary/80',
+    className: 'bg-secondary text-secondary-foreground font-medium cursor-pointer hover:bg-secondary/80 border border-border/20',
     description: 'Termine vorhanden'
   },
   vacation: {
@@ -57,11 +57,11 @@ export const DAY_INDICATOR_CONFIG = {
     description: 'Urlaubszeit'
   },
   closed: {
-    className: 'bg-muted text-muted-foreground opacity-60',
-    description: 'Geschlossen'
+    className: 'bg-transparent text-muted-foreground/40 opacity-50 cursor-pointer hover:opacity-70 hover:bg-muted/20 transition-all duration-200',
+    description: 'Geschlossen (Ausnahmetermin möglich)'
   },
   'other-month': {
-    className: 'text-muted-foreground/40 cursor-default',
+    className: 'text-muted-foreground/25 cursor-pointer opacity-50 hover:opacity-75 transition-opacity',
     description: 'Anderer Monat'
   }
 } as const

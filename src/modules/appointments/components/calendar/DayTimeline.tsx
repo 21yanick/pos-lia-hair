@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Clock, Plus } from 'lucide-react'
+import { Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
@@ -57,10 +57,8 @@ export function DayTimeline({
   const timelineRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(getCurrentTime())
   
-  // Debug: Log current organization (reduced)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🏢 DayTimeline:', currentOrganization?.name || 'Loading...')
-  }
+  // Debug: Log current organization (development only)
+  // Removed: Causing excessive logging on every render
   
   // Load real appointments for selected date
   const { 
@@ -72,10 +70,8 @@ export function DayTimeline({
     selectedDate
   )
   
-  // Debug: Log appointment query results (reduced)
-  if (process.env.NODE_ENV === 'development' && appointmentsData && !appointmentsLoading) {
-    console.log('📅 Appointments loaded:', appointmentsData.length, 'for', formatDateForAPI(selectedDate))
-  }
+  // Debug: Log appointment query results (development only)
+  // Removed: Causing excessive logging on every data change
   
   // Convert DB appointments to AppointmentBlocks
   const appointments: AppointmentBlock[] = useMemo(() => {
@@ -104,7 +100,6 @@ export function DayTimeline({
         title: apt.customer_name || 'Unbekannter Kunde',
         customerName: apt.customer_name || 'Unbekannter Kunde',
         services: mappedServices,
-        status: apt.status as 'scheduled' | 'confirmed' | 'cancelled' | 'completed',
         estimatedPrice: apt.estimated_price,
         totalPrice: apt.total_price,
         totalDuration: apt.total_duration_minutes,
@@ -116,9 +111,7 @@ export function DayTimeline({
       return appointment
     })
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Converted:', converted.length, 'appointments')
-    }
+    // Debug: Conversion logging removed for performance
     
     return converted
   }, [appointmentsData])
@@ -136,10 +129,7 @@ export function DayTimeline({
   const timelineData = useMemo(() => {
     const timeline = generateTimelineData(selectedDate, settings, appointments)
     
-    if (process.env.NODE_ENV === 'development') {
-      const totalAppointmentsInTimeline = timeline.hours.reduce((sum, hour) => sum + hour.appointments.length, 0)
-      console.log('📊 Timeline generated:', totalAppointmentsInTimeline, 'appointments for', formatDateForAPI(selectedDate))
-    }
+    // Debug: Timeline generation logging removed for performance
     
     return timeline
   }, [selectedDate, settings, appointments])
@@ -166,7 +156,6 @@ export function DayTimeline({
   
   // Show error state (AFTER all hooks)
   if (appointmentsError) {
-    console.error('Failed to load appointments:', appointmentsError)
     // Continue with empty appointments array - don't block the UI
   }
   
@@ -255,10 +244,6 @@ function DayTimelineHeader({
           </Badge>
         )}
         
-        <Button size="sm" variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Termin
-        </Button>
       </div>
     </div>
   )
@@ -394,13 +379,8 @@ function AppointmentBlockComponent({
   const COMPACT_THRESHOLD = 45
   const isCompact = appointment.duration <= COMPACT_THRESHOLD
   
-  const statusColors = {
-    confirmed: 'bg-appointment-confirmed text-appointment-confirmed-foreground border-appointment-confirmed/20',
-    scheduled: 'bg-appointment-scheduled text-appointment-scheduled-foreground border-appointment-scheduled/20',
-    pending: 'bg-appointment-pending text-appointment-pending-foreground border-appointment-pending/20', 
-    cancelled: 'bg-appointment-cancelled text-appointment-cancelled-foreground border-appointment-cancelled/20',
-    completed: 'bg-appointment-completed text-appointment-completed-foreground border-appointment-completed/20'
-  }
+  // Ultra-clean: Single appointment style using primary theme colors
+  const appointmentStyle = 'bg-primary text-primary-foreground border-primary/20'
   
   const customerName = appointment.customerName || appointment.title || 'Unbekannt'
   const timeRange = `${appointment.startTime} - ${appointment.endTime}`
@@ -409,7 +389,7 @@ function AppointmentBlockComponent({
     <div
       className={cn(
         'absolute left-0 right-2 rounded-lg cursor-pointer pointer-events-auto border shadow-lg z-10',
-        statusColors[appointment.status || 'scheduled']
+        appointmentStyle
       )}
       style={{
         top: position.top,

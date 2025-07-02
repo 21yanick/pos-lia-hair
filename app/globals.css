@@ -86,17 +86,6 @@
     --status-corrected: 25 95% 53%;
     --status-corrected-foreground: 25 95% 97%;
 
-    /* Appointment Status Colors - OKLCH Harmonized */
-    --appointment-scheduled: oklch(0.6104 0.0767 299.7335); /* Primary Purple */
-    --appointment-scheduled-foreground: oklch(0.9777 0.0041 301.4256);
-    --appointment-confirmed: oklch(0.7321 0.0749 169.8670); /* Success Green */
-    --appointment-confirmed-foreground: oklch(0.9777 0.0041 301.4256);
-    --appointment-pending: oklch(0.8540 0.0882 76.8292); /* Warning Orange */
-    --appointment-pending-foreground: oklch(0.3394 0.0441 1.7583);
-    --appointment-completed: oklch(0.7857 0.0645 258.0839); /* Chart-5 Blue */
-    --appointment-completed-foreground: oklch(0.9777 0.0041 301.4256);
-    --appointment-cancelled: oklch(0.5288 0.0375 290.7895); /* Muted */
-    --appointment-cancelled-foreground: oklch(0.9777 0.0041 301.4256);
 
     /* Tweakcn Typography & Shadows */
     --font-sans: Geist, sans-serif;
@@ -198,17 +187,6 @@
     --status-corrected: 25 95% 63%;
     --status-corrected-foreground: 25 95% 87%;
 
-    /* Appointment Status Colors - OKLCH Dark Mode */
-    --appointment-scheduled: oklch(0.7058 0.0777 302.0489); /* Primary Purple Dark */
-    --appointment-scheduled-foreground: oklch(0.2166 0.0215 292.8474);
-    --appointment-confirmed: oklch(0.7321 0.0749 169.8670); /* Success Green */
-    --appointment-confirmed-foreground: oklch(0.2166 0.0215 292.8474);
-    --appointment-pending: oklch(0.8540 0.0882 76.8292); /* Warning Orange */
-    --appointment-pending-foreground: oklch(0.2166 0.0215 292.8474);
-    --appointment-completed: oklch(0.7857 0.0645 258.0839); /* Chart-5 Blue */
-    --appointment-completed-foreground: oklch(0.2166 0.0215 292.8474);
-    --appointment-cancelled: oklch(0.6974 0.0282 300.0614); /* Muted Foreground */
-    --appointment-cancelled-foreground: oklch(0.2166 0.0215 292.8474);
     --radius: 0.35rem;
     --sidebar: oklch(0.1990 0.0220 292.6244);
     --font-sans: Geist, sans-serif;

@@ -26,6 +26,9 @@ export function generateTimelineData(
   // Get day working hours
   const dayHours = getDayWorkingHours(date, businessSettings)
   
+  // Check if this is a closed day (for exception slots)
+  const isClosedDay = !dayHours || dayHours.closed
+  
   // Determine timeline bounds
   const displayPrefs = businessSettings?.display_preferences
   const startHour = displayPrefs?.timelineStart ? parseTimeToHour(displayPrefs.timelineStart) : 8
@@ -41,7 +44,8 @@ export function generateTimelineData(
     endHour,
     slotInterval,
     dayHours,
-    appointments
+    appointments,
+    isClosedDay
   )
   
   return {
@@ -71,13 +75,14 @@ function generateTimelineHours(
   endHour: number,
   slotInterval: number,
   dayHours: DayWorkingHours | null,
-  appointments: AppointmentBlock[]
+  appointments: AppointmentBlock[],
+  isClosedDay: boolean = false
 ): TimelineHour[] {
   const hours: TimelineHour[] = []
   
   for (let hour = startHour; hour <= endHour; hour++) {
     const timeLabel = formatHour(hour)
-    const slots = generateSlotsForHour(date, hour, slotInterval, dayHours)
+    const slots = generateSlotsForHour(date, hour, slotInterval, dayHours, isClosedDay)
     const hourAppointments = getAppointmentsForHour(appointments, hour)
     
     hours.push({
@@ -98,7 +103,8 @@ function generateSlotsForHour(
   date: Date,
   hour: number,
   slotInterval: number,
-  dayHours: DayWorkingHours | null
+  dayHours: DayWorkingHours | null,
+  isClosedDay: boolean = false
 ): TimeSlot[] {
   const slots: TimeSlot[] = []
   const slotsPerHour = 60 / slotInterval
@@ -108,14 +114,14 @@ function generateSlotsForHour(
     const time = formatTime(hour, minutes)
     const slotDate = setMinutes(setHours(startOfDay(date), hour), minutes)
     
-    const status = determineSlotStatus(time, dayHours)
+    const status = determineSlotStatus(time, dayHours, isClosedDay)
     
     slots.push({
       time,
       date: slotDate,
       status,
       duration: slotInterval,
-      isClickable: status === 'available',
+      isClickable: status === 'available' || status === 'exception',
       breakReason: status === 'break' ? getBreakReason(time, dayHours) : undefined
     })
   }
@@ -126,8 +132,12 @@ function generateSlotsForHour(
 /**
  * Determine slot status based on business hours and breaks
  */
-function determineSlotStatus(time: string, dayHours: DayWorkingHours | null): SlotStatus {
+function determineSlotStatus(time: string, dayHours: DayWorkingHours | null, isClosedDay: boolean = false): SlotStatus {
   if (!dayHours || dayHours.closed) {
+    // If this is a closed day but we want to show exception slots
+    if (isClosedDay) {
+      return 'exception'
+    }
     return 'closed'
   }
   
@@ -137,6 +147,10 @@ function determineSlotStatus(time: string, dayHours: DayWorkingHours | null): Sl
   
   // Check if outside business hours
   if (timeMinutes < startMinutes || timeMinutes >= endMinutes) {
+    // If this is a closed day, allow exception appointments outside hours
+    if (isClosedDay) {
+      return 'exception'
+    }
     return 'closed'
   }
   

@@ -80,7 +80,7 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
       await updateWorkingHours(workingHours)
       setHasChanges(false)
     } catch (error) {
-      console.error('Error saving working hours:', error)
+      // Error handling delegated to UI layer
     }
   }
 
@@ -119,7 +119,7 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
             <div>
@@ -131,12 +131,13 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
           </div>
           
           {hasChanges && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleReset}>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="sm" onClick={handleReset} className="flex-1 sm:flex-initial">
                 <RotateCcw className="h-4 w-4 mr-2" />
-                Zurücksetzen
+                <span className="sm:hidden">Reset</span>
+                <span className="hidden sm:inline">Zurücksetzen</span>
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={saving}>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="flex-1 sm:flex-initial">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Speichern...' : 'Speichern'}
               </Button>
@@ -246,9 +247,9 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
                   </div>
 
                   {/* Quick Copy Actions */}
-                  <div className="flex items-center gap-2 pt-2">
+                  <div className="pt-2 space-y-1">
                     <Label className="text-xs text-muted-foreground">Schnellkopie:</Label>
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-1">
                       {WEEKDAYS.filter(d => d.key !== weekday.key).map((otherDay) => (
                         <Button
                           key={otherDay.key}

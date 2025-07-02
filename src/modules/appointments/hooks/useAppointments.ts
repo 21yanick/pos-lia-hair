@@ -29,10 +29,10 @@ export const useAppointmentsByDate = (organizationId: string, date: Date) => {
     queryFn: async () => {
       return getAppointments(organizationId, date)
     },
-    staleTime: 2 * 60 * 1000,   // 2 minutes
+    staleTime: 5 * 60 * 1000,   // 5 minutes
     gcTime: 10 * 60 * 1000,     // 10 minutes
     enabled: !!organizationId,
-    refetchOnWindowFocus: true,  // Important for appointments (real-time data)
+    refetchOnWindowFocus: false, // Disabled: was causing excessive re-renders
   })
 }
 
@@ -141,9 +141,10 @@ export const useCreateAppointment = (organizationId: string) => {
       return result.data
     },
     onSuccess: (newAppointment) => {
-      // Only invalidate queries - remove optimistic update to prevent duplicates
+      // Invalidate specific date query for immediate update
+      const appointmentDate = newAppointment.appointment_date
       queryClient.invalidateQueries({
-        queryKey: queryKeys.business.appointments.all(organizationId)
+        queryKey: queryKeys.business.appointments.byDate(organizationId, appointmentDate)
       })
       
       // Invalidate customer appointments if customer linked
@@ -154,7 +155,7 @@ export const useCreateAppointment = (organizationId: string) => {
       }
     },
     onError: (error) => {
-      console.error('Failed to create appointment:', error)
+      // Error handling delegated to UI layer
     }
   })
 }
@@ -174,9 +175,10 @@ export const useUpdateAppointment = (organizationId: string) => {
       return result.data
     },
     onSuccess: (updatedAppointment) => {
-      // Invalidate all appointment queries for this organization
+      // Invalidate specific date query for immediate update
+      const appointmentDate = updatedAppointment.appointment_date
       queryClient.invalidateQueries({
-        queryKey: queryKeys.business.appointments.all(organizationId)
+        queryKey: queryKeys.business.appointments.byDate(organizationId, appointmentDate)
       })
       
       // Update specific appointment in cache
@@ -193,7 +195,7 @@ export const useUpdateAppointment = (organizationId: string) => {
       }
     },
     onError: (error) => {
-      console.error('Failed to update appointment:', error)
+      // Error handling delegated to UI layer
     }
   })
 }
@@ -213,9 +215,10 @@ export const useCancelAppointment = (organizationId: string) => {
       return result.data
     },
     onSuccess: (cancelledAppointment) => {
-      // Invalidate all appointment queries for this organization
+      // Invalidate specific date query for immediate update
+      const appointmentDate = cancelledAppointment.appointment_date
       queryClient.invalidateQueries({
-        queryKey: queryKeys.business.appointments.all(organizationId)
+        queryKey: queryKeys.business.appointments.byDate(organizationId, appointmentDate)
       })
       
       // Update specific appointment in cache
@@ -232,7 +235,7 @@ export const useCancelAppointment = (organizationId: string) => {
       }
     },
     onError: (error) => {
-      console.error('Failed to cancel appointment:', error)
+      // Error handling delegated to UI layer
     }
   })
 }
@@ -251,8 +254,9 @@ export const useDeleteAppointment = (organizationId: string) => {
       }
       return appointmentId
     },
-    onSuccess: (deletedAppointmentId) => {
-      // Invalidate all appointment queries for this organization
+    onSuccess: (deletedAppointmentId, variables, context: any) => {
+      // Note: We need the appointment date for targeted invalidation
+      // For now, invalidate all to ensure consistency
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.appointments.all(organizationId)
       })
@@ -263,7 +267,7 @@ export const useDeleteAppointment = (organizationId: string) => {
       })
     },
     onError: (error) => {
-      console.error('Failed to delete appointment:', error)
+      // Error handling delegated to UI layer
     }
   })
 }

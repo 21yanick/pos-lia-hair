@@ -16,7 +16,8 @@ import {
   DialogTitle 
 } from '@/shared/components/ui/dialog'
 import { Progress } from '@/shared/components/ui/progress'
-import { ChevronLeft, Check, Loader2 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { ChevronLeft, Check, Loader2, AlertTriangle } from 'lucide-react'
 import { useToast } from '@/shared/hooks/core/useToast'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useItems } from '@/shared/hooks/business/useItems'
@@ -39,7 +40,8 @@ export function QuickBookingDialog({
   onClose, 
   onSuccess,
   initialTimeSlot,
-  initialDate = new Date()
+  initialDate = new Date(),
+  isExceptionAppointment = false
 }: QuickBookingDialogProps) {
   const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
@@ -58,7 +60,8 @@ export function QuickBookingDialog({
     customerName: '',
     customerPhone: null,
     notes: '',
-    isWalkIn: false
+    isWalkIn: false,
+    isExceptionAppointment
   })
 
   // Available services (filter for bookable services)
@@ -116,10 +119,11 @@ export function QuickBookingDialog({
         customerName: '',
         customerPhone: null,
         notes: '',
-        isWalkIn: false
+        isWalkIn: false,
+        isExceptionAppointment
       })
     }
-  }, [isOpen, initialTimeSlot, initialDate])
+  }, [isOpen, initialTimeSlot, initialDate, isExceptionAppointment])
 
   // Progress calculation
   const progress = currentStep === 'services' ? 50 : 100
@@ -155,6 +159,15 @@ export function QuickBookingDialog({
     try {
       const selectedServices = formData.selectedServices.filter(s => s.selected)
       
+      // Prepare notes with exception marker if needed
+      const baseNotes = formData.notes.trim()
+      const exceptionNote = formData.isExceptionAppointment 
+        ? '[AUSNAHMETERMIN]' 
+        : ''
+      const combinedNotes = [exceptionNote, baseNotes]
+        .filter(note => note.length > 0)
+        .join(' - ') || null
+
       const appointmentData: AppointmentInsert = {
         appointment_date: formatDateForAPI(formData.timeSlot.date),
         start_time: formData.timeSlot.start,
@@ -162,8 +175,7 @@ export function QuickBookingDialog({
         customer_id: formData.customerId,
         customer_name: formData.customerName || null,
         customer_phone: formData.customerPhone,
-        notes: formData.notes.trim() || null,
-        status: 'scheduled',
+        notes: combinedNotes,
         organization_id: currentOrganization.id,
         // Multi-service structure
         services: selectedServices.map((serviceSelection, index) => ({
@@ -248,6 +260,16 @@ export function QuickBookingDialog({
               : 'Wählen Sie einen Kunden und bestätigen Sie den Termin'
             }
           </DialogDescription>
+          
+          {/* Exception Appointment Warning */}
+          {formData.isExceptionAppointment && (
+            <Alert className="border-destructive/20 bg-destructive/10">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <AlertDescription className="text-destructive">
+                <strong>Ausnahmetermin:</strong> Dieser Termin liegt außerhalb der normalen Arbeitszeiten.
+              </AlertDescription>
+            </Alert>
+          )}
           
           {/* Progress Bar */}
           <div className="w-full mt-4">

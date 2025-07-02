@@ -97,14 +97,11 @@ export interface BookingRules {
   maxAdvanceDays: 30 | 60 | 90    // How far ahead bookings allowed
   minAdvanceHours: 1 | 2 | 4 | 24 // Minimum notice required
   bufferMinutes: 0 | 5 | 10       // Time between appointments
-  autoConfirm: boolean            // Auto-confirm bookings
 }
 
 export interface DisplayPreferences {
   timelineStart: string    // "08:00" - Timeline display start
-  timelineEnd: string      // "19:00" - Timeline display end  
-  showWeekends: boolean    // Show Sat/Sun in calendar
-  showClosedDays: boolean  // Show closed days in timeline
+  timelineEnd: string      // "19:00" - Timeline display end
 }
 
 export interface VacationPeriod {
@@ -132,15 +129,12 @@ export const DEFAULT_BOOKING_RULES: BookingRules = {
   defaultDuration: 60,
   maxAdvanceDays: 90,
   minAdvanceHours: 2,
-  bufferMinutes: 5,
-  autoConfirm: true
+  bufferMinutes: 5
 }
 
 export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
   timelineStart: "08:00",
-  timelineEnd: "19:00",
-  showWeekends: true,
-  showClosedDays: false
+  timelineEnd: "19:00"
 }
 
 export const DEFAULT_BUSINESS_SETTINGS: Partial<BusinessSettings> = {

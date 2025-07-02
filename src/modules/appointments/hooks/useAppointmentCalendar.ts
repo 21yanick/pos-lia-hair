@@ -9,6 +9,7 @@ import { useState, useCallback } from 'react'
 import { startOfMonth, addMonths, subMonths } from 'date-fns'
 import { formatDateForAPI, formatYearMonth } from '@/shared/utils/dateUtils'
 import type { TimeSlot, AppointmentBlock } from '../types/timeline'
+import type { DayStatus } from '../types/calendar'
 
 interface UseAppointmentCalendarReturn {
   // State
@@ -36,6 +37,9 @@ interface UseAppointmentCalendarReturn {
   openAppointmentDialog: (appointment: AppointmentBlock) => void
   closeDialogs: () => void
   
+  // Exception Appointment State
+  isExceptionAppointment: boolean
+  
   // Utilities
   formatDateKey: (date: Date) => string
   isToday: (date: Date) => boolean
@@ -51,6 +55,9 @@ export function useAppointmentCalendar(initialDate: Date = new Date()): UseAppoi
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentBlock | null>(null)
+  
+  // Exception appointment state
+  const [isExceptionAppointment, setIsExceptionAppointment] = useState(false)
   
   // Month Navigation
   const goToNextMonth = useCallback(() => {
@@ -84,6 +91,7 @@ export function useAppointmentCalendar(initialDate: Date = new Date()): UseAppoi
   const handleSlotClick = useCallback((slot: TimeSlot) => {
     setSelectedSlot(slot)
     setSelectedAppointment(null)
+    setIsExceptionAppointment(slot.status === 'exception')
     setIsBookingDialogOpen(true)
   }, [])
   
@@ -106,7 +114,9 @@ export function useAppointmentCalendar(initialDate: Date = new Date()): UseAppoi
     setIsBookingDialogOpen(false)
     setSelectedSlot(null)
     setSelectedAppointment(null)
+    setIsExceptionAppointment(false)
   }, [])
+  
   
   // Utilities
   const formatDateKey = useCallback((date: Date): string => {
@@ -146,6 +156,9 @@ export function useAppointmentCalendar(initialDate: Date = new Date()): UseAppoi
     openBookingDialog,
     openAppointmentDialog,
     closeDialogs,
+    
+    // Exception Appointment State
+    isExceptionAppointment,
     
     // Utilities
     formatDateKey,

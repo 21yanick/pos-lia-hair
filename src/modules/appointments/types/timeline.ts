@@ -9,6 +9,7 @@ export type SlotStatus =
   | 'break'           // Business break time
   | 'closed'          // Outside business hours
   | 'buffer'          // Buffer time between appointments
+  | 'exception'       // Exception appointment slot (outside normal hours)
 
 export interface AppointmentService {
   id: string
@@ -37,7 +38,6 @@ export interface AppointmentBlock {
   duration: number      // Duration in minutes
   services: AppointmentService[]  // Full service objects with details
   notes?: string
-  status: 'confirmed' | 'pending' | 'cancelled'
   backgroundColor?: string
   textColor?: string
   estimatedPrice?: number
@@ -98,6 +98,10 @@ export const SLOT_CONFIG = {
   buffer: {
     className: 'bg-primary/10 border border-primary/20 text-primary-foreground',
     description: 'Pufferzeit'
+  },
+  exception: {
+    className: 'bg-destructive/30 hover:bg-destructive/40 cursor-pointer border border-dashed border-destructive/60 transition-all',
+    description: 'Ausnahmetermin möglich'
   }
 } as const
 

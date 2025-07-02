@@ -97,7 +97,7 @@ export function VacationManager({ className }: VacationManagerProps) {
       setNewVacation({ start: '', end: '', reason: '' })
       setIsAddDialogOpen(false)
     } catch (error) {
-      console.error('Error adding vacation period:', error)
+      // Error handling delegated to UI layer
     }
   }
 
@@ -105,7 +105,7 @@ export function VacationManager({ className }: VacationManagerProps) {
     try {
       await removeVacationPeriod(index)
     } catch (error) {
-      console.error('Error removing vacation period:', error)
+      // Error handling delegated to UI layer
     }
   }
 
@@ -137,7 +137,7 @@ export function VacationManager({ className }: VacationManagerProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary" />
             <div>
@@ -150,9 +150,10 @@ export function VacationManager({ className }: VacationManagerProps) {
           
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                Urlaubszeit hinzufügen
+                <span className="sm:hidden">Hinzufügen</span>
+                <span className="hidden sm:inline">Urlaubszeit hinzufügen</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
@@ -320,10 +321,10 @@ export function VacationManager({ className }: VacationManagerProps) {
                     isUpcoming && "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
                   )}
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="flex items-start gap-3 flex-1">
                       <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
                         isCurrent ? "bg-destructive/10 text-destructive" :
                         isUpcoming ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400" :
                         "bg-muted text-muted-foreground"
@@ -332,28 +333,30 @@ export function VacationManager({ className }: VacationManagerProps) {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium truncate">{vacation.reason}</h4>
-                          <Badge variant={getVacationVariant(vacation.reason)} className="text-xs">
-                            {days} Tag{days !== 1 ? 'e' : ''}
-                          </Badge>
-                          {isCurrent && (
-                            <Badge variant="destructive" className="text-xs">
-                              Aktuell
+                        <div className="mb-2">
+                          <h4 className="font-medium mb-1">{vacation.reason}</h4>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge variant={getVacationVariant(vacation.reason)} className="text-xs">
+                              {days} Tag{days !== 1 ? 'e' : ''}
                             </Badge>
-                          )}
-                          {isUpcoming && (
-                            <Badge variant="secondary" className="text-xs">
-                              Geplant
-                            </Badge>
-                          )}
+                            {isCurrent && (
+                              <Badge variant="destructive" className="text-xs">
+                                Aktuell
+                              </Badge>
+                            )}
+                            {isUpcoming && (
+                              <Badge variant="secondary" className="text-xs">
+                                Geplant
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
                           <span className="font-mono">
                             {formatDateForDisplay(new Date(vacation.start))}
                           </span>
-                          <span>bis</span>
+                          <span className="hidden sm:inline">bis</span>
                           <span className="font-mono">
                             {formatDateForDisplay(new Date(vacation.end))}
                           </span>
@@ -361,7 +364,7 @@ export function VacationManager({ className }: VacationManagerProps) {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 self-start">
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <Edit className="h-3 w-3" />
                       </Button>

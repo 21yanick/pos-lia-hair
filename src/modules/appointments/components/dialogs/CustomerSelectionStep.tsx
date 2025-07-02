@@ -68,9 +68,6 @@ export function CustomerSelectionStep({
     .map(s => s.service.name)
     .join(' + ')
 
-  const totalPrice = selectedServices
-    .filter(s => s.selected)
-    .reduce((sum, s) => sum + (s.service.default_price || 0), 0)
 
   // Handle existing customer selection
   const handleCustomerSelect = (customer: Customer) => {
@@ -115,23 +112,25 @@ export function CustomerSelectionStep({
         </p>
       </div>
 
-      {/* Customer Type Toggle */}
-      <div className="flex gap-2">
+      {/* Customer Type Toggle - Mobile Optimized */}
+      <div className="flex flex-col sm:flex-row gap-2">
         <Button
           variant={!isWalkIn ? "default" : "outline"}
           onClick={() => handleCustomerTypeToggle(false)}
           className="flex-1"
         >
-          <User className="h-4 w-4 mr-2" />
-          Bestehender Kunde
+          <User className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Bestehender Kunde</span>
+          <span className="sm:hidden">Bestehend</span>
         </Button>
         <Button
           variant={isWalkIn ? "default" : "outline"}
           onClick={() => handleCustomerTypeToggle(true)}
           className="flex-1"
         >
-          <User className="h-4 w-4 mr-2" />
-          Laufkundschaft
+          <User className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Laufkundschaft</span>
+          <span className="sm:hidden">Laufkunde</span>
         </Button>
       </div>
 
@@ -261,36 +260,32 @@ export function CustomerSelectionStep({
               <Check className="h-4 w-4" />
               Termin-Zusammenfassung
             </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Kunde:</span>
-                <span className="font-medium">
+            <div className="space-y-3 text-sm">
+              <div>
+                <div className="text-muted-foreground mb-1">Kunde:</div>
+                <div className="font-medium truncate">
                   {isWalkIn ? walkInForm.name : selectedCustomer?.name}
-                </span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Services:</span>
-                <span className="font-medium">{selectedServiceNames}</span>
+              <div>
+                <div className="text-muted-foreground mb-1">Services:</div>
+                <div className="font-medium break-words">{selectedServiceNames}</div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Datum:</span>
-                <span className="font-medium">{formatDateForDisplay(timeSlot.date)}</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-muted-foreground mb-1">Datum:</div>
+                  <div className="font-medium text-xs sm:text-sm">{formatDateForDisplay(timeSlot.date)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground mb-1">Zeit:</div>
+                  <div className="font-medium text-xs sm:text-sm">
+                    {formatTimeShort(timeSlot.start)} - {formatTimeShort(timeSlot.end)}
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Zeit:</span>
-                <span className="font-medium">
-                  {formatTimeShort(timeSlot.start)} - {formatTimeShort(timeSlot.end)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Dauer:</span>
-                <span className="font-medium">{totalDuration} Minuten</span>
-              </div>
-              <div className="flex justify-between border-t pt-2">
-                <span className="text-muted-foreground">Geschätzter Preis:</span>
-                <span className="font-semibold">
-                  CHF {totalPrice.toFixed(2)}
-                </span>
+              <div>
+                <div className="text-muted-foreground mb-1">Dauer:</div>
+                <div className="font-medium">{totalDuration} Minuten</div>
               </div>
             </div>
           </CardContent>

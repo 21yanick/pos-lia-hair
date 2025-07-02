@@ -31,6 +31,9 @@ export interface QuickBookingFormData {
   customerPhone: string | null
   notes: string
   isWalkIn: boolean
+  
+  // Exception Appointment
+  isExceptionAppointment: boolean  // True if booked outside working hours
 }
 
 export interface QuickBookingDialogProps {
@@ -39,6 +42,7 @@ export interface QuickBookingDialogProps {
   onSuccess?: () => void
   initialTimeSlot?: BookingTimeSlot
   initialDate?: Date
+  isExceptionAppointment?: boolean  // True if this is an exception appointment outside working hours
 }
 
 export interface ServiceStepProps {
@@ -65,3 +69,4 @@ export interface CustomerStepProps {
   timeSlot: BookingTimeSlot | null
   totalDuration: number
 }
+

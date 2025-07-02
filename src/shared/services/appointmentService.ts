@@ -288,7 +288,6 @@ export async function createAppointment(
     const completeAppointmentData = {
       ...appointmentWithoutServices,
       organization_id: validOrgId,
-      status: appointmentWithoutServices.status || 'scheduled',
       estimated_price: totalPrice,
       created_by: currentUserId,
       updated_by: currentUserId

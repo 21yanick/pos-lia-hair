@@ -6,7 +6,7 @@
  */
 
 import { Suspense, useMemo } from 'react'
-import { Calendar as CalendarIcon, Plus, Settings } from 'lucide-react'
+import { Calendar as CalendarIcon, Settings } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
@@ -39,7 +39,8 @@ export function AppointmentsPage() {
     selectedAppointment,
     closeDialogs,
     isToday,
-    formatDateKey
+    formatDateKey,
+    isExceptionAppointment
   } = useAppointmentCalendar()
 
   // Load appointments for selected date to get real stats
@@ -103,19 +104,6 @@ export function AppointmentsPage() {
           
           {/* Header Actions */}
           <div className="flex items-center gap-2">
-            {/* Appointment Stats */}
-            {appointmentStats.total > 0 && (
-              <div className="hidden sm:flex items-center gap-2">
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  {appointmentStats.scheduled}
-                </Badge>
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  {appointmentStats.completed}
-                </Badge>
-              </div>
-            )}
             
             {/* Quick Actions */}
             <Button 
@@ -130,17 +118,6 @@ export function AppointmentsPage() {
               Heute
             </Button>
             
-            <Button 
-              size="sm"
-              onClick={() => {
-                // TODO: Open QuickBookingDialog when ready
-                console.log('Quick booking for:', selectedDate)
-              }}
-              className="hidden sm:flex"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Termin
-            </Button>
           </div>
         </div>
       </div>
@@ -205,29 +182,6 @@ export function AppointmentsPage() {
         </div>
       </div>
 
-      {/* Mobile Floating Add Button */}
-      <Button 
-        onClick={() => {
-          // Open QuickBookingDialog with current date and default time
-          const defaultTimeSlot = {
-            start: '09:00',
-            end: '10:00',
-            date: selectedDate
-          }
-          // Simulate slot click to open dialog
-          handleSlotClick({
-            time: defaultTimeSlot.start,
-            date: defaultTimeSlot.date,
-            status: 'available',
-            duration: 60,
-            isClickable: true
-          })
-        }}
-        className="lg:hidden fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg z-50"
-        size="icon"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
 
       {/* Quick Booking Dialog (for slot clicks) */}
       <QuickBookingDialog
@@ -243,6 +197,7 @@ export function AppointmentsPage() {
           date: selectedSlot.date
         } : undefined}
         initialDate={selectedDate}
+        isExceptionAppointment={isExceptionAppointment}
       />
       
       {/* Appointment Detail Dialog (for appointment clicks) */}
@@ -252,15 +207,9 @@ export function AppointmentsPage() {
         appointment={selectedAppointment}
         onEdit={(appointment) => {
           // TODO: Implement edit functionality
-          console.log('Edit appointment:', appointment)
         }}
         onDelete={async (appointmentId) => {
           // TODO: Implement delete functionality
-          console.log('Delete appointment:', appointmentId)
-        }}
-        onStatusChange={async (appointmentId, status) => {
-          // TODO: Implement status change functionality
-          console.log('Change status:', appointmentId, status)
         }}
       />
     </div>

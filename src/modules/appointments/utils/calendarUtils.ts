@@ -45,7 +45,7 @@ function createCalendarDay(date: Date, currentMonth: Date): CalendarDay {
     status: getInitialDayStatus(date, isCurrentMonth),
     appointmentCount: 0, // Will be populated by business logic
     isWeekend: isWeekend(date),
-    isClickable: isCurrentMonth,
+    isClickable: true, // All days are clickable (other-month days navigate to that month)
     vacationReason: undefined // Will be populated if in vacation period
   }
 }
@@ -96,7 +96,7 @@ function applyBusinessLogicToDay(
       ...day,
       status: 'vacation',
       appointmentCount,
-      isClickable: false,
+      isClickable: true,  // Allow exception appointments
       vacationReason: vacationInfo.reason
     }
   }
@@ -110,7 +110,7 @@ function applyBusinessLogicToDay(
       ...day,
       status: 'closed',
       appointmentCount,
-      isClickable: false
+      isClickable: true  // Allow exception appointments
     }
   }
   

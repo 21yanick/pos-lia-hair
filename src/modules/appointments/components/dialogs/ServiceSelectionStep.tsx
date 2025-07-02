@@ -79,7 +79,7 @@ export function ServiceSelectionStep({
     }
   }
 
-  // Handle start time adjustment (±30min slots)
+  // Handle start time adjustment (±15min slots)
   const handleStartTimeAdjust = (adjustment: number) => {
     if (!timeSlot) return
     
@@ -124,28 +124,38 @@ export function ServiceSelectionStep({
               onClick={() => handleServiceToggle(service.id, !isSelected)}
             >
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
+                  {/* Service Header */}
                   <div className="flex items-center gap-3">
                     <Checkbox 
                       checked={isSelected}
                       onChange={(checked) => handleServiceToggle(service.id, checked)}
                       onClick={(e) => e.stopPropagation()}
                     />
-                    <div>
-                      <h4 className="font-medium">{service.name}</h4>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">{service.name}</h4>
+                        {isSelected && (
+                          <Badge variant="secondary" className="ml-2">
+                            Ausgewählt
+                          </Badge>
+                        )}
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         Standard: {service.duration_minutes} Min
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    {/* Duration Adjustment for Selected Services */}
-                    {isSelected && (
-                      <div className="flex items-center gap-1">
+                  {/* Duration Adjustment for Selected Services - Mobile Optimized */}
+                  {isSelected && (
+                    <div className="flex items-center justify-between bg-muted/30 rounded-lg p-2">
+                      <span className="text-sm font-medium">Dauer anpassen:</span>
+                      <div className="flex items-center gap-2">
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-8 w-8 p-0"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleServiceDurationChange(service.id, currentDuration - 15)
@@ -153,12 +163,13 @@ export function ServiceSelectionStep({
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="text-sm font-medium w-12 text-center">
+                        <span className="text-sm font-medium min-w-[50px] text-center">
                           {currentDuration}min
                         </span>
                         <Button
                           size="sm" 
                           variant="outline"
+                          className="h-8 w-8 p-0"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleServiceDurationChange(service.id, currentDuration + 15)
@@ -167,20 +178,8 @@ export function ServiceSelectionStep({
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
-                    )}
-                    
-                    {/* Price Display */}
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        CHF {service.default_price?.toFixed(2) || '0.00'}
-                      </div>
-                      {isSelected && (
-                        <Badge variant="secondary" className="mt-1">
-                          Ausgewählt
-                        </Badge>
-                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -192,32 +191,34 @@ export function ServiceSelectionStep({
       {hasSelectedServices && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
-                <span className="font-medium">Gesamtdauer:</span>
+                <span className="font-medium">Gesamtdauer: {totalDuration} Minuten</span>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
+                  className="h-8"
                   onClick={() => handleTotalDurationAdjust(-15)}
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-3 w-3 mr-1" />
                   15min
                 </Button>
                 
-                <Badge variant="default" className="text-base px-3 py-1">
-                  {totalDuration} Minuten
+                <Badge variant="default" className="text-sm px-4 py-1">
+                  {totalDuration} Min
                 </Badge>
                 
                 <Button
                   size="sm"
-                  variant="outline" 
+                  variant="outline"
+                  className="h-8"
                   onClick={() => handleTotalDurationAdjust(15)}
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3 w-3 mr-1" />
                   15min
                 </Button>
               </div>
@@ -230,33 +231,35 @@ export function ServiceSelectionStep({
       {hasSelectedServices && timeSlot && (
         <Card className="border-secondary/20 bg-secondary/5">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-secondary-foreground" />
                 <span className="font-medium">Terminzeit:</span>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleStartTimeAdjust(-30)}
+                  className="h-8"
+                  onClick={() => handleStartTimeAdjust(-15)}
                 >
-                  <ChevronLeft className="h-3 w-3" />
-                  30min
+                  <ChevronLeft className="h-3 w-3 mr-1" />
+                  15min
                 </Button>
                 
-                <Badge variant="secondary" className="text-base px-3 py-1">
+                <Badge variant="secondary" className="text-sm px-3 py-1 min-w-[120px] text-center">
                   {formatTimeShort(timeSlot.start)} - {formatTimeShort(timeSlot.end)}
                 </Badge>
                 
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleStartTimeAdjust(30)}
+                  className="h-8"
+                  onClick={() => handleStartTimeAdjust(15)}
                 >
-                  30min
-                  <ChevronRight className="h-3 w-3" />
+                  15min
+                  <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>
             </div>

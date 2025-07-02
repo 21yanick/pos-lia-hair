@@ -50,7 +50,6 @@ interface AppointmentDetailDialogProps {
   appointment: AppointmentBlock | null
   onEdit?: (appointment: AppointmentBlock) => void
   onDelete?: (appointmentId: string) => void
-  onStatusChange?: (appointmentId: string, status: string) => void
 }
 
 export function AppointmentDetailDialog({ 
@@ -58,82 +57,15 @@ export function AppointmentDetailDialog({
   onClose, 
   appointment,
   onEdit,
-  onDelete,
-  onStatusChange
+  onDelete
 }: AppointmentDetailDialogProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   if (!appointment) return null
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return {
-          label: 'Bestätigt',
-          variant: 'default' as const,
-          className: 'bg-[hsl(var(--appointment-confirmed))] text-[hsl(var(--appointment-confirmed-foreground))]',
-          icon: CheckCircle
-        }
-      case 'scheduled':
-        return {
-          label: 'Geplant',
-          variant: 'secondary' as const,
-          className: 'bg-[hsl(var(--appointment-scheduled))] text-[hsl(var(--appointment-scheduled-foreground))]',
-          icon: Calendar
-        }
-      case 'pending':
-        return {
-          label: 'Ausstehend',
-          variant: 'outline' as const,
-          className: 'bg-[hsl(var(--appointment-pending))] text-[hsl(var(--appointment-pending-foreground))]',
-          icon: Clock
-        }
-      case 'completed':
-        return {
-          label: 'Abgeschlossen',
-          variant: 'default' as const,
-          className: 'bg-[hsl(var(--appointment-completed))] text-[hsl(var(--appointment-completed-foreground))]',
-          icon: CheckCircle
-        }
-      case 'cancelled':
-        return {
-          label: 'Storniert',
-          variant: 'destructive' as const,
-          className: 'bg-[hsl(var(--appointment-cancelled))] text-[hsl(var(--appointment-cancelled-foreground))]',
-          icon: XCircle
-        }
-      default:
-        return {
-          label: 'Unbekannt',
-          variant: 'outline' as const,
-          className: 'bg-muted text-muted-foreground',
-          icon: Calendar
-        }
-    }
-  }
 
-  const statusConfig = getStatusConfig(appointment.status)
-  const StatusIcon = statusConfig.icon
 
-  const handleStatusChange = async (newStatus: string) => {
-    setIsLoading(true)
-    try {
-      await onStatusChange?.(appointment.id, newStatus)
-      toast({
-        title: 'Status aktualisiert',
-        description: `Termin-Status wurde zu "${getStatusConfig(newStatus).label}" geändert.`
-      })
-    } catch (error) {
-      toast({
-        title: 'Fehler',
-        description: 'Status konnte nicht aktualisiert werden.',
-        variant: 'destructive'
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleDelete = async () => {
     if (!confirm('Möchten Sie diesen Termin wirklich löschen?')) return
@@ -173,11 +105,6 @@ export function AppointmentDetailDialog({
             </div>
             
             <div className="flex items-center gap-2">
-              <Badge className={cn(statusConfig.className)}>
-                <StatusIcon className="h-3 w-3 mr-1" />
-                {statusConfig.label}
-              </Badge>
-              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" disabled={isLoading}>
@@ -189,25 +116,6 @@ export function AppointmentDetailDialog({
                     <Edit className="h-4 w-4 mr-2" />
                     Bearbeiten
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {appointment.status !== 'confirmed' && (
-                    <DropdownMenuItem onClick={() => handleStatusChange('confirmed')}>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Bestätigen
-                    </DropdownMenuItem>
-                  )}
-                  {appointment.status !== 'completed' && (
-                    <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Als erledigt markieren
-                    </DropdownMenuItem>
-                  )}
-                  {appointment.status !== 'cancelled' && (
-                    <DropdownMenuItem onClick={() => handleStatusChange('cancelled')}>
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Stornieren
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleDelete}
