@@ -26,5 +26,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# PWA files (auto-generated during build)
+/public/sw.js
+/public/workbox-*.js
+/public/fallback-*.js
 # Supabase
 /supabase-local
