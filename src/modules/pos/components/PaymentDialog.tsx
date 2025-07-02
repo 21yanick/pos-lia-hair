@@ -82,7 +82,7 @@ export function PaymentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
           <DialogTitle className="text-xl font-bold flex items-center">
             <div className="mr-3 p-2 bg-primary/10 rounded-xl">
