@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
+import { PWAInstallCard } from './PWAInstallCard'
 
 export function SettingsPage() {
   const { currentOrganization, memberships } = useCurrentOrganization()
@@ -34,6 +35,9 @@ export function SettingsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        
+        {/* PWA Installation */}
+        <PWAInstallCard />
         
         {/* Import-Funktionen */}
         <Card className="hover:shadow-lg transition-shadow">
