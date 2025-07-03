@@ -4,6 +4,7 @@ import React, { useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { organizationPersistence } from '@/shared/services/organizationPersistence'
 
 interface OrganizationRouteProps {
   children: React.ReactNode
@@ -104,7 +105,12 @@ export function OrganizationRoute({
     // - Organization is already set correctly
     // - Organization is being set (provider will handle it)
     if (hasAccess) {
-      if (currentOrganization?.slug === slug || !currentOrganization) {
+      if (currentOrganization?.slug === slug) {
+        // Save organization to persistence for PWA shortcuts
+        organizationPersistence.save(currentOrganization.id, currentOrganization.slug)
+        return <>{children}</>
+      }
+      if (!currentOrganization) {
         return <>{children}</>
       }
     }

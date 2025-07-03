@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSmartRedirect } from '@/shared/hooks/core/useSmartRedirect'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
@@ -8,7 +8,14 @@ import { Loader2, Building2, ArrowRight } from 'lucide-react'
 
 export function SmartRedirectPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { isRedirecting, fallbackReason, targetUrl } = useSmartRedirect()
+  
+  // Preserve quick parameter when redirecting to organization selection
+  const quickParam = searchParams.get('quick')
+  const organizationUrl = quickParam 
+    ? `/organizations?returnTo=${quickParam}` 
+    : '/organizations'
 
   // Show loading during redirect
   if (isRedirecting) {
@@ -57,7 +64,7 @@ export function SmartRedirectPage() {
           </CardHeader>
           <CardContent>
             <Button 
-              onClick={() => router.push('/organizations')}
+              onClick={() => router.push(organizationUrl)}
               className="w-full"
             >
               <ArrowRight className="mr-2 h-4 w-4" />

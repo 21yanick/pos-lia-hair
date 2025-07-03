@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
@@ -20,6 +20,7 @@ import {
   AlertTriangle 
 } from 'lucide-react'
 import { OrganizationRole } from '@/shared/types/organizations'
+import { organizationPersistence } from '@/shared/services/organizationPersistence'
 
 interface OrganizationSelectorProps {
   title?: string
@@ -40,12 +41,28 @@ export function OrganizationSelector({
 }: OrganizationSelectorProps) {
   const { memberships, loading, error } = useCurrentOrganization()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [switching, setSwitching] = useState<string | null>(null)
+  
+  // Check for returnTo parameter to determine destination after selection
+  const returnTo = searchParams.get('returnTo')
 
   // Simple organization switching - URL-based (PLANNED APPROACH)
   const handleSwitchOrganization = (orgSlug: string) => {
     setSwitching(orgSlug)
-    router.push(`/org/${orgSlug}/dashboard`)
+    
+    // Save organization to persistence for PWA shortcuts
+    const membership = memberships.find(m => m.organization.slug === orgSlug)
+    if (membership) {
+      organizationPersistence.save(membership.organization.id, orgSlug)
+    }
+    
+    // Navigate to returnTo destination or default to dashboard
+    const destination = returnTo 
+      ? `/org/${orgSlug}/${returnTo}` 
+      : `/org/${orgSlug}/dashboard`
+    
+    router.push(destination)
   }
 
   // Auto-redirect is now handled by OrganizationContext for better performance
