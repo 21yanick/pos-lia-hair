@@ -21,7 +21,7 @@ export default function CreateOrganizationPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Neue Organisation erstellen</h1>
           <p className="text-muted-foreground mt-2">
-            Erstellen Sie eine neue Organisation für Ihr Unternehmen.
+            Erstelle eine neue Organisation für dein Unternehmen.
           </p>
         </div>
       </div>

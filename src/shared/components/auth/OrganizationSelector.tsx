@@ -166,7 +166,7 @@ export function OrganizationSelector({
                     <Plus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                     <h3 className="font-semibold mb-2">Neue Organisation</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Erstellen Sie eine neue Organisation für Ihr Unternehmen.
+                      Erstelle eine neue Organisation für dein Unternehmen.
                     </p>
                     <Button variant="outline" onClick={handleCreateNew}>
                       Organisation erstellen

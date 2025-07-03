@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/shared/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
 import { Badge } from "@/shared/components/ui/badge"
 import { useItems } from "@/shared/hooks/business/useItems"
-import type { ProductTab } from "../hooks/usePOSState"
+import type { ProductTab } from "@/shared/hooks/usePOSState"
 import type { Item } from "@/shared/hooks/business/useItems"
 
 interface ProductGridProps {
@@ -48,7 +48,7 @@ export function ProductGrid({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
-            placeholder="Suche nach Produkten..."
+            placeholder="Suche..."
             className="pl-10 pr-10 h-10"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}

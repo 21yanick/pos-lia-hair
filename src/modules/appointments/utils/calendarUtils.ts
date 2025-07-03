@@ -3,8 +3,15 @@
  * Clean, pure functions for calendar calculations
  */
 
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameMonth, isWeekend } from 'date-fns'
-import { formatMonthYear, formatWeekdayFullDate, formatDateForAPI } from '@/shared/utils/dateUtils'
+import { 
+  formatMonthYear, 
+  formatWeekdayFullDate, 
+  formatDateForAPI, 
+  isToday, 
+  isSameMonth, 
+  isWeekend, 
+  eachDayOfInterval 
+} from '@/shared/utils/dateUtils'
 import type { CalendarDay, DayStatus, MonthData } from '../types/calendar'
 import type { BusinessSettings, VacationPeriod, WeekDay } from '@/shared/types/businessSettings'
 
@@ -13,14 +20,14 @@ import type { BusinessSettings, VacationPeriod, WeekDay } from '@/shared/types/b
  * Always shows complete weeks for consistent grid layout
  */
 export function generateMonthData(date: Date): MonthData {
-  const monthStart = startOfMonth(date)
-  const monthEnd = endOfMonth(date)
+  const monthStart = new Date(date.getFullYear(), date.getMonth(), 1)
+  const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0)
   
   // Get complete weeks (42 days total for consistent 6x7 grid)
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }) // Monday
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
+  const calendarStart = getWeekStart(monthStart)
+  const calendarEnd = getWeekEnd(monthEnd)
   
-  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
+  const days = eachDayOfInterval(calendarStart, calendarEnd)
   
   return {
     year: date.getFullYear(),
@@ -188,4 +195,26 @@ function getStatusText(status: DayStatus): string {
     case 'other-month': return 'Anderer Monat'
     default: return ''
   }
+}
+
+/**
+ * Get start of week (Monday) for a given date
+ */
+function getWeekStart(date: Date): Date {
+  const day = date.getDay()
+  const diff = day === 0 ? -6 : 1 - day // Monday = 1, Sunday = 0
+  const result = new Date(date)
+  result.setDate(date.getDate() + diff)
+  return result
+}
+
+/**
+ * Get end of week (Sunday) for a given date
+ */
+function getWeekEnd(date: Date): Date {
+  const day = date.getDay()
+  const diff = day === 0 ? 0 : 7 - day // Sunday = 0
+  const result = new Date(date)
+  result.setDate(date.getDate() + diff)
+  return result
 }

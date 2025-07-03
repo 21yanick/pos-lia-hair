@@ -48,7 +48,7 @@ export function ProductGrid({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
-            placeholder="Suche nach Produkten..."
+            placeholder="Suche..."
             className="pl-10 pr-10 h-10"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}

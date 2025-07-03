@@ -268,10 +268,12 @@ export function convertSwissToUTC(swissDate: Date): Date {
  * Prüft ob ein Datum heute ist (Schweizer Zeit)
  */
 export function isToday(date: Date | string): boolean {
-  const inputDate = createSwissDate(date)
-  const today = getTodaySwiss()
+  const inputDate = typeof date === 'string' ? new Date(date) : date
+  const today = new Date()
   
-  return formatDateForAPI(inputDate) === formatDateForAPI(today)
+  return inputDate.getFullYear() === today.getFullYear() &&
+         inputDate.getMonth() === today.getMonth() &&
+         inputDate.getDate() === today.getDate()
 }
 
 /**
@@ -540,4 +542,34 @@ export function sortAppointments<T extends { appointment_date: string; start_tim
     // Then by time
     return a.start_time.localeCompare(b.start_time)
   })
+}
+
+/**
+ * Check if two dates are in the same month
+ */
+export function isSameMonth(date1: Date, date2: Date): boolean {
+  return formatYearMonth(date1) === formatYearMonth(date2)
+}
+
+/**
+ * Check if date is weekend (Saturday or Sunday)
+ */
+export function isWeekend(date: Date): boolean {
+  const day = date.getDay()
+  return day === 0 || day === 6
+}
+
+/**
+ * Generate array of dates between start and end (inclusive)
+ */
+export function eachDayOfInterval(start: Date, end: Date): Date[] {
+  const days: Date[] = []
+  const current = new Date(start)
+  
+  while (current <= end) {
+    days.push(new Date(current))
+    current.setDate(current.getDate() + 1)
+  }
+  
+  return days
 }

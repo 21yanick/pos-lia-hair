@@ -8,7 +8,7 @@ export default function OrganizationsPage() {
     <ProtectedRoute>
       <OrganizationSelector
         title="Organisation auswählen"
-        description="Wählen Sie eine Organisation aus, um mit der Arbeit zu beginnen."
+        description="Wähle eine Organisation aus, um zum Dashboard zu gelangen."
         showCreateButton={true}
       />
     </ProtectedRoute>
