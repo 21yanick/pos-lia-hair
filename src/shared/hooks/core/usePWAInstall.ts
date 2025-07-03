@@ -22,6 +22,7 @@ interface PWAInstallState {
 interface PWAInstallActions {
   install: () => Promise<boolean>
   canInstall: boolean
+  hasAlternativeInstall: boolean
   getInstallInstructions: () => string
 }
 
@@ -101,27 +102,41 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
   // Platform Support Check
   const isPlatformSupported = platform !== 'unknown'
   
-  // Install Instructions for iOS (manual process)
+  // Enhanced Install Instructions with better fallbacks
   const getInstallInstructions = useCallback((): string => {
     switch (platform) {
       case 'ios':
-        return 'Tippen Sie auf das Teilen-Symbol und wählen Sie "Zum Home-Bildschirm"'
+        return 'Tippen Sie auf das Teilen-Symbol (⎙) unten und wählen Sie "Zum Home-Bildschirm hinzufügen"'
       case 'android':
-        return installPrompt 
-          ? 'Tippen Sie auf "Als App installieren" um LIA HAIR zu installieren'
-          : 'Öffnen Sie das Browser-Menü und wählen Sie "App installieren"'
+        if (installPrompt) {
+          return 'Tippen Sie auf "Als App installieren" um LIA HAIR zu installieren'
+        }
+        // Enhanced Android instructions
+        return 'Chrome: Tippen Sie auf ⋮ (Menü) → "App installieren" oder "Zum Startbildschirm hinzufügen"'
       case 'desktop':
-        return installPrompt
-          ? 'Klicken Sie auf "Als App installieren" um LIA HAIR zu installieren'
-          : 'Klicken Sie auf das App-Symbol in der Adressleiste'
+        if (installPrompt) {
+          return 'Klicken Sie auf "Als App installieren" um LIA HAIR zu installieren'
+        }
+        // Enhanced desktop instructions  
+        return 'Chrome: Klicken Sie auf das ⊞ Symbol in der Adressleiste oder ⋮ Menü → "LIA HAIR installieren"'
       default:
         return 'Installation auf diesem Gerät nicht unterstützt'
     }
   }, [platform, installPrompt])
 
+  // Check if we can show alternative install method
+  const hasAlternativeInstall = useCallback((): boolean => {
+    // For Android/Desktop Chrome when no prompt is available
+    if ((platform === 'android' || platform === 'desktop') && !installPrompt) {
+      const isChrome = /chrome|chromium|crios/i.test(navigator.userAgent)
+      return isChrome
+    }
+    return false
+  }, [platform, installPrompt])
+
   return {
     // State
-    isInstallable: !!installPrompt || platform === 'ios',
+    isInstallable: !!installPrompt || platform === 'ios' || hasAlternativeInstall(),
     isInstalled,
     isPlatformSupported,
     platform,
@@ -130,6 +145,7 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
     // Actions
     install,
     canInstall: !!installPrompt && !isInstalled,
+    hasAlternativeInstall: hasAlternativeInstall(),
     getInstallInstructions,
   }
 }

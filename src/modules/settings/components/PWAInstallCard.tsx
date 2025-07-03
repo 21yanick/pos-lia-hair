@@ -18,6 +18,7 @@ export function PWAInstallCard() {
     isPlatformSupported,
     platform,
     canInstall,
+    hasAlternativeInstall,
     install,
     getInstallInstructions
   } = usePWAInstall()
@@ -138,6 +139,7 @@ export function PWAInstallCard() {
           ) : (
             <div className="space-y-3">
               {canInstall ? (
+                // Direct install available
                 <Button 
                   onClick={handleInstall} 
                   disabled={isInstalling}
@@ -155,7 +157,36 @@ export function PWAInstallCard() {
                     </>
                   )}
                 </Button>
+              ) : hasAlternativeInstall ? (
+                // Chrome without beforeinstallprompt - show enhanced guide
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                    <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-amber-700 dark:text-amber-300">
+                      <p className="font-medium mb-2">Installation über Browser-Menü:</p>
+                      <p className="mb-2">{getInstallInstructions()}</p>
+                      <p className="text-xs opacity-80">
+                        💡 Nach mehreren Besuchen wird oft ein direkter "Installieren"-Button verfügbar
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={() => {
+                      toast({
+                        title: "Installationsschritte",
+                        description: getInstallInstructions(),
+                        duration: 8000
+                      })
+                    }}
+                  >
+                    <Info className="mr-2 h-4 w-4" />
+                    Anleitung nochmal anzeigen
+                  </Button>
+                </div>
               ) : (
+                // Standard manual installation
                 <div className="space-y-2">
                   <div className="flex items-start space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
