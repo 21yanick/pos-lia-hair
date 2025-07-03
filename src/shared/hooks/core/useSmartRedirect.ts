@@ -10,7 +10,6 @@ interface SmartRedirectState {
   isRedirecting: boolean
   hasRedirected: boolean
   targetUrl: string | null
-  fallbackReason: 'no-organization' | 'invalid-quick' | 'no-params' | null
 }
 
 export function useSmartRedirect(): SmartRedirectState {
@@ -19,8 +18,7 @@ export function useSmartRedirect(): SmartRedirectState {
   const [state, setState] = useState<SmartRedirectState>({
     isRedirecting: false,
     hasRedirected: false,
-    targetUrl: null,
-    fallbackReason: null
+    targetUrl: null
   })
 
   useEffect(() => {
@@ -41,8 +39,7 @@ export function useSmartRedirect(): SmartRedirectState {
         setState(prev => ({
           ...prev,
           isRedirecting: true,
-          targetUrl,
-          fallbackReason: null
+          targetUrl
         }))
         
         router.push(targetUrl)
@@ -55,11 +52,9 @@ export function useSmartRedirect(): SmartRedirectState {
         return
       }
 
-      console.log('🚀 Smart Redirect - No stored organization, showing fallback')
-      setState(prev => ({
-        ...prev,
-        fallbackReason: 'no-organization'
-      }))
+      console.log('🚀 Smart Redirect - No stored organization, redirecting to selection')
+      router.push('/organizations')
+      setState(prev => ({ ...prev, hasRedirected: true }))
       return
     }
 
@@ -70,11 +65,9 @@ export function useSmartRedirect(): SmartRedirectState {
     ]
 
     if (!validQuickActions.includes(quickParam)) {
-      console.log('🚀 Smart Redirect - Invalid quick param:', quickParam)
-      setState(prev => ({
-        ...prev,
-        fallbackReason: 'invalid-quick'
-      }))
+      console.log('🚀 Smart Redirect - Invalid quick param, redirecting to selection')
+      router.push('/organizations')
+      setState(prev => ({ ...prev, hasRedirected: true }))
       return
     }
 
@@ -82,11 +75,10 @@ export function useSmartRedirect(): SmartRedirectState {
     const storedOrg = organizationPersistence.load()
     
     if (!storedOrg) {
-      console.log('🚀 Smart Redirect - No stored organization for quick action')
-      setState(prev => ({
-        ...prev,
-        fallbackReason: 'no-organization'
-      }))
+      console.log('🚀 Smart Redirect - No stored organization for quick action, redirecting with returnTo')
+      const organizationUrl = `/organizations?returnTo=${quickParam}`
+      router.push(organizationUrl)
+      setState(prev => ({ ...prev, hasRedirected: true }))
       return
     }
 
@@ -97,8 +89,7 @@ export function useSmartRedirect(): SmartRedirectState {
     setState(prev => ({
       ...prev,
       isRedirecting: true,
-      targetUrl,
-      fallbackReason: null
+      targetUrl
     }))
 
     router.push(targetUrl)
