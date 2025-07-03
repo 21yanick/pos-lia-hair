@@ -56,21 +56,35 @@ export default function manifest() {
         name: 'POS Kasse',
         short_name: 'POS',
         description: 'Direkt zur Kasse',
-        url: '/org/[slug]/pos',
+        url: '/?quick=pos',
         icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
       },
       {
         name: 'Termine',
-        short_name: 'Termine',
+        short_name: 'Termine', 
         description: 'Terminverwaltung',
-        url: '/org/[slug]/appointments',
+        url: '/?quick=appointments',
         icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
       },
       {
         name: 'Kunden',
         short_name: 'Kunden',
-        description: 'Kundenverwaltung',
-        url: '/org/[slug]/customers',
+        description: 'Kundenverwaltung', 
+        url: '/?quick=customers',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+      },
+      {
+        name: 'Transaktionen',
+        short_name: 'Transaktionen',
+        description: 'Verkäufe und Ausgaben',
+        url: '/?quick=transactions',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+      },
+      {
+        name: 'Banking',
+        short_name: 'Banking',
+        description: 'Bankabgleich und Finanzen',
+        url: '/?quick=banking',
         icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
       }
     ],

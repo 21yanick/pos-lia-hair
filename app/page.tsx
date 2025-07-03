@@ -1,13 +1,37 @@
-import { redirect } from "next/navigation"
+import { Suspense } from 'react'
+import { SmartRedirectPage } from '@/shared/components/SmartRedirectPage'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Loader2 } from 'lucide-react'
 
 /**
- * 🏠 ROOT LANDING PAGE - CLIENT-SIDE AUTH ARCHITECTURE
+ * 🏠 ROOT LANDING PAGE - SMART PWA REDIRECT
  * 
- * Simple redirect to /organizations.
- * Auth Guards on /organizations handle authentication logic.
+ * Intelligent redirect system for PWA shortcuts:
+ * - ?quick=appointments → /org/{slug}/appointments
+ * - ?quick=pos → /org/{slug}/pos  
+ * - No params → /org/{slug}/dashboard (last org)
+ * - Fallback → /organizations
  */
 
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+          <CardTitle>LIA HAIR</CardTitle>
+        </CardHeader>
+      </Card>
+    </div>
+  )
+}
+
 export default function Home() {
-  redirect("/organizations")
-  return null
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <SmartRedirectPage />
+    </Suspense>
+  )
 }
