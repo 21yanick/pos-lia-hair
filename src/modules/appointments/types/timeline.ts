@@ -36,6 +36,7 @@ export interface AppointmentBlock {
   startTime: string     // "09:00"
   endTime: string       // "10:30"
   duration: number      // Duration in minutes
+  date: Date           // Appointment date
   services: AppointmentService[]  // Full service objects with details
   notes?: string
   backgroundColor?: string
@@ -43,6 +44,10 @@ export interface AppointmentBlock {
   estimatedPrice?: number
   totalPrice?: number   // Calculated from services
   totalDuration?: number // Calculated from services
+  // Additional fields for editing
+  customerId?: string | null
+  customerPhone?: string | null
+  status?: string
 }
 
 export interface TimelineHour {

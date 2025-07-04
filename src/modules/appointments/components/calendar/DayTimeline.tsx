@@ -99,12 +99,17 @@ export function DayTimeline({
         endTime: apt.end_time,
         title: apt.customer_name || 'Unbekannter Kunde',
         customerName: apt.customer_name || 'Unbekannter Kunde',
+        date: selectedDate, // Add appointment date
         services: mappedServices,
         estimatedPrice: apt.estimated_price,
         totalPrice: apt.total_price,
         totalDuration: apt.total_duration_minutes,
         notes: apt.notes,
-        duration: calculateDurationFromTimes(apt.start_time, apt.end_time)
+        duration: calculateDurationFromTimes(apt.start_time, apt.end_time),
+        // Additional fields for editing
+        customerId: apt.customer_id,
+        customerPhone: apt.customer_phone,
+        status: apt.status
       }
       
       

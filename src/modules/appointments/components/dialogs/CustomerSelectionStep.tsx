@@ -94,8 +94,10 @@ export function CustomerSelectionStep({
     onWalkInToggle(walkIn)
     
     if (walkIn) {
-      // Switch to walk-in: clear existing customer, use form data
-      onCustomerChange(null, walkInForm.name, walkInForm.phone || null)
+      // Switch to walk-in: set "Laufkundschaft" as default name
+      const defaultName = walkInForm.name || 'Laufkundschaft'
+      setWalkInForm(prev => ({ ...prev, name: defaultName }))
+      onCustomerChange(null, defaultName, walkInForm.phone || null)
     } else {
       // Switch to existing: clear form data
       onCustomerChange(null, '', null)
@@ -246,7 +248,7 @@ export function CustomerSelectionStep({
           id="notes"
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
-          placeholder="Zusätzliche Notizen zum Termin..."
+          placeholder="Notizen zum Termin..."
           rows={3}
           className="mt-1"
         />

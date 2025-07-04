@@ -4,13 +4,14 @@
  */
 
 import type { Item } from '@/shared/hooks/business/useItems'
+import type { Appointment } from '@/shared/services/appointmentService'
 
 export type BookingStep = 'services' | 'customer'
 
 export interface ServiceSelection {
   service: Item
-  duration: number  // Can override default duration
   selected: boolean
+  // Duration is always taken from service.duration_minutes (no override)
 }
 
 export interface BookingTimeSlot {

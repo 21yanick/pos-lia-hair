@@ -45,11 +45,11 @@ export const DAY_INDICATOR_CONFIG = {
     description: 'Heute'
   },
   available: {
-    className: 'bg-muted/60 text-foreground hover:bg-muted/80 transition-colors cursor-pointer border border-border/40',
+    className: 'bg-muted/60 text-foreground hover:bg-muted/80 transition-colors cursor-pointer border-2 border-border/80 hover:border-border',
     description: 'Verfügbar'
   },
   booked: {
-    className: 'bg-secondary text-secondary-foreground font-medium cursor-pointer hover:bg-secondary/80 border border-border/20',
+    className: 'bg-secondary text-secondary-foreground font-medium cursor-pointer hover:bg-secondary/80 border-2 border-border/60 hover:border-border/80',
     description: 'Termine vorhanden'
   },
   vacation: {

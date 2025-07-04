@@ -3,7 +3,7 @@
  * 
  * Simple appointment booking system for hair salon
  * - Clean calendar views (mobile agenda + desktop week)
- * - 3-step booking flow
+ * - 2-step booking flow (QuickBookingDialog)
  * - Swiss timezone support
  * - Multi-tenant architecture
  */
@@ -14,9 +14,7 @@ export { AppointmentsPage } from './components/AppointmentsPage'
 // NEW: Phase 2 Calendar Components (clean replacement)
 export * from './components/calendar'
 
-// Dialog Components
-export { AppointmentDialog } from './components/AppointmentDialog'
-export { TimeSlotPicker } from './components/TimeSlotPicker'
+// Dialog Components (QuickBookingDialog exported via ./components/dialogs)
 
 // Hooks
 export { 

@@ -391,7 +391,8 @@ export async function updateAppointment(
     // Get current user
     const currentUserId = await getCurrentUserId()
     
-    const { data, error } = await supabase
+    // First update the appointment basic data
+    const { data: updatedAppointment, error } = await supabase
       .from('appointments')
       .update({
         ...updateData,
@@ -399,17 +400,63 @@ export async function updateAppointment(
       })
       .eq('id', id)
       .eq('organization_id', validOrgId) // Multi-tenant security
-      .select(`
-        *,
-        customer:customers(id, name, phone, email),
-        service:items!item_id(id, name, default_price, duration_minutes)
-      `)
+      .select()
       .single()
     
     if (error) {
       console.error('Error updating appointment:', error)
       throw error
     }
+    
+    // Update services if provided
+    if (updateData.services && updateData.services.length > 0) {
+      // Delete existing appointment services
+      const { error: deleteError } = await supabase
+        .from('appointment_services')
+        .delete()
+        .eq('appointment_id', id)
+      
+      if (deleteError) {
+        console.error('Error deleting appointment services:', deleteError)
+        throw deleteError
+      }
+      
+      // Insert new appointment services
+      const appointmentServices = updateData.services.map(service => ({
+        appointment_id: id,
+        item_id: service.item_id,
+        service_price: service.service_price,
+        service_duration_minutes: service.service_duration_minutes,
+        sort_order: service.sort_order
+      }))
+      
+      const { error: servicesError } = await supabase
+        .from('appointment_services')
+        .insert(appointmentServices)
+      
+      if (servicesError) {
+        console.error('Error updating appointment services:', servicesError)
+        throw servicesError
+      }
+    }
+    
+    // Fetch the complete appointment with services using the view
+    const { data: completeAppointment, error: fetchError } = await supabase
+      .from('appointments_with_services')
+      .select(`
+        *,
+        customer:customers(id, name, phone, email)
+      `)
+      .eq('id', id)
+      .single()
+    
+    if (fetchError) {
+      console.error('Error fetching complete appointment:', fetchError)
+      // Return basic appointment data if view fetch fails
+      return { success: true, data: updatedAppointment }
+    }
+    
+    const data = completeAppointment
     
     return { success: true, data }
   } catch (err: any) {

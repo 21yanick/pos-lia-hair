@@ -120,7 +120,7 @@ export async function getCurrentUserId(): Promise<string> {
 // ========================================
 
 /**
- * Get all items for an organization
+ * Get all items for an organization (excluding deleted items)
  */
 export async function getItems(organizationId: string): Promise<Item[]> {
   const validOrgId = validateOrganizationId(organizationId)
@@ -129,6 +129,7 @@ export async function getItems(organizationId: string): Promise<Item[]> {
     .from('items')
     .select('*')
     .eq('organization_id', validOrgId)
+    .neq('deleted', true) // Exclude deleted items
     .order('name')
   
   if (error) {
@@ -150,6 +151,7 @@ export async function getActiveItems(organizationId: string): Promise<Item[]> {
     .select('*')
     .eq('organization_id', validOrgId)
     .eq('active', true)
+    .neq('deleted', true) // Exclude deleted items
     .order('name')
   
   if (error) {
@@ -172,6 +174,7 @@ export async function getFavoriteItems(organizationId: string): Promise<Item[]> 
     .eq('organization_id', validOrgId)
     .eq('is_favorite', true)
     .eq('active', true)
+    .neq('deleted', true) // Exclude deleted items
     .order('name')
   
   if (error) {
@@ -196,6 +199,7 @@ export async function searchItems(
     .from('items')
     .select('*')
     .eq('organization_id', validOrgId)
+    .neq('deleted', true) // Always exclude deleted items
     .or(`name.ilike.%${query}%,category.ilike.%${query}%`)
   
   if (activeOnly) {
@@ -297,7 +301,9 @@ export async function updateItem(
 }
 
 /**
- * Delete an item
+ * Delete an item (Soft Delete)
+ * Sets deleted = true instead of physical deletion to preserve referential integrity
+ * This is different from active/inactive which controls POS vs appointment visibility
  */
 export async function deleteItem(
   itemId: string, 
@@ -306,9 +312,12 @@ export async function deleteItem(
   try {
     const validOrgId = validateOrganizationId(organizationId)
     
+    // Soft delete: Set deleted = true instead of physical deletion
+    // This preserves referential integrity with sale_items and appointment_services
+    // while hiding the item from all lists
     const { error } = await supabase
       .from('items')
-      .delete()
+      .update({ deleted: true })
       .eq('id', itemId)
       .eq('organization_id', validOrgId) // Multi-tenant security
     
@@ -323,6 +332,38 @@ export async function deleteItem(
     return { 
       success: false, 
       error: err.message || 'Fehler beim Löschen des Artikels'
+    }
+  }
+}
+
+/**
+ * Restore a soft-deleted item
+ * Sets deleted = false to restore the item to the lists
+ */
+export async function restoreItem(
+  itemId: string, 
+  organizationId: string
+): Promise<ItemDeleteResult> {
+  try {
+    const validOrgId = validateOrganizationId(organizationId)
+    
+    const { error } = await supabase
+      .from('items')
+      .update({ deleted: false })
+      .eq('id', itemId)
+      .eq('organization_id', validOrgId) // Multi-tenant security
+    
+    if (error) {
+      // console.error('Error restoring item:', error)
+      throw error
+    }
+    
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error in restoreItem:', err)
+    return { 
+      success: false, 
+      error: err.message || 'Fehler beim Wiederherstellen des Artikels'
     }
   }
 }
@@ -446,6 +487,7 @@ export async function getItemsCountByCategory(organizationId: string): Promise<R
     .select('category')
     .eq('organization_id', validOrgId)
     .eq('active', true)
+    .neq('deleted', true) // Exclude deleted items
   
   if (error) {
     // console.error('Error getting items count by category:', error)

@@ -71,7 +71,6 @@ export function parseDateFromDisplay(germanDateString: string): Date {
   // Format: "15.01.2025" → Date object
   const parts = germanDateString.trim().split('.')
   if (parts.length !== 3) {
-    // console.warn('Invalid German date format:', germanDateString)
     return new Date() // Fallback zu heute
   }
   
@@ -81,7 +80,6 @@ export function parseDateFromDisplay(germanDateString: string): Date {
   
   // Validierung
   if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900) {
-    // console.warn('Invalid date components:', { day, month: month + 1, year })
     return new Date() // Fallback zu heute
   }
   
@@ -296,13 +294,14 @@ export function debugTimezone() {
   const todayString = getTodaySwissString()
   const range = getSwissDayRange(swissNow)
   
-  // console.log('🇨🇭 Timezone Debug:')
-  // console.log('UTC Now:', now.toISOString())
-  // console.log('Swiss Now:', swissNow.toISOString())
-  // console.log('Swiss Now Formatted:', formatDateTimeForDisplay(now))
-  // console.log('Today Swiss String:', todayString)
-  // console.log('Swiss Day Range (UTC):', range)
-  // console.log('Swiss Offset:', getSwissTimezoneOffset(now), 'hours')
+  return {
+    utcNow: now.toISOString(),
+    swissNow: swissNow.toISOString(),
+    swissFormatted: formatDateTimeForDisplay(now),
+    todayString,
+    dayRange: range,
+    offset: getSwissTimezoneOffset(now)
+  }
 }
 
 /**
@@ -561,12 +560,14 @@ export function isWeekend(date: Date): boolean {
 
 /**
  * Generate array of dates between start and end (inclusive)
+ * Uses noon to avoid timezone issues
  */
 export function eachDayOfInterval(start: Date, end: Date): Date[] {
   const days: Date[] = []
-  const current = new Date(start)
+  const current = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 12, 0, 0, 0)
+  const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 12, 0, 0, 0)
   
-  while (current <= end) {
+  while (current <= endDate) {
     days.push(new Date(current))
     current.setDate(current.getDate() + 1)
   }

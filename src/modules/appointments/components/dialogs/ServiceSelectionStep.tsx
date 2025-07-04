@@ -24,7 +24,6 @@ export function ServiceSelectionStep({
   onTimeSlotChange,
   onDurationAdjust
 }: ServiceStepProps) {
-  const [customDurationMode, setCustomDurationMode] = useState(false)
 
   // Handle service selection toggle
   const handleServiceToggle = (serviceId: string, checked: boolean) => {
@@ -37,10 +36,10 @@ export function ServiceSelectionStep({
     
     onServicesChange(updatedServices)
     
-    // Auto-calculate new total duration
+    // Auto-calculate new total duration using standard service durations
     const newTotalDuration = updatedServices
       .filter(s => s.selected)
-      .reduce((sum, s) => sum + s.duration, 0)
+      .reduce((sum, s) => sum + (s.service.duration_minutes || 60), 0)
     
     // Update end time if we have a start time
     if (timeSlot && newTotalDuration > 0) {
@@ -52,17 +51,6 @@ export function ServiceSelectionStep({
     }
   }
 
-  // Handle duration adjustment for individual service
-  const handleServiceDurationChange = (serviceId: string, newDuration: number) => {
-    const updatedServices = selectedServices.map(serviceSelection => {
-      if (serviceSelection.service.id === serviceId) {
-        return { ...serviceSelection, duration: Math.max(15, newDuration) }
-      }
-      return serviceSelection
-    })
-    
-    onServicesChange(updatedServices)
-  }
 
   // Handle manual total duration adjustment
   const handleTotalDurationAdjust = (adjustment: number) => {
@@ -112,7 +100,8 @@ export function ServiceSelectionStep({
         {availableServices.map((service) => {
           const serviceSelection = selectedServices.find(s => s.service.id === service.id)
           const isSelected = serviceSelection?.selected || false
-          const currentDuration = serviceSelection?.duration || service.duration_minutes || 60
+          // Always use standard service duration
+          const serviceDuration = service.duration_minutes || 60
 
           return (
             <Card 
@@ -142,44 +131,10 @@ export function ServiceSelectionStep({
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Standard: {service.duration_minutes} Min
+                        Dauer: {serviceDuration} Minuten
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Duration Adjustment for Selected Services - Mobile Optimized */}
-                  {isSelected && (
-                    <div className="flex items-center justify-between bg-muted/30 rounded-lg p-2">
-                      <span className="text-sm font-medium">Dauer anpassen:</span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleServiceDurationChange(service.id, currentDuration - 15)
-                          }}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="text-sm font-medium min-w-[50px] text-center">
-                          {currentDuration}min
-                        </span>
-                        <Button
-                          size="sm" 
-                          variant="outline"
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleServiceDurationChange(service.id, currentDuration + 15)
-                          }}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>

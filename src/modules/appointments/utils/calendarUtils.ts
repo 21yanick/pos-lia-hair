@@ -20,8 +20,9 @@ import type { BusinessSettings, VacationPeriod, WeekDay } from '@/shared/types/b
  * Always shows complete weeks for consistent grid layout
  */
 export function generateMonthData(date: Date): MonthData {
-  const monthStart = new Date(date.getFullYear(), date.getMonth(), 1)
-  const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+  // Use noon to avoid timezone issues
+  const monthStart = new Date(date.getFullYear(), date.getMonth(), 1, 12, 0, 0, 0)
+  const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 12, 0, 0, 0)
   
   // Get complete weeks (42 days total for consistent 6x7 grid)
   const calendarStart = getWeekStart(monthStart)
@@ -108,6 +109,16 @@ function applyBusinessLogicToDay(
     }
   }
   
+  // IMPORTANT: 'today' ALWAYS has highest priority
+  if (day.status === 'today') {
+    return {
+      ...day,
+      status: 'today', // Today always wins, even over closed/vacation
+      appointmentCount,
+      isClickable: true
+    }
+  }
+  
   // Check if business is open on this day
   const weekDay = getWeekDay(day.date)
   const dayWorkingHours = settings.working_hours[weekDay]
@@ -122,10 +133,7 @@ function applyBusinessLogicToDay(
   }
   
   // Determine status based on appointments
-  let status: DayStatus = day.status // Keep 'today' if it was set
-  if (status !== 'today') {
-    status = appointmentCount > 0 ? 'booked' : 'available'
-  }
+  const status = appointmentCount > 0 ? 'booked' : 'available'
   
   return {
     ...day,
@@ -199,22 +207,22 @@ function getStatusText(status: DayStatus): string {
 
 /**
  * Get start of week (Monday) for a given date
+ * Uses noon to avoid timezone issues
  */
 function getWeekStart(date: Date): Date {
   const day = date.getDay()
   const diff = day === 0 ? -6 : 1 - day // Monday = 1, Sunday = 0
-  const result = new Date(date)
-  result.setDate(date.getDate() + diff)
+  const result = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff, 12, 0, 0, 0)
   return result
 }
 
 /**
  * Get end of week (Sunday) for a given date
+ * Uses noon to avoid timezone issues
  */
 function getWeekEnd(date: Date): Date {
   const day = date.getDay()
   const diff = day === 0 ? 0 : 7 - day // Sunday = 0
-  const result = new Date(date)
-  result.setDate(date.getDate() + diff)
+  const result = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff, 12, 0, 0, 0)
   return result
 }

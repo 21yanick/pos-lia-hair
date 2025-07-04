@@ -5,13 +5,15 @@
  * Mobile-first appointment system with touch optimization
  */
 
-import { Suspense, useMemo } from 'react'
+import { Suspense, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { Calendar as CalendarIcon, Settings } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { formatDateForDisplay } from '@/shared/utils/dateUtils'
-import { useAppointmentsByDate } from '../hooks/useAppointments'
+import { formatDateForDisplay, formatDateForAPI } from '@/shared/utils/dateUtils'
+import { useAppointmentsByDate, useDeleteAppointment } from '../hooks/useAppointments'
+import type { AppointmentBlock } from '../types/timeline'
 import { cn } from '@/shared/utils'
 import { 
   MonthGrid, 
@@ -21,6 +23,7 @@ import {
 } from './calendar'
 import { QuickBookingDialog } from './dialogs'
 import { AppointmentDetailDialog } from './AppointmentDetailDialog'
+import { EditAppointmentDialog } from './EditAppointmentDialog'
 
 export function AppointmentsPage() {
   const { currentOrganization } = useCurrentOrganization()
@@ -42,6 +45,15 @@ export function AppointmentsPage() {
     formatDateKey,
     isExceptionAppointment
   } = useAppointmentCalendar()
+
+  // Edit dialog state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [appointmentToEdit, setAppointmentToEdit] = useState<AppointmentBlock | null>(null)
+  
+  // Delete appointment hook
+  const deleteAppointment = useDeleteAppointment(currentOrganization?.id || '')
+
+
 
   // Load appointments for selected date to get real stats
   const { data: dayAppointments = [] } = useAppointmentsByDate(
@@ -116,6 +128,14 @@ export function AppointmentsPage() {
               )}
             >
               Heute
+            </Button>
+            
+            {/* Settings */}
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/org/${currentOrganization.slug}/appointments/settings`}>
+                <Settings className="h-4 w-4" />
+                <span className="sr-only">Einstellungen</span>
+              </Link>
             </Button>
             
           </div>
@@ -205,12 +225,37 @@ export function AppointmentsPage() {
         isOpen={isBookingDialogOpen && !!selectedAppointment}
         onClose={closeDialogs}
         appointment={selectedAppointment}
-        onEdit={(appointment) => {
-          // TODO: Implement edit functionality
+        onEdit={(appointmentBlock) => {
+          setAppointmentToEdit(appointmentBlock)
+          setIsEditDialogOpen(true)
+          closeDialogs() // Close detail dialog
         }}
         onDelete={async (appointmentId) => {
-          // TODO: Implement delete functionality
+          try {
+            await deleteAppointment.mutateAsync(appointmentId)
+            // Close the appointment detail dialog after successful delete
+            closeDialogs()
+            // React Query will automatically refetch and update the UI
+          } catch (error) {
+            // Error is already handled in the dialog component
+            throw error
+          }
         }}
+      />
+
+      {/* Edit Appointment Dialog */}
+      <EditAppointmentDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false)
+          setAppointmentToEdit(null)
+        }}
+        onSuccess={() => {
+          setIsEditDialogOpen(false)
+          setAppointmentToEdit(null)
+          // React Query will refetch data automatically
+        }}
+        appointment={appointmentToEdit}
       />
     </div>
   )

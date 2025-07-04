@@ -86,7 +86,7 @@ export function ProductsPage() {
         setSyncMessage(`Unerwarteter Fehler: ${err.message}`);
       });
     }
-  }, [error, toast, syncAuthUser])
+  }, [error, toast])
 
   // Reset service fields when type changes
   useEffect(() => {

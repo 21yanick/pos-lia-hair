@@ -78,7 +78,6 @@ export function QuickBookingDialog({
     if (availableServices.length > 0 && formData.selectedServices.length === 0) {
       const serviceSelections: ServiceSelection[] = availableServices.map(service => ({
         service,
-        duration: service.duration_minutes || 60,
         selected: false
       }))
       setFormData(prev => ({
@@ -88,11 +87,11 @@ export function QuickBookingDialog({
     }
   }, [availableServices, formData.selectedServices.length])
 
-  // Calculate total duration from selected services
+  // Calculate total duration from selected services using standard durations
   const totalDuration = useMemo(() => {
     return formData.selectedServices
       .filter(s => s.selected)
-      .reduce((sum, s) => sum + s.duration, 0)
+      .reduce((sum, s) => sum + (s.service.duration_minutes || 60), 0)
   }, [formData.selectedServices])
 
   // Update total duration when services change
@@ -103,7 +102,8 @@ export function QuickBookingDialog({
     }))
   }, [totalDuration])
 
-  // Reset form when dialog opens/closes
+
+  // Reset/Initialize form when dialog opens/closes
   useEffect(() => {
     if (isOpen) {
       setCurrentStep('services')
@@ -168,6 +168,7 @@ export function QuickBookingDialog({
         .filter(note => note.length > 0)
         .join(' - ') || null
 
+      // Create new appointment
       const appointmentData: AppointmentInsert = {
         appointment_date: formatDateForAPI(formData.timeSlot.date),
         start_time: formData.timeSlot.start,
@@ -181,7 +182,7 @@ export function QuickBookingDialog({
         services: selectedServices.map((serviceSelection, index) => ({
           item_id: serviceSelection.service.id,
           service_price: serviceSelection.service.default_price || null,
-          service_duration_minutes: serviceSelection.duration,
+          service_duration_minutes: serviceSelection.service.duration_minutes || 60,
           sort_order: index + 1
         }))
       }
@@ -198,7 +199,7 @@ export function QuickBookingDialog({
     } catch (error) {
       toast({
         title: 'Fehler',
-        description: 'Termin konnte nicht erstellt werden. Bitte versuchen Sie es erneut.',
+        description: 'Termin konnte nicht erstellt werden.',
         variant: 'destructive'
       })
     }
@@ -256,7 +257,7 @@ export function QuickBookingDialog({
           </DialogTitle>
           <DialogDescription>
             {currentStep === 'services' 
-              ? 'Wählen Sie Services und passen Sie die Zeit an' 
+              ? 'Wählen Sie Services und passen Sie die Zeit an'
               : 'Wählen Sie einen Kunden und bestätigen Sie den Termin'
             }
           </DialogDescription>
