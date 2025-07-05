@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
 import { Progress } from "@/shared/components/ui/progress"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { 
@@ -105,14 +104,11 @@ export function JsonImport() {
       {/* JSON Import */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FileJson className="h-5 w-5 text-primary" />
-                <CardTitle>JSON Import</CardTitle>
-              </div>
-              <Badge variant="default">Vollständig verfügbar</Badge>
+            <div className="flex items-center space-x-2">
+              <FileJson className="h-5 w-5 text-primary" />
+              <CardTitle>JSON Import</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="break-words">
               Vollständiger Import von Produkten, Verkäufen und Ausgaben mit automatischer PDF-Generierung
             </CardDescription>
           </CardHeader>
@@ -129,16 +125,16 @@ export function JsonImport() {
                   Ihre Daten werden validiert und sicher importiert
                 </p>
               </div>
-              <div className="flex justify-center space-x-2 mt-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 mt-4">
                 <Button 
                   variant="outline" 
                   onClick={() => fileInputRef.current?.click()}
-                  className="relative"
+                  className="relative w-full sm:w-auto"
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   Datei auswählen
                 </Button>
-                <Button variant="outline" onClick={loadSampleData}>
+                <Button variant="outline" onClick={loadSampleData} className="w-full sm:w-auto">
                   Beispieldaten laden
                 </Button>
               </div>
@@ -153,15 +149,18 @@ export function JsonImport() {
           </div>
         )}
 
-        {/* File Info */}
+        {/* File Info - Mobile-optimiert */}
         {(selectedFile || jsonData) && state.status === 'idle' && (
           <Alert>
             <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="break-words">
               {selectedFile ? (
-                <>
-                  <strong>Datei geladen:</strong> {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
-                </>
+                <div className="space-y-1">
+                  <div><strong>Datei geladen:</strong></div>
+                  <div className="text-sm text-muted-foreground truncate">
+                    {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                  </div>
+                </div>
               ) : (
                 <>
                   <strong>Beispieldaten geladen:</strong> {jsonData?.items?.length || 0} Items
@@ -171,11 +170,11 @@ export function JsonImport() {
           </Alert>
         )}
 
-        {/* Data Preview */}
+        {/* Data Preview - Mobile-optimiert */}
         {jsonData && state.status === 'idle' && (
           <div className="space-y-3">
             <h4 className="font-medium">Daten-Vorschau</h4>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {jsonData.items && (
                 <div className="bg-primary/10 p-3 rounded-lg">
                   <p className="font-medium text-primary-foreground">Produkte</p>
@@ -198,16 +197,17 @@ export function JsonImport() {
           </div>
         )}
 
-        {/* Actions */}
+        {/* Actions - Mobile-optimiert */}
         {jsonData && state.status === 'idle' && (
-          <div className="flex space-x-2">
-            <Button onClick={() => handleImport(true)} variant="outline">
-              Validierung testen
-            </Button>
-            <Button onClick={() => handleImport(false)}>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={() => handleImport(false)} className="w-full sm:w-auto">
               Import starten
             </Button>
-            <Button onClick={handleReset} variant="ghost">
+            <Button onClick={() => handleImport(true)} variant="outline" className="w-full sm:w-auto">
+              <span className="sm:hidden">Validieren</span>
+              <span className="hidden sm:inline">Validierung testen</span>
+            </Button>
+            <Button onClick={handleReset} variant="ghost" className="w-full sm:w-auto">
               Zurücksetzen
             </Button>
           </div>
@@ -271,11 +271,12 @@ export function JsonImport() {
           </Alert>
         )}
 
-        {/* JSON Format Info */}
+        {/* JSON Format Info - Mobile-optimiert */}
         {state.status === 'idle' && !jsonData && (
           <div className="bg-muted/50 p-4 rounded-lg">
             <h4 className="font-medium mb-2">Erwartetes JSON-Format:</h4>
-            <pre className="text-xs text-muted-foreground overflow-x-auto">
+            <div className="bg-background border rounded p-3 overflow-hidden">
+              <pre className="text-xs text-muted-foreground whitespace-pre-wrap break-all">
 {`{
   "items": [
     {
@@ -287,7 +288,8 @@ export function JsonImport() {
     }
   ]
 }`}
-            </pre>
+              </pre>
+            </div>
           </div>
         )}
 

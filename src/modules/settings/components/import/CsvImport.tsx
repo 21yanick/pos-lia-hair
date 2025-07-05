@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 import { 
@@ -566,12 +565,9 @@ export function CsvImport() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FileSpreadsheet className="h-5 w-5 text-primary" />
-              <CardTitle>CSV Import</CardTitle>
-            </div>
-            <Badge variant="secondary">GO-Live Ready</Badge>
+          <div className="flex items-center space-x-2">
+            <FileSpreadsheet className="h-5 w-5 text-primary" />
+            <CardTitle>CSV Import</CardTitle>
           </div>
           <CardDescription>
             Importieren Sie Ihre historischen Daten aus Excel/CSV Dateien
