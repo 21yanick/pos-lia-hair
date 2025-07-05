@@ -10,6 +10,7 @@ import { Textarea } from "@/shared/components/ui/textarea"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, AlertCircle } from "lucide-react"
 import { getSupplierById, updateSupplier } from '@/shared/services/supplierServices'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier, SupplierCategory, SupplierFormData } from '@/shared/types/suppliers'
 
@@ -26,6 +27,7 @@ export function SupplierEditDialog({
   onSuccess,
   supplierId
 }: SupplierEditDialogProps) {
+  const { currentOrganization } = useCurrentOrganization()
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,19 +52,19 @@ export function SupplierEditDialog({
 
   // Load supplier data when dialog opens
   useEffect(() => {
-    if (open && supplierId) {
+    if (open && supplierId && currentOrganization) {
       loadSupplierData()
     }
-  }, [open, supplierId])
+  }, [open, supplierId, currentOrganization])
 
   const loadSupplierData = async () => {
-    if (!supplierId) return
+    if (!supplierId || !currentOrganization) return
 
     setDataLoading(true)
     setError(null)
 
     try {
-      const supplierData = await getSupplierById(supplierId)
+      const supplierData = await getSupplierById(supplierId, currentOrganization.id)
       
       if (!supplierData) {
         throw new Error('Lieferant nicht gefunden')
@@ -125,8 +127,8 @@ export function SupplierEditDialog({
       return
     }
 
-    if (!supplierId) {
-      setError('Lieferant-ID fehlt')
+    if (!supplierId || !currentOrganization) {
+      setError('Lieferant-ID oder Organisation fehlt')
       return
     }
 
@@ -134,7 +136,7 @@ export function SupplierEditDialog({
     setError(null)
 
     try {
-      const updatedSupplier = await updateSupplier(supplierId, formData)
+      const updatedSupplier = await updateSupplier(supplierId, formData, currentOrganization.id)
       onSuccess(updatedSupplier)
       handleOpenChange(false)
     } catch (error) {
@@ -148,7 +150,7 @@ export function SupplierEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Lieferant bearbeiten</DialogTitle>
           <DialogDescription>
@@ -172,7 +174,7 @@ export function SupplierEditDialog({
               )}
 
               {/* Required Fields */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name *</Label>
                   <Input
@@ -209,7 +211,7 @@ export function SupplierEditDialog({
               </div>
 
               {/* Contact Information */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="contact_email">E-Mail</Label>
                   <Input
@@ -226,6 +228,7 @@ export function SupplierEditDialog({
                   <Label htmlFor="contact_phone">Telefon</Label>
                   <Input
                     id="contact_phone"
+                    type="tel"
                     value={formData.contact_phone}
                     onChange={(e) => setFormData(prev => ({ ...prev, contact_phone: e.target.value }))}
                     placeholder="+41 44 123 45 67"
@@ -238,6 +241,7 @@ export function SupplierEditDialog({
                 <Label htmlFor="website">Website</Label>
                 <Input
                   id="website"
+                  type="url"
                   value={formData.website}
                   onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
                   placeholder="https://www.lieferant.ch"
@@ -269,7 +273,7 @@ export function SupplierEditDialog({
                   />
                 </div>
                 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="postal_code">PLZ</Label>
                     <Input
@@ -306,7 +310,7 @@ export function SupplierEditDialog({
               </div>
 
               {/* Business Information */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="iban">IBAN</Label>
                   <Input
@@ -364,16 +368,17 @@ export function SupplierEditDialog({
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Abbrechen
               </Button>
-              <Button type="submit" disabled={isFormDisabled}>
+              <Button type="submit" disabled={isFormDisabled} className="w-full sm:w-auto">
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Aktualisieren
               </Button>

@@ -62,7 +62,11 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
   const loadSuppliers = async () => {
     setLoading(true)
     try {
-      const { data, count } = await getSuppliers({
+      if (!currentOrganization) {
+        throw new Error('Keine Organisation ausgewählt')
+      }
+      
+      const { data, count } = await getSuppliers(currentOrganization.id, {
         active_only: activeFilter === 'active',
         category: categoryFilter !== 'all' ? categoryFilter as SupplierCategory : undefined,
         search: searchQuery || undefined
@@ -115,25 +119,27 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
   }
 
   return (
-    <div className={hideHeader ? "space-y-6" : "container mx-auto p-6 space-y-6"}>
+    <div className={hideHeader ? "space-y-6" : "container mx-auto p-4 sm:p-6 space-y-6"}>
       {/* Header with Navigation */}
       {!hideHeader && (
         <SettingsHeader
           title="Lieferanten"
           description="Verwalten Sie Ihre Lieferanten und Geschäftspartner"
           actions={
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" asChild>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
+              <Button variant="outline" asChild className="w-full sm:w-auto">
                 <Link href={getOrgUrl("/settings/import")}>
                   <Upload className="h-4 w-4 mr-2" />
-                  CSV Import
+                  <span className="hidden sm:inline">CSV Import</span>
+                  <span className="sm:hidden">Import</span>
                 </Link>
               </Button>
               
               {currentUserId && (
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Neuer Lieferant
+                  <span className="hidden sm:inline">Neuer Lieferant</span>
+                  <span className="sm:hidden">Neu</span>
                 </Button>
               )}
             </div>
@@ -143,25 +149,27 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
 
       {/* Inline Actions (when header is hidden) */}
       {hideHeader && (
-        <div className="flex justify-end items-center space-x-2 mb-4">
-          <Button variant="outline" asChild>
+        <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 sm:space-x-2 mb-4">
+          <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link href={getOrgUrl("/settings/import")}>
               <Upload className="h-4 w-4 mr-2" />
-              CSV Import
+              <span className="hidden sm:inline">CSV Import</span>
+              <span className="sm:hidden">Import</span>
             </Link>
           </Button>
           
           {currentUserId && (
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Neuer Lieferant
+              <span className="hidden sm:inline">Neuer Lieferant</span>
+              <span className="sm:hidden">Neu</span>
             </Button>
           )}
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Gesamt</CardTitle>

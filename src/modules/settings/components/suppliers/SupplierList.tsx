@@ -11,6 +11,7 @@ import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import { updateSupplier, deleteSupplier } from '@/shared/services/supplierServices'
 import { SupplierEditDialog } from '@/shared/components/supplier/SupplierEditDialog'
 import { SupplierViewDialog } from '@/shared/components/supplier/SupplierViewDialog'
+import { SupplierCard } from './SupplierCard'
 import type { Supplier } from '@/shared/types/suppliers'
 
 interface SupplierListProps {
@@ -124,163 +125,178 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
 
   return (
     <>
-    <div className="border rounded-lg">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Kategorie</TableHead>
-            <TableHead>Kontakt</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Aktionen</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {suppliers.map((supplier) => (
-            <TableRow key={supplier.id}>
-              {/* Name & Details */}
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium">{supplier.name}</div>
-                  {supplier.city && (
-                    <div className="text-sm text-muted-foreground">
-                      {supplier.city}
-                      {supplier.country && supplier.country !== 'CH' && `, ${supplier.country}`}
-                    </div>
-                  )}
-                  {supplier.notes && (
-                    <div className="text-xs text-muted-foreground line-clamp-1">
-                      {supplier.notes}
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-
-              {/* Category */}
-              <TableCell>
-                <Badge variant="outline">
-                  {SUPPLIER_CATEGORIES[supplier.category]}
-                </Badge>
-              </TableCell>
-
-              {/* Contact */}
-              <TableCell>
-                <div className="space-y-1">
-                  {supplier.contact_email && (
-                    <div className="flex items-center text-sm">
-                      <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <a 
-                        href={`mailto:${supplier.contact_email}`}
-                        className="text-primary hover:underline"
-                      >
-                        {supplier.contact_email}
-                      </a>
-                    </div>
-                  )}
-                  {supplier.contact_phone && (
-                    <div className="flex items-center text-sm">
-                      <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <a 
-                        href={`tel:${supplier.contact_phone}`}
-                        className="text-primary hover:underline"
-                      >
-                        {supplier.contact_phone}
-                      </a>
-                    </div>
-                  )}
-                  {supplier.website && (
-                    <div className="flex items-center text-sm">
-                      <ExternalLink className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <a 
-                        href={supplier.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        Website
-                      </a>
-                    </div>
-                  )}
-                  {!supplier.contact_email && !supplier.contact_phone && !supplier.website && (
-                    <div className="text-sm text-muted-foreground">
-                      Keine Kontaktdaten
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-
-              {/* Status */}
-              <TableCell>
-                <Badge variant={supplier.is_active ? "default" : "secondary"}>
-                  {supplier.is_active ? 'Aktiv' : 'Inaktiv'}
-                </Badge>
-              </TableCell>
-
-              {/* Actions */}
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      className="h-8 w-8 p-0"
-                      disabled={actionLoading === supplier.id}
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      onClick={() => handleView(supplier)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Details anzeigen
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuItem 
-                      onClick={() => handleEdit(supplier)}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Bearbeiten
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuItem onClick={() => handleToggleActive(supplier)}>
-                      <div className="mr-2 h-4 w-4 flex items-center justify-center">
-                        {supplier.is_active ? '⏸' : '▶'}
-                      </div>
-                      {supplier.is_active ? 'Deaktivieren' : 'Aktivieren'}
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuItem 
-                      onClick={() => handleDelete(supplier)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Löschen
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+      {/* Desktop Table - Hidden on mobile */}
+      <div className="hidden md:block border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Kategorie</TableHead>
+              <TableHead>Kontakt</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {suppliers.map((supplier) => (
+              <TableRow key={supplier.id}>
+                {/* Name & Details */}
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="font-medium line-clamp-2">{supplier.name}</div>
+                    {supplier.city && (
+                      <div className="text-sm text-muted-foreground">
+                        {supplier.city}
+                        {supplier.country && supplier.country !== 'CH' && `, ${supplier.country}`}
+                      </div>
+                    )}
+                    {supplier.notes && (
+                      <div className="text-xs text-muted-foreground line-clamp-1">
+                        {supplier.notes}
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
 
-    {/* View Dialog */}
-    <SupplierViewDialog
-      open={viewDialogOpen}
-      onOpenChange={setViewDialogOpen}
-      onEdit={handleEditFromView}
-      supplierId={selectedSupplierId}
-    />
+                {/* Category */}
+                <TableCell>
+                  <Badge variant="outline">
+                    {SUPPLIER_CATEGORIES[supplier.category]}
+                  </Badge>
+                </TableCell>
 
-    {/* Edit Dialog */}
-    <SupplierEditDialog
-      open={editDialogOpen}
-      onOpenChange={setEditDialogOpen}
-      onSuccess={handleEditSuccess}
-      supplierId={selectedSupplierId}
-    />
-  </>
+                {/* Contact */}
+                <TableCell>
+                  <div className="space-y-1">
+                    {supplier.contact_email && (
+                      <div className="flex items-center text-sm">
+                        <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
+                        <a 
+                          href={`mailto:${supplier.contact_email}`}
+                          className="text-primary hover:underline truncate"
+                          title={supplier.contact_email}
+                        >
+                          {supplier.contact_email}
+                        </a>
+                      </div>
+                    )}
+                    {supplier.contact_phone && (
+                      <div className="flex items-center text-sm">
+                        <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
+                        <a 
+                          href={`tel:${supplier.contact_phone}`}
+                          className="text-primary hover:underline"
+                        >
+                          {supplier.contact_phone}
+                        </a>
+                      </div>
+                    )}
+                    {supplier.website && (
+                      <div className="flex items-center text-sm">
+                        <ExternalLink className="h-3 w-3 mr-1 text-muted-foreground" />
+                        <a 
+                          href={supplier.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          Website
+                        </a>
+                      </div>
+                    )}
+                    {!supplier.contact_email && !supplier.contact_phone && !supplier.website && (
+                      <div className="text-sm text-muted-foreground">
+                        Keine Kontaktdaten
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+
+                {/* Status */}
+                <TableCell>
+                  <Badge variant={supplier.is_active ? "default" : "secondary"}>
+                    {supplier.is_active ? 'Aktiv' : 'Inaktiv'}
+                  </Badge>
+                </TableCell>
+
+                {/* Actions */}
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        className="h-8 w-8 p-0"
+                        disabled={actionLoading === supplier.id}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={() => handleView(supplier)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Details anzeigen
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => handleEdit(supplier)}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Bearbeiten
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem onClick={() => handleToggleActive(supplier)}>
+                        <div className="mr-2 h-4 w-4 flex items-center justify-center">
+                          {supplier.is_active ? '⏸' : '▶'}
+                        </div>
+                        {supplier.is_active ? 'Deaktivieren' : 'Aktivieren'}
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => handleDelete(supplier)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Löschen
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile Cards - Hidden on desktop */}
+      <div className="md:hidden space-y-4">
+        {suppliers.map((supplier) => (
+          <SupplierCard
+            key={supplier.id}
+            supplier={supplier}
+            onSupplierUpdated={onSupplierUpdated}
+            onView={handleView}
+            onEdit={handleEdit}
+          />
+        ))}
+      </div>
+
+      {/* View Dialog */}
+      <SupplierViewDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        onEdit={handleEditFromView}
+        supplierId={selectedSupplierId}
+      />
+
+      {/* Edit Dialog */}
+      <SupplierEditDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={handleEditSuccess}
+        supplierId={selectedSupplierId}
+      />
+    </>
   )
 }

@@ -140,27 +140,54 @@ export function ExpenseCategoriesForm() {
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 p-2 sm:p-6">
         {/* Category List */}
         <div className="space-y-2">
           {categoriesArray.map(({ key, label, isDefault }) => (
-            <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Badge variant={isDefault ? "secondary" : "outline"}>
+            <div key={key} className="border rounded-lg p-2 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Badge variant={isDefault ? "secondary" : "outline"} className="hidden sm:inline-flex text-xs px-2 py-1">
                   {isDefault ? "Standard" : "Eigene"}
                 </Badge>
-                <div>
-                  <div className="font-medium">{label}</div>
-                  <div className="text-sm text-muted-foreground">{key}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate text-sm sm:text-base">{label}</div>
+                  <div className="text-xs text-muted-foreground truncate">{key}</div>
                 </div>
+                
+                {/* Desktop: Side buttons */}
+                {!isDefault && (
+                  <div className="hidden sm:flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEdit(key, label)}
+                      className="h-8 w-8 sm:h-9 sm:w-9"
+                      title="Bearbeiten"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveCategory(key)}
+                      className="h-9 w-9 text-destructive hover:text-destructive"
+                      title="Löschen"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
               
+              {/* Mobile: Bottom buttons */}
               {!isDefault && (
-                <div className="flex items-center gap-2">
+                <div className="sm:hidden flex justify-end gap-1 mt-2 pt-2 border-t">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => startEdit(key, label)}
+                    className="h-9 w-9"
+                    title="Bearbeiten"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -168,7 +195,8 @@ export function ExpenseCategoriesForm() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveCategory(key)}
-                    className="text-destructive hover:text-destructive"
+                    className="h-9 w-9 text-destructive hover:text-destructive"
+                    title="Löschen"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -183,10 +211,11 @@ export function ExpenseCategoriesForm() {
           <DialogTrigger asChild>
             <Button variant="outline" className="w-full">
               <Plus className="mr-2 h-4 w-4" />
-              Kategorie hinzufügen
+              <span className="hidden sm:inline">Kategorie hinzufügen</span>
+              <span className="sm:hidden">Hinzufügen</span>
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Neue Kategorie hinzufügen</DialogTitle>
               <DialogDescription>
@@ -201,7 +230,7 @@ export function ExpenseCategoriesForm() {
                   id="category-key"
                   value={newCategoryKey}
                   onChange={(e) => setNewCategoryKey(e.target.value.toLowerCase().replace(/[^a-z_]/g, ''))}
-                  placeholder="nur_kleine_buchstaben_und_unterstriche"
+                  placeholder="kategorie_key"
                 />
               </div>
               
@@ -216,8 +245,8 @@ export function ExpenseCategoriesForm() {
               </div>
             </div>
             
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-full sm:w-auto">
                 Abbrechen
               </Button>
               <Button 
@@ -227,6 +256,7 @@ export function ExpenseCategoriesForm() {
                   handleAddCategory()
                 }}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 {loading ? 'Wird hinzugefügt...' : 'Hinzufügen'}
               </Button>
@@ -236,7 +266,7 @@ export function ExpenseCategoriesForm() {
 
         {/* Edit Category Dialog */}
         <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Kategorie bearbeiten</DialogTitle>
               <DialogDescription>
@@ -254,11 +284,11 @@ export function ExpenseCategoriesForm() {
               />
             </div>
             
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingCategory(null)}>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setEditingCategory(null)} className="w-full sm:w-auto">
                 Abbrechen
               </Button>
-              <Button onClick={handleEditCategory}>
+              <Button onClick={handleEditCategory} className="w-full sm:w-auto">
                 Speichern
               </Button>
             </DialogFooter>

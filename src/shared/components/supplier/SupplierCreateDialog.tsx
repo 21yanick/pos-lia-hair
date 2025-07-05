@@ -105,7 +105,7 @@ export function SupplierCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Neuen Lieferanten erstellen</DialogTitle>
           <DialogDescription>
@@ -123,7 +123,7 @@ export function SupplierCreateDialog({
             )}
 
             {/* Required Fields */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
                 <Input
@@ -158,7 +158,7 @@ export function SupplierCreateDialog({
             </div>
 
             {/* Contact Information */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="contact_email">E-Mail</Label>
                 <Input
@@ -174,6 +174,7 @@ export function SupplierCreateDialog({
                 <Label htmlFor="contact_phone">Telefon</Label>
                 <Input
                   id="contact_phone"
+                  type="tel"
                   value={formData.contact_phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, contact_phone: e.target.value }))}
                   placeholder="+41 44 123 45 67"
@@ -185,6 +186,7 @@ export function SupplierCreateDialog({
               <Label htmlFor="website">Website</Label>
               <Input
                 id="website"
+                type="url"
                 value={formData.website}
                 onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
                 placeholder="https://www.lieferant.ch"
@@ -213,7 +215,7 @@ export function SupplierCreateDialog({
                 />
               </div>
               
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="postal_code">PLZ</Label>
                   <Input
@@ -247,7 +249,7 @@ export function SupplierCreateDialog({
             </div>
 
             {/* Business Information */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="iban">IBAN</Label>
                 <Input
@@ -282,16 +284,17 @@ export function SupplierCreateDialog({
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               Abbrechen
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Erstellen
             </Button>

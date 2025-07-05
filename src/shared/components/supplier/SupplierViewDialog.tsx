@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Loader2, AlertCircle, Edit, Mail, Phone, ExternalLink, MapPin, Building, CreditCard, FileText } from "lucide-react"
 import { getSupplierById } from '@/shared/services/supplierServices'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import type { Supplier } from '@/shared/types/suppliers'
 
@@ -24,25 +25,26 @@ export function SupplierViewDialog({
   onEdit,
   supplierId
 }: SupplierViewDialogProps) {
+  const { currentOrganization } = useCurrentOrganization()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [supplier, setSupplier] = useState<Supplier | null>(null)
 
   // Load supplier data when dialog opens
   useEffect(() => {
-    if (open && supplierId) {
+    if (open && supplierId && currentOrganization) {
       loadSupplierData()
     }
-  }, [open, supplierId])
+  }, [open, supplierId, currentOrganization])
 
   const loadSupplierData = async () => {
-    if (!supplierId) return
+    if (!supplierId || !currentOrganization) return
 
     setLoading(true)
     setError(null)
 
     try {
-      const supplierData = await getSupplierById(supplierId)
+      const supplierData = await getSupplierById(supplierId, currentOrganization.id)
       
       if (!supplierData) {
         throw new Error('Lieferant nicht gefunden')
@@ -106,15 +108,11 @@ export function SupplierViewDialog({
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <Building className="h-5 w-5 mr-2" />
-                  Grundinformationen
+                  {supplier.name}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Name</label>
-                    <p className="text-base font-medium">{supplier.name}</p>
-                  </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Kategorie</label>
                     <div className="mt-1">
@@ -138,7 +136,7 @@ export function SupplierViewDialog({
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <Phone className="h-5 w-5 mr-2" />
-                  Kontaktinformationen
+                  Kontakt
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -211,7 +209,7 @@ export function SupplierViewDialog({
                 <CardHeader>
                   <CardTitle className="flex items-center text-lg">
                     <MapPin className="h-5 w-5 mr-2" />
-                    Adressinformationen
+                    Adresse
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
