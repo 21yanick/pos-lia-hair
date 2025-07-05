@@ -118,7 +118,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
         <Button variant="ghost" size="sm" onClick={handleBack} className="shrink-0">
           <ArrowLeft className="h-4 w-4" />
-          <span className="hidden xs:inline ml-1">Zurück</span>
+          <span className="hidden sm:inline ml-1">Zurück</span>
         </Button>
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <User className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
