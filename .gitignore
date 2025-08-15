@@ -33,3 +33,4 @@ next-env.d.ts
 /public/fallback-*.js
 # Supabase
 /supabase-local
+backups/
