@@ -10,7 +10,8 @@ import { Skeleton } from "@/shared/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/shared/components/ui/alert"
 import { Zap, Target, AlertCircle, Brain, Eye, CheckCircle2 } from "lucide-react"
 import { useBankingData } from '../../hooks/useBankingData'
-import { getProviderMatchSuggestions, executeAutoProviderMatch } from '../../services/bankingApi'
+import { executeAutoProviderMatch } from '../../services/bankingApi'
+import { providerMatchingService } from '../../services/providerMatching'
 import type { ProviderMatchCandidate } from '../../services/matchingTypes'
 import { ProviderMatchConnector } from './ProviderMatchConnector'
 import { formatDateForDisplay } from '@/shared/utils/dateUtils'
@@ -52,10 +53,14 @@ export function EnhancedProviderTables({
 
     setIsAnalyzing(true)
     try {
-      const result = await getProviderMatchSuggestions()
+      // Use already loaded data instead of making new API calls
+      const result = await providerMatchingService.findProviderMatches(
+        unmatchedSales as any, 
+        unmatchedProviderReports as any
+      )
       
-      if (result.error) {
-        throw new Error(result.error.message || 'Analysis failed')
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Analysis failed')
       }
 
       const candidates = result.data?.candidates || []

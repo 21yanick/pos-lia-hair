@@ -7,7 +7,6 @@ import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
 import { Label } from "@/shared/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
 import { supabase } from "@/shared/lib/supabase/client"
 import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
 import { PublicRoute } from "@/shared/components/auth"
@@ -39,17 +38,6 @@ function RegisterForm() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   
-  // Organization data (for creating new org)
-  const [orgName, setOrgName] = useState("")
-  const [orgSlug, setOrgSlug] = useState("")
-  const [orgDisplayName, setOrgDisplayName] = useState("")
-  const [orgEmail, setOrgEmail] = useState("")
-  const [orgPhone, setOrgPhone] = useState("")
-  const [orgAddress, setOrgAddress] = useState("")
-  const [orgCity, setOrgCity] = useState("")
-  const [orgPostalCode, setOrgPostalCode] = useState("")
-  
-  const [tabValue, setTabValue] = useState(inviteToken ? "join" : "create")
 
   // Validate invitation token on page load
   useEffect(() => {
@@ -76,31 +64,17 @@ function RegisterForm() {
       if (data.valid) {
         setInvitationInfo(data.invitation)
         setEmail(data.invitation.email) // Pre-fill email from invitation
-        setTabValue("join")
       } else {
         setError(`Ungültige Einladung: ${data.error}`)
-        setTabValue("create") // Fall back to create org
       }
     } catch (err) {
       console.error('Invitation validation error:', err)
       setError("Fehler beim Validieren der Einladung")
-      setTabValue("create")
     } finally {
       setIsValidatingInvite(false)
     }
   }
 
-  // Auto-generate slug from organization name
-  const handleOrgNameChange = (value: string) => {
-    setOrgName(value)
-    const slug = value
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/--+/g, '-') // Replace multiple hyphens with single
-      .trim()
-    setOrgSlug(slug)
-  }
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -120,29 +94,6 @@ function RegisterForm() {
     
     if (password !== confirmPassword) {
       setError("Die Passwörter stimmen nicht überein")
-      return false
-    }
-    
-    if (tabValue === "create") {
-      if (!orgName.trim()) {
-        setError("Bitte geben Sie den Namen Ihrer Organisation ein")
-        return false
-      }
-      
-      if (!orgSlug.trim()) {
-        setError("Bitte geben Sie einen URL-Namen für Ihre Organisation ein")
-        return false
-      }
-      
-      // Validate slug format
-      if (!/^[a-z0-9-]+$/.test(orgSlug)) {
-        setError("Der URL-Name darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten")
-        return false
-      }
-    }
-    
-    if (tabValue === "join" && !inviteToken) {
-      setError("Kein gültiger Einladungstoken vorhanden")
       return false
     }
     
@@ -184,75 +135,7 @@ function RegisterForm() {
 
       // 2. User record is automatically created by the handle_new_user trigger
 
-      if (tabValue === "create") {
-        // 3. Create new organization
-        const { data: orgData, error: orgError } = await supabase
-          .from('organizations')
-          .insert({
-            name: orgName.trim(),
-            slug: orgSlug.trim(),
-            display_name: orgDisplayName.trim() || orgName.trim(),
-            email: orgEmail.trim() || email.trim(),
-            phone: orgPhone.trim(),
-            address: orgAddress.trim(),
-            city: orgCity.trim(),
-            postal_code: orgPostalCode.trim(),
-            settings: {
-              tax_rate: 7.7,
-              default_currency: 'CHF',
-              pdf_show_logo: true,
-              pdf_show_company_details: true,
-              custom_expense_categories: {}
-            }
-          })
-          .select()
-          .single()
-
-        if (orgError) {
-          console.error("Error creating organization:", orgError)
-          if (orgError.code === '23505') {
-            setError("Eine Organisation mit diesem URL-Namen existiert bereits")
-          } else {
-            setError("Fehler beim Erstellen der Organisation")
-          }
-          return
-        }
-
-        // 4. Add user as owner to organization
-        const { error: memberError } = await supabase
-          .from('organization_users')
-          .insert({
-            organization_id: orgData.id,
-            user_id: authData.user.id,
-            role: 'owner'
-          })
-
-        if (memberError) {
-          console.error("Error adding user to organization:", memberError)
-          setError("Fehler beim Zuordnen zur Organisation")
-          return
-        }
-
-        // 5. Send welcome email
-        try {
-          await EmailService.sendWelcomeEmail({
-            to: email.trim(),
-            userName: name.trim(),
-            organizationName: orgData.name,
-            organizationSlug: orgData.slug,
-            isOwner: true,
-          })
-        } catch (emailError) {
-          console.error("Failed to send welcome email:", emailError)
-          // Don't fail registration for email errors
-        }
-
-        setSuccess(true)
-        setTimeout(() => {
-          window.location.href = `/org/${orgData.slug}/dashboard`
-        }, 1000)
-
-      } else if (inviteToken) {
+      if (inviteToken) {
         // 3. Accept invitation using JWT token
         try {
           const result = await InvitationService.acceptInvitation(inviteToken, authData.user.id)
@@ -281,6 +164,12 @@ function RegisterForm() {
           setError(inviteError instanceof Error ? inviteError.message : "Fehler beim Annehmen der Einladung")
           return
         }
+      } else {
+        // 3. New user without invitation - redirect to organizations page
+        setSuccess(true)
+        setTimeout(() => {
+          window.location.href = `/organizations`
+        }, 1000)
       }
 
     } catch (err) {
@@ -319,7 +208,7 @@ function RegisterForm() {
           <CardDescription className="text-center text-muted-foreground/80">
             {invitationInfo 
               ? `Einladung zu ${invitationInfo.organizationName}`
-              : "Neues Konto für Salon Management erstellen"
+              : "Neues Benutzerkonto erstellen"
             }
           </CardDescription>
         </CardHeader>
@@ -340,7 +229,10 @@ function RegisterForm() {
 
             {success && (
               <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-600 rounded-lg text-sm backdrop-blur-sm animate-in fade-in-0 slide-in-from-top-2">
-                Registrierung erfolgreich! Sie werden weitergeleitet...
+                {invitationInfo 
+                  ? "Registrierung erfolgreich! Sie werden weitergeleitet..."
+                  : "Benutzerkonto erstellt! Sie werden zur Organisations-Auswahl weitergeleitet..."
+                }
               </div>
             )}
 
@@ -426,157 +318,6 @@ function RegisterForm() {
               </div>
             </div>
 
-            {/* Organization Selection - Only show if no invitation */}
-            {!invitationInfo && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Organisation</h3>
-                
-                <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="create">Neue Organisation erstellen</TabsTrigger>
-                    <TabsTrigger value="join">Mit Einladungslink beitreten</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="create" className="space-y-4 mt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="orgName" className="text-sm font-medium text-foreground/90">
-                          Organisationsname *
-                        </Label>
-                        <Input
-                          id="orgName"
-                          type="text"
-                          value={orgName}
-                          onChange={(e) => handleOrgNameChange(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="Mein Friseursalon"
-                          required={tabValue === "create"}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="orgSlug" className="text-sm font-medium text-foreground/90">
-                          URL-Name *
-                        </Label>
-                        <Input
-                          id="orgSlug"
-                          type="text"
-                          value={orgSlug}
-                          onChange={(e) => setOrgSlug(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="mein-salon"
-                          required={tabValue === "create"}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Wird für URLs verwendet: /org/{orgSlug || "ihr-salon"}/dashboard
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="orgDisplayName" className="text-sm font-medium text-foreground/90">
-                          Anzeigename
-                        </Label>
-                        <Input
-                          id="orgDisplayName"
-                          type="text"
-                          value={orgDisplayName}
-                          onChange={(e) => setOrgDisplayName(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="Offizieller Firmenname"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="orgEmail" className="text-sm font-medium text-foreground/90">
-                          Geschäfts-E-Mail
-                        </Label>
-                        <Input
-                          id="orgEmail"
-                          type="email"
-                          value={orgEmail}
-                          onChange={(e) => setOrgEmail(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="info@salon.ch"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="orgPhone" className="text-sm font-medium text-foreground/90">
-                          Telefon
-                        </Label>
-                        <Input
-                          id="orgPhone"
-                          type="tel"
-                          value={orgPhone}
-                          onChange={(e) => setOrgPhone(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="+41 XX XXX XX XX"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="orgAddress" className="text-sm font-medium text-foreground/90">
-                          Adresse
-                        </Label>
-                        <Input
-                          id="orgAddress"
-                          type="text"
-                          value={orgAddress}
-                          onChange={(e) => setOrgAddress(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="Musterstrasse 123"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="orgCity" className="text-sm font-medium text-foreground/90">
-                          Ort
-                        </Label>
-                        <Input
-                          id="orgCity"
-                          type="text"
-                          value={orgCity}
-                          onChange={(e) => setOrgCity(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="Zürich"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="orgPostalCode" className="text-sm font-medium text-foreground/90">
-                          PLZ
-                        </Label>
-                        <Input
-                          id="orgPostalCode"
-                          type="text"
-                          value={orgPostalCode}
-                          onChange={(e) => setOrgPostalCode(e.target.value)}
-                          className="h-11 transition-all duration-200"
-                          placeholder="8000"
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="join" className="space-y-4 mt-4">
-                    <div className="text-center p-8 border-2 border-dashed border-muted-foreground/20 rounded-lg">
-                      <p className="text-muted-foreground">
-                        Um einer bestehenden Organisation beizutreten, benötigen Sie einen Einladungslink.
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Dieser Link wurde Ihnen per E-Mail zugesandt oder von Ihrem Administrator bereitgestellt.
-                      </p>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            )}
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4 pb-8">
@@ -593,7 +334,7 @@ function RegisterForm() {
               ) : invitationInfo ? (
                 "Einladung annehmen"
               ) : (
-                "Konto erstellen"
+                "Benutzerkonto erstellen"
               )}
             </Button>
             

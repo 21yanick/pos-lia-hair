@@ -159,11 +159,14 @@ export async function getOwnerBalance(userId: string): Promise<{ data: OwnerBala
     const total_expenses = expensesResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
     const total_withdrawals = withdrawalsResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
 
+    // Calculate net balance: positive means business owes owner
+    const net_balance = (total_deposits + total_expenses) - total_withdrawals
+
     const balance: OwnerBalance = {
       total_deposits,
       total_expenses,
       total_withdrawals,
-      net_balance: data || 0 // From PostgreSQL function
+      net_balance
     }
 
     return { data: balance, error: null }

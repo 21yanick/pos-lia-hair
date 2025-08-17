@@ -44,7 +44,16 @@ async function fetchUserOrganizations(): Promise<OrganizationMembership[]> {
     .eq('organization.active', true)
     .order('joined_at', { ascending: true })
 
+  console.log('🔍 [DEBUG] Query result:', { 
+    hasData: !!data, 
+    dataLength: data?.length,
+    error: error?.message,
+    errorCode: error?.code,
+    errorHint: error?.hint
+  })
+
   if (error) {
+    console.error('🔍 [DEBUG] Full error object:', error)
     throw new Error(`Failed to load organizations: ${error.message}`)
   }
 

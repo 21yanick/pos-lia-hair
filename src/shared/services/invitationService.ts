@@ -22,6 +22,34 @@ export interface DecodedInvitation extends InvitationPayload {
   exp: number; // Expires at
 }
 
+// Organization data structure from database
+export interface OrganizationData {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+}
+
+// Organization membership record from organization_users table
+export interface OrganizationMembership {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  role: 'staff' | 'admin' | 'owner';
+  invited_by: string | null;
+  joined_at: string;
+  created_at: string;
+  active: boolean;
+}
+
+// Return type for acceptInvitation function
+export interface AcceptInvitationResult {
+  success: true;
+  organization: OrganizationData;
+  membership: OrganizationMembership;
+  role: 'staff' | 'admin' | 'owner';
+}
+
 export class InvitationService {
   
   /**
@@ -139,7 +167,7 @@ export class InvitationService {
   /**
    * Accepts an invitation and creates organization membership
    */
-  static async acceptInvitation(token: string, userId: string) {
+  static async acceptInvitation(token: string, userId: string): Promise<AcceptInvitationResult> {
     try {
       // 1. Verify and decode token
       const invitation = this.verifyInvitationToken(token);
