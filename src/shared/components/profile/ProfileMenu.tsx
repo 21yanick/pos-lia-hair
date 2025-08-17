@@ -1,33 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { Building2, ChevronDown, LogOut, Settings, User } from 'lucide-react'
 import Link from 'next/link'
-import { ChevronDown, Settings, LogOut, Building2, User } from 'lucide-react'
-import { cn } from '@/shared/utils'
-import { Button } from '@/shared/components/ui/button'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
-import { ProfileAvatar } from './ProfileAvatar'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useRouter } from 'next/navigation'
 import type { OrganizationRole } from '@/shared/types/organizations'
+import { cn } from '@/shared/utils'
+import { ProfileAvatar } from './ProfileAvatar'
 
 // Role display configuration
-const roleConfig: Record<OrganizationRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
+const roleConfig: Record<
+  OrganizationRole,
+  { label: string; variant: 'default' | 'secondary' | 'outline' }
+> = {
   owner: { label: 'Inhaber', variant: 'default' },
   admin: { label: 'Admin', variant: 'secondary' },
-  staff: { label: 'Mitarbeiter', variant: 'outline' }
+  staff: { label: 'Mitarbeiter', variant: 'outline' },
 }
 
 interface ProfileMenuProps {
@@ -66,8 +69,8 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className={cn(
             'flex items-center space-x-2 px-2 py-1.5 h-auto',
             'hover:bg-accent hover:text-accent-foreground',
@@ -75,12 +78,7 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
             className
           )}
         >
-          <ProfileAvatar 
-            name={user.name} 
-            email={user.email} 
-            size="md"
-            showOnlineStatus
-          />
+          <ProfileAvatar name={user.name} email={user.email} size="md" showOnlineStatus />
           <div className="hidden md:flex flex-col items-start text-left min-w-0">
             <span className="text-sm font-medium truncate max-w-32">
               {user.name || user.email?.split('@')[0] || 'User'}
@@ -94,24 +92,17 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
           <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
         </Button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="end" className="w-64" sideOffset={8}>
         {/* User Information Header */}
         <DropdownMenuLabel className="p-3">
           <div className="flex items-center space-x-3">
-            <ProfileAvatar 
-              name={user.name} 
-              email={user.email} 
-              size="lg"
-              showOnlineStatus
-            />
+            <ProfileAvatar name={user.name} email={user.email} size="lg" showOnlineStatus />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium leading-none truncate">
                 {user.name || 'Unbenannter Benutzer'}
               </p>
-              <p className="text-xs text-muted-foreground mt-1 truncate">
-                {user.email}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1 truncate">{user.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 {roleDisplay && (
                   <Badge variant={roleDisplay.variant} className="text-xs">
@@ -133,7 +124,7 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
               {currentOrganization.display_name || currentOrganization.name}
             </span>
           </div>
-          
+
           {hasMultipleOrganizations && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className="mt-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
@@ -141,8 +132,8 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="w-56">
                 {userOrganizations
-                  .filter(membership => membership.organization.id !== currentOrganization.id)
-                  .map(membership => (
+                  .filter((membership) => membership.organization.id !== currentOrganization.id)
+                  .map((membership) => (
                     <DropdownMenuItem
                       key={membership.organization.id}
                       onClick={() => handleOrganizationSwitch(membership.organization.slug)}
@@ -170,8 +161,12 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
 
         {/* Quick Actions */}
         <DropdownMenuItem asChild>
-          <Link 
-            href={currentOrganization ? `/org/${currentOrganization.slug}/settings/profile` : "/settings/profile"}
+          <Link
+            href={
+              currentOrganization
+                ? `/org/${currentOrganization.slug}/settings/profile`
+                : '/settings/profile'
+            }
             className="flex items-center space-x-2 cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
@@ -181,8 +176,8 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link 
-            href={currentOrganization ? `/org/${currentOrganization.slug}/settings` : "/settings"}
+          <Link
+            href={currentOrganization ? `/org/${currentOrganization.slug}/settings` : '/settings'}
             className="flex items-center space-x-2 cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
@@ -194,7 +189,7 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
         <DropdownMenuSeparator />
 
         {/* Sign Out */}
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={handleSignOut}
           className="flex items-center space-x-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
         >

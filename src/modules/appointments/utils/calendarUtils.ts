@@ -3,17 +3,17 @@
  * Clean, pure functions for calendar calculations
  */
 
-import { 
-  formatMonthYear, 
-  formatWeekdayFullDate, 
-  formatDateForAPI, 
-  isToday, 
-  isSameMonth, 
-  isWeekend, 
-  eachDayOfInterval 
+import type { BusinessSettings, VacationPeriod, WeekDay } from '@/shared/types/businessSettings'
+import {
+  eachDayOfInterval,
+  formatDateForAPI,
+  formatMonthYear,
+  formatWeekdayFullDate,
+  isSameMonth,
+  isToday,
+  isWeekend,
 } from '@/shared/utils/dateUtils'
 import type { CalendarDay, DayStatus, MonthData } from '../types/calendar'
-import type { BusinessSettings, VacationPeriod, WeekDay } from '@/shared/types/businessSettings'
 
 /**
  * Generate complete month data with 42 days (6 weeks)
@@ -23,20 +23,20 @@ export function generateMonthData(date: Date): MonthData {
   // Use noon to avoid timezone issues
   const monthStart = new Date(date.getFullYear(), date.getMonth(), 1, 12, 0, 0, 0)
   const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 12, 0, 0, 0)
-  
+
   // Get complete weeks (42 days total for consistent 6x7 grid)
   const calendarStart = getWeekStart(monthStart)
   const calendarEnd = getWeekEnd(monthEnd)
-  
+
   const days = eachDayOfInterval(calendarStart, calendarEnd)
-  
+
   return {
     year: date.getFullYear(),
     month: date.getMonth(),
     monthName: formatMonthYear(date),
-    days: days.map(day => createCalendarDay(day, date)),
+    days: days.map((day) => createCalendarDay(day, date)),
     startDate: calendarStart,
-    endDate: calendarEnd
+    endDate: calendarEnd,
   }
 }
 
@@ -46,7 +46,7 @@ export function generateMonthData(date: Date): MonthData {
  */
 function createCalendarDay(date: Date, currentMonth: Date): CalendarDay {
   const isCurrentMonth = isSameMonth(date, currentMonth)
-  
+
   return {
     date,
     dayNumber: date.getDate(),
@@ -54,7 +54,7 @@ function createCalendarDay(date: Date, currentMonth: Date): CalendarDay {
     appointmentCount: 0, // Will be populated by business logic
     isWeekend: isWeekend(date),
     isClickable: true, // All days are clickable (other-month days navigate to that month)
-    vacationReason: undefined // Will be populated if in vacation period
+    vacationReason: undefined, // Will be populated if in vacation period
   }
 }
 
@@ -71,7 +71,7 @@ function getInitialDayStatus(date: Date, isCurrentMonth: boolean): DayStatus {
  * Apply business settings to determine day status
  */
 export function applyBusinessLogicToMonth(
-  monthData: MonthData, 
+  monthData: MonthData,
   businessSettings: BusinessSettings | null,
   appointmentCounts: Record<string, number> = {}
 ): MonthData {
@@ -79,7 +79,9 @@ export function applyBusinessLogicToMonth(
 
   return {
     ...monthData,
-    days: monthData.days.map(day => applyBusinessLogicToDay(day, businessSettings, appointmentCounts))
+    days: monthData.days.map((day) =>
+      applyBusinessLogicToDay(day, businessSettings, appointmentCounts)
+    ),
   }
 }
 
@@ -87,16 +89,16 @@ export function applyBusinessLogicToMonth(
  * Apply business logic to a single day
  */
 function applyBusinessLogicToDay(
-  day: CalendarDay, 
+  day: CalendarDay,
   settings: BusinessSettings,
   appointmentCounts: Record<string, number>
 ): CalendarDay {
   // Skip other-month days
   if (day.status === 'other-month') return day
-  
+
   const dayKey = formatDateForAPI(day.date)
   const appointmentCount = appointmentCounts[dayKey] || 0
-  
+
   // Check vacation periods
   const vacationInfo = getVacationInfo(day.date, settings.vacation_periods)
   if (vacationInfo) {
@@ -104,42 +106,42 @@ function applyBusinessLogicToDay(
       ...day,
       status: 'vacation',
       appointmentCount,
-      isClickable: true,  // Allow exception appointments
-      vacationReason: vacationInfo.reason
+      isClickable: true, // Allow exception appointments
+      vacationReason: vacationInfo.reason,
     }
   }
-  
+
   // IMPORTANT: 'today' ALWAYS has highest priority
   if (day.status === 'today') {
     return {
       ...day,
       status: 'today', // Today always wins, even over closed/vacation
       appointmentCount,
-      isClickable: true
+      isClickable: true,
     }
   }
-  
+
   // Check if business is open on this day
   const weekDay = getWeekDay(day.date)
   const dayWorkingHours = settings.working_hours[weekDay]
-  
+
   if (dayWorkingHours.closed) {
     return {
       ...day,
       status: 'closed',
       appointmentCount,
-      isClickable: true  // Allow exception appointments
+      isClickable: true, // Allow exception appointments
     }
   }
-  
+
   // Determine status based on appointments
   const status = appointmentCount > 0 ? 'booked' : 'available'
-  
+
   return {
     ...day,
     status,
     appointmentCount,
-    isClickable: true
+    isClickable: true,
   }
 }
 
@@ -148,10 +150,12 @@ function applyBusinessLogicToDay(
  */
 function getVacationInfo(date: Date, vacationPeriods: VacationPeriod[]): VacationPeriod | null {
   const dateStr = formatDateForAPI(date)
-  
-  return vacationPeriods.find(vacation => {
-    return dateStr >= vacation.start && dateStr <= vacation.end
-  }) || null
+
+  return (
+    vacationPeriods.find((vacation) => {
+      return dateStr >= vacation.start && dateStr <= vacation.end
+    }) || null
+  )
 }
 
 /**
@@ -159,7 +163,15 @@ function getVacationInfo(date: Date, vacationPeriods: VacationPeriod[]): Vacatio
  */
 function getWeekDay(date: Date): WeekDay {
   const dayIndex = date.getDay()
-  const weekDays: WeekDay[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const weekDays: WeekDay[] = [
+    'sunday',
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+  ]
   return weekDays[dayIndex]
 }
 
@@ -176,17 +188,17 @@ export function formatDayNumber(day: CalendarDay): string {
 export function getDayAriaLabel(day: CalendarDay): string {
   const dateStr = formatWeekdayFullDate(day.date)
   const statusText = getStatusText(day.status)
-  
+
   let label = `${dateStr}, ${statusText}`
-  
+
   if (day.appointmentCount > 0) {
     label += `, ${day.appointmentCount} Termin${day.appointmentCount !== 1 ? 'e' : ''}`
   }
-  
+
   if (day.vacationReason) {
     label += `, ${day.vacationReason}`
   }
-  
+
   return label
 }
 
@@ -195,13 +207,20 @@ export function getDayAriaLabel(day: CalendarDay): string {
  */
 function getStatusText(status: DayStatus): string {
   switch (status) {
-    case 'today': return 'Heute'
-    case 'available': return 'Verfügbar'
-    case 'booked': return 'Termine vorhanden'
-    case 'vacation': return 'Urlaubszeit'
-    case 'closed': return 'Geschlossen'
-    case 'other-month': return 'Anderer Monat'
-    default: return ''
+    case 'today':
+      return 'Heute'
+    case 'available':
+      return 'Verfügbar'
+    case 'booked':
+      return 'Termine vorhanden'
+    case 'vacation':
+      return 'Urlaubszeit'
+    case 'closed':
+      return 'Geschlossen'
+    case 'other-month':
+      return 'Anderer Monat'
+    default:
+      return ''
   }
 }
 

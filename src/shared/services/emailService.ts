@@ -1,33 +1,32 @@
-import { Resend } from 'resend';
-import { InviteUserEmail } from '@/src/emails/InviteUserEmail';
-import { WelcomeEmail } from '@/src/emails/WelcomeEmail';
+import { Resend } from 'resend'
+import { InviteUserEmail } from '@/src/emails/InviteUserEmail'
+import { WelcomeEmail } from '@/src/emails/WelcomeEmail'
 
 // Initialize Resend only when needed to prevent build-time errors
 function getResendClient() {
   if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY environment variable is required');
+    throw new Error('RESEND_API_KEY environment variable is required')
   }
-  return new Resend(process.env.RESEND_API_KEY);
+  return new Resend(process.env.RESEND_API_KEY)
 }
 
 interface SendInviteEmailProps {
-  to: string;
-  inviterName: string;
-  organizationName: string;
-  inviteToken: string;
-  role: 'staff' | 'admin' | 'owner';
+  to: string
+  inviterName: string
+  organizationName: string
+  inviteToken: string
+  role: 'staff' | 'admin' | 'owner'
 }
 
 interface SendWelcomeEmailProps {
-  to: string;
-  userName: string;
-  organizationName: string;
-  organizationSlug: string;
-  isOwner?: boolean;
+  to: string
+  userName: string
+  organizationName: string
+  organizationSlug: string
+  isOwner?: boolean
 }
 
 export class EmailService {
-  
   /**
    * Sendet eine Einladungs-Email an einen neuen User
    */
@@ -38,10 +37,10 @@ export class EmailService {
     inviteToken,
     role,
   }: SendInviteEmailProps) {
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/register?invite=${inviteToken}`;
-    
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/register?invite=${inviteToken}`
+
     try {
-      const resend = getResendClient();
+      const resend = getResendClient()
       const { data, error } = await resend.emails.send({
         from: `${organizationName} <einladung@lia-hair.ch>`,
         to: [to],
@@ -52,17 +51,17 @@ export class EmailService {
           inviteLink,
           role,
         }),
-      });
+      })
 
       if (error) {
-        console.error('Failed to send invitation email:', error);
-        throw new Error(`Email sending failed: ${error.message}`);
+        console.error('Failed to send invitation email:', error)
+        throw new Error(`Email sending failed: ${error.message}`)
       }
 
-      return { success: true, data };
+      return { success: true, data }
     } catch (error) {
-      console.error('Email service error:', error);
-      throw error;
+      console.error('Email service error:', error)
+      throw error
     }
   }
 
@@ -76,15 +75,15 @@ export class EmailService {
     organizationSlug,
     isOwner = false,
   }: SendWelcomeEmailProps) {
-    const dashboardLink = `${process.env.NEXT_PUBLIC_APP_URL}/org/${organizationSlug}/dashboard`;
-    
+    const dashboardLink = `${process.env.NEXT_PUBLIC_APP_URL}/org/${organizationSlug}/dashboard`
+
     try {
-      const resend = getResendClient();
+      const resend = getResendClient()
       const { data, error } = await resend.emails.send({
         from: `Lia Hair POS <willkommen@lia-hair.ch>`,
         to: [to],
-        subject: isOwner 
-          ? `Willkommen bei Lia Hair POS! Dein Salon "${organizationName}" ist bereit` 
+        subject: isOwner
+          ? `Willkommen bei Lia Hair POS! Dein Salon "${organizationName}" ist bereit`
           : `Willkommen im Team von "${organizationName}"`,
         react: WelcomeEmail({
           userName,
@@ -92,17 +91,17 @@ export class EmailService {
           dashboardLink,
           isOwner,
         }),
-      });
+      })
 
       if (error) {
-        console.error('Failed to send welcome email:', error);
-        throw new Error(`Email sending failed: ${error.message}`);
+        console.error('Failed to send welcome email:', error)
+        throw new Error(`Email sending failed: ${error.message}`)
       }
 
-      return { success: true, data };
+      return { success: true, data }
     } catch (error) {
-      console.error('Email service error:', error);
-      throw error;
+      console.error('Email service error:', error)
+      throw error
     }
   }
 
@@ -111,7 +110,7 @@ export class EmailService {
    */
   static async sendTestEmail(to: string) {
     try {
-      const resend = getResendClient();
+      const resend = getResendClient()
       const { data, error } = await resend.emails.send({
         from: 'Lia Hair POS <test@lia-hair.ch>',
         to: [to],
@@ -125,16 +124,16 @@ export class EmailService {
             </p>
           </div>
         `,
-      });
+      })
 
       if (error) {
-        throw new Error(`Test email failed: ${error.message}`);
+        throw new Error(`Test email failed: ${error.message}`)
       }
 
-      return { success: true, data };
+      return { success: true, data }
     } catch (error) {
-      console.error('Test email error:', error);
-      throw error;
+      console.error('Test email error:', error)
+      throw error
     }
   }
 }

@@ -1,15 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from 'react'
-import { Check, ChevronsUpDown, Plus, User } from "lucide-react"
-import { cn } from "@/shared/utils"
-import { Button } from "@/shared/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
-import { Badge } from "@/shared/components/ui/badge"
-import { searchCustomers, createCustomer } from '@/shared/services/customerService'
+import { Check, ChevronsUpDown, Plus, User } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/shared/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import type { Customer } from '@/shared/services/customerService'
+import { createCustomer, searchCustomers } from '@/shared/services/customerService'
+import { cn } from '@/shared/utils'
 
 interface CustomerAutocompleteProps {
   value?: Customer | null
@@ -24,13 +31,13 @@ export function CustomerAutocomplete({
   value,
   onSelect,
   onCreateNew,
-  placeholder = "Kunde suchen...",
+  placeholder = 'Kunde suchen...',
   className,
-  allowCreateNew = true
+  allowCreateNew = true,
 }: CustomerAutocompleteProps) {
   const { currentOrganization } = useCurrentOrganization()
   const [open, setOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState("")
+  const [searchValue, setSearchValue] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -62,7 +69,7 @@ export function CustomerAutocomplete({
   const handleSelect = (customer: Customer) => {
     onSelect(customer)
     setOpen(false)
-    setSearchValue("")
+    setSearchValue('')
   }
 
   const handleCreateNew = async () => {
@@ -71,13 +78,13 @@ export function CustomerAutocomplete({
     setCreating(true)
     try {
       const newCustomer = await createCustomer(currentOrganization.id, {
-        name: searchValue.trim()
+        name: searchValue.trim(),
       })
-      
+
       onSelect(newCustomer)
       onCreateNew?.(newCustomer)
       setOpen(false)
-      setSearchValue("")
+      setSearchValue('')
     } catch (error) {
       console.error('Error creating customer:', error)
     } finally {
@@ -88,10 +95,10 @@ export function CustomerAutocomplete({
   const handleClear = () => {
     onSelect(null)
     setOpen(false)
-    setSearchValue("")
+    setSearchValue('')
   }
 
-  const displayValue = value ? value.name : ""
+  const displayValue = value ? value.name : ''
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -100,7 +107,7 @@ export function CustomerAutocomplete({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn('w-full justify-between', className)}
         >
           <div className="flex items-center">
             {value ? (
@@ -130,9 +137,7 @@ export function CustomerAutocomplete({
           <CommandList>
             <CommandEmpty>
               {loading ? (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  Suche läuft...
-                </div>
+                <div className="py-6 text-center text-sm text-muted-foreground">Suche läuft...</div>
               ) : creating ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   Kunde wird erstellt...
@@ -153,14 +158,13 @@ export function CustomerAutocomplete({
                       onClick={handleCreateNew}
                       disabled={creating}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
-                      "{searchValue}" als neuen Kunden erstellen
+                      <Plus className="mr-2 h-4 w-4" />"{searchValue}" als neuen Kunden erstellen
                     </Button>
                   )}
                 </div>
               )}
             </CommandEmpty>
-            
+
             {customers.length > 0 && (
               <CommandGroup>
                 {/* Clear selection option */}
@@ -172,7 +176,7 @@ export function CustomerAutocomplete({
                     </div>
                   </CommandItem>
                 )}
-                
+
                 {customers.map((customer) => (
                   <CommandItem
                     key={customer.id}
@@ -183,17 +187,16 @@ export function CustomerAutocomplete({
                     <div className="flex items-center">
                       <Check
                         className={cn(
-                          "mr-2 h-4 w-4",
-                          value?.id === customer.id ? "opacity-100" : "opacity-0"
+                          'mr-2 h-4 w-4',
+                          value?.id === customer.id ? 'opacity-100' : 'opacity-0'
                         )}
                       />
                       <div>
                         <div className="font-medium">{customer.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {customer.phone && customer.email 
+                          {customer.phone && customer.email
                             ? `${customer.phone} • ${customer.email}`
-                            : customer.phone || customer.email || 'Keine Kontaktdaten'
-                          }
+                            : customer.phone || customer.email || 'Keine Kontaktdaten'}
                         </div>
                       </div>
                     </div>
@@ -203,7 +206,7 @@ export function CustomerAutocomplete({
                     </Badge>
                   </CommandItem>
                 ))}
-                
+
                 {searchValue.trim() && allowCreateNew && (
                   <CommandItem onSelect={handleCreateNew} disabled={creating}>
                     <Plus className="mr-2 h-4 w-4" />

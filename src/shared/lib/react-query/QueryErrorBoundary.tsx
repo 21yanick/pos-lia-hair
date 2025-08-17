@@ -1,11 +1,18 @@
 'use client'
 
-import React, { Component, ReactNode } from 'react'
-import { Button } from '@/shared/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { AlertTriangle, RefreshCw, Wifi, WifiOff } from 'lucide-react'
+import type React from 'react'
+import { Component, type ReactNode } from 'react'
 import { toast } from 'sonner'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
 
 interface QueryErrorBoundaryState {
   hasError: boolean
@@ -22,7 +29,7 @@ interface QueryErrorBoundaryProps {
 
 /**
  * Error Boundary specifically designed for React Query errors
- * 
+ *
  * Features:
  * - Graceful error handling for data fetching
  * - Network connectivity awareness
@@ -30,17 +37,20 @@ interface QueryErrorBoundaryProps {
  * - Retry functionality
  * - Automatic error reporting
  */
-export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, QueryErrorBoundaryState> {
+export class QueryErrorBoundary extends Component<
+  QueryErrorBoundaryProps,
+  QueryErrorBoundaryState
+> {
   private retryTimeoutId: NodeJS.Timeout | null = null
 
   constructor(props: QueryErrorBoundaryProps) {
     super(props)
-    
+
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
-      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true
+      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     }
   }
 
@@ -57,7 +67,7 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
       window.removeEventListener('online', this.handleOnline)
       window.removeEventListener('offline', this.handleOffline)
     }
-    
+
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId)
     }
@@ -66,13 +76,13 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
   static getDerivedStateFromError(error: Error): Partial<QueryErrorBoundaryState> {
     return {
       hasError: true,
-      error
+      error,
     }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({
-      errorInfo
+      errorInfo,
     })
 
     // Log error for debugging
@@ -89,7 +99,7 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
 
   handleOnline = () => {
     this.setState({ isOnline: true })
-    
+
     // Auto-retry when coming back online
     if (this.state.hasError) {
       toast.success('Verbindung wiederhergestellt - Versuche erneut...')
@@ -108,9 +118,9 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     })
-    
+
     // Trigger a re-render by forcing a state update
     this.forceUpdate()
   }
@@ -118,7 +128,7 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
   reportError = (error: Error, errorInfo: React.ErrorInfo) => {
     // Here you would integrate with your error reporting service
     // e.g., Sentry, LogRocket, Bugsnag, etc.
-    
+
     try {
       const errorReport = {
         message: error.message,
@@ -127,12 +137,11 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
         timestamp: new Date().toISOString(),
         url: typeof window !== 'undefined' ? window.location.href : 'unknown',
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-        isOnline: this.state.isOnline
+        isOnline: this.state.isOnline,
       }
-      
+
       // In a real app, send this to your error tracking service
       // console.log('📊 Error Report:', errorReport)
-      
     } catch (reportingError) {
       console.error('Failed to report error:', reportingError)
     }
@@ -140,47 +149,52 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
 
   getErrorMessage = (error: Error) => {
     // Parse common error types and provide user-friendly messages
-    
+
     if (!this.state.isOnline) {
       return {
         title: 'Keine Internetverbindung',
         description: 'Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.',
-        isNetworkError: true
+        isNetworkError: true,
       }
     }
-    
+
     // Network/API errors
     if (error.message.includes('fetch') || error.message.includes('network')) {
       return {
         title: 'Verbindungsfehler',
         description: 'Es gab ein Problem beim Laden der Daten. Bitte versuchen Sie es erneut.',
-        isNetworkError: true
+        isNetworkError: true,
       }
     }
-    
+
     // Authentication errors
-    if (error.message.includes('auth') || error.message.includes('401') || error.message.includes('403')) {
+    if (
+      error.message.includes('auth') ||
+      error.message.includes('401') ||
+      error.message.includes('403')
+    ) {
       return {
         title: 'Anmeldung erforderlich',
         description: 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
-        isAuthError: true
+        isAuthError: true,
       }
     }
-    
+
     // Organization/Permission errors
     if (error.message.includes('organization') || error.message.includes('permission')) {
       return {
         title: 'Zugriff verweigert',
         description: 'Sie haben keine Berechtigung für diese Aktion oder Organisation.',
-        isPermissionError: true
+        isPermissionError: true,
       }
     }
-    
+
     // Generic errors
     return {
       title: 'Ein Fehler ist aufgetreten',
-      description: error.message || 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
-      isGenericError: true
+      description:
+        error.message || 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+      isGenericError: true,
     }
   }
 
@@ -192,7 +206,8 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
       }
 
       // Default error UI
-      const { title, description, isNetworkError, isAuthError, isPermissionError } = this.getErrorMessage(this.state.error)
+      const { title, description, isNetworkError, isAuthError, isPermissionError } =
+        this.getErrorMessage(this.state.error)
 
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -200,7 +215,11 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
             <CardHeader>
               <div className="flex items-center gap-2">
                 {isNetworkError ? (
-                  this.state.isOnline ? <Wifi className="h-5 w-5 text-destructive" /> : <WifiOff className="h-5 w-5 text-destructive" />
+                  this.state.isOnline ? (
+                    <Wifi className="h-5 w-5 text-destructive" />
+                  ) : (
+                    <WifiOff className="h-5 w-5 text-destructive" />
+                  )
                 ) : (
                   <AlertTriangle className="h-5 w-5 text-destructive" />
                 )}
@@ -208,7 +227,7 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
               </div>
               <CardDescription>{description}</CardDescription>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               {/* Error Details (Development only) */}
               {process.env.NODE_ENV === 'development' && (
@@ -220,10 +239,10 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
                   </AlertDescription>
                 </Alert>
               )}
-              
+
               {/* Action Buttons */}
               <div className="flex gap-2">
-                <Button 
+                <Button
                   onClick={this.handleRetry}
                   disabled={!this.state.isOnline && isNetworkError}
                   className="flex-1"
@@ -231,18 +250,18 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Erneut versuchen
                 </Button>
-                
+
                 {(isAuthError || isPermissionError) && (
-                  <Button 
+                  <Button
                     variant="outline"
-                    onClick={() => window.location.href = '/login'}
+                    onClick={() => (window.location.href = '/login')}
                     className="flex-1"
                   >
                     Anmelden
                   </Button>
                 )}
               </div>
-              
+
               {/* Network Status */}
               {isNetworkError && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -271,11 +290,7 @@ export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, Query
 
 // Functional wrapper for easier usage
 export function QueryErrorWrapper({ children, ...props }: QueryErrorBoundaryProps) {
-  return (
-    <QueryErrorBoundary {...props}>
-      {children}
-    </QueryErrorBoundary>
-  )
+  return <QueryErrorBoundary {...props}>{children}</QueryErrorBoundary>
 }
 
 export default QueryErrorBoundary

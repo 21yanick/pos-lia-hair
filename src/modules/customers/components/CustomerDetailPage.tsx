@@ -1,7 +1,7 @@
 'use client'
 
+import { AlertCircle, ArrowLeft, Loader2, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
@@ -17,11 +17,11 @@ interface CustomerDetailPageProps {
 export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const router = useRouter()
   const { currentOrganization } = useCurrentOrganization()
-  
-  const { 
-    data: customer, 
-    isLoading, 
-    error 
+
+  const {
+    data: customer,
+    isLoading,
+    error,
   } = useCustomerDetail(customerId, currentOrganization?.id || '')
 
   const handleBack = () => {
@@ -46,7 +46,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
             <span className="text-xl font-bold">Lade Kunde...</span>
           </div>
         </div>
-        
+
         {/* Loading skeleton */}
         <div className="space-y-6">
           <Card>
@@ -61,7 +61,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-6">
               <div className="w-32 h-6 bg-muted rounded animate-pulse mb-4" />
@@ -88,7 +88,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           </Button>
           <h1 className="text-3xl font-bold">Kunde nicht gefunden</h1>
         </div>
-        
+
         <Card className="border-destructive">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 text-destructive">
@@ -96,14 +96,13 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               <div>
                 <p className="font-medium">Kunde konnte nicht geladen werden</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Der Kunde existiert möglicherweise nicht oder Sie haben keine Berechtigung, ihn anzuzeigen.
+                  Der Kunde existiert möglicherweise nicht oder Sie haben keine Berechtigung, ihn
+                  anzuzeigen.
                 </p>
               </div>
             </div>
             <div className="mt-4">
-              <Button onClick={handleBack}>
-                Zurück zur Kundenliste
-              </Button>
+              <Button onClick={handleBack}>Zurück zur Kundenliste</Button>
             </div>
           </CardContent>
         </Card>

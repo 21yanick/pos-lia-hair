@@ -199,7 +199,12 @@ export type ProviderReportUpdate = {
 // TRANSACTION MATCHING
 // =====================================================
 
-export type MatchedType = 'sale' | 'expense' | 'provider_batch' | 'cash_movement' | 'owner_transaction'
+export type MatchedType =
+  | 'sale'
+  | 'expense'
+  | 'provider_batch'
+  | 'cash_movement'
+  | 'owner_transaction'
 export type MatchType = 'automatic' | 'manual' | 'suggested'
 
 export type TransactionMatchRow = {
@@ -257,7 +262,7 @@ export type SaleWithBanking = {
   banking_status: BankingStatus
 }
 
-// Extended Expense with Banking fields  
+// Extended Expense with Banking fields
 export type ExpenseWithBanking = {
   id: string
   // ... existing expense fields
@@ -399,27 +404,27 @@ export type AvailableForBankMatching = {
 export interface TWINTCsvRow {
   'Datum Überweisung': string
   'Datum Abrechnung': string
-  'Währung': string
-  'Transaktionsgebühr': string
+  Währung: string
+  Transaktionsgebühr: string
   'Gutgeschriebener Betrag': string
   'Betrag Transaktion': string
-  'Transaktionsdatum': string
-  'Transaktionszeit': string
+  Transaktionsdatum: string
+  Transaktionszeit: string
   'Order ID': string
   'Transaktions-ID': string
 }
 
 export interface SumUpCsvRow {
   'E-Mail': string
-  'Datum': string
+  Datum: string
   'Transaktions-ID': string
-  'Zahlungsart': string
-  'Status': string
-  'Kartentyp': string
+  Zahlungsart: string
+  Status: string
+  Kartentyp: string
   'Betrag inkl. MwSt.': string
-  'Gebühr': string
-  'Auszahlung': string
-  'Auszahlungsdatum': string
+  Gebühr: string
+  Auszahlung: string
+  Auszahlungsdatum: string
 }
 
 // Matching Algorithm

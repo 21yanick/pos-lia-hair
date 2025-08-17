@@ -26,10 +26,10 @@ export class LRUCache<T> {
     if (this.cache.has(key)) {
       this.cache.delete(key)
     }
-    
+
     // Add to end
     this.cache.set(key, value)
-    
+
     // Remove oldest if over limit
     if (this.cache.size > this.maxSize) {
       const firstKey = this.cache.keys().next().value

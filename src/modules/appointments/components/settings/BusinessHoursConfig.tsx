@@ -1,16 +1,22 @@
 'use client'
 
+import { Clock, Plus, RotateCcw, Save, X } from 'lucide-react'
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { Switch } from '@/shared/components/ui/switch'
-import { Badge } from '@/shared/components/ui/badge'
 import { Separator } from '@/shared/components/ui/separator'
-import { Clock, Plus, X, Save, RotateCcw } from 'lucide-react'
+import { Switch } from '@/shared/components/ui/switch'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
-import type { WorkingHours, WeekDay, DayWorkingHours } from '@/shared/types/businessSettings'
+import type { DayWorkingHours, WeekDay, WorkingHours } from '@/shared/types/businessSettings'
 import { DEFAULT_WORKING_HOURS } from '@/shared/types/businessSettings'
 import { cn } from '@/shared/utils'
 
@@ -21,7 +27,7 @@ const WEEKDAYS: { key: WeekDay; label: string; short: string }[] = [
   { key: 'thursday', label: 'Donnerstag', short: 'Do' },
   { key: 'friday', label: 'Freitag', short: 'Fr' },
   { key: 'saturday', label: 'Samstag', short: 'Sa' },
-  { key: 'sunday', label: 'Sonntag', short: 'So' }
+  { key: 'sunday', label: 'Sonntag', short: 'So' },
 ]
 
 interface BusinessHoursConfigProps {
@@ -36,7 +42,11 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
   const [hasChanges, setHasChanges] = useState(false)
 
   // Update local state when settings load
-  if (settings?.working_hours && !hasChanges && JSON.stringify(workingHours) !== JSON.stringify(settings.working_hours)) {
+  if (
+    settings?.working_hours &&
+    !hasChanges &&
+    JSON.stringify(workingHours) !== JSON.stringify(settings.working_hours)
+  ) {
     setWorkingHours(settings.working_hours)
   }
 
@@ -45,8 +55,8 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
       ...workingHours,
       [day]: {
         ...workingHours[day],
-        ...updates
-      }
+        ...updates,
+      },
     }
     setWorkingHours(updatedHours)
     setHasChanges(true)
@@ -56,20 +66,20 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
     const dayHours = workingHours[day]
     const newBreak = { start: '12:00', end: '13:00' }
     updateDayHours(day, {
-      breaks: [...dayHours.breaks, newBreak]
+      breaks: [...dayHours.breaks, newBreak],
     })
   }
 
   const removeBreak = (day: WeekDay, breakIndex: number) => {
     const dayHours = workingHours[day]
     updateDayHours(day, {
-      breaks: dayHours.breaks.filter((_, index) => index !== breakIndex)
+      breaks: dayHours.breaks.filter((_, index) => index !== breakIndex),
     })
   }
 
   const updateBreak = (day: WeekDay, breakIndex: number, field: 'start' | 'end', value: string) => {
     const dayHours = workingHours[day]
-    const updatedBreaks = dayHours.breaks.map((breakTime, index) => 
+    const updatedBreaks = dayHours.breaks.map((breakTime, index) =>
       index === breakIndex ? { ...breakTime, [field]: value } : breakTime
     )
     updateDayHours(day, { breaks: updatedBreaks })
@@ -129,15 +139,25 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
               </CardDescription>
             </div>
           </div>
-          
+
           {hasChanges && (
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" size="sm" onClick={handleReset} className="flex-1 sm:flex-initial">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="flex-1 sm:flex-initial"
+              >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 <span className="sm:hidden">Reset</span>
                 <span className="hidden sm:inline">Zurücksetzen</span>
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={saving} className="flex-1 sm:flex-initial">
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 sm:flex-initial"
+              >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Speichern...' : 'Speichern'}
               </Button>
@@ -149,7 +169,7 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
       <CardContent className="space-y-6">
         {WEEKDAYS.map((weekday) => {
           const dayHours = workingHours[weekday.key]
-          
+
           return (
             <div key={weekday.key} className="space-y-4">
               <div className="flex items-center justify-between">
@@ -159,7 +179,7 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
                   </Badge>
                   <Label className="font-medium">{weekday.label}</Label>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Label className="text-sm text-muted-foreground">Geschlossen</Label>
                   <Switch
@@ -220,14 +240,18 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
                               <Input
                                 type="time"
                                 value={breakTime.start}
-                                onChange={(e) => updateBreak(weekday.key, index, 'start', e.target.value)}
+                                onChange={(e) =>
+                                  updateBreak(weekday.key, index, 'start', e.target.value)
+                                }
                                 className="font-mono text-sm"
                                 placeholder="Von"
                               />
                               <Input
                                 type="time"
                                 value={breakTime.end}
-                                onChange={(e) => updateBreak(weekday.key, index, 'end', e.target.value)}
+                                onChange={(e) =>
+                                  updateBreak(weekday.key, index, 'end', e.target.value)
+                                }
                                 className="font-mono text-sm"
                                 placeholder="Bis"
                               />
@@ -250,7 +274,7 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
                   <div className="pt-2 space-y-1">
                     <Label className="text-xs text-muted-foreground">Schnellkopie:</Label>
                     <div className="flex flex-wrap gap-1">
-                      {WEEKDAYS.filter(d => d.key !== weekday.key).map((otherDay) => (
+                      {WEEKDAYS.filter((d) => d.key !== weekday.key).map((otherDay) => (
                         <Button
                           key={otherDay.key}
                           variant="outline"
@@ -284,10 +308,12 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
               return (
                 <div key={weekday.key} className="flex justify-between">
                   <span className="font-medium">{weekday.label}:</span>
-                  <span className={cn(
-                    "font-mono",
-                    dayHours.closed ? "text-muted-foreground" : "text-foreground"
-                  )}>
+                  <span
+                    className={cn(
+                      'font-mono',
+                      dayHours.closed ? 'text-muted-foreground' : 'text-foreground'
+                    )}
+                  >
                     {dayHours.closed ? 'Geschlossen' : `${dayHours.start} - ${dayHours.end}`}
                     {!dayHours.closed && dayHours.breaks.length > 0 && (
                       <span className="text-muted-foreground ml-1">

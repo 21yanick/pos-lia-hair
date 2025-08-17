@@ -1,41 +1,41 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useCurrentOrganization } from './useCurrentOrganization'
-import { 
-  Permission, 
-  OrganizationRole, 
-  ROLE_PERMISSIONS 
+import {
+  type OrganizationRole,
+  type Permission,
+  ROLE_PERMISSIONS,
 } from '@/shared/types/organizations'
+import { useCurrentOrganization } from './useCurrentOrganization'
 
 interface OrganizationPermissionsReturn {
   // Permission checks
   can: (permission: Permission) => boolean
-  
+
   // Role checks
   isOwner: boolean
   isAdmin: boolean
   isStaff: boolean
-  
+
   // Current state
   role: OrganizationRole | null
   organization: any // Current organization
-  
+
   // Loading state
   loading: boolean
 }
 
 /**
  * Organization-Scoped Permissions Hook
- * 
+ *
  * BEFORE: Global permissions via complex OrganizationProvider
  * AFTER:  URL-based organization permissions via useCurrentOrganization
- * 
+ *
  * How it works:
  * 1. Get current organization + user role from URL
  * 2. Map role to permissions using ROLE_PERMISSIONS
  * 3. Provide simple permission check functions
- * 
+ *
  * Benefits:
  * - Permissions are always scoped to current organization
  * - No global state complexity
@@ -43,11 +43,7 @@ interface OrganizationPermissionsReturn {
  * - Consistent with URL-based architecture
  */
 export function useOrganizationPermissions(): OrganizationPermissionsReturn {
-  const { 
-    currentOrganization, 
-    userRole, 
-    loading 
-  } = useCurrentOrganization()
+  const { currentOrganization, userRole, loading } = useCurrentOrganization()
 
   // Calculate permissions based on user role
   const permissions = useMemo(() => {
@@ -64,26 +60,29 @@ export function useOrganizationPermissions(): OrganizationPermissionsReturn {
   }, [permissions, userRole, currentOrganization])
 
   // Role flags
-  const roleFlags = useMemo(() => ({
-    isOwner: userRole === 'owner',
-    isAdmin: userRole === 'admin' || userRole === 'owner', // Owner has admin rights
-    isStaff: userRole === 'staff' || userRole === 'admin' || userRole === 'owner'
-  }), [userRole])
+  const roleFlags = useMemo(
+    () => ({
+      isOwner: userRole === 'owner',
+      isAdmin: userRole === 'admin' || userRole === 'owner', // Owner has admin rights
+      isStaff: userRole === 'staff' || userRole === 'admin' || userRole === 'owner',
+    }),
+    [userRole]
+  )
 
   return {
     // Permission checks
     can,
-    
-    // Role checks  
+
+    // Role checks
     isOwner: roleFlags.isOwner,
     isAdmin: roleFlags.isAdmin,
     isStaff: roleFlags.isStaff,
-    
+
     // Current state
     role: userRole,
     organization: currentOrganization,
-    
+
     // Loading state
-    loading
+    loading,
   }
 }

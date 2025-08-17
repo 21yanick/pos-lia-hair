@@ -1,14 +1,26 @@
 'use client'
 
+import { Calendar, Clock, Info, RotateCcw, Save, Settings, Shield } from 'lucide-react'
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Button } from '@/shared/components/ui/button'
-import { Label } from '@/shared/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
-import { Switch } from '@/shared/components/ui/switch'
-import { Separator } from '@/shared/components/ui/separator'
 import { Badge } from '@/shared/components/ui/badge'
-import { Settings, Clock, Calendar, Shield, Save, RotateCcw, Info } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { Label } from '@/shared/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Separator } from '@/shared/components/ui/separator'
+import { Switch } from '@/shared/components/ui/switch'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import type { BookingRules, DisplayPreferences } from '@/shared/types/businessSettings'
 import { DEFAULT_BOOKING_RULES, DEFAULT_DISPLAY_PREFERENCES } from '@/shared/types/businessSettings'
@@ -20,45 +32,46 @@ interface BookingRulesConfigProps {
 
 const SLOT_INTERVALS = [
   { value: 15, label: '15 Minuten', description: 'Sehr flexible Buchungen' },
-  { value: 30, label: '30 Minuten', description: 'Standard für die meisten Salons' }
+  { value: 30, label: '30 Minuten', description: 'Standard für die meisten Salons' },
 ] as const
 
 const DEFAULT_DURATIONS = [
   { value: 30, label: '30 Minuten', description: 'Kurze Services' },
   { value: 45, label: '45 Minuten', description: 'Standard Services' },
-  { value: 60, label: '60 Minuten', description: 'Längere Services' }
+  { value: 60, label: '60 Minuten', description: 'Längere Services' },
 ] as const
 
 const MAX_ADVANCE_DAYS = [
   { value: 30, label: '30 Tage', description: '1 Monat voraus' },
   { value: 60, label: '60 Tage', description: '2 Monate voraus' },
-  { value: 90, label: '90 Tage', description: '3 Monate voraus' }
+  { value: 90, label: '90 Tage', description: '3 Monate voraus' },
 ] as const
 
 const MIN_ADVANCE_HOURS = [
   { value: 1, label: '1 Stunde', description: 'Last-Minute Buchungen' },
   { value: 2, label: '2 Stunden', description: 'Kurze Vorlaufzeit' },
   { value: 4, label: '4 Stunden', description: 'Halber Tag Vorlauf' },
-  { value: 24, label: '24 Stunden', description: 'Ein Tag Vorlauf' }
+  { value: 24, label: '24 Stunden', description: 'Ein Tag Vorlauf' },
 ] as const
 
 const BUFFER_MINUTES = [
   { value: 0, label: 'Keine Puffer', description: 'Termine direkt nacheinander' },
   { value: 5, label: '5 Minuten', description: 'Kurze Pause zwischen Terminen' },
-  { value: 10, label: '10 Minuten', description: 'Standard Puffer' }
+  { value: 10, label: '10 Minuten', description: 'Standard Puffer' },
 ] as const
 
 const TIMELINE_HOURS = Array.from({ length: 15 }, (_, i) => {
   const hour = i + 6 // Start at 6 AM
   return {
     value: `${hour.toString().padStart(2, '0')}:00`,
-    label: `${hour.toString().padStart(2, '0')}:00`
+    label: `${hour.toString().padStart(2, '0')}:00`,
   }
 })
 
 export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
-  const { settings, loading, saving, updateBookingRules, updateDisplayPreferences } = useBusinessSettingsQuery()
-  
+  const { settings, loading, saving, updateBookingRules, updateDisplayPreferences } =
+    useBusinessSettingsQuery()
+
   const [bookingRules, setBookingRules] = useState<BookingRules>(
     settings?.booking_rules || DEFAULT_BOOKING_RULES
   )
@@ -68,20 +81,31 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
   const [hasChanges, setHasChanges] = useState(false)
 
   // Update local state when settings load
-  if (settings?.booking_rules && !hasChanges && JSON.stringify(bookingRules) !== JSON.stringify(settings.booking_rules)) {
+  if (
+    settings?.booking_rules &&
+    !hasChanges &&
+    JSON.stringify(bookingRules) !== JSON.stringify(settings.booking_rules)
+  ) {
     setBookingRules(settings.booking_rules)
   }
-  if (settings?.display_preferences && !hasChanges && JSON.stringify(displayPreferences) !== JSON.stringify(settings.display_preferences)) {
+  if (
+    settings?.display_preferences &&
+    !hasChanges &&
+    JSON.stringify(displayPreferences) !== JSON.stringify(settings.display_preferences)
+  ) {
     setDisplayPreferences(settings.display_preferences)
   }
 
   const updateBookingRule = <K extends keyof BookingRules>(key: K, value: BookingRules[K]) => {
-    setBookingRules(prev => ({ ...prev, [key]: value }))
+    setBookingRules((prev) => ({ ...prev, [key]: value }))
     setHasChanges(true)
   }
 
-  const updateDisplayPreference = <K extends keyof DisplayPreferences>(key: K, value: DisplayPreferences[K]) => {
-    setDisplayPreferences(prev => ({ ...prev, [key]: value }))
+  const updateDisplayPreference = <K extends keyof DisplayPreferences>(
+    key: K,
+    value: DisplayPreferences[K]
+  ) => {
+    setDisplayPreferences((prev) => ({ ...prev, [key]: value }))
     setHasChanges(true)
   }
 
@@ -89,7 +113,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
     try {
       await Promise.all([
         updateBookingRules(bookingRules),
-        updateDisplayPreferences(displayPreferences)
+        updateDisplayPreferences(displayPreferences),
       ])
       setHasChanges(false)
     } catch (error) {
@@ -139,15 +163,25 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </CardDescription>
             </div>
           </div>
-          
+
           {hasChanges && (
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" size="sm" onClick={handleReset} className="flex-1 sm:flex-initial">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="flex-1 sm:flex-initial"
+              >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 <span className="sm:hidden">Reset</span>
                 <span className="hidden sm:inline">Zurücksetzen</span>
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={saving} className="flex-1 sm:flex-initial">
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 sm:flex-initial"
+              >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Speichern...' : 'Speichern'}
               </Button>
@@ -175,7 +209,9 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </div>
               <Select
                 value={bookingRules.slotInterval.toString()}
-                onValueChange={(value) => updateBookingRule('slotInterval', parseInt(value) as 15 | 30)}
+                onValueChange={(value) =>
+                  updateBookingRule('slotInterval', parseInt(value) as 15 | 30)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -203,7 +239,9 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </div>
               <Select
                 value={bookingRules.defaultDuration.toString()}
-                onValueChange={(value) => updateBookingRule('defaultDuration', parseInt(value) as 30 | 45 | 60)}
+                onValueChange={(value) =>
+                  updateBookingRule('defaultDuration', parseInt(value) as 30 | 45 | 60)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -231,7 +269,9 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </div>
               <Select
                 value={bookingRules.maxAdvanceDays.toString()}
-                onValueChange={(value) => updateBookingRule('maxAdvanceDays', parseInt(value) as 30 | 60 | 90)}
+                onValueChange={(value) =>
+                  updateBookingRule('maxAdvanceDays', parseInt(value) as 30 | 60 | 90)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -259,7 +299,9 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </div>
               <Select
                 value={bookingRules.minAdvanceHours.toString()}
-                onValueChange={(value) => updateBookingRule('minAdvanceHours', parseInt(value) as 1 | 2 | 4 | 24)}
+                onValueChange={(value) =>
+                  updateBookingRule('minAdvanceHours', parseInt(value) as 1 | 2 | 4 | 24)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -289,7 +331,9 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </div>
               <Select
                 value={bookingRules.bufferMinutes.toString()}
-                onValueChange={(value) => updateBookingRule('bufferMinutes', parseInt(value) as 0 | 5 | 10)}
+                onValueChange={(value) =>
+                  updateBookingRule('bufferMinutes', parseInt(value) as 0 | 5 | 10)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -306,7 +350,6 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
                 </SelectContent>
               </Select>
             </div>
-
           </div>
         </div>
 
@@ -368,7 +411,6 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
                 </SelectContent>
               </Select>
             </div>
-
           </div>
         </div>
 
@@ -404,7 +446,9 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Timeline:</span>
-                <span className="font-medium">{displayPreferences.timelineStart} - {displayPreferences.timelineEnd}</span>
+                <span className="font-medium">
+                  {displayPreferences.timelineStart} - {displayPreferences.timelineEnd}
+                </span>
               </div>
             </div>
           </div>

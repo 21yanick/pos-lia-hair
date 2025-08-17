@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
+import type React from 'react'
 import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
-import { Permission, OrganizationRole } from '@/shared/types/organizations'
+import type { OrganizationRole, Permission } from '@/shared/types/organizations'
 
 interface PermissionGuardProps {
   children: React.ReactNode
@@ -37,9 +37,9 @@ export function PermissionGuard({
   // Check multiple permissions
   if (permissions && permissions.length > 0) {
     const hasPermissions = requireAll
-      ? permissions.every(p => can(p))
-      : permissions.some(p => can(p))
-    
+      ? permissions.every((p) => can(p))
+      : permissions.some((p) => can(p))
+
     if (!hasPermissions) {
       return <>{fallback}</>
     }
@@ -136,7 +136,7 @@ interface FeatureGuardProps {
 export function FeatureGuard({ children, feature, fallback = null }: FeatureGuardProps) {
   // This could be extended to work with actual feature flags
   // For now, it's a placeholder for future feature flag implementation
-  
+
   // Example feature flags based on role/organization
   const featureMap: Record<string, Permission[]> = {
     'advanced-banking': ['banking.reconcile', 'banking.manage_accounts'],
@@ -164,14 +164,22 @@ export function useConditionalRender() {
   const { can, isOwner, isAdmin, isStaff, role } = useOrganizationPermissions()
 
   const renderIf = (condition: boolean, component: React.ReactNode, fallback?: React.ReactNode) => {
-    return condition ? component : (fallback || null)
+    return condition ? component : fallback || null
   }
 
-  const renderForPermission = (permission: Permission, component: React.ReactNode, fallback?: React.ReactNode) => {
+  const renderForPermission = (
+    permission: Permission,
+    component: React.ReactNode,
+    fallback?: React.ReactNode
+  ) => {
     return renderIf(can(permission), component, fallback)
   }
 
-  const renderForRole = (requiredRole: OrganizationRole, component: React.ReactNode, fallback?: React.ReactNode) => {
+  const renderForRole = (
+    requiredRole: OrganizationRole,
+    component: React.ReactNode,
+    fallback?: React.ReactNode
+  ) => {
     return renderIf(role === requiredRole, component, fallback)
   }
 

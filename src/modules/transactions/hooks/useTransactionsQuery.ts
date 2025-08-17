@@ -1,19 +1,24 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/shared/lib/supabase/client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import type { UnifiedTransaction, TransactionSearchQuery, PdfStatus, PdfRequirement } from '../types/unifiedTransactions'
+import { supabase } from '@/shared/lib/supabase/client'
+import type {
+  PdfRequirement,
+  PdfStatus,
+  TransactionSearchQuery,
+  UnifiedTransaction,
+} from '../types/unifiedTransactions'
 
 /**
  * Calculate PDF status for a transaction
  */
-function calculatePdfStatus(tx: any): { status: PdfStatus, requirement: PdfRequirement } {
+function calculatePdfStatus(tx: any): { status: PdfStatus; requirement: PdfRequirement } {
   // Cash Movements and Bank Transactions don't need PDFs
   if (tx.transaction_type === 'cash_movement' || tx.transaction_type === 'bank_transaction') {
     return {
       status: 'not_needed',
-      requirement: 'not_applicable'
+      requirement: 'not_applicable',
     }
   }
 
@@ -22,12 +27,12 @@ function calculatePdfStatus(tx: any): { status: PdfStatus, requirement: PdfRequi
     if (tx.has_pdf || tx.document_id) {
       return {
         status: 'available',
-        requirement: 'required'
+        requirement: 'required',
       }
     } else {
       return {
         status: 'missing',
-        requirement: 'required'
+        requirement: 'required',
       }
     }
   }
@@ -35,7 +40,7 @@ function calculatePdfStatus(tx: any): { status: PdfStatus, requirement: PdfRequi
   // Fallback
   return {
     status: 'not_needed',
-    requirement: 'optional'
+    requirement: 'optional',
   }
 }
 
@@ -55,7 +60,7 @@ const transactionKeys = {
  */
 export function useTransactionsQuery(query: TransactionSearchQuery = {}) {
   const { currentOrganization } = useCurrentOrganization()
-  
+
   return useQuery({
     queryKey: transactionKeys.list(query),
     queryFn: async () => {
@@ -95,27 +100,27 @@ export function useTransactionsQuery(query: TransactionSearchQuery = {}) {
       const { data, error } = await dbQuery
 
       if (error) throw error
-      
+
       // Calculate PDF status for each transaction
-      const transactionsWithPdfStatus = (data || []).map(tx => {
+      const transactionsWithPdfStatus = (data || []).map((tx) => {
         const pdfStatus = calculatePdfStatus(tx)
         return {
           ...tx,
           pdf_status: pdfStatus.status,
-          pdf_requirement: pdfStatus.requirement
+          pdf_requirement: pdfStatus.requirement,
         } as UnifiedTransaction
       })
-      
+
       return transactionsWithPdfStatus
     },
     enabled: !!currentOrganization,
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    
+
     // Mobile optimization: refetch when window regains focus
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    
+
     // Keep previous data while fetching
     keepPreviousData: true,
   })
@@ -142,13 +147,13 @@ export function useUpdateTransaction() {
         .single()
 
       if (error) throw error
-      
+
       // Calculate PDF status for the updated transaction
       const pdfStatus = calculatePdfStatus(data)
       return {
         ...data,
         pdf_status: pdfStatus.status,
-        pdf_requirement: pdfStatus.requirement
+        pdf_requirement: pdfStatus.requirement,
       } as UnifiedTransaction
     },
     onSuccess: (updatedTransaction) => {
@@ -157,17 +162,12 @@ export function useUpdateTransaction() {
         { queryKey: transactionKeys.lists() },
         (oldData: UnifiedTransaction[] | undefined) => {
           if (!oldData) return oldData
-          return oldData.map(tx => 
-            tx.id === updatedTransaction.id ? updatedTransaction : tx
-          )
+          return oldData.map((tx) => (tx.id === updatedTransaction.id ? updatedTransaction : tx))
         }
       )
-      
+
       // Update specific transaction detail
-      queryClient.setQueryData(
-        transactionKeys.detail(updatedTransaction.id),
-        updatedTransaction
-      )
+      queryClient.setQueryData(transactionKeys.detail(updatedTransaction.id), updatedTransaction)
     },
   })
 }
@@ -197,10 +197,11 @@ export function useGeneratePdf() {
  */
 export function useInvalidateTransactions() {
   const queryClient = useQueryClient()
-  
+
   return {
     invalidateAll: () => queryClient.invalidateQueries({ queryKey: transactionKeys.all }),
     invalidateList: () => queryClient.invalidateQueries({ queryKey: transactionKeys.lists() }),
-    invalidateDetail: (id: string) => queryClient.invalidateQueries({ queryKey: transactionKeys.detail(id) }),
+    invalidateDetail: (id: string) =>
+      queryClient.invalidateQueries({ queryKey: transactionKeys.detail(id) }),
   }
 }

@@ -1,7 +1,7 @@
-import React from 'react'
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
-import type { Expense } from '@/shared/types/expenses'
+import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import type React from 'react'
 import type { BusinessSettings } from '@/shared/types/businessSettings'
+import type { Expense } from '@/shared/types/expenses'
 
 interface PlaceholderReceiptPDFProps {
   expense: Expense
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     fontSize: 10,
   },
-  
+
   // Compact header
   header: {
     marginBottom: 20,
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginBottom: 20,
   },
-  
+
   // Amount section - clean
   amountSection: {
     marginBottom: 25,
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
-  
+
   // Simple sections
   section: {
     marginBottom: 20,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     textTransform: 'uppercase',
   },
-  
+
   // Detail rows - simple
   detailRow: {
     flexDirection: 'row',
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     width: '65%',
   },
-  
+
   // Archive section - minimal
   archiveSection: {
     marginBottom: 20,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     textAlign: 'center',
   },
-  
+
   // Warning section - simple
   warningSection: {
     marginBottom: 20,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 3,
   },
-  
+
   // Footer - compact
   footer: {
     marginTop: 20,
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 2,
   },
-  
+
   // Document info - simple list
   documentInfo: {
     marginBottom: 20,
@@ -157,7 +157,7 @@ const formatDate = (dateString: string) => {
     return date.toLocaleDateString('de-DE', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     })
   } catch {
     return dateString
@@ -167,7 +167,7 @@ const formatDate = (dateString: string) => {
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('de-CH', {
     style: 'currency',
-    currency: 'CHF'
+    currency: 'CHF',
   }).format(amount)
 }
 
@@ -177,19 +177,19 @@ const categoryLabels: Record<string, string> = {
   salary: 'Lohn',
   utilities: 'Nebenkosten',
   insurance: 'Versicherung',
-  other: 'Sonstiges'
+  other: 'Sonstiges',
 }
 
 const paymentMethodLabels: Record<string, string> = {
   cash: 'Bargeld',
-  bank: 'Banküberweisung'
+  bank: 'Banküberweisung',
 }
 
-export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({ 
-  expense, 
-  archiveLocation = "Physisches Archiv",
-  createdBy = "System",
-  businessSettings
+export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
+  expense,
+  archiveLocation = 'Physisches Archiv',
+  createdBy = 'System',
+  businessSettings,
 }) => {
   return (
     <Document>
@@ -211,25 +211,29 @@ export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
         {/* Expense Details */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ausgaben-Details</Text>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Beschreibung</Text>
             <Text style={styles.detailValue}>{expense.description}</Text>
           </View>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Kategorie</Text>
-            <Text style={styles.detailValue}>{categoryLabels[expense.category] || expense.category}</Text>
+            <Text style={styles.detailValue}>
+              {categoryLabels[expense.category] || expense.category}
+            </Text>
           </View>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Zahlungsdatum</Text>
             <Text style={styles.detailValue}>{formatDate(expense.payment_date)}</Text>
           </View>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Zahlungsmethode</Text>
-            <Text style={styles.detailValue}>{paymentMethodLabels[expense.payment_method] || expense.payment_method}</Text>
+            <Text style={styles.detailValue}>
+              {paymentMethodLabels[expense.payment_method] || expense.payment_method}
+            </Text>
           </View>
 
           {expense.supplier_name && (
@@ -264,17 +268,19 @@ export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
         {/* Document Information - Simple List */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dokument-Informationen</Text>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Belegnummer</Text>
-            <Text style={styles.detailValue}>{expense.receipt_number || expense.id.slice(0, 8)}</Text>
+            <Text style={styles.detailValue}>
+              {expense.receipt_number || expense.id.slice(0, 8)}
+            </Text>
           </View>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Erfasst von</Text>
             <Text style={styles.detailValue}>{createdBy}</Text>
           </View>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Erfasst am</Text>
             <Text style={styles.detailValue}>{formatDate(expense.created_at)}</Text>
@@ -294,9 +300,7 @@ export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Automatisch generierter Beleg-Platzhalter
-          </Text>
+          <Text style={styles.footerText}>Automatisch generierter Beleg-Platzhalter</Text>
           <Text style={styles.footerText}>
             {businessSettings?.company_name || 'POS-LIA-HAIR'} System
           </Text>

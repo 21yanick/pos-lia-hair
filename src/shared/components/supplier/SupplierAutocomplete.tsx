@@ -1,16 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from 'react'
-import { Check, ChevronsUpDown, Plus } from "lucide-react"
-import { cn } from "@/shared/utils"
-import { Button } from "@/shared/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
-import { Badge } from "@/shared/components/ui/badge"
-import { searchSuppliers } from '@/shared/services/supplierServices'
+import { Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/shared/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import { searchSuppliers } from '@/shared/services/supplierServices'
 import type { Supplier, SupplierSearchResult } from '@/shared/types/suppliers'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import { cn } from '@/shared/utils'
 
 interface SupplierAutocompleteProps {
   value?: Supplier | null
@@ -24,12 +31,12 @@ export function SupplierAutocomplete({
   value,
   onSelect,
   onCreateNew,
-  placeholder = "Lieferant suchen...",
-  className
+  placeholder = 'Lieferant suchen...',
+  className,
 }: SupplierAutocompleteProps) {
   const { currentOrganization } = useCurrentOrganization()
   const [open, setOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState("")
+  const [searchValue, setSearchValue] = useState('')
   const [suppliers, setSuppliers] = useState<SupplierSearchResult[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -45,7 +52,7 @@ export function SupplierAutocomplete({
       try {
         const results = await searchSuppliers(searchValue, currentOrganization.id, {
           active_only: true,
-          limit: 10
+          limit: 10,
         })
         setSuppliers(results)
       } catch (error) {
@@ -82,23 +89,23 @@ export function SupplierAutocomplete({
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       created_by: null,
-      organization_id: currentOrganization?.id || null // 🔒 Multi-Tenant Security
+      organization_id: currentOrganization?.id || null, // 🔒 Multi-Tenant Security
     }
-    
+
     onSelect(fullSupplier)
     setOpen(false)
-    setSearchValue("")
+    setSearchValue('')
   }
 
   const handleCreateNew = () => {
     if (searchValue.trim()) {
       onCreateNew(searchValue.trim())
       setOpen(false)
-      setSearchValue("")
+      setSearchValue('')
     }
   }
 
-  const displayValue = value ? value.name : ""
+  const displayValue = value ? value.name : ''
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -107,7 +114,7 @@ export function SupplierAutocomplete({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn('w-full justify-between', className)}
         >
           {displayValue || placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -123,9 +130,7 @@ export function SupplierAutocomplete({
           <CommandList>
             <CommandEmpty>
               {loading ? (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  Suche läuft...
-                </div>
+                <div className="py-6 text-center text-sm text-muted-foreground">Suche läuft...</div>
               ) : searchValue.length < 2 ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   Mindestens 2 Zeichen eingeben...
@@ -141,14 +146,13 @@ export function SupplierAutocomplete({
                       className="w-full justify-start"
                       onClick={handleCreateNew}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
-                      "{searchValue}" erstellen
+                      <Plus className="mr-2 h-4 w-4" />"{searchValue}" erstellen
                     </Button>
                   )}
                 </div>
               )}
             </CommandEmpty>
-            
+
             {suppliers.length > 0 && (
               <CommandGroup>
                 {suppliers.map((supplier) => (
@@ -161,8 +165,8 @@ export function SupplierAutocomplete({
                     <div className="flex items-center">
                       <Check
                         className={cn(
-                          "mr-2 h-4 w-4",
-                          value?.id === supplier.id ? "opacity-100" : "opacity-0"
+                          'mr-2 h-4 w-4',
+                          value?.id === supplier.id ? 'opacity-100' : 'opacity-0'
                         )}
                       />
                       <div>
@@ -179,7 +183,7 @@ export function SupplierAutocomplete({
                     </Badge>
                   </CommandItem>
                 ))}
-                
+
                 {searchValue.trim() && (
                   <CommandItem onSelect={handleCreateNew}>
                     <Plus className="mr-2 h-4 w-4" />

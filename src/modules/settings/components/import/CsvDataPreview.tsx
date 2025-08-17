@@ -1,41 +1,41 @@
-"use client"
+'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { ScrollArea } from "@/shared/components/ui/scroll-area"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/shared/components/ui/table"
-import { 
-  Eye, 
-  FileText, 
-  AlertCircle, 
-  CheckCircle, 
-  TrendingUp,
+import {
+  AlertCircle,
+  CheckCircle,
   Database,
-  MoreHorizontal
-} from "lucide-react"
-
+  Eye,
+  FileText,
+  MoreHorizontal,
+  TrendingUp,
+} from 'lucide-react'
+import { useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table'
+import type { ExpenseImport, ItemImport, SaleImport } from '@/shared/hooks/business/useImport'
 import type {
-  ParsedCsvData,
-  CsvMappingConfig,
   CsvImportType,
-  CsvValidationResult
+  CsvMappingConfig,
+  CsvValidationResult,
+  ParsedCsvData,
 } from '@/shared/types/csvImport'
-
-import type {
-  ItemImport,
-  SaleImport,
-  ExpenseImport
-} from '@/shared/hooks/business/useImport'
 
 import { getCsvStats } from '@/shared/utils/csvParser'
 import { validateTransformedData } from '@/shared/utils/csvToJsonTransform'
@@ -57,50 +57,49 @@ export function CsvDataPreview({
   mappingConfig,
   transformedData,
   onConfirm,
-  onBack
+  onBack,
 }: CsvDataPreviewProps) {
-  
   const [showAllRows, setShowAllRows] = useState(false)
-  
+
   // Get data statistics
   const csvStats = getCsvStats(csvData)
   const validation = validateTransformedData(transformedData, mappingConfig.importType)
-  
+
   // Determine preview rows
   const maxPreviewRows = 10
   const displayRows = showAllRows ? csvData.rows : csvData.rows.slice(0, maxPreviewRows)
   const hasMoreRows = csvData.rows.length > maxPreviewRows
-  
+
   // Get mapped headers only
   const mappedHeaders = Object.values(mappingConfig.mappings)
-    .filter(mapping => mapping.csvHeader && mapping.csvHeader.trim())
-    .map(mapping => mapping.csvHeader)
-  
+    .filter((mapping) => mapping.csvHeader && mapping.csvHeader.trim())
+    .map((mapping) => mapping.csvHeader)
+
   const getTransformedDataStats = () => {
     switch (mappingConfig.importType) {
       case 'items':
         return {
           count: transformedData.items?.length || 0,
           type: 'Produkte/Services',
-          icon: <Database className="h-4 w-4" />
+          icon: <Database className="h-4 w-4" />,
         }
       case 'sales':
         return {
           count: transformedData.sales?.length || 0,
           type: 'Verkäufe',
-          icon: <TrendingUp className="h-4 w-4" />
+          icon: <TrendingUp className="h-4 w-4" />,
         }
       case 'expenses':
         return {
           count: transformedData.expenses?.length || 0,
           type: 'Ausgaben',
-          icon: <FileText className="h-4 w-4" />
+          icon: <FileText className="h-4 w-4" />,
         }
     }
   }
-  
+
   const transformedStats = getTransformedDataStats()
-  
+
   const renderPreviewData = () => {
     switch (mappingConfig.importType) {
       case 'items':
@@ -113,10 +112,10 @@ export function CsvDataPreview({
         return null
     }
   }
-  
+
   const renderItemsPreview = () => {
     const items = transformedData.items?.slice(0, showAllRows ? undefined : maxPreviewRows) || []
-    
+
     return (
       <Table>
         <TableHeader>
@@ -154,10 +153,10 @@ export function CsvDataPreview({
       </Table>
     )
   }
-  
+
   const renderSalesPreview = () => {
     const sales = transformedData.sales?.slice(0, showAllRows ? undefined : maxPreviewRows) || []
-    
+
     return (
       <Table>
         <TableHeader>
@@ -176,26 +175,30 @@ export function CsvDataPreview({
               <TableCell>{sale.time}</TableCell>
               <TableCell className="font-medium">CHF {sale.total_amount.toFixed(2)}</TableCell>
               <TableCell>
-                <Badge variant={
-                  sale.payment_method === 'cash' ? 'default' : 
-                  sale.payment_method === 'twint' ? 'secondary' : 'outline'
-                }>
+                <Badge
+                  variant={
+                    sale.payment_method === 'cash'
+                      ? 'default'
+                      : sale.payment_method === 'twint'
+                        ? 'secondary'
+                        : 'outline'
+                  }
+                >
                   {sale.payment_method}
                 </Badge>
               </TableCell>
-              <TableCell className="max-w-[200px] truncate">
-                {sale.items[0]?.item_name}
-              </TableCell>
+              <TableCell className="max-w-[200px] truncate">{sale.items[0]?.item_name}</TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     )
   }
-  
+
   const renderExpensesPreview = () => {
-    const expenses = transformedData.expenses?.slice(0, showAllRows ? undefined : maxPreviewRows) || []
-    
+    const expenses =
+      transformedData.expenses?.slice(0, showAllRows ? undefined : maxPreviewRows) || []
+
     return (
       <Table>
         <TableHeader>
@@ -214,9 +217,7 @@ export function CsvDataPreview({
               <TableCell className="font-medium">CHF {expense.amount.toFixed(2)}</TableCell>
               <TableCell className="max-w-[200px] truncate">{expense.description}</TableCell>
               <TableCell>
-                <Badge variant="outline">
-                  {expense.category}
-                </Badge>
+                <Badge variant="outline">{expense.category}</Badge>
               </TableCell>
               <TableCell>
                 <Badge variant={expense.payment_method === 'cash' ? 'default' : 'secondary'}>
@@ -229,10 +230,9 @@ export function CsvDataPreview({
       </Table>
     )
   }
-  
+
   return (
     <div className="space-y-6">
-      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -240,10 +240,11 @@ export function CsvDataPreview({
           <h3 className="text-lg font-semibold">Daten-Vorschau</h3>
         </div>
         <Badge variant="outline" className="text-sm">
-          {mappingConfig.importType.charAt(0).toUpperCase() + mappingConfig.importType.slice(1)} Import
+          {mappingConfig.importType.charAt(0).toUpperCase() + mappingConfig.importType.slice(1)}{' '}
+          Import
         </Badge>
       </div>
-      
+
       {/* Statistics Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
@@ -257,7 +258,7 @@ export function CsvDataPreview({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
@@ -269,7 +270,7 @@ export function CsvDataPreview({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
@@ -281,7 +282,7 @@ export function CsvDataPreview({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
@@ -298,41 +299,49 @@ export function CsvDataPreview({
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Validation Results */}
       {!validation.isValid && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             <div className="space-y-2">
-              <p><strong>Validierungsfehler gefunden:</strong></p>
+              <p>
+                <strong>Validierungsfehler gefunden:</strong>
+              </p>
               <ul className="list-disc list-inside space-y-1">
                 {validation.errors.map((error, index) => (
-                  <li key={index} className="text-sm">{error}</li>
+                  <li key={index} className="text-sm">
+                    {error}
+                  </li>
                 ))}
               </ul>
             </div>
           </AlertDescription>
         </Alert>
       )}
-      
+
       {/* Warnings */}
       {validation.warnings.length > 0 && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             <div className="space-y-2">
-              <p><strong>Warnungen:</strong></p>
+              <p>
+                <strong>Warnungen:</strong>
+              </p>
               <ul className="list-disc list-inside space-y-1">
                 {validation.warnings.map((warning, index) => (
-                  <li key={index} className="text-sm">{warning}</li>
+                  <li key={index} className="text-sm">
+                    {warning}
+                  </li>
                 ))}
               </ul>
             </div>
           </AlertDescription>
         </Alert>
       )}
-      
+
       {/* Raw CSV Preview */}
       <Card>
         <CardHeader>
@@ -346,7 +355,7 @@ export function CsvDataPreview({
             <Table>
               <TableHeader>
                 <TableRow>
-                  {mappedHeaders.map(header => (
+                  {mappedHeaders.map((header) => (
                     <TableHead key={header} className="min-w-[120px]">
                       {header}
                     </TableHead>
@@ -356,7 +365,7 @@ export function CsvDataPreview({
               <TableBody>
                 {displayRows.map((row, index) => (
                   <TableRow key={index}>
-                    {mappedHeaders.map(header => (
+                    {mappedHeaders.map((header) => (
                       <TableCell key={`${index}-${header}`} className="max-w-[200px] truncate">
                         {row[header] || <span className="text-muted-foreground">-</span>}
                       </TableCell>
@@ -366,14 +375,10 @@ export function CsvDataPreview({
               </TableBody>
             </Table>
           </ScrollArea>
-          
+
           {hasMoreRows && !showAllRows && (
             <div className="mt-4 text-center">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowAllRows(true)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowAllRows(true)}>
                 <MoreHorizontal className="h-4 w-4 mr-2" />
                 Alle {csvData.rows.length} Zeilen anzeigen
               </Button>
@@ -381,7 +386,7 @@ export function CsvDataPreview({
           )}
         </CardContent>
       </Card>
-      
+
       {/* Transformed Data Preview */}
       <Card>
         <CardHeader>
@@ -391,31 +396,26 @@ export function CsvDataPreview({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px] w-full">
-            {renderPreviewData()}
-          </ScrollArea>
-          
+          <ScrollArea className="h-[400px] w-full">{renderPreviewData()}</ScrollArea>
+
           {hasMoreRows && !showAllRows && (
             <div className="mt-4 text-center">
               <p className="text-sm text-muted-foreground">
-                Zeige {Math.min(maxPreviewRows, transformedStats.count)} von {transformedStats.count} {transformedStats.type}
+                Zeige {Math.min(maxPreviewRows, transformedStats.count)} von{' '}
+                {transformedStats.count} {transformedStats.type}
               </p>
             </div>
           )}
         </CardContent>
       </Card>
-      
+
       {/* Action Buttons */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           Zurück zu Mapping
         </Button>
-        
-        <Button 
-          onClick={onConfirm}
-          disabled={!validation.isValid}
-          className="min-w-[140px]"
-        >
+
+        <Button onClick={onConfirm} disabled={!validation.isValid} className="min-w-[140px]">
           {validation.isValid ? (
             <>
               <CheckCircle className="h-4 w-4 mr-2" />

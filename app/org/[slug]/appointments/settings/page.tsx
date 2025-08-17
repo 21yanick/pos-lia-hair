@@ -1,7 +1,7 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import { BookingRulesConfig } from '@/modules/appointments/components/settings/BookingRulesConfig'
 import { BusinessHoursConfig } from '@/modules/appointments/components/settings/BusinessHoursConfig'
 import { VacationManager } from '@/modules/appointments/components/settings/VacationManager'
-import { BookingRulesConfig } from '@/modules/appointments/components/settings/BookingRulesConfig'
 
 export const metadata: Metadata = {
   title: 'Termin-Einstellungen',
@@ -14,7 +14,8 @@ export default function AppointmentSettingsPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Termin-Einstellungen</h1>
         <p className="text-muted-foreground">
-          Konfigurieren Sie Ihre Geschäftszeiten, Urlaubszeiten und Buchungsregeln für das Appointment-System.
+          Konfigurieren Sie Ihre Geschäftszeiten, Urlaubszeiten und Buchungsregeln für das
+          Appointment-System.
         </p>
       </div>
 

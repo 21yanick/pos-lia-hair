@@ -1,9 +1,9 @@
 /**
  * Authentication Service Functions
- * 
+ *
  * Pure business logic functions for authentication and user management
  * Extracted from useItems hook for better separation of concerns
- * 
+ *
  * Features:
  * - User synchronization between Auth and Database
  * - Automatic user creation for new auth users
@@ -14,7 +14,7 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { Database } from '@/types/supabase'
+import type { Database } from '@/types/database'
 
 // ========================================
 // Types
@@ -22,13 +22,15 @@ import type { Database } from '@/types/supabase'
 
 export type User = Database['public']['Tables']['users']['Row']
 
-export type SyncAuthUserResult = {
-  success: true
-  user: User
-} | {
-  success: false
-  error: string
-}
+export type SyncAuthUserResult =
+  | {
+      success: true
+      user: User
+    }
+  | {
+      success: false
+      error: string
+    }
 
 // ========================================
 // Core Authentication Operations
@@ -51,12 +53,13 @@ export async function checkUserExists(userId: string): Promise<User | null> {
     .select('*')
     .eq('id', userId)
     .single()
-  
-  if (error && error.code !== 'PGRST116') { // PGRST116 = Not found
+
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 = Not found
     // console.error('Error checking user existence:', error)
     throw new Error('Fehler beim Prüfen der Benutzerdaten')
   }
-  
+
   return existingUser || null
 }
 
@@ -72,16 +75,16 @@ export async function createUserFromAuth(authUser: any): Promise<User> {
       username: authUser.email?.split('@')[0] || 'user',
       email: authUser.email || '',
       role: 'admin', // Default role for new users
-      active: true
+      active: true,
     })
     .select()
     .single()
-  
+
   if (error) {
     // console.error('Error creating user:', error)
     throw new Error('Fehler beim Erstellen des Benutzers')
   }
-  
+
   return newUser
 }
 
@@ -93,39 +96,38 @@ export async function syncAuthUser(): Promise<SyncAuthUserResult> {
   try {
     // Get current auth user
     const authUser = await getCurrentAuthUser()
-    
+
     if (!authUser) {
       // console.error('No authenticated user found')
-      return { 
-        success: false, 
-        error: 'Kein eingeloggter Benutzer gefunden' 
+      return {
+        success: false,
+        error: 'Kein eingeloggter Benutzer gefunden',
       }
     }
-    
+
     // Check if user exists in database
     const existingUser = await checkUserExists(authUser.id)
-    
+
     if (existingUser) {
-      return { 
-        success: true, 
-        user: existingUser 
+      return {
+        success: true,
+        user: existingUser,
       }
     }
-    
+
     // Create new user if doesn't exist
     const newUser = await createUserFromAuth(authUser)
-    
+
     // console.log('User successfully synchronized:', newUser.id)
-    return { 
-      success: true, 
-      user: newUser 
+    return {
+      success: true,
+      user: newUser,
     }
-    
   } catch (err: any) {
     console.error('Error synchronizing auth user:', err)
-    return { 
-      success: false, 
-      error: err.message || 'Fehler bei der Benutzer-Synchronisierung' 
+    return {
+      success: false,
+      error: err.message || 'Fehler bei der Benutzer-Synchronisierung',
     }
   }
 }
@@ -136,36 +138,35 @@ export async function syncAuthUser(): Promise<SyncAuthUserResult> {
  */
 export async function ensureUserExists(maxRetries = 3): Promise<SyncAuthUserResult> {
   let lastError = ''
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = await syncAuthUser()
-      
+
       if (result.success) {
         return result
       }
-      
+
       lastError = result.error
-      
+
       // Wait before retry (exponential backoff)
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
-        await new Promise(resolve => setTimeout(resolve, delay))
+        const delay = Math.min(1000 * 2 ** (attempt - 1), 5000)
+        await new Promise((resolve) => setTimeout(resolve, delay))
       }
-      
     } catch (err: any) {
       lastError = err.message
-      
+
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
-        await new Promise(resolve => setTimeout(resolve, delay))
+        const delay = Math.min(1000 * 2 ** (attempt - 1), 5000)
+        await new Promise((resolve) => setTimeout(resolve, delay))
       }
     }
   }
-  
-  return { 
-    success: false, 
-    error: `Benutzer-Synchronisierung nach ${maxRetries} Versuchen fehlgeschlagen: ${lastError}` 
+
+  return {
+    success: false,
+    error: `Benutzer-Synchronisierung nach ${maxRetries} Versuchen fehlgeschlagen: ${lastError}`,
   }
 }
 
@@ -177,7 +178,7 @@ export async function ensureUserExists(maxRetries = 3): Promise<SyncAuthUserResu
  * Update user profile
  */
 export async function updateUserProfile(
-  userId: string, 
+  userId: string,
   updates: Partial<Pick<User, 'name' | 'username' | 'email'>>
 ): Promise<SyncAuthUserResult> {
   try {
@@ -187,22 +188,21 @@ export async function updateUserProfile(
       .eq('id', userId)
       .select()
       .single()
-    
+
     if (error) {
       // console.error('Error updating user profile:', error)
       throw error
     }
-    
-    return { 
-      success: true, 
-      user: updatedUser 
+
+    return {
+      success: true,
+      user: updatedUser,
     }
-    
   } catch (err: any) {
     console.error('Error in updateUserProfile:', err)
-    return { 
-      success: false, 
-      error: err.message || 'Fehler beim Aktualisieren des Benutzerprofils' 
+    return {
+      success: false,
+      error: err.message || 'Fehler beim Aktualisieren des Benutzerprofils',
     }
   }
 }
@@ -212,19 +212,14 @@ export async function updateUserProfile(
  */
 export async function getUserById(userId: string): Promise<User | null> {
   try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    
+    const { data: user, error } = await supabase.from('users').select('*').eq('id', userId).single()
+
     if (error && error.code !== 'PGRST116') {
       // console.error('Error getting user by ID:', error)
       throw error
     }
-    
+
     return user || null
-    
   } catch (err: any) {
     console.error('Error in getUserById:', err)
     return null
@@ -247,7 +242,9 @@ export async function isAuthenticated(): Promise<boolean> {
  * Get current session
  */
 export async function getCurrentSession() {
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   return session
 }
 
@@ -257,14 +254,13 @@ export async function getCurrentSession() {
 export async function signOut(): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase.auth.signOut()
-    
+
     if (error) {
       // console.error('Error signing out:', error)
       return { success: false, error: error.message }
     }
-    
+
     return { success: true }
-    
   } catch (err: any) {
     console.error('Error in signOut:', err)
     return { success: false, error: err.message || 'Fehler beim Abmelden' }

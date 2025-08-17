@@ -1,16 +1,40 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from "@/shared/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
-import { Badge } from "@/shared/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Loader2, AlertCircle, Edit, Mail, Phone, ExternalLink, MapPin, Building, CreditCard, FileText } from "lucide-react"
-import { getSupplierById } from '@/shared/services/supplierServices'
+import {
+  AlertCircle,
+  Building,
+  CreditCard,
+  Edit,
+  ExternalLink,
+  FileText,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import { getSupplierById } from '@/shared/services/supplierServices'
 import type { Supplier } from '@/shared/types/suppliers'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 
 interface SupplierViewDialogProps {
   open: boolean
@@ -23,7 +47,7 @@ export function SupplierViewDialog({
   open,
   onOpenChange,
   onEdit,
-  supplierId
+  supplierId,
 }: SupplierViewDialogProps) {
   const { currentOrganization } = useCurrentOrganization()
   const [loading, setLoading] = useState(false)
@@ -45,7 +69,7 @@ export function SupplierViewDialog({
 
     try {
       const supplierData = await getSupplierById(supplierId, currentOrganization.id)
-      
+
       if (!supplierData) {
         throw new Error('Lieferant nicht gefunden')
       }
@@ -81,14 +105,12 @@ export function SupplierViewDialog({
           <DialogTitle className="flex items-center justify-between">
             <span>Lieferant Details</span>
             {supplier && (
-              <Badge variant={supplier.is_active ? "default" : "secondary"}>
+              <Badge variant={supplier.is_active ? 'default' : 'secondary'}>
                 {supplier.is_active ? 'Aktiv' : 'Inaktiv'}
               </Badge>
             )}
           </DialogTitle>
-          <DialogDescription>
-            Detaillierte Informationen zum Lieferanten
-          </DialogDescription>
+          <DialogDescription>Detaillierte Informationen zum Lieferanten</DialogDescription>
         </DialogHeader>
 
         {loading ? (
@@ -116,9 +138,7 @@ export function SupplierViewDialog({
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Kategorie</label>
                     <div className="mt-1">
-                      <Badge variant="outline">
-                        {SUPPLIER_CATEGORIES[supplier.category]}
-                      </Badge>
+                      <Badge variant="outline">{SUPPLIER_CATEGORIES[supplier.category]}</Badge>
                     </div>
                   </div>
                 </div>
@@ -147,7 +167,7 @@ export function SupplierViewDialog({
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">E-Mail</label>
                         <div>
-                          <a 
+                          <a
                             href={`mailto:${supplier.contact_email}`}
                             className="text-primary hover:underline"
                           >
@@ -157,14 +177,14 @@ export function SupplierViewDialog({
                       </div>
                     </div>
                   )}
-                  
+
                   {supplier.contact_phone && (
                     <div className="flex items-center space-x-3">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Telefon</label>
                         <div>
-                          <a 
+                          <a
                             href={`tel:${supplier.contact_phone}`}
                             className="text-primary hover:underline"
                           >
@@ -174,14 +194,14 @@ export function SupplierViewDialog({
                       </div>
                     </div>
                   )}
-                  
+
                   {supplier.website && (
                     <div className="flex items-center space-x-3">
                       <ExternalLink className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Website</label>
                         <div>
-                          <a 
+                          <a
                             href={supplier.website}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -214,12 +234,8 @@ export function SupplierViewDialog({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {supplier.address_line1 && (
-                      <p>{supplier.address_line1}</p>
-                    )}
-                    {supplier.address_line2 && (
-                      <p>{supplier.address_line2}</p>
-                    )}
+                    {supplier.address_line1 && <p>{supplier.address_line1}</p>}
+                    {supplier.address_line2 && <p>{supplier.address_line2}</p>}
                     <p>
                       {supplier.postal_code && supplier.postal_code + ' '}
                       {supplier.city}
@@ -248,7 +264,9 @@ export function SupplierViewDialog({
                   )}
                   {supplier.vat_number && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">UID-Nummer</label>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        UID-Nummer
+                      </label>
                       <p className="font-mono text-sm">{supplier.vat_number}</p>
                     </div>
                   )}
@@ -281,18 +299,11 @@ export function SupplierViewDialog({
         ) : null}
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleOpenChange(false)}
-          >
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             Schließen
           </Button>
           {supplier && onEdit && (
-            <Button
-              type="button"
-              onClick={handleEdit}
-            >
+            <Button type="button" onClick={handleEdit}>
               <Edit className="mr-2 h-4 w-4" />
               Bearbeiten
             </Button>

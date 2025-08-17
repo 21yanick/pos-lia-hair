@@ -1,9 +1,9 @@
 /**
  * Customer Service Functions
- * 
+ *
  * Pure business logic functions for customer management operations
  * Multi-tenant secure with organization-scoped operations
- * 
+ *
  * Features:
  * - Customer CRUD operations with multi-tenant security
  * - Customer notes management (flexible block system)
@@ -14,19 +14,29 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { Database } from '@/types/supabase'
+import type { Database } from '@/types/database'
 
 // ========================================
 // Types
 // ========================================
 
 export type Customer = Database['public']['Tables']['customers']['Row']
-export type CustomerInsert = Omit<Database['public']['Tables']['customers']['Insert'], 'id' | 'created_at' | 'updated_at'>
-export type CustomerUpdate = Partial<Omit<Database['public']['Tables']['customers']['Update'], 'id' | 'created_at' | 'updated_at'>> & { id: string }
+export type CustomerInsert = Omit<
+  Database['public']['Tables']['customers']['Insert'],
+  'id' | 'created_at' | 'updated_at'
+>
+export type CustomerUpdate = Partial<
+  Omit<Database['public']['Tables']['customers']['Update'], 'id' | 'created_at' | 'updated_at'>
+> & { id: string }
 
 export type CustomerNote = Database['public']['Tables']['customer_notes']['Row']
-export type CustomerNoteInsert = Omit<Database['public']['Tables']['customer_notes']['Insert'], 'id' | 'created_at' | 'updated_at'>
-export type CustomerNoteUpdate = Partial<Omit<Database['public']['Tables']['customer_notes']['Update'], 'id' | 'created_at' | 'updated_at'>> & { id: string }
+export type CustomerNoteInsert = Omit<
+  Database['public']['Tables']['customer_notes']['Insert'],
+  'id' | 'created_at' | 'updated_at'
+>
+export type CustomerNoteUpdate = Partial<
+  Omit<Database['public']['Tables']['customer_notes']['Update'], 'id' | 'created_at' | 'updated_at'>
+> & { id: string }
 
 export interface CustomerWithNotes extends Customer {
   notes: CustomerNote[]
@@ -46,7 +56,10 @@ export type CustomerFormData = {
  * Get current user ID from session
  */
 async function getCurrentUserId(): Promise<string> {
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
   if (error || !user) {
     throw new Error('Benutzer nicht authentifiziert')
   }
@@ -78,7 +91,7 @@ export async function getCustomers(
     limit?: number
     offset?: number
   }
-): Promise<{ data: Customer[], count: number }> {
+): Promise<{ data: Customer[]; count: number }> {
   const validOrgId = validateOrganizationId(organizationId)
 
   let query = supabase
@@ -92,7 +105,9 @@ export async function getCustomers(
   }
 
   if (options?.search) {
-    query = query.or(`name.ilike.%${options.search}%,phone.ilike.%${options.search}%,email.ilike.%${options.search}%`)
+    query = query.or(
+      `name.ilike.%${options.search}%,phone.ilike.%${options.search}%,email.ilike.%${options.search}%`
+    )
   }
 
   if (options?.limit) {
@@ -115,10 +130,7 @@ export async function getCustomers(
 /**
  * Search customers by name, phone, or email
  */
-export async function searchCustomers(
-  organizationId: string,
-  query: string
-): Promise<Customer[]> {
+export async function searchCustomers(organizationId: string, query: string): Promise<Customer[]> {
   if (!query || query.length < 2) {
     return []
   }
@@ -144,7 +156,10 @@ export async function searchCustomers(
 /**
  * Get customer by ID
  */
-export async function getCustomerById(id: string, organizationId: string): Promise<Customer | null> {
+export async function getCustomerById(
+  id: string,
+  organizationId: string
+): Promise<Customer | null> {
   const validOrgId = validateOrganizationId(organizationId)
 
   const { data, error } = await supabase
@@ -178,7 +193,7 @@ export async function createCustomer(
     email: data.email || null,
     organization_id: validOrgId,
     created_by: userId,
-    is_active: true
+    is_active: true,
   }
 
   const { data: customer, error } = await supabase
@@ -206,7 +221,7 @@ export async function updateCustomer(
 
   const updateData: Partial<CustomerInsert> = {
     ...data,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   }
 
   // Only explicitly set phone/email to null if they were provided in the update
@@ -235,10 +250,7 @@ export async function updateCustomer(
 /**
  * Soft delete customer (set is_active = false)
  */
-export async function deleteCustomer(
-  customerId: string,
-  organizationId: string
-): Promise<void> {
+export async function deleteCustomer(customerId: string, organizationId: string): Promise<void> {
   const validOrgId = validateOrganizationId(organizationId)
 
   const { error } = await supabase
@@ -283,7 +295,7 @@ export async function getCustomerWithNotes(
 
   return {
     ...customer,
-    notes: notes || []
+    notes: notes || [],
   }
 }
 
@@ -308,7 +320,7 @@ export async function createCustomerNote(
     block_name: blockName,
     content: content,
     organization_id: validOrgId,
-    created_by: userId
+    created_by: userId,
   }
 
   const { data: note, error } = await supabase
@@ -336,7 +348,7 @@ export async function updateCustomerNote(
 
   const updateData = {
     ...data,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   }
 
   const { data: note, error } = await supabase
@@ -357,10 +369,7 @@ export async function updateCustomerNote(
 /**
  * Delete customer note
  */
-export async function deleteCustomerNote(
-  noteId: string,
-  organizationId: string
-): Promise<void> {
+export async function deleteCustomerNote(noteId: string, organizationId: string): Promise<void> {
   const validOrgId = validateOrganizationId(organizationId)
 
   const { error } = await supabase

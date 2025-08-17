@@ -1,24 +1,24 @@
 'use client'
 
-import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
-import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
+import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
 import {
-  createSale as createSaleService,
+  type CartItem,
+  type CreateSaleData,
   cancelSale as cancelSaleService,
-  getTodaySales,
-  getSalesForDateRange as getSalesForDateRangeService,
   createReceiptPDF as createReceiptPDFService,
+  createSale as createSaleService,
+  getSalesForDateRange as getSalesForDateRangeService,
+  getTodaySales,
   type Sale,
   type SaleInsert,
-  type SaleUpdate,
   type SaleItem,
   type SaleItemInsert,
-  type CreateSaleData,
-  type CartItem
+  type SaleUpdate,
 } from '@/shared/services/salesService'
 
 // Re-export types for compatibility
@@ -26,14 +26,14 @@ export type { Sale, SaleInsert, SaleUpdate, SaleItem, SaleItemInsert, CreateSale
 
 /**
  * React Query-powered Sales Hook
- * 
+ *
  * Features:
  * - Optimistic updates for instant POS feedback
- * - Automatic cache invalidation 
+ * - Automatic cache invalidation
  * - Background refetching for real-time data
  * - Multi-tenant security
  * - Legacy-compatible interface
- * 
+ *
  * Performance Optimizations:
  * - Parallel queries where possible
  * - Smart cache strategies per data volatility
@@ -46,16 +46,16 @@ interface UseSalesReturn {
   error: string | null
   sales: Sale[]
   currentSale: Sale | null
-  
+
   // Core Operations (Legacy Compatible)
   createSale: (data: CreateSaleData) => Promise<any>
   createReceiptPDF: (sale: Sale, items: CartItem[]) => Promise<any>
-  
-  // Query Operations (Legacy Compatible) 
+
+  // Query Operations (Legacy Compatible)
   loadTodaySales: () => Promise<any>
   getSalesForDateRange: (startDate: string, endDate: string) => Promise<any>
   loadSalesForDateRange: (startDate: string, endDate: string) => Promise<any>
-  
+
   // Modification Operations (Legacy Compatible)
   cancelSale: (saleId: string) => Promise<any>
 }
@@ -64,11 +64,11 @@ export function useSales(): UseSalesReturn {
   const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
   const { createSaleCashMovement, reverseCashMovement } = useCashMovements()
-  
+
   // Local state for legacy compatibility
   const [currentSale, setCurrentSale] = useState<Sale | null>(null)
   const [error, setError] = useState<string | null>(null)
-  
+
   const organizationId = currentOrganization?.id
 
   if (process.env.NODE_ENV === 'development') {
@@ -82,11 +82,11 @@ export function useSales(): UseSalesReturn {
     data: sales = [],
     isLoading: isTodayLoading,
     error: todayError,
-    refetch: refetchTodaySales
+    refetch: refetchTodaySales,
   } = useQuery({
-    queryKey: queryKeys.business.sales.list(organizationId || '', { 
+    queryKey: queryKeys.business.sales.list(organizationId || '', {
       type: 'today',
-      date: new Date().toISOString().split('T')[0]
+      date: new Date().toISOString().split('T')[0],
     }),
     queryFn: async () => {
       if (!organizationId) {
@@ -98,8 +98,8 @@ export function useSales(): UseSalesReturn {
     staleTime: cacheConfig.sales.staleTime,
     gcTime: cacheConfig.sales.gcTime,
     meta: {
-      errorMessage: 'Fehler beim Laden der heutigen Verkäufe'
-    }
+      errorMessage: 'Fehler beim Laden der heutigen Verkäufe',
+    },
   })
 
   // ========================================
@@ -110,30 +110,30 @@ export function useSales(): UseSalesReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const result = await createSaleService(data, organizationId, {
-        createSaleCashMovement
+        createSaleCashMovement,
       })
-      
+
       if (!result.success) {
         throw new Error(result.error)
       }
-      
+
       return result
     },
     onMutate: async (newSaleData) => {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.sales.list(organizationId, { type: 'today' })
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.sales.list(organizationId, { type: 'today' }),
       })
 
       // Snapshot the previous value
       const previousSales = queryClient.getQueryData(
-        queryKeys.business.sales.list(organizationId, { 
+        queryKeys.business.sales.list(organizationId, {
           type: 'today',
-          date: new Date().toISOString().split('T')[0]
+          date: new Date().toISOString().split('T')[0],
         })
       ) as Sale[]
 
@@ -147,14 +147,14 @@ export function useSales(): UseSalesReturn {
         user_id: 'current-user',
         organization_id: organizationId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }
 
       // Optimistically update the cache
       queryClient.setQueryData(
-        queryKeys.business.sales.list(organizationId, { 
+        queryKeys.business.sales.list(organizationId, {
           type: 'today',
-          date: new Date().toISOString().split('T')[0]
+          date: new Date().toISOString().split('T')[0],
         }),
         (old: Sale[] = []) => [optimisticSale, ...old]
       )
@@ -166,14 +166,14 @@ export function useSales(): UseSalesReturn {
       // Rollback on error
       if (context?.previousSales && organizationId) {
         queryClient.setQueryData(
-          queryKeys.business.sales.list(organizationId, { 
+          queryKeys.business.sales.list(organizationId, {
             type: 'today',
-            date: new Date().toISOString().split('T')[0]
+            date: new Date().toISOString().split('T')[0],
           }),
           context.previousSales
         )
       }
-      
+
       setError(error.message || 'Fehler beim Erstellen des Verkaufs')
       toast.error(error.message || 'Fehler beim Erstellen des Verkaufs')
     },
@@ -181,7 +181,7 @@ export function useSales(): UseSalesReturn {
       setCurrentSale(data.sale)
       setError(null)
       toast.success('Verkauf erfolgreich erstellt')
-      
+
       if (process.env.NODE_ENV === 'development') {
         // console.log('🟢 React Query: Sale created:', data.sale.id)
       }
@@ -189,17 +189,20 @@ export function useSales(): UseSalesReturn {
     onSettled: () => {
       // Always refetch after mutation to ensure data consistency
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.sales.all(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.sales.all(organizationId),
         })
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.cash.balance(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.cash.balance(organizationId),
         })
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.dashboard.todayStats(organizationId, new Date().toISOString().split('T')[0])
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.dashboard.todayStats(
+            organizationId,
+            new Date().toISOString().split('T')[0]
+          ),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -210,43 +213,41 @@ export function useSales(): UseSalesReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const result = await cancelSaleService(saleId, organizationId, {
-        reverseCashMovement
+        reverseCashMovement,
       })
-      
+
       if (!result.success) {
         throw new Error(result.error)
       }
-      
+
       return result
     },
     onMutate: async (saleId) => {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.sales.list(organizationId)
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.sales.list(organizationId),
       })
 
       // Snapshot the previous value
       const previousSales = queryClient.getQueryData(
-        queryKeys.business.sales.list(organizationId, { 
+        queryKeys.business.sales.list(organizationId, {
           type: 'today',
-          date: new Date().toISOString().split('T')[0]
+          date: new Date().toISOString().split('T')[0],
         })
       ) as Sale[]
 
       // Optimistically update the sale status
       queryClient.setQueryData(
-        queryKeys.business.sales.list(organizationId, { 
+        queryKeys.business.sales.list(organizationId, {
           type: 'today',
-          date: new Date().toISOString().split('T')[0]
+          date: new Date().toISOString().split('T')[0],
         }),
-        (old: Sale[] = []) => 
-          old.map(sale => 
-            sale.id === saleId ? { ...sale, status: 'cancelled' } : sale
-          )
+        (old: Sale[] = []) =>
+          old.map((sale) => (sale.id === saleId ? { ...sale, status: 'cancelled' } : sale))
       )
 
       // Return context with the snapshotted value
@@ -256,14 +257,14 @@ export function useSales(): UseSalesReturn {
       // Rollback on error
       if (context?.previousSales && organizationId) {
         queryClient.setQueryData(
-          queryKeys.business.sales.list(organizationId, { 
+          queryKeys.business.sales.list(organizationId, {
             type: 'today',
-            date: new Date().toISOString().split('T')[0]
+            date: new Date().toISOString().split('T')[0],
           }),
           context.previousSales
         )
       }
-      
+
       setError(error.message || 'Fehler beim Stornieren des Verkaufs')
       toast.error(error.message || 'Fehler beim Stornieren des Verkaufs')
     },
@@ -274,14 +275,14 @@ export function useSales(): UseSalesReturn {
     onSettled: () => {
       // Always refetch after mutation
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.sales.all(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.sales.all(organizationId),
         })
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.cash.balance(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.cash.balance(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -303,7 +304,7 @@ export function useSales(): UseSalesReturn {
     if (!organizationId) {
       return { success: false, error: 'No organization selected' }
     }
-    
+
     try {
       return await createReceiptPDFService(sale, items, organizationId)
     } catch (error: any) {
@@ -327,11 +328,11 @@ export function useSales(): UseSalesReturn {
   const getSalesForDateRange = async (startDate: string, endDate: string) => {
     try {
       setError(null)
-      
+
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const salesData = await getSalesForDateRangeService(organizationId, startDate, endDate)
       return { success: true, sales: salesData }
     } catch (err: any) {
@@ -343,19 +344,19 @@ export function useSales(): UseSalesReturn {
   // Load Sales for Date Range (Legacy Compatible - with state update)
   const loadSalesForDateRange = async (startDate: string, endDate: string) => {
     const result = await getSalesForDateRange(startDate, endDate)
-    
+
     // Update query cache with the loaded data
     if (result.success && organizationId) {
       queryClient.setQueryData(
-        queryKeys.business.sales.list(organizationId, { 
+        queryKeys.business.sales.list(organizationId, {
           type: 'dateRange',
           startDate,
-          endDate
+          endDate,
         }),
         result.sales
       )
     }
-    
+
     return result
   }
 
@@ -384,17 +385,17 @@ export function useSales(): UseSalesReturn {
     error: combinedError,
     sales,
     currentSale,
-    
+
     // Core Operations (Legacy Compatible)
     createSale,
     createReceiptPDF,
-    
-    // Query Operations (Legacy Compatible) 
+
+    // Query Operations (Legacy Compatible)
     loadTodaySales,
     getSalesForDateRange,
     loadSalesForDateRange,
-    
+
     // Modification Operations (Legacy Compatible)
-    cancelSale
+    cancelSale,
   }
 }

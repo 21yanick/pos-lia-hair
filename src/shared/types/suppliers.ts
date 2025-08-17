@@ -1,25 +1,30 @@
 // Supplier Types for Master Table Implementation
 // Provides normalized supplier data for consistent analytics
 
-import type { Database } from '@/types/supabase'
+import type { Database } from '@/types/database'
 
 // Core supplier types (from database)
 export type Supplier = Database['public']['Tables']['suppliers']['Row']
-export type SupplierInsert = Omit<Database['public']['Tables']['suppliers']['Insert'], 'id' | 'created_at' | 'updated_at'>
-export type SupplierUpdate = Partial<Omit<Database['public']['Tables']['suppliers']['Update'], 'id' | 'created_at' | 'updated_at'>> & { id: string }
+export type SupplierInsert = Omit<
+  Database['public']['Tables']['suppliers']['Insert'],
+  'id' | 'created_at' | 'updated_at'
+>
+export type SupplierUpdate = Partial<
+  Omit<Database['public']['Tables']['suppliers']['Update'], 'id' | 'created_at' | 'updated_at'>
+> & { id: string }
 
 // Supplier Category enum for better TypeScript support
-export type SupplierCategory = 
-  | 'beauty_supplies'    // Haarprodukte, Kosmetik
-  | 'equipment'          // Geräte, Möbel  
-  | 'utilities'          // Strom, Wasser, Internet
-  | 'rent'              // Miete, Nebenkosten
-  | 'insurance'         // Versicherungen
+export type SupplierCategory =
+  | 'beauty_supplies' // Haarprodukte, Kosmetik
+  | 'equipment' // Geräte, Möbel
+  | 'utilities' // Strom, Wasser, Internet
+  | 'rent' // Miete, Nebenkosten
+  | 'insurance' // Versicherungen
   | 'professional_services' // Steuerberater, Anwalt
-  | 'retail'            // Coop, Migros für Büromaterial
+  | 'retail' // Coop, Migros für Büromaterial
   | 'online_marketplace' // AliExpress, Amazon
-  | 'real_estate'       // Immobilienfirmen
-  | 'other'             // Sonstiges
+  | 'real_estate' // Immobilienfirmen
+  | 'other' // Sonstiges
 
 // Category labels for UI display
 export const SUPPLIER_CATEGORIES: Record<SupplierCategory, string> = {
@@ -32,7 +37,7 @@ export const SUPPLIER_CATEGORIES: Record<SupplierCategory, string> = {
   retail: 'Einzelhandel',
   online_marketplace: 'Online Marketplace',
   real_estate: 'Immobilien',
-  other: 'Sonstiges'
+  other: 'Sonstiges',
 } as const
 
 // Enhanced supplier with aggregated data for analytics

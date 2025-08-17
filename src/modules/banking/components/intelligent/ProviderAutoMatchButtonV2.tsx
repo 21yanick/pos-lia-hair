@@ -1,29 +1,21 @@
-"use client"
+'use client'
 
+import { AlertCircle, Brain, CheckCircle2, Eye, Loader2, RotateCcw, Zap } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from "@/shared/components/ui/button"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Badge } from "@/shared/components/ui/badge"
-import { 
-  Brain, 
-  Eye, 
-  CheckCircle2, 
-  AlertCircle, 
-  Loader2, 
-  Zap,
-  RotateCcw
-} from "lucide-react"
-import { 
-  getProviderMatchSuggestions, 
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  createProviderMatch,
   executeAutoProviderMatch,
-  createProviderMatch
+  getProviderMatchSuggestions,
 } from '../../services/bankingApi'
-import { ProviderMatchPreview } from './ProviderMatchPreview'
-import type { 
-  ProviderMatchResult, 
+import type {
+  ProviderAutoMatchResult,
   ProviderMatchCandidate,
-  ProviderAutoMatchResult 
+  ProviderMatchResult,
 } from '../../services/matchingTypes'
+import { ProviderMatchPreview } from './ProviderMatchPreview'
 
 interface ProviderAutoMatchButtonV2Props {
   onMatchComplete: () => void
@@ -33,10 +25,10 @@ interface ProviderAutoMatchButtonV2Props {
 
 type AnalysisPhase = 'idle' | 'analyzing' | 'preview' | 'executing' | 'completed'
 
-export function ProviderAutoMatchButtonV2({ 
-  onMatchComplete, 
+export function ProviderAutoMatchButtonV2({
+  onMatchComplete,
   onAnalysisComplete,
-  className 
+  className,
 }: ProviderAutoMatchButtonV2Props) {
   const [phase, setPhase] = useState<AnalysisPhase>('idle')
   const [suggestions, setSuggestions] = useState<ProviderMatchResult | null>(null)
@@ -48,20 +40,19 @@ export function ProviderAutoMatchButtonV2({
     setPhase('analyzing')
     setError(null)
     setLastResult(null)
-    
+
     try {
       const { data, error: apiError } = await getProviderMatchSuggestions()
-      
+
       if (apiError || !data) {
         throw new Error(apiError?.message || 'Fehler beim Analysieren der Matches')
       }
-      
+
       setSuggestions(data)
       setPhase('preview')
-      
+
       // Notify parent about found candidates
       onAnalysisComplete?.(data.candidates)
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
       setPhase('idle')
@@ -80,7 +71,7 @@ export function ProviderAutoMatchButtonV2({
     setPhase('executing')
     setShowPreview(false)
     setError(null)
-    
+
     try {
       const processedCandidates: ProviderMatchCandidate[] = []
       const errors: string[] = []
@@ -98,10 +89,14 @@ export function ProviderAutoMatchButtonV2({
             matchedPairs++
             processedCandidates.push(candidate)
           } else {
-            errors.push(`Sale ${candidate.sale.id}: ${matchResult.error?.message || 'Unbekannter Fehler'}`)
+            errors.push(
+              `Sale ${candidate.sale.id}: ${matchResult.error?.message || 'Unbekannter Fehler'}`
+            )
           }
         } catch (error) {
-          errors.push(`Sale ${candidate.sale.id}: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`)
+          errors.push(
+            `Sale ${candidate.sale.id}: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`
+          )
         }
       }
 
@@ -109,20 +104,19 @@ export function ProviderAutoMatchButtonV2({
         success: errors.length === 0,
         matchedPairs,
         errors,
-        processedCandidates
+        processedCandidates,
       }
-      
+
       setLastResult(result)
       setPhase('completed')
-      
+
       if (matchedPairs > 0) {
         onMatchComplete()
       }
-      
+
       if (errors.length > 0) {
         setError(`${matchedPairs} Matches erfolgreich, ${errors.length} Fehler`)
       }
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
       setPhase('preview')
@@ -146,24 +140,14 @@ export function ProviderAutoMatchButtonV2({
       {/* Main Action Button */}
       <div className="flex items-center gap-3">
         {phase === 'idle' && (
-          <Button
-            onClick={startAnalysis}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          >
+          <Button onClick={startAnalysis} variant="outline" size="lg" className="flex-1">
             <Brain className="w-4 h-4 mr-2" />
             Intelligente Analyse starten
           </Button>
         )}
 
         {phase === 'analyzing' && (
-          <Button
-            disabled
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          >
+          <Button disabled variant="outline" size="lg" className="flex-1">
             <Brain className="w-4 h-4 mr-2 animate-pulse" />
             Analysiere Matches...
           </Button>
@@ -171,44 +155,25 @@ export function ProviderAutoMatchButtonV2({
 
         {phase === 'preview' && (
           <>
-            <Button
-              onClick={openPreview}
-              variant="default"
-              size="lg"
-              className="flex-1"
-            >
+            <Button onClick={openPreview} variant="default" size="lg" className="flex-1">
               <Eye className="w-4 h-4 mr-2" />
               {totalCandidates} Matches gefunden - Vorschau
             </Button>
-            <Button
-              onClick={resetToIdle}
-              variant="outline"
-              size="lg"
-            >
+            <Button onClick={resetToIdle} variant="outline" size="lg">
               <RotateCcw className="w-4 h-4" />
             </Button>
           </>
         )}
 
         {phase === 'executing' && (
-          <Button
-            disabled
-            variant="default"
-            size="lg"
-            className="flex-1"
-          >
+          <Button disabled variant="default" size="lg" className="flex-1">
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             Führe Matches aus...
           </Button>
         )}
 
         {phase === 'completed' && (
-          <Button
-            onClick={resetToIdle}
-            variant="outline"
-            size="lg"
-            className="flex-1"
-          >
+          <Button onClick={resetToIdle} variant="outline" size="lg" className="flex-1">
             <RotateCcw className="w-4 h-4 mr-2" />
             Neue Analyse
           </Button>
@@ -243,7 +208,8 @@ export function ProviderAutoMatchButtonV2({
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
-            <strong>Erfolgreich!</strong> {lastResult.matchedPairs} Provider-Matches automatisch erstellt.
+            <strong>Erfolgreich!</strong> {lastResult.matchedPairs} Provider-Matches automatisch
+            erstellt.
           </AlertDescription>
         </Alert>
       )}
@@ -252,9 +218,7 @@ export function ProviderAutoMatchButtonV2({
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error}
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
@@ -266,8 +230,12 @@ export function ProviderAutoMatchButtonV2({
             <span className="font-medium text-blue-800">Intelligente Analyse</span>
           </div>
           <div className="space-y-1">
-            <div>📊 <strong>{totalCandidates}</strong> Kandidaten gefunden</div>
-            <div>🎯 Höchste Confidence: <strong>{suggestions.summary.highestConfidence}%</strong></div>
+            <div>
+              📊 <strong>{totalCandidates}</strong> Kandidaten gefunden
+            </div>
+            <div>
+              🎯 Höchste Confidence: <strong>{suggestions.summary.highestConfidence}%</strong>
+            </div>
             {autoMatchCount > 0 && (
               <div className="text-green-700 font-medium">
                 ⚡ {autoMatchCount} Paare bereit für Auto-Match

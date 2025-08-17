@@ -1,14 +1,14 @@
+import { Loader2 } from 'lucide-react'
 import { Suspense } from 'react'
 import { SmartRedirectPage } from '@/shared/components/SmartRedirectPage'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Loader2 } from 'lucide-react'
 
 /**
  * 🏠 ROOT LANDING PAGE - SMART PWA REDIRECT
- * 
+ *
  * Intelligent redirect system for PWA shortcuts:
  * - ?quick=appointments → /org/{slug}/appointments
- * - ?quick=pos → /org/{slug}/pos  
+ * - ?quick=pos → /org/{slug}/pos
  * - No params → /org/{slug}/dashboard (last org)
  * - Fallback → /organizations
  */

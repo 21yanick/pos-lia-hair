@@ -1,17 +1,17 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef } from 'react'
 
 /**
  * Global Page Visibility Handler
- * 
+ *
  * Handles browser tab focus/visibility changes with targeted
  * invalidation to avoid over-fetching and race conditions.
- * 
+ *
  * Features:
  * - Debounced event handling
- * - Targeted query invalidation  
+ * - Targeted query invalidation
  * - Excludes core auth/org queries
  * - Performance optimized
  */
@@ -19,43 +19,41 @@ export function PageVisibilityHandler() {
   const queryClient = useQueryClient()
   const isInitialLoad = useRef(true)
   const debounceTimer = useRef<number>()
-  
+
   const handleTabFocus = useCallback(() => {
     // Skip initial page load to avoid unnecessary requests
     if (isInitialLoad.current) {
       isInitialLoad.current = false
       return
     }
-    
+
     // Clear any existing debounce timer
     if (debounceTimer.current) {
       window.clearTimeout(debounceTimer.current)
     }
-    
+
     // Debounce to avoid multiple rapid calls
     debounceTimer.current = window.setTimeout(() => {
       // console.log('🔄 Tab refocused: Refreshing data queries...')
-      
+
       // 🎯 TARGETED INVALIDATION: Only invalidate data queries
       // Use actual query key patterns from queryKeys.ts
-      
+
       // Business data queries (organization-scoped)
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: ['business'],
-        exact: false 
+        exact: false,
       })
-      
+
       // Note: We don't need to specify each sub-key individually
       // because ['business'] will match all business.* queries
       // like ['business', orgId, 'expenses'], ['business', orgId, 'cash'], etc.
-      
+
       // This approach is more maintainable and covers:
       // - expenses, cash, sales, items, documents
       // - dashboard stats and real-time data
       // - all organization-scoped business data
-      
     }, 300) // 300ms debounce to avoid rapid-fire events
-    
   }, [queryClient])
 
   useEffect(() => {
@@ -66,12 +64,12 @@ export function PageVisibilityHandler() {
         handleTabFocus()
       }
     }
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
-      
+
       // Cleanup debounce timer
       if (debounceTimer.current) {
         window.clearTimeout(debounceTimer.current)

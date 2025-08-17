@@ -41,7 +41,7 @@ export const assignCustomerToSale = async (
     .from('sales')
     .update({
       customer_id: customer?.id || null,
-      customer_name: customer?.name || null
+      customer_name: customer?.name || null,
     })
     .eq('id', saleId)
     .eq('organization_id', organizationId)
@@ -60,43 +60,40 @@ export const useTransactionCustomer = (organizationId: string) => {
 
   // Customer assignment mutation
   const assignCustomerMutation = useMutation({
-    mutationFn: ({ 
-      transactionId, 
-      customer 
-    }: { 
+    mutationFn: ({
+      transactionId,
+      customer,
+    }: {
       transactionId: string
-      customer: Customer | null 
+      customer: Customer | null
     }) => assignCustomerToSale(transactionId, customer, organizationId),
-    
+
     onMutate: async ({ transactionId, customer }) => {
-      // Cancel outgoing transaction queries  
+      // Cancel outgoing transaction queries
       await queryClient.cancelQueries({
-        queryKey: transactionKeys.lists()
+        queryKey: transactionKeys.lists(),
       })
 
       // Snapshot previous transaction data
-      const previousTransactions = queryClient.getQueryData(
-        transactionKeys.lists()
-      ) as UnifiedTransaction[] | undefined
+      const previousTransactions = queryClient.getQueryData(transactionKeys.lists()) as
+        | UnifiedTransaction[]
+        | undefined
 
       // Find and update the specific transaction optimistically
       if (previousTransactions) {
-        const updatedTransactions = previousTransactions.map(transaction => {
+        const updatedTransactions = previousTransactions.map((transaction) => {
           if (transaction.id === transactionId && transaction.transaction_type === 'sale') {
             return {
               ...transaction,
               customer_id: customer?.id || null,
-              customer_name: customer?.name || null
+              customer_name: customer?.name || null,
             }
           }
           return transaction
         })
 
         // Optimistically update cache
-        queryClient.setQueryData(
-          transactionKeys.lists(),
-          updatedTransactions
-        )
+        queryClient.setQueryData(transactionKeys.lists(), updatedTransactions)
       }
 
       return { previousTransactions }
@@ -105,10 +102,7 @@ export const useTransactionCustomer = (organizationId: string) => {
     onError: (error, variables, context) => {
       // Rollback optimistic update
       if (context?.previousTransactions) {
-        queryClient.setQueryData(
-          transactionKeys.lists(),
-          context.previousTransactions
-        )
+        queryClient.setQueryData(transactionKeys.lists(), context.previousTransactions)
       }
 
       // Show error toast
@@ -122,17 +116,17 @@ export const useTransactionCustomer = (organizationId: string) => {
       } else {
         toast.success('Kundenzuordnung erfolgreich entfernt')
       }
-      
+
       // Invalidate transactions to refetch fresh data
       queryClient.invalidateQueries({
-        queryKey: transactionKeys.lists()
+        queryKey: transactionKeys.lists(),
       })
-    }
+    },
   })
 
   return {
     assignCustomer: assignCustomerMutation.mutateAsync,
     isAssigning: assignCustomerMutation.isPending,
-    error: assignCustomerMutation.error
+    error: assignCustomerMutation.error,
   }
 }

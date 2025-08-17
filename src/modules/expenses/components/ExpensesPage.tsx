@@ -1,27 +1,45 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useExpenses, type ExpenseCategory } from "@/shared/hooks/business/useExpenses"
-import { useExpenseCategories } from "@/shared/hooks/business/useExpenseCategories"
-import { ExpensePDFActions } from "./ExpensePDFActions"
-import { ExpenseActions } from "./ExpenseActions"
-import { useToast } from "@/shared/hooks/core/useToast"
-import { formatDateForDisplay, getTodaySwissString, formatDateForAPI } from "@/shared/utils/dateUtils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
-import { Label } from "@/shared/components/ui/label"
-import { Textarea } from "@/shared/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/components/ui/dialog"
-import { Badge } from "@/shared/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
-import { Plus, Upload, Download, Search, Filter, Calendar } from "lucide-react"
-import { supabase } from "@/shared/lib/supabase/client"
+import { Calendar, Download, Filter, Plus, Search, Upload } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { SupplierAutocomplete } from '@/shared/components/supplier/SupplierAutocomplete'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
-import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
+import { Textarea } from '@/shared/components/ui/textarea'
+import { useExpenseCategories } from '@/shared/hooks/business/useExpenseCategories'
+import { type ExpenseCategory, useExpenses } from '@/shared/hooks/business/useExpenses'
+import { useToast } from '@/shared/hooks/core/useToast'
+import { supabase } from '@/shared/lib/supabase/client'
 import type { Supplier } from '@/shared/types/suppliers'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import {
+  formatDateForAPI,
+  formatDateForDisplay,
+  getTodaySwissString,
+} from '@/shared/utils/dateUtils'
+import { ExpenseActions } from './ExpenseActions'
+import { ExpensePDFActions } from './ExpensePDFActions'
 
 export function ExpensesPage() {
   const {
@@ -37,19 +55,19 @@ export function ExpensesPage() {
     getExpensesByCategory,
     uploadExpenseReceipt,
     replaceExpenseReceipt,
-    generatePlaceholderReceipt
+    generatePlaceholderReceipt,
   } = useExpenses()
-  
+
   const { categories: EXPENSE_CATEGORIES } = useExpenseCategories()
-  
+
   const { toast } = useToast()
-  
+
   // State für neue Ausgabe
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [receiptType, setReceiptType] = useState<'upload' | 'physical'>('upload')
   const [archiveLocation, setArchiveLocation] = useState('')
-  
+
   // Supplier State
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false)
@@ -62,19 +80,19 @@ export function ExpensesPage() {
     payment_method: '' as 'bank' | 'cash' | '',
     payment_date: formatDateForAPI(new Date()),
     invoice_number: '',
-    notes: ''
+    notes: '',
   })
-  
+
   // Filter State
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   // Lade Ausgaben beim Start
   useEffect(() => {
     loadExpenses() // Lädt alle Ausgaben statt nur aktueller Monat
   }, [])
-  
+
   // Load current user ID for supplier creation
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -85,59 +103,65 @@ export function ExpensesPage() {
     }
     getCurrentUser()
   }, [])
-  
+
   // Fehlerbehandlung
   useEffect(() => {
     if (error) {
       toast({
-        title: "Fehler",
+        title: 'Fehler',
         description: error,
-        variant: "destructive"
+        variant: 'destructive',
       })
     }
   }, [error, toast])
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!formData.amount || !formData.description || !formData.category || !formData.payment_method || !selectedSupplier) {
+
+    if (
+      !formData.amount ||
+      !formData.description ||
+      !formData.category ||
+      !formData.payment_method ||
+      !selectedSupplier
+    ) {
       toast({
-        title: "Fehler",
-        description: "Bitte füllen Sie alle Pflichtfelder aus (inkl. Lieferant).",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Bitte füllen Sie alle Pflichtfelder aus (inkl. Lieferant).',
+        variant: 'destructive',
       })
       return
     }
 
     if (receiptType === 'upload' && !selectedFile) {
       toast({
-        title: "Fehler", 
+        title: 'Fehler',
         description: "Bitte laden Sie einen Beleg hoch oder wählen Sie 'Physischer Beleg'.",
-        variant: "destructive"
+        variant: 'destructive',
       })
       return
     }
 
     if (receiptType === 'physical' && !archiveLocation.trim()) {
       toast({
-        title: "Fehler",
-        description: "Bitte geben Sie den Archiv-Standort für den physischen Beleg an.",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Bitte geben Sie den Archiv-Standort für den physischen Beleg an.',
+        variant: 'destructive',
       })
       return
     }
-    
+
     // Get current user
     const { data: userData } = await supabase.auth.getUser()
     if (!userData?.user) {
       toast({
-        title: "Fehler",
-        description: "Sie müssen angemeldet sein.",
-        variant: "destructive",
+        title: 'Fehler',
+        description: 'Sie müssen angemeldet sein.',
+        variant: 'destructive',
       })
       return
     }
-    
+
     // Create expense data
     const expenseData = {
       amount: parseFloat(formData.amount),
@@ -149,7 +173,7 @@ export function ExpensesPage() {
       supplier_name: selectedSupplier?.name || null, // Keep for backward compatibility
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
-      user_id: userData.user.id
+      user_id: userData.user.id,
     }
 
     let result
@@ -159,30 +183,31 @@ export function ExpensesPage() {
     } else {
       // Physical receipt flow - create expense without file first
       result = await createExpense(expenseData)
-      
+
       if (result.success && result.expense) {
         // Then generate placeholder receipt
         const placeholderResult = await generatePlaceholderReceipt(
-          result.expense.id, 
+          result.expense.id,
           archiveLocation || undefined
         )
-        
+
         if (!placeholderResult.success) {
           toast({
-            title: "Warnung",
-            description: "Ausgabe erstellt, aber Platzhalter-Beleg konnte nicht generiert werden.",
-            variant: "destructive"
+            title: 'Warnung',
+            description: 'Ausgabe erstellt, aber Platzhalter-Beleg konnte nicht generiert werden.',
+            variant: 'destructive',
           })
         }
       }
     }
-    
+
     if (result.success) {
       toast({
-        title: "Erfolg",
-        description: receiptType === 'upload' 
-          ? "Ausgabe und Beleg wurden erfolgreich erstellt."
-          : "Ausgabe und Platzhalter-Beleg wurden erfolgreich erstellt."
+        title: 'Erfolg',
+        description:
+          receiptType === 'upload'
+            ? 'Ausgabe und Beleg wurden erfolgreich erstellt.'
+            : 'Ausgabe und Platzhalter-Beleg wurden erfolgreich erstellt.',
       })
       setIsDialogOpen(false)
       setFormData({
@@ -192,7 +217,7 @@ export function ExpensesPage() {
         payment_method: '',
         payment_date: formatDateForAPI(new Date()),
         invoice_number: '',
-        notes: ''
+        notes: '',
       })
       setSelectedSupplier(null)
       setSelectedFile(null)
@@ -200,34 +225,36 @@ export function ExpensesPage() {
       setArchiveLocation('')
     }
   }
-  
+
   // Supplier Handler Functions
   const handleSupplierSelect = (supplier: Supplier | null) => {
     setSelectedSupplier(supplier)
   }
-  
+
   const handleSupplierCreateNew = (name: string) => {
     setNewSupplierName(name)
     setIsSupplierDialogOpen(true)
   }
-  
+
   const handleSupplierCreated = (supplier: Supplier) => {
     setSelectedSupplier(supplier)
     setNewSupplierName('')
   }
-  
+
   // Gefilterte Ausgaben
-  const filteredExpenses = expenses.filter(expense => {
+  const filteredExpenses = expenses.filter((expense) => {
     const matchesCategory = filterCategory === 'all' || expense.category === filterCategory
-    const matchesPaymentMethod = filterPaymentMethod === 'all' || expense.payment_method === filterPaymentMethod
-    const matchesSearch = searchQuery === '' || 
+    const matchesPaymentMethod =
+      filterPaymentMethod === 'all' || expense.payment_method === filterPaymentMethod
+    const matchesSearch =
+      searchQuery === '' ||
       expense.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expense.supplier_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expense.invoice_number?.toLowerCase().includes(searchQuery.toLowerCase())
-    
+
     return matchesCategory && matchesPaymentMethod && matchesSearch
   })
-  
+
   // Statistiken
   const stats = calculateExpenseStats()
 
@@ -237,11 +264,9 @@ export function ExpensesPage() {
       <div className="space-y-4 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ausgaben</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Geschäftsausgaben verwalten
-          </p>
+          <p className="text-muted-foreground text-sm sm:text-base">Geschäftsausgaben verwalten</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
@@ -257,7 +282,7 @@ export function ExpensesPage() {
                 Erfassen Sie eine neue Geschäftsausgabe oder Lieferantenrechnung.
               </DialogDescription>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -267,53 +292,69 @@ export function ExpensesPage() {
                     type="number"
                     step="0.01"
                     value={formData.amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, amount: e.target.value }))}
                     placeholder="0.00"
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="payment_date">Zahlungsdatum *</Label>
                   <Input
                     id="payment_date"
                     type="date"
                     value={formData.payment_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, payment_date: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, payment_date: e.target.value }))
+                    }
                     required
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Beschreibung *</Label>
                 <Input
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, description: e.target.value }))
+                  }
                   placeholder="z.B. Büromiete Januar 2024"
                   required
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="category">Kategorie *</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as ExpenseCategory }))}>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, category: value as ExpenseCategory }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Kategorie wählen" />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(EXPENSE_CATEGORIES).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="payment_method">Zahlungsart *</Label>
-                  <Select value={formData.payment_method} onValueChange={(value) => setFormData(prev => ({ ...prev, payment_method: value as 'bank' | 'cash' }))}>
+                  <Select
+                    value={formData.payment_method}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, payment_method: value as 'bank' | 'cash' }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Zahlungsart wählen" />
                     </SelectTrigger>
@@ -324,7 +365,7 @@ export function ExpensesPage() {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="supplier">Lieferant/Firma *</Label>
@@ -335,24 +376,26 @@ export function ExpensesPage() {
                     placeholder="Lieferant auswählen oder neu erstellen..."
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="invoice_number">Rechnungsnummer</Label>
                   <Input
                     id="invoice_number"
                     value={formData.invoice_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, invoice_number: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, invoice_number: e.target.value }))
+                    }
                     placeholder="z.B. R-2024-001"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="notes">Notizen</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                   placeholder="Zusätzliche Informationen..."
                   rows={3}
                 />
@@ -361,7 +404,7 @@ export function ExpensesPage() {
               {/* Beleg-Optionen */}
               <div className="space-y-4">
                 <Label>Beleg-Verwaltung *</Label>
-                
+
                 {/* Receipt Type Selection */}
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
@@ -378,7 +421,7 @@ export function ExpensesPage() {
                       Digitalen Beleg hochladen
                     </Label>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
@@ -405,8 +448,8 @@ export function ExpensesPage() {
                       onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                       className="hidden"
                     />
-                    <label 
-                      htmlFor="file-upload" 
+                    <label
+                      htmlFor="file-upload"
                       className="cursor-pointer flex flex-col items-center space-y-2"
                     >
                       <Upload className="h-8 w-8 text-muted-foreground" />
@@ -437,12 +480,13 @@ export function ExpensesPage() {
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      📁 Es wird automatisch ein Platzhalter-PDF erstellt mit Verweis auf den physischen Beleg.
+                      📁 Es wird automatisch ein Platzhalter-PDF erstellt mit Verweis auf den
+                      physischen Beleg.
                     </p>
                   </div>
                 )}
               </div>
-              
+
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Abbrechen
@@ -467,7 +511,7 @@ export function ExpensesPage() {
             <p className="text-xs text-muted-foreground">{stats.count} Ausgaben</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Barzahlungen</CardTitle>
@@ -477,7 +521,7 @@ export function ExpensesPage() {
             <p className="text-xs text-muted-foreground">Bar bezahlt</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium truncate">Überweisungen</CardTitle>
@@ -487,20 +531,26 @@ export function ExpensesPage() {
             <p className="text-xs text-muted-foreground">Per Bank bezahlt</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium truncate">Größte Kategorie</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Object.entries(stats.byCategory).reduce((a, b) => a[1] > b[1] ? a : b, ['', 0])[0] ? 
-                EXPENSE_CATEGORIES[Object.entries(stats.byCategory).reduce((a, b) => a[1] > b[1] ? a : b)[0] as ExpenseCategory] : 
-                'Keine'
-              }
+              {Object.entries(stats.byCategory).reduce((a, b) => (a[1] > b[1] ? a : b), ['', 0])[0]
+                ? EXPENSE_CATEGORIES[
+                    Object.entries(stats.byCategory).reduce((a, b) =>
+                      a[1] > b[1] ? a : b
+                    )[0] as ExpenseCategory
+                  ]
+                : 'Keine'}
             </div>
             <p className="text-xs text-muted-foreground">
-              CHF {Object.entries(stats.byCategory).reduce((a, b) => a[1] > b[1] ? a : b, ['', 0])[1].toFixed(2)}
+              CHF{' '}
+              {Object.entries(stats.byCategory)
+                .reduce((a, b) => (a[1] > b[1] ? a : b), ['', 0])[1]
+                .toFixed(2)}
             </p>
           </CardContent>
         </Card>
@@ -522,7 +572,7 @@ export function ExpensesPage() {
                 className="w-full sm:w-64 min-w-0"
               />
             </div>
-            
+
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Alle Kategorien" />
@@ -530,11 +580,13 @@ export function ExpensesPage() {
               <SelectContent>
                 <SelectItem value="all">Alle Kategorien</SelectItem>
                 {Object.entries(EXPENSE_CATEGORIES).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
+
             <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Alle Zahlungsarten" />
@@ -558,58 +610,84 @@ export function ExpensesPage() {
           {loading ? (
             <div className="text-center py-4">Lade Ausgaben...</div>
           ) : filteredExpenses.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              Keine Ausgaben gefunden
-            </div>
+            <div className="text-center py-4 text-muted-foreground">Keine Ausgaben gefunden</div>
           ) : (
             <div className="space-y-4 w-full max-w-full overflow-hidden">
               {filteredExpenses.map((expense) => (
-                <div key={expense.id} className="border rounded-lg p-4 w-full max-w-full overflow-hidden">
+                <div
+                  key={expense.id}
+                  className="border rounded-lg p-4 w-full max-w-full overflow-hidden"
+                >
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 w-full max-w-full overflow-hidden">
                     <div className="space-y-2 flex-1 min-w-0 max-w-full overflow-hidden">
-                      <h3 className="font-medium text-base leading-tight break-words" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
+                      <h3
+                        className="font-medium text-base leading-tight break-words"
+                        style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                      >
                         {expense.description}
                       </h3>
                       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground max-w-full overflow-hidden">
-                        <Badge variant="outline" className="text-xs truncate max-w-32 flex-shrink-0">
+                        <Badge
+                          variant="outline"
+                          className="text-xs truncate max-w-32 flex-shrink-0"
+                        >
                           {EXPENSE_CATEGORIES[expense.category as ExpenseCategory]}
                         </Badge>
-                        <Badge variant={expense.payment_method === 'cash' ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
+                        <Badge
+                          variant={expense.payment_method === 'cash' ? 'default' : 'secondary'}
+                          className="text-xs flex-shrink-0"
+                        >
                           {expense.payment_method === 'cash' ? 'Bar' : 'Bank'}
                         </Badge>
-                        <span className="text-xs flex-shrink-0">{formatDateForDisplay(expense.payment_date)}</span>
+                        <span className="text-xs flex-shrink-0">
+                          {formatDateForDisplay(expense.payment_date)}
+                        </span>
                       </div>
                       {/* Supplier Display - prioritize supplier relation over supplier_name */}
                       {expense.supplier ? (
                         <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground max-w-full overflow-hidden">
                           <span className="text-xs flex-shrink-0">Lieferant:</span>
-                          <Badge variant="outline" className="text-xs max-w-48 truncate flex-shrink-0">
+                          <Badge
+                            variant="outline"
+                            className="text-xs max-w-48 truncate flex-shrink-0"
+                          >
                             {expense.supplier.name}
                           </Badge>
                           {expense.supplier.category && (
                             <span className="text-xs opacity-60 max-w-32 truncate hidden sm:inline flex-shrink-0">
-                              ({SUPPLIER_CATEGORIES[expense.supplier.category as keyof typeof SUPPLIER_CATEGORIES] || expense.supplier.category})
+                              (
+                              {SUPPLIER_CATEGORIES[
+                                expense.supplier.category as keyof typeof SUPPLIER_CATEGORIES
+                              ] || expense.supplier.category}
+                              )
                             </span>
                           )}
                         </div>
-                      ) : expense.supplier_name && (
-                        <div className="text-sm text-muted-foreground max-w-full overflow-hidden">
-                          <span className="text-xs">Lieferant: </span>
-                          <span className="break-words text-xs" style={{wordBreak: 'break-word'}}>{expense.supplier_name}</span>
-                        </div>
+                      ) : (
+                        expense.supplier_name && (
+                          <div className="text-sm text-muted-foreground max-w-full overflow-hidden">
+                            <span className="text-xs">Lieferant: </span>
+                            <span
+                              className="break-words text-xs"
+                              style={{ wordBreak: 'break-word' }}
+                            >
+                              {expense.supplier_name}
+                            </span>
+                          </div>
+                        )
                       )}
                       {expense.invoice_number && (
                         <div className="text-sm text-muted-foreground max-w-full overflow-hidden">
                           <span className="text-xs">Rechnung: </span>
-                          <span className="break-words text-xs" style={{wordBreak: 'break-word'}}>{expense.invoice_number}</span>
+                          <span className="break-words text-xs" style={{ wordBreak: 'break-word' }}>
+                            {expense.invoice_number}
+                          </span>
                         </div>
                       )}
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 flex-shrink-0 min-w-0">
                       <div className="flex items-center gap-2 sm:gap-3 justify-end sm:justify-start">
-                        <ExpensePDFActions 
-                          expense={expense}
-                        />
+                        <ExpensePDFActions expense={expense} />
                         <ExpenseActions
                           expense={expense}
                           onUpdate={updateExpense}
@@ -624,7 +702,7 @@ export function ExpensesPage() {
                               payment_method: expense.payment_method as 'bank' | 'cash',
                               payment_date: formatDateForAPI(new Date()),
                               invoice_number: '',
-                              notes: expense.notes || ''
+                              notes: expense.notes || '',
                             })
                             if (expense.supplier) {
                               setSelectedSupplier(expense.supplier)
@@ -635,7 +713,7 @@ export function ExpensesPage() {
                                 category: 'other',
                                 is_active: true,
                                 created_at: '',
-                                organization_id: ''
+                                organization_id: '',
                               })
                             }
                             setIsDialogOpen(true)
@@ -643,7 +721,9 @@ export function ExpensesPage() {
                         />
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className="text-lg font-bold whitespace-nowrap">CHF {expense.amount.toFixed(2)}</div>
+                        <div className="text-lg font-bold whitespace-nowrap">
+                          CHF {expense.amount.toFixed(2)}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -653,7 +733,7 @@ export function ExpensesPage() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Supplier Create Dialog */}
       {currentUserId && (
         <SupplierCreateDialog

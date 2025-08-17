@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { Trash2 } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/components/ui/dialog"
+} from '@/shared/components/ui/dialog'
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean
@@ -17,11 +17,7 @@ interface DeleteConfirmDialogProps {
   onClose: () => void
 }
 
-export function DeleteConfirmDialog({
-  isOpen,
-  onConfirm,
-  onClose,
-}: DeleteConfirmDialogProps) {
+export function DeleteConfirmDialog({ isOpen, onConfirm, onClose }: DeleteConfirmDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -35,18 +31,10 @@ export function DeleteConfirmDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="w-full sm:w-auto"
-          >
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Abbrechen
           </Button>
-          <Button 
-            onClick={onConfirm}
-            variant="destructive"
-            className="w-full sm:w-auto"
-          >
+          <Button onClick={onConfirm} variant="destructive" className="w-full sm:w-auto">
             <Trash2 className="mr-2" size={16} />
             Entfernen
           </Button>

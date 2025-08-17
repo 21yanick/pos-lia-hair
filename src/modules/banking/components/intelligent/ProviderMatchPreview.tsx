@@ -1,6 +1,21 @@
-"use client"
+'use client'
 
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Target,
+  TrendingUp,
+  Zap,
+} from 'lucide-react'
 import { useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -8,24 +23,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/components/ui/dialog"
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Checkbox } from "@/shared/components/ui/checkbox"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Card, CardContent } from "@/shared/components/ui/card"
-import { 
-  CheckCircle2, 
-  AlertCircle, 
-  Zap, 
-  ArrowRight,
-  Eye,
-  Target,
-  Clock,
-  TrendingUp
-} from "lucide-react"
-import type { ProviderMatchCandidate } from '../../services/matchingTypes'
+} from '@/shared/components/ui/dialog'
 import { formatDateForDisplay } from '@/shared/utils/dateUtils'
+import type { ProviderMatchCandidate } from '../../services/matchingTypes'
 
 interface ProviderMatchPreviewProps {
   isOpen: boolean
@@ -35,24 +35,24 @@ interface ProviderMatchPreviewProps {
   isExecuting?: boolean
 }
 
-export function ProviderMatchPreview({ 
-  isOpen, 
-  onClose, 
-  matchCandidates, 
+export function ProviderMatchPreview({
+  isOpen,
+  onClose,
+  matchCandidates,
   onExecuteMatches,
-  isExecuting = false
+  isExecuting = false,
 }: ProviderMatchPreviewProps) {
   const [selectedMatches, setSelectedMatches] = useState<string[]>(
     // Pre-select high confidence matches (95%+)
     matchCandidates
-      .filter(candidate => candidate.confidence >= 95)
-      .map(candidate => `${candidate.sale.id}-${candidate.providerReport.id}`)
+      .filter((candidate) => candidate.confidence >= 95)
+      .map((candidate) => `${candidate.sale.id}-${candidate.providerReport.id}`)
   )
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('de-CH', {
       style: 'currency',
-      currency: 'CHF'
+      currency: 'CHF',
     }).format(amount)
   }
 
@@ -72,19 +72,17 @@ export function ProviderMatchPreview({
   }
 
   const handleMatchToggle = (candidateId: string) => {
-    setSelectedMatches(prev => 
-      prev.includes(candidateId) 
-        ? prev.filter(id => id !== candidateId)
-        : [...prev, candidateId]
+    setSelectedMatches((prev) =>
+      prev.includes(candidateId) ? prev.filter((id) => id !== candidateId) : [...prev, candidateId]
     )
   }
 
   const handleSelectAll = (onlyHighConfidence = false) => {
-    const candidates = onlyHighConfidence 
-      ? matchCandidates.filter(c => c.confidence >= 95)
+    const candidates = onlyHighConfidence
+      ? matchCandidates.filter((c) => c.confidence >= 95)
       : matchCandidates
-    
-    setSelectedMatches(candidates.map(c => `${c.sale.id}-${c.providerReport.id}`))
+
+    setSelectedMatches(candidates.map((c) => `${c.sale.id}-${c.providerReport.id}`))
   }
 
   const handleDeselectAll = () => {
@@ -92,15 +90,15 @@ export function ProviderMatchPreview({
   }
 
   const executeSelectedMatches = () => {
-    const selectedCandidates = matchCandidates.filter(candidate => 
+    const selectedCandidates = matchCandidates.filter((candidate) =>
       selectedMatches.includes(`${candidate.sale.id}-${candidate.providerReport.id}`)
     )
     onExecuteMatches(selectedCandidates)
   }
 
   const selectedCount = selectedMatches.length
-  const autoMatchCount = matchCandidates.filter(c => c.confidence >= 95).length
-  const reviewCount = matchCandidates.filter(c => c.confidence < 95).length
+  const autoMatchCount = matchCandidates.filter((c) => c.confidence >= 95).length
+  const reviewCount = matchCandidates.filter((c) => c.confidence < 95).length
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -112,8 +110,8 @@ export function ProviderMatchPreview({
               Provider Match Vorschau
             </DialogTitle>
             <DialogDescription>
-              {matchCandidates.length} Matching-Kandidaten gefunden. 
-              Wählen Sie aus, welche Matches ausgeführt werden sollen.
+              {matchCandidates.length} Matching-Kandidaten gefunden. Wählen Sie aus, welche Matches
+              ausgeführt werden sollen.
             </DialogDescription>
           </DialogHeader>
 
@@ -135,26 +133,14 @@ export function ProviderMatchPreview({
 
           {/* Selection Controls */}
           <div className="flex gap-2 mb-4">
-            <Button 
-              onClick={() => handleSelectAll(true)} 
-              variant="outline" 
-              size="sm"
-            >
+            <Button onClick={() => handleSelectAll(true)} variant="outline" size="sm">
               <CheckCircle2 className="w-4 h-4 mr-2" />
               Auto-Match auswählen
             </Button>
-            <Button 
-              onClick={() => handleSelectAll(false)} 
-              variant="outline" 
-              size="sm"
-            >
+            <Button onClick={() => handleSelectAll(false)} variant="outline" size="sm">
               Alle auswählen
             </Button>
-            <Button 
-              onClick={handleDeselectAll} 
-              variant="outline" 
-              size="sm"
-            >
+            <Button onClick={handleDeselectAll} variant="outline" size="sm">
               Alle abwählen
             </Button>
           </div>
@@ -165,10 +151,10 @@ export function ProviderMatchPreview({
           {matchCandidates.map((candidate) => {
             const candidateId = `${candidate.sale.id}-${candidate.providerReport.id}`
             const isSelected = selectedMatches.includes(candidateId)
-            
+
             return (
-              <Card 
-                key={candidateId} 
+              <Card
+                key={candidateId}
                 className={`transition-all duration-200 ${
                   isSelected ? 'ring-2 ring-blue-300 bg-blue-50' : 'hover:bg-gray-50'
                 }`}
@@ -183,7 +169,9 @@ export function ProviderMatchPreview({
                     />
 
                     {/* Confidence Badge */}
-                    <Badge className={`${getConfidenceColor(candidate.confidence)} flex items-center gap-1`}>
+                    <Badge
+                      className={`${getConfidenceColor(candidate.confidence)} flex items-center gap-1`}
+                    >
                       {getConfidenceIcon(candidate.confidence)}
                       {candidate.confidence}%
                     </Badge>
@@ -197,7 +185,8 @@ export function ProviderMatchPreview({
                           {formatAmount(candidate.sale.total_amount)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {formatDateForDisplay(candidate.sale.created_at)} • {candidate.sale.payment_display}
+                          {formatDateForDisplay(candidate.sale.created_at)} •{' '}
+                          {candidate.sale.payment_display}
                         </div>
                       </div>
 
@@ -213,7 +202,8 @@ export function ProviderMatchPreview({
                           {formatAmount(candidate.providerReport.gross_amount)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {formatDateForDisplay(candidate.providerReport.transaction_date)} • {candidate.providerReport.provider_display}
+                          {formatDateForDisplay(candidate.providerReport.transaction_date)} •{' '}
+                          {candidate.providerReport.provider_display}
                         </div>
                       </div>
                     </div>
@@ -233,12 +223,8 @@ export function ProviderMatchPreview({
                     <div>
                       Betrag-Diff: {formatAmount(Math.abs(candidate.details.amountDifference))}
                     </div>
-                    <div>
-                      Tage-Diff: {candidate.details.daysDifference}
-                    </div>
-                    <div>
-                      Provider: {candidate.details.providerMatches ? '✅' : '❌'}
-                    </div>
+                    <div>Tage-Diff: {candidate.details.daysDifference}</div>
+                    <div>Provider: {candidate.details.providerMatches ? '✅' : '❌'}</div>
                   </div>
                 </CardContent>
               </Card>
@@ -249,46 +235,46 @@ export function ProviderMatchPreview({
         {/* Footer with warnings and actions */}
         <div className="px-6 pb-6">
           {/* Warning for low confidence selections */}
-          {selectedMatches.some(id => {
-            const candidate = matchCandidates.find(c => 
-              `${c.sale.id}-${c.providerReport.id}` === id
+          {selectedMatches.some((id) => {
+            const candidate = matchCandidates.find(
+              (c) => `${c.sale.id}-${c.providerReport.id}` === id
             )
             return candidate && candidate.confidence < 80
           }) && (
             <Alert className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Sie haben Matches mit niedriger Confidence (&lt;80%) ausgewählt. 
-                Bitte überprüfen Sie diese sorgfältig.
+                Sie haben Matches mit niedriger Confidence (&lt;80%) ausgewählt. Bitte überprüfen
+                Sie diese sorgfältig.
               </AlertDescription>
             </Alert>
           )}
 
-            <DialogFooter className="flex justify-between">
-              <Button variant="outline" onClick={onClose} disabled={isExecuting}>
-                Abbrechen
+          <DialogFooter className="flex justify-between">
+            <Button variant="outline" onClick={onClose} disabled={isExecuting}>
+              Abbrechen
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={executeSelectedMatches}
+                disabled={selectedCount === 0 || isExecuting}
+                className="min-w-[200px]"
+              >
+                {isExecuting ? (
+                  <>
+                    <Clock className="w-4 h-4 mr-2 animate-spin" />
+                    Führe {selectedCount} Matches aus...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    {selectedCount} Matches ausführen
+                  </>
+                )}
               </Button>
-              <div className="flex gap-2">
-                <Button
-                  onClick={executeSelectedMatches}
-                  disabled={selectedCount === 0 || isExecuting}
-                  className="min-w-[200px]"
-                >
-                  {isExecuting ? (
-                    <>
-                      <Clock className="w-4 h-4 mr-2 animate-spin" />
-                      Führe {selectedCount} Matches aus...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4 mr-2" />
-                      {selectedCount} Matches ausführen
-                    </>
-                  )}
-                </Button>
-              </div>
-            </DialogFooter>
-          </div>
+            </div>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

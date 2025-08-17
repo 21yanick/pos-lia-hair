@@ -1,36 +1,31 @@
 /**
  * React Query Library Exports
- * 
+ *
  * Centralized exports for React Query setup and utilities
  */
 
-// Core React Query setup
-export { default as QueryProvider } from './QueryProvider'
-export { QueryProvider as QueryProviderComponent } from './QueryProvider'
-export { createQueryClient, queryClient, cacheConfig } from './queryClient'
-
-// Query Keys and utilities
-export { default as queryKeys } from './queryKeys'
-export { queryKeys as queryKeyFactory, queryKeyUtils } from './queryKeys'
-export type { QueryKey, BusinessQueryKey, AuthQueryKey, OrganizationQueryKey } from './queryKeys'
-
-// Error Handling
-export { QueryErrorBoundary, QueryErrorWrapper } from './QueryErrorBoundary'
-
 // Re-export commonly used React Query hooks and utilities
 export {
-  useQuery,
-  useMutation,
-  useQueryClient,
+  MutationCache,
+  QueryCache,
   useInfiniteQuery,
-  useSuspenseQuery,
-  useQueries,
-  useMutationState,
   useIsFetching,
   useIsMutating,
-  QueryCache,
-  MutationCache,
+  useMutation,
+  useMutationState,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
 } from '@tanstack/react-query'
+// Error Handling
+export { QueryErrorBoundary, QueryErrorWrapper } from './QueryErrorBoundary'
+// Core React Query setup
+export { default as QueryProvider, QueryProvider as QueryProviderComponent } from './QueryProvider'
+export { cacheConfig, createQueryClient, queryClient } from './queryClient'
+export type { AuthQueryKey, BusinessQueryKey, OrganizationQueryKey, QueryKey } from './queryKeys'
+// Query Keys and utilities
+export { default as queryKeys, queryKeys as queryKeyFactory, queryKeyUtils } from './queryKeys'
 
 // Custom hooks and utilities will be added here as we build them
 // export { useBusinessSettings } from './hooks/useBusinessSettings'

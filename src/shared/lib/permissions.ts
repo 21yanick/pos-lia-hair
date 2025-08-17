@@ -1,8 +1,8 @@
 // Permission System Utilities
 
 import {
-  Permission,
-  OrganizationRole,
+  type OrganizationRole,
+  type Permission,
   ROLE_PERMISSIONS,
 } from '@/shared/types/organizations'
 
@@ -38,9 +38,7 @@ export function canAccessModule(role: OrganizationRole, module: string): boolean
   const requiredPermissions = modulePermissions[module]
   if (!requiredPermissions) return false
 
-  return requiredPermissions.some(permission => 
-    roleHasPermission(role, permission)
-  )
+  return requiredPermissions.some((permission) => roleHasPermission(role, permission))
 }
 
 /**
@@ -48,13 +46,13 @@ export function canAccessModule(role: OrganizationRole, module: string): boolean
  */
 export function getMinimumRoleForPermission(permission: Permission): OrganizationRole | null {
   const roles: OrganizationRole[] = ['staff', 'admin', 'owner']
-  
+
   for (const role of roles) {
     if (roleHasPermission(role, permission)) {
       return role
     }
   }
-  
+
   return null
 }
 
@@ -62,39 +60,13 @@ export function getMinimumRoleForPermission(permission: Permission): Organizatio
  * Permission groups for UI organization
  */
 export const PERMISSION_GROUPS = {
-  'POS & Verkauf': [
-    'pos.create_sale',
-    'pos.view_sales',
-    'pos.manage_items',
-  ],
-  'Ausgaben': [
-    'expenses.create',
-    'expenses.view',
-    'expenses.manage',
-  ],
-  'Banking': [
-    'banking.view',
-    'banking.reconcile',
-    'banking.manage_accounts',
-  ],
-  'Kasse': [
-    'cash.view_balance',
-    'cash.manage_movements',
-  ],
-  'Berichte': [
-    'reports.view_basic',
-    'reports.view_advanced',
-    'reports.export',
-  ],
-  'Dokumente': [
-    'documents.view',
-    'documents.manage',
-  ],
-  'Einstellungen': [
-    'settings.view',
-    'settings.manage_business',
-    'settings.manage_users',
-  ],
+  'POS & Verkauf': ['pos.create_sale', 'pos.view_sales', 'pos.manage_items'],
+  Ausgaben: ['expenses.create', 'expenses.view', 'expenses.manage'],
+  Banking: ['banking.view', 'banking.reconcile', 'banking.manage_accounts'],
+  Kasse: ['cash.view_balance', 'cash.manage_movements'],
+  Berichte: ['reports.view_basic', 'reports.view_advanced', 'reports.export'],
+  Dokumente: ['documents.view', 'documents.manage'],
+  Einstellungen: ['settings.view', 'settings.manage_business', 'settings.manage_users'],
 } as const
 
 /**
@@ -146,11 +118,11 @@ export class PermissionValidator {
   }
 
   canAny(permissions: Permission[]): boolean {
-    return permissions.some(permission => this.can(permission))
+    return permissions.some((permission) => this.can(permission))
   }
 
   canAll(permissions: Permission[]): boolean {
-    return permissions.every(permission => this.can(permission))
+    return permissions.every((permission) => this.can(permission))
   }
 
   accessLevel(): 'full' | 'business' | 'limited' {
@@ -160,8 +132,17 @@ export class PermissionValidator {
   }
 
   getAvailableModules(): string[] {
-    const modules = ['pos', 'expenses', 'banking', 'reports', 'settings', 'users', 'cash', 'documents']
-    return modules.filter(module => canAccessModule(this.role, module))
+    const modules = [
+      'pos',
+      'expenses',
+      'banking',
+      'reports',
+      'settings',
+      'users',
+      'cash',
+      'documents',
+    ]
+    return modules.filter((module) => canAccessModule(this.role, module))
   }
 }
 
@@ -170,7 +151,7 @@ export class PermissionValidator {
  */
 export function getFeatureFlags(role: OrganizationRole) {
   const validator = new PermissionValidator(role)
-  
+
   return {
     canCreateSales: validator.can('pos.create_sale'),
     canManageItems: validator.can('pos.manage_items'),
@@ -183,7 +164,7 @@ export function getFeatureFlags(role: OrganizationRole) {
     canManageUsers: validator.can('settings.manage_users'),
     canManageCash: validator.can('cash.manage_movements'),
     canManageDocuments: validator.can('documents.manage'),
-    
+
     // Computed flags
     isBusinessManager: validator.canAny(['settings.manage_business', 'reports.view_advanced']),
     isFullAdmin: validator.role === 'owner',

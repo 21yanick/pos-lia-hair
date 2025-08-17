@@ -1,33 +1,30 @@
 'use client'
 
-import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
+import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
+import { ensureUserExists, syncAuthUser } from '@/shared/services/authService'
 import {
-  getItems,
+  createItem,
+  deleteItem,
   getActiveItems,
   getFavoriteItems,
-  searchItems,
-  createItem,
-  updateItem,
-  deleteItem,
-  toggleItemFavorite,
-  toggleItemActive,
+  getItems,
   getItemsOptimized,
   type Item,
   type ItemInsert,
-  type ItemUpdate
+  type ItemUpdate,
+  searchItems,
+  toggleItemActive,
+  toggleItemFavorite,
+  updateItem,
 } from '@/shared/services/itemsService'
-import {
-  syncAuthUser,
-  ensureUserExists
-} from '@/shared/services/authService'
 
 /**
  * React Query-powered Items Hook
- * 
+ *
  * Features:
  * - Smart caching for product catalog (15min stale time)
  * - Optimistic updates for instant CRUD feedback
@@ -35,7 +32,7 @@ import {
  * - Multi-tenant security
  * - Legacy-compatible interface
  * - Auth user synchronization
- * 
+ *
  * Performance Optimizations:
  * - High cache potential (products change rarely)
  * - Parallel queries where possible
@@ -48,16 +45,22 @@ interface UseItemsQueryReturn {
   items: Item[]
   loading: boolean
   error: string | null
-  
+
   // CRUD Operations (Legacy Compatible)
   addItem: (newItem: ItemInsert) => Promise<{ data: Item | null; error: string | null }>
   updateItem: (updatedItem: ItemUpdate) => Promise<{ data: Item | null; error: string | null }>
   deleteItem: (id: string) => Promise<{ error: string | null }>
-  
+
   // Toggle Operations (Legacy Compatible)
-  toggleFavorite: (id: string, currentValue: boolean) => Promise<{ data: Item | null; error: string | null }>
-  toggleActive: (id: string, currentValue: boolean) => Promise<{ data: Item | null; error: string | null }>
-  
+  toggleFavorite: (
+    id: string,
+    currentValue: boolean
+  ) => Promise<{ data: Item | null; error: string | null }>
+  toggleActive: (
+    id: string,
+    currentValue: boolean
+  ) => Promise<{ data: Item | null; error: string | null }>
+
   // Auth Operations (Legacy Compatible)
   syncAuthUser: () => Promise<{ success: boolean; error?: string; user?: any }>
 }
@@ -65,10 +68,10 @@ interface UseItemsQueryReturn {
 export function useItemsQuery(): UseItemsQueryReturn {
   const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
-  
+
   // Local state for legacy compatibility
   const [error, setError] = useState<string | null>(null)
-  
+
   const organizationId = currentOrganization?.id
 
   if (process.env.NODE_ENV === 'development') {
@@ -82,7 +85,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
     data: items = [],
     isLoading,
     error: queryError,
-    refetch: refetchItems
+    refetch: refetchItems,
   } = useQuery({
     queryKey: queryKeys.business.items.optimized(organizationId || ''),
     queryFn: async () => {
@@ -115,8 +118,8 @@ export function useItemsQuery(): UseItemsQueryReturn {
       return failureCount < 2
     },
     meta: {
-      errorMessage: 'Fehler beim Laden der Artikel'
-    }
+      errorMessage: 'Fehler beim Laden der Artikel',
+    },
   })
 
   // ========================================
@@ -127,21 +130,21 @@ export function useItemsQuery(): UseItemsQueryReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const result = await createItem(newItem, organizationId)
-      
+
       if (!result.success) {
         throw new Error(result.error)
       }
-      
+
       return result.data
     },
     onMutate: async (newItem) => {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.items.all(organizationId)
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.items.all(organizationId),
       })
 
       // Snapshot the previous value
@@ -160,7 +163,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
         is_favorite: newItem.is_favorite ?? false,
         organization_id: organizationId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }
 
       // Optimistically update the cache
@@ -180,14 +183,14 @@ export function useItemsQuery(): UseItemsQueryReturn {
           context.previousItems
         )
       }
-      
+
       setError(error.message || 'Fehler beim Hinzufügen des Artikels')
       toast.error(error.message || 'Fehler beim Hinzufügen des Artikels')
     },
     onSuccess: () => {
       setError(null)
       toast.success('Artikel erfolgreich hinzugefügt')
-      
+
       if (process.env.NODE_ENV === 'development') {
         // console.log('🟢 React Query: Item created')
       }
@@ -195,11 +198,11 @@ export function useItemsQuery(): UseItemsQueryReturn {
     onSettled: () => {
       // Always refetch after mutation to ensure data consistency
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.items.all(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.items.all(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -210,21 +213,21 @@ export function useItemsQuery(): UseItemsQueryReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const result = await updateItem(updatedItem, organizationId)
-      
+
       if (!result.success) {
         throw new Error(result.error)
       }
-      
+
       return result.data
     },
     onMutate: async (updatedItem) => {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.items.all(organizationId)
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.items.all(organizationId),
       })
 
       // Snapshot the previous value
@@ -235,9 +238,9 @@ export function useItemsQuery(): UseItemsQueryReturn {
       // Optimistically update the item
       queryClient.setQueryData(
         queryKeys.business.items.optimized(organizationId),
-        (old: Item[] = []) => 
-          old.map(item => 
-            item.id === updatedItem.id 
+        (old: Item[] = []) =>
+          old.map((item) =>
+            item.id === updatedItem.id
               ? { ...item, ...updatedItem, updated_at: new Date().toISOString() }
               : item
           )
@@ -254,7 +257,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
           context.previousItems
         )
       }
-      
+
       setError(error.message || 'Fehler beim Aktualisieren des Artikels')
       toast.error(error.message || 'Fehler beim Aktualisieren des Artikels')
     },
@@ -265,11 +268,11 @@ export function useItemsQuery(): UseItemsQueryReturn {
     onSettled: () => {
       // Always refetch after mutation
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.items.all(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.items.all(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -280,21 +283,21 @@ export function useItemsQuery(): UseItemsQueryReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const result = await deleteItem(itemId, organizationId)
-      
+
       if (!result.success) {
         throw new Error(result.error)
       }
-      
+
       return itemId
     },
     onMutate: async (itemId) => {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.items.all(organizationId)
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.items.all(organizationId),
       })
 
       // Snapshot the previous value
@@ -305,7 +308,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
       // Optimistically remove the item
       queryClient.setQueryData(
         queryKeys.business.items.optimized(organizationId),
-        (old: Item[] = []) => old.filter(item => item.id !== itemId)
+        (old: Item[] = []) => old.filter((item) => item.id !== itemId)
       )
 
       // Return context with the snapshotted value
@@ -319,7 +322,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
           context.previousItems
         )
       }
-      
+
       setError(error.message || 'Fehler beim Löschen des Artikels')
       toast.error(error.message || 'Fehler beim Löschen des Artikels')
     },
@@ -330,11 +333,11 @@ export function useItemsQuery(): UseItemsQueryReturn {
     onSettled: () => {
       // Always refetch after mutation
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.items.all(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.items.all(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -345,21 +348,21 @@ export function useItemsQuery(): UseItemsQueryReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const result = await toggleItemFavorite(id, currentValue, organizationId)
-      
+
       if (!result.success) {
         throw new Error(result.error)
       }
-      
+
       return result.data
     },
     onMutate: async ({ id, currentValue }) => {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.items.all(organizationId)
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.items.all(organizationId),
       })
 
       // Snapshot the previous value
@@ -370,9 +373,9 @@ export function useItemsQuery(): UseItemsQueryReturn {
       // Optimistically update the favorite status
       queryClient.setQueryData(
         queryKeys.business.items.optimized(organizationId),
-        (old: Item[] = []) => 
-          old.map(item => 
-            item.id === id 
+        (old: Item[] = []) =>
+          old.map((item) =>
+            item.id === id
               ? { ...item, is_favorite: !currentValue, updated_at: new Date().toISOString() }
               : item
           )
@@ -389,7 +392,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
           context.previousItems
         )
       }
-      
+
       setError(error.message || 'Fehler beim Ändern des Favoriten-Status')
     },
     onSuccess: () => {
@@ -398,11 +401,11 @@ export function useItemsQuery(): UseItemsQueryReturn {
     onSettled: () => {
       // Invalidate favorites list
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.items.favorites(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.items.favorites(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -413,21 +416,21 @@ export function useItemsQuery(): UseItemsQueryReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       const result = await toggleItemActive(id, currentValue, organizationId)
-      
+
       if (!result.success) {
         throw new Error(result.error)
       }
-      
+
       return result.data
     },
     onMutate: async ({ id, currentValue }) => {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.items.all(organizationId)
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.items.all(organizationId),
       })
 
       // Snapshot the previous value
@@ -438,9 +441,9 @@ export function useItemsQuery(): UseItemsQueryReturn {
       // Optimistically update the active status
       queryClient.setQueryData(
         queryKeys.business.items.optimized(organizationId),
-        (old: Item[] = []) => 
-          old.map(item => 
-            item.id === id 
+        (old: Item[] = []) =>
+          old.map((item) =>
+            item.id === id
               ? { ...item, active: !currentValue, updated_at: new Date().toISOString() }
               : item
           )
@@ -457,7 +460,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
           context.previousItems
         )
       }
-      
+
       setError(error.message || 'Fehler beim Ändern des Aktiv-Status')
     },
     onSuccess: () => {
@@ -466,11 +469,11 @@ export function useItemsQuery(): UseItemsQueryReturn {
     onSettled: () => {
       // Invalidate active items list
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.items.active(organizationId)
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.items.active(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -540,13 +543,14 @@ export function useItemsQuery(): UseItemsQueryReturn {
   // ========================================
   // Combined Loading and Error States
   // ========================================
-  const loading = isLoading || 
-                 createItemMutation.isPending || 
-                 updateItemMutation.isPending || 
-                 deleteItemMutation.isPending ||
-                 toggleFavoriteMutation.isPending ||
-                 toggleActiveMutation.isPending
-  
+  const loading =
+    isLoading ||
+    createItemMutation.isPending ||
+    updateItemMutation.isPending ||
+    deleteItemMutation.isPending ||
+    toggleFavoriteMutation.isPending ||
+    toggleActiveMutation.isPending
+
   const combinedError = error || queryError?.message || null
 
   // ========================================
@@ -557,17 +561,17 @@ export function useItemsQuery(): UseItemsQueryReturn {
     items,
     loading,
     error: combinedError,
-    
+
     // CRUD Operations (Legacy Compatible)
     addItem,
     updateItem: updateItemLegacy,
     deleteItem: deleteItemLegacy,
-    
+
     // Toggle Operations (Legacy Compatible)
     toggleFavorite,
     toggleActive,
-    
+
     // Auth Operations (Legacy Compatible)
-    syncAuthUser: syncAuthUserLegacy
+    syncAuthUser: syncAuthUserLegacy,
   }
 }

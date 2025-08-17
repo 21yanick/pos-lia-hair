@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
-import { Search, Plus, Users, Loader2 } from 'lucide-react'
+import { Loader2, Plus, Search, Users } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
 import { Card, CardContent } from '@/shared/components/ui/card'
+import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useCustomersQuery } from '../hooks/useCustomersQuery'
@@ -16,29 +16,29 @@ export function CustomersPage() {
   const { currentOrganization } = useCurrentOrganization()
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  
+
   // Use debounced search query for API calls
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery)
     }, 300)
-    
+
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const { 
-    data: customers = [], 
-    isLoading, 
-    error 
+  const {
+    data: customers = [],
+    isLoading,
+    error,
   } = useCustomersQuery(currentOrganization?.id || '', debouncedQuery)
 
   // Client-side filtering for immediate feedback
   const filteredCustomers = useMemo(() => {
     if (!searchQuery) return customers
-    return customers.filter(customer => matchesSearchQuery(customer, searchQuery))
+    return customers.filter((customer) => matchesSearchQuery(customer, searchQuery))
   }, [customers, searchQuery])
 
   const handleCreateSuccess = () => {
@@ -170,17 +170,14 @@ export function CustomersPage() {
         <>
           {/* Results Count */}
           <div className="text-sm text-muted-foreground">
-            {filteredCustomers.length} Kunde{filteredCustomers.length !== 1 ? 'n' : ''} 
+            {filteredCustomers.length} Kunde{filteredCustomers.length !== 1 ? 'n' : ''}
             {searchQuery && ` für "${searchQuery}"`}
           </div>
 
           {/* Customer Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredCustomers.map((customer) => (
-              <CustomerCard 
-                key={customer.id} 
-                customer={customer}
-              />
+              <CustomerCard key={customer.id} customer={customer} />
             ))}
           </div>
         </>

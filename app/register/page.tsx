@@ -1,43 +1,49 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { useState, useEffect, Suspense } from "react"
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
-import { Label } from "@/shared/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { supabase } from "@/shared/lib/supabase/client"
-import { SmartAppLogo } from "@/shared/components/ui/SmartAppLogo"
-import { PublicRoute } from "@/shared/components/auth"
-import { InvitationService } from "@/shared/services/invitationService"
-import { EmailService } from "@/shared/services/emailService"
-import Link from "next/link"
+import type React from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { PublicRoute } from '@/shared/components/auth'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import { SmartAppLogo } from '@/shared/components/ui/SmartAppLogo'
+import { supabase } from '@/shared/lib/supabase/client'
+import { EmailService } from '@/shared/services/emailService'
+import { InvitationService } from '@/shared/services/invitationService'
 
 interface InvitationInfo {
-  organizationName: string;
-  organizationSlug: string;
-  role: 'staff' | 'admin' | 'owner';
-  invitedByName: string;
-  email: string;
+  organizationName: string
+  organizationSlug: string
+  role: 'staff' | 'admin' | 'owner'
+  invitedByName: string
+  email: string
 }
 
 function RegisterForm() {
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get('invite')
-  
+
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [invitationInfo, setInvitationInfo] = useState<InvitationInfo | null>(null)
   const [isValidatingInvite, setIsValidatingInvite] = useState(false)
-  
+
   // User data
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   // Validate invitation token on page load
   useEffect(() => {
@@ -48,8 +54,8 @@ function RegisterForm() {
 
   const validateInvitationToken = async (token: string) => {
     setIsValidatingInvite(true)
-    setError("")
-    
+    setError('')
+
     try {
       const response = await fetch('/api/invitations/validate', {
         method: 'POST',
@@ -69,45 +75,44 @@ function RegisterForm() {
       }
     } catch (err) {
       console.error('Invitation validation error:', err)
-      setError("Fehler beim Validieren der Einladung")
+      setError('Fehler beim Validieren der Einladung')
     } finally {
       setIsValidatingInvite(false)
     }
   }
 
-
   const validateForm = () => {
     if (!name.trim()) {
-      setError("Bitte geben Sie Ihren Namen ein")
+      setError('Bitte geben Sie Ihren Namen ein')
       return false
     }
-    
+
     if (!email.trim()) {
-      setError("Bitte geben Sie Ihre E-Mail-Adresse ein")
+      setError('Bitte geben Sie Ihre E-Mail-Adresse ein')
       return false
     }
-    
+
     if (password.length < 6) {
-      setError("Das Passwort muss mindestens 6 Zeichen lang sein")
+      setError('Das Passwort muss mindestens 6 Zeichen lang sein')
       return false
     }
-    
+
     if (password !== confirmPassword) {
-      setError("Die Passwörter stimmen nicht überein")
+      setError('Die Passwörter stimmen nicht überein')
       return false
     }
-    
+
     return true
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
-    
-    setError("")
+
+    setError('')
     setIsLoading(true)
 
     try {
@@ -118,18 +123,18 @@ function RegisterForm() {
         options: {
           data: {
             name: name.trim(),
-            username: email.trim().split('@')[0]
-          }
-        }
+            username: email.trim().split('@')[0],
+          },
+        },
       })
 
       if (authError) {
-        setError(authError.message || "Fehler bei der Registrierung")
+        setError(authError.message || 'Fehler bei der Registrierung')
         return
       }
 
       if (!authData.user) {
-        setError("Benutzer konnte nicht erstellt werden")
+        setError('Benutzer konnte nicht erstellt werden')
         return
       }
 
@@ -150,7 +155,7 @@ function RegisterForm() {
               isOwner: false,
             })
           } catch (emailError) {
-            console.error("Failed to send welcome email:", emailError)
+            console.error('Failed to send welcome email:', emailError)
             // Don't fail registration for email errors
           }
 
@@ -158,10 +163,13 @@ function RegisterForm() {
           setTimeout(() => {
             window.location.href = `/org/${result.organization.slug}/dashboard`
           }, 1000)
-
         } catch (inviteError) {
-          console.error("Error accepting invitation:", inviteError)
-          setError(inviteError instanceof Error ? inviteError.message : "Fehler beim Annehmen der Einladung")
+          console.error('Error accepting invitation:', inviteError)
+          setError(
+            inviteError instanceof Error
+              ? inviteError.message
+              : 'Fehler beim Annehmen der Einladung'
+          )
           return
         }
       } else {
@@ -171,10 +179,9 @@ function RegisterForm() {
           window.location.href = `/organizations`
         }, 1000)
       }
-
     } catch (err) {
-      console.error("Registration error:", err)
-      setError("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.")
+      console.error('Registration error:', err)
+      setError('Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.')
     } finally {
       setIsLoading(false)
     }
@@ -186,12 +193,14 @@ function RegisterForm() {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30 animate-gradient-shift" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,transparent_50%)] opacity-40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--accent)_0%,transparent_50%)] opacity-30" />
-      
-      <Card className={`w-full max-w-2xl shadow-xl bg-card border-border/50 transition-all duration-600 hover:shadow-2xl transform-gpu relative z-10
-        ${success ? 'animate-card-flip scale-95 opacity-0' : 'animate-in fade-in-0 zoom-in-90'}`}>
+
+      <Card
+        className={`w-full max-w-2xl shadow-xl bg-card border-border/50 transition-all duration-600 hover:shadow-2xl transform-gpu relative z-10
+        ${success ? 'animate-card-flip scale-95 opacity-0' : 'animate-in fade-in-0 zoom-in-90'}`}
+      >
         <CardHeader className="space-y-1 flex flex-col items-center pb-6">
           <div className="relative mb-4 transform transition-transform duration-300 hover:scale-105">
-            <SmartAppLogo 
+            <SmartAppLogo
               size="lg"
               alt="Lia Hair Logo"
               className="drop-shadow-lg w-24 h-24"
@@ -202,14 +211,11 @@ function RegisterForm() {
               }
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">
-            Lia Hair POS
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Lia Hair POS</CardTitle>
           <CardDescription className="text-center text-muted-foreground/80">
-            {invitationInfo 
+            {invitationInfo
               ? `Einladung zu ${invitationInfo.organizationName}`
-              : "Neues Benutzerkonto erstellen"
-            }
+              : 'Neues Benutzerkonto erstellen'}
           </CardDescription>
         </CardHeader>
 
@@ -229,18 +235,28 @@ function RegisterForm() {
 
             {success && (
               <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-600 rounded-lg text-sm backdrop-blur-sm animate-in fade-in-0 slide-in-from-top-2">
-                {invitationInfo 
-                  ? "Registrierung erfolgreich! Sie werden weitergeleitet..."
-                  : "Benutzerkonto erstellt! Sie werden zur Organisations-Auswahl weitergeleitet..."
-                }
+                {invitationInfo
+                  ? 'Registrierung erfolgreich! Sie werden weitergeleitet...'
+                  : 'Benutzerkonto erstellt! Sie werden zur Organisations-Auswahl weitergeleitet...'}
               </div>
             )}
 
             {invitationInfo && (
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <h3 className="font-semibold text-blue-800 dark:text-blue-200">Einladungsdetails</h3>
+                <h3 className="font-semibold text-blue-800 dark:text-blue-200">
+                  Einladungsdetails
+                </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                  <strong>{invitationInfo.invitedByName}</strong> hat Sie zu <strong>{invitationInfo.organizationName}</strong> als <strong>{invitationInfo.role === 'staff' ? 'Mitarbeiter' : invitationInfo.role === 'admin' ? 'Administrator' : 'Inhaber'}</strong> eingeladen.
+                  <strong>{invitationInfo.invitedByName}</strong> hat Sie zu{' '}
+                  <strong>{invitationInfo.organizationName}</strong> als{' '}
+                  <strong>
+                    {invitationInfo.role === 'staff'
+                      ? 'Mitarbeiter'
+                      : invitationInfo.role === 'admin'
+                        ? 'Administrator'
+                        : 'Inhaber'}
+                  </strong>{' '}
+                  eingeladen.
                 </p>
               </div>
             )}
@@ -248,7 +264,7 @@ function RegisterForm() {
             {/* User Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Persönliche Daten</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-medium text-foreground/90">
@@ -301,7 +317,10 @@ function RegisterForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground/90">
+                  <Label
+                    htmlFor="confirmPassword"
+                    className="text-sm font-medium text-foreground/90"
+                  >
                     Passwort bestätigen *
                   </Label>
                   <Input
@@ -317,13 +336,12 @@ function RegisterForm() {
                 </div>
               </div>
             </div>
-
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4 pb-8">
-            <Button 
-              type="submit" 
-              className="w-full h-11 font-medium shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary" 
+            <Button
+              type="submit"
+              className="w-full h-11 font-medium shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
               disabled={isLoading || isValidatingInvite}
             >
               {isLoading ? (
@@ -332,14 +350,14 @@ function RegisterForm() {
                   Wird registriert...
                 </span>
               ) : invitationInfo ? (
-                "Einladung annehmen"
+                'Einladung annehmen'
               ) : (
-                "Benutzerkonto erstellen"
+                'Benutzerkonto erstellen'
               )}
             </Button>
-            
+
             <div className="text-center text-sm text-muted-foreground">
-              Haben Sie bereits ein Konto?{" "}
+              Haben Sie bereits ein Konto?{' '}
               <Link href="/login" className="text-primary hover:underline font-medium">
                 Hier anmelden
               </Link>
@@ -354,11 +372,13 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <PublicRoute>
-      <Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        }
+      >
         <RegisterForm />
       </Suspense>
     </PublicRoute>

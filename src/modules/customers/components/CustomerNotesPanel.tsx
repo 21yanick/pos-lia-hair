@@ -1,12 +1,8 @@
 'use client'
 
+import { FileText, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Plus, Trash2, FileText, Loader2, Pencil } from 'lucide-react'
-import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
-import { Textarea } from '@/shared/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -16,11 +12,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog'
-import { useToast } from '@/shared/hooks/core/useToast'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Input } from '@/shared/components/ui/input'
+import { Textarea } from '@/shared/components/ui/textarea'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useToast } from '@/shared/hooks/core/useToast'
+import type { CustomerNote, CustomerWithNotes } from '@/shared/services/customerService'
 import { useCustomerActions } from '../hooks/useCustomerActions'
 import { formatRelativeDate } from '../utils/customerUtils'
-import type { CustomerWithNotes, CustomerNote } from '@/shared/services/customerService'
 
 interface CustomerNotesPanelProps {
   customer: CustomerWithNotes
@@ -52,7 +52,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
       toast({
         title: 'Fehler',
         description: 'Titel und Inhalt sind erforderlich.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
       return
     }
@@ -61,7 +61,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
       await createNote.mutateAsync({
         customerId: customer.id,
         blockName: newNote.block_name.trim(),
-        content: newNote.content.trim()
+        content: newNote.content.trim(),
       })
 
       setIsAddingNote(false)
@@ -75,7 +75,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
       toast({
         title: 'Fehler',
         description: 'Notiz konnte nicht erstellt werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }
@@ -89,7 +89,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
     setEditingNote({
       id: note.id,
       block_name: note.block_name,
-      content: note.content
+      content: note.content,
     })
   }
 
@@ -100,7 +100,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
       toast({
         title: 'Fehler',
         description: 'Titel und Inhalt sind erforderlich.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
       return
     }
@@ -110,9 +110,9 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
         noteId: editingNote.id,
         data: {
           block_name: editingNote.block_name.trim(),
-          content: editingNote.content.trim()
+          content: editingNote.content.trim(),
         },
-        customerId: customer.id
+        customerId: customer.id,
       })
 
       setEditingNote(null)
@@ -125,7 +125,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
       toast({
         title: 'Fehler',
         description: 'Notiz konnte nicht aktualisiert werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }
@@ -138,7 +138,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
     try {
       await deleteNote.mutateAsync({
         noteId,
-        customerId: customer.id
+        customerId: customer.id,
       })
 
       setDeleteNoteId(null)
@@ -151,7 +151,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
       toast({
         title: 'Fehler',
         description: 'Notiz konnte nicht gelöscht werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }
@@ -166,30 +166,26 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
             <div className="space-y-3">
               <Input
                 value={editingNote.block_name}
-                onChange={(e) => setEditingNote({...editingNote, block_name: e.target.value})}
+                onChange={(e) => setEditingNote({ ...editingNote, block_name: e.target.value })}
                 placeholder="z.B. Haarfarbe, Allergien, Präferenzen"
                 className="font-semibold"
               />
-              
+
               <Textarea
                 value={editingNote.content}
-                onChange={(e) => setEditingNote({...editingNote, content: e.target.value})}
+                onChange={(e) => setEditingNote({ ...editingNote, content: e.target.value })}
                 placeholder="Notizen eingeben..."
                 className="min-h-[80px] resize-none"
               />
-              
+
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  onClick={handleSaveEdit}
-                  disabled={updateNote.isPending}
-                >
+                <Button size="sm" onClick={handleSaveEdit} disabled={updateNote.isPending}>
                   {updateNote.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                   Speichern
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={handleCancelEdit}
                   disabled={updateNote.isPending}
                 >
@@ -226,11 +222,11 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
               </Button>
             </div>
           </div>
-          
+
           <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {note.content}
           </p>
-          
+
           <div className="text-xs text-muted-foreground mt-3">
             {formatRelativeDate(note.updated_at)}
           </div>
@@ -264,30 +260,32 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
               <div className="space-y-3">
                 <Input
                   value={newNote.block_name}
-                  onChange={(e) => setNewNote({...newNote, block_name: e.target.value})}
+                  onChange={(e) => setNewNote({ ...newNote, block_name: e.target.value })}
                   placeholder="z.B. Haarfarbe, Allergien, Präferenzen"
                   className="font-semibold"
                 />
-                
+
                 <Textarea
                   value={newNote.content}
-                  onChange={(e) => setNewNote({...newNote, content: e.target.value})}
+                  onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
                   placeholder="Notizen eingeben..."
                   className="min-h-[80px] resize-none"
                 />
-                
+
                 <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={handleSaveNewNote}
-                    disabled={createNote.isPending || !newNote.block_name.trim() || !newNote.content.trim()}
+                    disabled={
+                      createNote.isPending || !newNote.block_name.trim() || !newNote.content.trim()
+                    }
                   >
                     {createNote.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                     Notiz erstellen
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={handleCancelNewNote}
                     disabled={createNote.isPending}
                   >
@@ -320,7 +318,8 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Notiz löschen</AlertDialogTitle>
               <AlertDialogDescription>
-                Sind Sie sicher, dass Sie diese Notiz löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+                Sind Sie sicher, dass Sie diese Notiz löschen möchten? Diese Aktion kann nicht
+                rückgängig gemacht werden.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

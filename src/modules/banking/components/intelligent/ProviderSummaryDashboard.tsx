@@ -1,27 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Badge } from "@/shared/components/ui/badge"
-import { Button } from "@/shared/components/ui/button"
-import { Skeleton } from "@/shared/components/ui/skeleton"
-import { 
-  RefreshCw, 
-  TrendingUp,
-  Building2,
-  Wallet,
-  User,
-  AlertCircle
-} from "lucide-react"
+import { AlertCircle, Building2, RefreshCw, TrendingUp, User, Wallet } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Skeleton } from '@/shared/components/ui/skeleton'
 import { getProviderSummaries } from '../../services/bankingApi'
-import type { ProviderSummaryDashboard, ProviderSummary } from '../../services/matchingTypes'
+import type { ProviderSummary, ProviderSummaryDashboard } from '../../services/matchingTypes'
 
 interface ProviderSummaryDashboardProps {
   onProviderSelect?: (providerSummary: ProviderSummary) => void
   className?: string
 }
 
-export function ProviderSummaryDashboard({ onProviderSelect, className }: ProviderSummaryDashboardProps) {
+export function ProviderSummaryDashboard({
+  onProviderSelect,
+  className,
+}: ProviderSummaryDashboardProps) {
   const [dashboard, setDashboard] = useState<ProviderSummaryDashboard | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,14 +25,14 @@ export function ProviderSummaryDashboard({ onProviderSelect, className }: Provid
   const loadSummaries = async () => {
     setIsLoading(true)
     setError(null)
-    
+
     try {
       const { data, error: apiError } = await getProviderSummaries()
-      
+
       if (apiError || !data) {
         throw new Error(apiError?.message || 'Fehler beim Laden der Provider-Summaries')
       }
-      
+
       setDashboard(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
@@ -52,7 +48,7 @@ export function ProviderSummaryDashboard({ onProviderSelect, className }: Provid
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('de-CH', {
       style: 'currency',
-      currency: 'CHF'
+      currency: 'CHF',
     }).format(amount)
   }
 
@@ -154,17 +150,12 @@ export function ProviderSummaryDashboard({ onProviderSelect, className }: Provid
             <TrendingUp className="w-5 h-5" />
             Provider Übersicht
           </CardTitle>
-          <Button 
-            onClick={loadSummaries} 
-            variant="ghost" 
-            size="sm"
-            disabled={isLoading}
-          >
+          <Button onClick={loadSummaries} variant="ghost" size="sm" disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-3">
         {/* Grand Total */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -189,9 +180,7 @@ export function ProviderSummaryDashboard({ onProviderSelect, className }: Provid
           <div
             key={summary.provider}
             className={`border rounded-lg p-4 transition-all duration-200 ${
-              onProviderSelect 
-                ? 'cursor-pointer hover:bg-gray-50 hover:border-gray-300' 
-                : ''
+              onProviderSelect ? 'cursor-pointer hover:bg-gray-50 hover:border-gray-300' : ''
             }`}
             onClick={() => onProviderSelect?.(summary)}
           >
@@ -213,11 +202,9 @@ export function ProviderSummaryDashboard({ onProviderSelect, className }: Provid
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-right">
-                <div className="text-lg font-semibold">
-                  {formatAmount(summary.totalAmount)}
-                </div>
+                <div className="text-lg font-semibold">{formatAmount(summary.totalAmount)}</div>
                 <div className="text-sm text-gray-500">
                   Ø {formatAmount(summary.totalAmount / summary.itemCount)}
                 </div>

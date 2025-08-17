@@ -1,15 +1,15 @@
 /**
  * Query Key Factory for React Query
- * 
+ *
  * Centralized query key management for:
  * - Type safety
  * - Consistency
  * - Easy invalidation
  * - Multi-tenant support
- * 
+ *
  * Query Key Hierarchy:
  * [domain, organizationId, entity, ...filters]
- * 
+ *
  * Examples:
  * ['business', 'org123', 'settings']
  * ['business', 'org123', 'sales', { status: 'completed' }]
@@ -26,7 +26,7 @@ export const queryKeys = {
     profile: () => [...queryKeys.auth.all(), 'profile'] as const,
     session: () => [...queryKeys.auth.all(), 'session'] as const,
   },
-  
+
   // ========================================
   // Organization Management (Multi-Tenant)
   // ========================================
@@ -38,305 +38,204 @@ export const queryKeys = {
     detail: (orgId: string) => [...queryKeys.organization.details(), orgId] as const,
     members: (orgId: string) => [...queryKeys.organization.detail(orgId), 'members'] as const,
   },
-  
+
   // ========================================
   // Business Data (Organization-Scoped)
   // ========================================
   business: {
     // Root business queries
     all: (orgId: string) => ['business', orgId] as const,
-    
+
     // Business Settings
     settings: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'settings'] as const,
       detail: (orgId: string) => [...queryKeys.business.settings.all(orgId), 'detail'] as const,
     },
-    
+
     // Cash Movements & Balance
     cash: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'cash'] as const,
       balance: (orgId: string) => [...queryKeys.business.cash.all(orgId), 'balance'] as const,
-      movements: (orgId: string, filters?: any) => [
-        ...queryKeys.business.cash.all(orgId), 
-        'movements', 
-        filters
-      ] as const,
+      movements: (orgId: string, filters?: any) =>
+        [...queryKeys.business.cash.all(orgId), 'movements', filters] as const,
     },
-    
+
     // Sales & Transactions
     sales: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'sales'] as const,
       lists: (orgId: string) => [...queryKeys.business.sales.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) => [
-        ...queryKeys.business.sales.lists(orgId), 
-        filters
-      ] as const,
+      list: (orgId: string, filters?: any) =>
+        [...queryKeys.business.sales.lists(orgId), filters] as const,
       details: (orgId: string) => [...queryKeys.business.sales.all(orgId), 'detail'] as const,
-      detail: (orgId: string, saleId: string) => [
-        ...queryKeys.business.sales.details(orgId), 
-        saleId
-      ] as const,
-      stats: (orgId: string, timeframe?: string) => [
-        ...queryKeys.business.sales.all(orgId), 
-        'stats', 
-        timeframe
-      ] as const,
+      detail: (orgId: string, saleId: string) =>
+        [...queryKeys.business.sales.details(orgId), saleId] as const,
+      stats: (orgId: string, timeframe?: string) =>
+        [...queryKeys.business.sales.all(orgId), 'stats', timeframe] as const,
     },
-    
+
     // Products & Services
     items: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'items'] as const,
       lists: (orgId: string) => [...queryKeys.business.items.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) => [
-        ...queryKeys.business.items.lists(orgId), 
-        filters
-      ] as const,
+      list: (orgId: string, filters?: any) =>
+        [...queryKeys.business.items.lists(orgId), filters] as const,
       active: (orgId: string) => [...queryKeys.business.items.lists(orgId), 'active'] as const,
-      favorites: (orgId: string) => [...queryKeys.business.items.lists(orgId), 'favorites'] as const,
-      search: (orgId: string, query: string, activeOnly?: boolean) => [
-        ...queryKeys.business.items.lists(orgId), 
-        'search',
-        query,
-        activeOnly
-      ] as const,
+      favorites: (orgId: string) =>
+        [...queryKeys.business.items.lists(orgId), 'favorites'] as const,
+      search: (orgId: string, query: string, activeOnly?: boolean) =>
+        [...queryKeys.business.items.lists(orgId), 'search', query, activeOnly] as const,
       details: (orgId: string) => [...queryKeys.business.items.all(orgId), 'detail'] as const,
-      detail: (orgId: string, itemId: string) => [
-        ...queryKeys.business.items.details(orgId), 
-        itemId
-      ] as const,
-      categories: (orgId: string) => [...queryKeys.business.items.all(orgId), 'categories'] as const,
-      categoryCounts: (orgId: string) => [...queryKeys.business.items.all(orgId), 'category-counts'] as const,
+      detail: (orgId: string, itemId: string) =>
+        [...queryKeys.business.items.details(orgId), itemId] as const,
+      categories: (orgId: string) =>
+        [...queryKeys.business.items.all(orgId), 'categories'] as const,
+      categoryCounts: (orgId: string) =>
+        [...queryKeys.business.items.all(orgId), 'category-counts'] as const,
       optimized: (orgId: string) => [...queryKeys.business.items.all(orgId), 'optimized'] as const,
     },
-    
+
     // 🆕 Customer Management
     customers: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'customers'] as const,
       lists: (orgId: string) => [...queryKeys.business.customers.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) => [
-        ...queryKeys.business.customers.lists(orgId), 
-        filters
-      ] as const,
+      list: (orgId: string, filters?: any) =>
+        [...queryKeys.business.customers.lists(orgId), filters] as const,
       active: (orgId: string) => [...queryKeys.business.customers.lists(orgId), 'active'] as const,
-      search: (orgId: string, query: string) => [
-        ...queryKeys.business.customers.lists(orgId), 
-        'search',
-        query
-      ] as const,
+      search: (orgId: string, query: string) =>
+        [...queryKeys.business.customers.lists(orgId), 'search', query] as const,
       details: (orgId: string) => [...queryKeys.business.customers.all(orgId), 'detail'] as const,
-      detail: (orgId: string, customerId: string) => [
-        ...queryKeys.business.customers.details(orgId), 
-        customerId
-      ] as const,
-      withNotes: (orgId: string, customerId: string) => [
-        ...queryKeys.business.customers.detail(orgId, customerId), 
-        'notes'
-      ] as const,
-      notes: (orgId: string, customerId: string) => [
-        ...queryKeys.business.customers.detail(orgId, customerId), 
-        'notes-only'
-      ] as const,
-      sales: (orgId: string, customerId: string) => [
-        ...queryKeys.business.customers.detail(orgId, customerId), 
-        'sales'
-      ] as const,
-      lastVisit: (orgId: string, customerId: string) => [
-        ...queryKeys.business.customers.detail(orgId, customerId), 
-        'last-visit'
-      ] as const,
-      salesStats: (orgId: string, customerId: string) => [
-        ...queryKeys.business.customers.detail(orgId, customerId), 
-        'sales-stats'
-      ] as const,
+      detail: (orgId: string, customerId: string) =>
+        [...queryKeys.business.customers.details(orgId), customerId] as const,
+      withNotes: (orgId: string, customerId: string) =>
+        [...queryKeys.business.customers.detail(orgId, customerId), 'notes'] as const,
+      notes: (orgId: string, customerId: string) =>
+        [...queryKeys.business.customers.detail(orgId, customerId), 'notes-only'] as const,
+      sales: (orgId: string, customerId: string) =>
+        [...queryKeys.business.customers.detail(orgId, customerId), 'sales'] as const,
+      lastVisit: (orgId: string, customerId: string) =>
+        [...queryKeys.business.customers.detail(orgId, customerId), 'last-visit'] as const,
+      salesStats: (orgId: string, customerId: string) =>
+        [...queryKeys.business.customers.detail(orgId, customerId), 'sales-stats'] as const,
     },
-    
+
     // 🆕 Appointment Management (Phase 3)
     appointments: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'appointments'] as const,
       lists: (orgId: string) => [...queryKeys.business.appointments.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) => [
-        ...queryKeys.business.appointments.lists(orgId), 
-        filters
-      ] as const,
-      byDate: (orgId: string, date: string) => [
-        ...queryKeys.business.appointments.lists(orgId), 
-        'byDate',
-        date
-      ] as const,
-      byDateRange: (orgId: string, startDate: string, endDate: string) => [
-        ...queryKeys.business.appointments.lists(orgId), 
-        'dateRange',
-        startDate,
-        endDate
-      ] as const,
-      byCustomer: (orgId: string, customerId: string) => [
-        ...queryKeys.business.appointments.lists(orgId), 
-        'customer',
-        customerId
-      ] as const,
-      byStatus: (orgId: string, status: string) => [
-        ...queryKeys.business.appointments.lists(orgId), 
-        'status',
-        status
-      ] as const,
-      details: (orgId: string) => [...queryKeys.business.appointments.all(orgId), 'detail'] as const,
-      detail: (orgId: string, appointmentId: string) => [
-        ...queryKeys.business.appointments.details(orgId), 
-        appointmentId
-      ] as const,
-      conflicts: (orgId: string, date: string, startTime: string, endTime: string, excludeId?: string) => [
-        ...queryKeys.business.appointments.all(orgId), 
-        'conflicts',
-        date,
-        startTime,
-        endTime,
-        excludeId
-      ] as const,
+      list: (orgId: string, filters?: any) =>
+        [...queryKeys.business.appointments.lists(orgId), filters] as const,
+      byDate: (orgId: string, date: string) =>
+        [...queryKeys.business.appointments.lists(orgId), 'byDate', date] as const,
+      byDateRange: (orgId: string, startDate: string, endDate: string) =>
+        [...queryKeys.business.appointments.lists(orgId), 'dateRange', startDate, endDate] as const,
+      byCustomer: (orgId: string, customerId: string) =>
+        [...queryKeys.business.appointments.lists(orgId), 'customer', customerId] as const,
+      byStatus: (orgId: string, status: string) =>
+        [...queryKeys.business.appointments.lists(orgId), 'status', status] as const,
+      details: (orgId: string) =>
+        [...queryKeys.business.appointments.all(orgId), 'detail'] as const,
+      detail: (orgId: string, appointmentId: string) =>
+        [...queryKeys.business.appointments.details(orgId), appointmentId] as const,
+      conflicts: (
+        orgId: string,
+        date: string,
+        startTime: string,
+        endTime: string,
+        excludeId?: string
+      ) =>
+        [
+          ...queryKeys.business.appointments.all(orgId),
+          'conflicts',
+          date,
+          startTime,
+          endTime,
+          excludeId,
+        ] as const,
     },
-    
+
     // Expenses & Financial Operations
     expenses: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'expenses'] as const,
       lists: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) => [
-        ...queryKeys.business.expenses.lists(orgId), 
-        filters
-      ] as const,
-      dateRange: (orgId: string, startDate: string, endDate: string) => [
-        ...queryKeys.business.expenses.lists(orgId), 
-        'dateRange',
-        startDate,
-        endDate
-      ] as const,
-      currentMonth: (orgId: string) => [
-        ...queryKeys.business.expenses.lists(orgId), 
-        'currentMonth'
-      ] as const,
-      byCategory: (orgId: string, category: string) => [
-        ...queryKeys.business.expenses.lists(orgId),
-        'category',
-        category
-      ] as const,
-      byPaymentMethod: (orgId: string, paymentMethod: string) => [
-        ...queryKeys.business.expenses.lists(orgId),
-        'paymentMethod',
-        paymentMethod
-      ] as const,
+      list: (orgId: string, filters?: any) =>
+        [...queryKeys.business.expenses.lists(orgId), filters] as const,
+      dateRange: (orgId: string, startDate: string, endDate: string) =>
+        [...queryKeys.business.expenses.lists(orgId), 'dateRange', startDate, endDate] as const,
+      currentMonth: (orgId: string) =>
+        [...queryKeys.business.expenses.lists(orgId), 'currentMonth'] as const,
+      byCategory: (orgId: string, category: string) =>
+        [...queryKeys.business.expenses.lists(orgId), 'category', category] as const,
+      byPaymentMethod: (orgId: string, paymentMethod: string) =>
+        [...queryKeys.business.expenses.lists(orgId), 'paymentMethod', paymentMethod] as const,
       details: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'detail'] as const,
-      detail: (orgId: string, expenseId: string) => [
-        ...queryKeys.business.expenses.details(orgId), 
-        expenseId
-      ] as const,
-      categories: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'categories'] as const,
-      stats: (orgId: string, timeframe?: string) => [
-        ...queryKeys.business.expenses.all(orgId), 
-        'stats',
-        timeframe
-      ] as const,
+      detail: (orgId: string, expenseId: string) =>
+        [...queryKeys.business.expenses.details(orgId), expenseId] as const,
+      categories: (orgId: string) =>
+        [...queryKeys.business.expenses.all(orgId), 'categories'] as const,
+      stats: (orgId: string, timeframe?: string) =>
+        [...queryKeys.business.expenses.all(orgId), 'stats', timeframe] as const,
       grouped: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'grouped'] as const,
     },
-    
+
     // Banking & Financial Data
     banking: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'banking'] as const,
-      transactions: (orgId: string, filters?: any) => [
-        ...queryKeys.business.banking.all(orgId), 
-        'transactions', 
-        filters
-      ] as const,
-      reconciliation: (orgId: string) => [
-        ...queryKeys.business.banking.all(orgId), 
-        'reconciliation'
-      ] as const,
+      transactions: (orgId: string, filters?: any) =>
+        [...queryKeys.business.banking.all(orgId), 'transactions', filters] as const,
+      reconciliation: (orgId: string) =>
+        [...queryKeys.business.banking.all(orgId), 'reconciliation'] as const,
     },
-    
+
     // Reports & Analytics
     reports: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'reports'] as const,
-      financial: (orgId: string, period?: string) => [
-        ...queryKeys.business.reports.all(orgId), 
-        'financial', 
-        period
-      ] as const,
-      sales: (orgId: string, period?: string) => [
-        ...queryKeys.business.reports.all(orgId), 
-        'sales', 
-        period
-      ] as const,
-      performance: (orgId: string, period?: string) => [
-        ...queryKeys.business.reports.all(orgId), 
-        'performance', 
-        period
-      ] as const,
+      financial: (orgId: string, period?: string) =>
+        [...queryKeys.business.reports.all(orgId), 'financial', period] as const,
+      sales: (orgId: string, period?: string) =>
+        [...queryKeys.business.reports.all(orgId), 'sales', period] as const,
+      performance: (orgId: string, period?: string) =>
+        [...queryKeys.business.reports.all(orgId), 'performance', period] as const,
     },
-    
+
     // Dashboard-specific queries (granular)
     dashboard: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'dashboard'] as const,
-      
+
       // Real-time / High volatility data
       balance: (orgId: string) => [...queryKeys.business.dashboard.all(orgId), 'balance'] as const,
-      todayStats: (orgId: string, date: string) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'today-stats', 
-        date
-      ] as const,
-      recentTransactions: (orgId: string, limit?: number) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'recent-transactions', 
-        limit
-      ] as const,
-      
+      todayStats: (orgId: string, date: string) =>
+        [...queryKeys.business.dashboard.all(orgId), 'today-stats', date] as const,
+      recentTransactions: (orgId: string, limit?: number) =>
+        [...queryKeys.business.dashboard.all(orgId), 'recent-transactions', limit] as const,
+
       // Medium volatility data
-      weekStats: (orgId: string, weekStart: string) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'week-stats', 
-        weekStart
-      ] as const,
-      monthStats: (orgId: string, monthStart: string) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'month-stats', 
-        monthStart
-      ] as const,
-      recentActivities: (orgId: string, limit?: number) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'recent-activities', 
-        limit
-      ] as const,
-      
+      weekStats: (orgId: string, weekStart: string) =>
+        [...queryKeys.business.dashboard.all(orgId), 'week-stats', weekStart] as const,
+      monthStats: (orgId: string, monthStart: string) =>
+        [...queryKeys.business.dashboard.all(orgId), 'month-stats', monthStart] as const,
+      recentActivities: (orgId: string, limit?: number) =>
+        [...queryKeys.business.dashboard.all(orgId), 'recent-activities', limit] as const,
+
       // Low volatility / Historical data
-      monthlyTrends: (orgId: string, monthsBack?: number) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'monthly-trends', 
-        monthsBack
-      ] as const,
-      productCount: (orgId: string) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'product-count'
-      ] as const,
-      yearTotal: (orgId: string, year?: number) => [
-        ...queryKeys.business.dashboard.all(orgId), 
-        'year-total', 
-        year
-      ] as const,
+      monthlyTrends: (orgId: string, monthsBack?: number) =>
+        [...queryKeys.business.dashboard.all(orgId), 'monthly-trends', monthsBack] as const,
+      productCount: (orgId: string) =>
+        [...queryKeys.business.dashboard.all(orgId), 'product-count'] as const,
+      yearTotal: (orgId: string, year?: number) =>
+        [...queryKeys.business.dashboard.all(orgId), 'year-total', year] as const,
     },
-    
+
     // Documents & Files
     documents: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'documents'] as const,
       lists: (orgId: string) => [...queryKeys.business.documents.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) => [
-        ...queryKeys.business.documents.lists(orgId), 
-        filters
-      ] as const,
-      detail: (orgId: string, docId: string) => [
-        ...queryKeys.business.documents.all(orgId), 
-        'detail', 
-        docId
-      ] as const,
+      list: (orgId: string, filters?: any) =>
+        [...queryKeys.business.documents.lists(orgId), filters] as const,
+      detail: (orgId: string, docId: string) =>
+        [...queryKeys.business.documents.all(orgId), 'detail', docId] as const,
     },
   },
-  
+
   // ========================================
   // System & Global Data
   // ========================================
@@ -358,7 +257,7 @@ export const queryKeyUtils = {
   invalidateOrganization: (orgId: string) => {
     return queryKeys.business.all(orgId)
   },
-  
+
   /**
    * Invalidate all financial data for an organization
    */
@@ -370,14 +269,14 @@ export const queryKeyUtils = {
       queryKeys.business.banking.all(orgId),
     ]
   },
-  
+
   /**
    * Invalidate all settings and configuration
    */
   invalidateSettings: (orgId: string) => {
     return queryKeys.business.settings.all(orgId)
   },
-  
+
   /**
    * Get all query keys that should be prefetched for a new organization
    */
@@ -393,9 +292,13 @@ export const queryKeyUtils = {
 
 // Type exports for better TypeScript support
 export type QueryKey = readonly unknown[]
-export type BusinessQueryKey = ReturnType<typeof queryKeys.business[keyof typeof queryKeys.business]>
-export type AuthQueryKey = ReturnType<typeof queryKeys.auth[keyof typeof queryKeys.auth]>
-export type OrganizationQueryKey = ReturnType<typeof queryKeys.organization[keyof typeof queryKeys.organization]>
+export type BusinessQueryKey = ReturnType<
+  (typeof queryKeys.business)[keyof typeof queryKeys.business]
+>
+export type AuthQueryKey = ReturnType<(typeof queryKeys.auth)[keyof typeof queryKeys.auth]>
+export type OrganizationQueryKey = ReturnType<
+  (typeof queryKeys.organization)[keyof typeof queryKeys.organization]
+>
 
 // Export default for convenience
 export default queryKeys

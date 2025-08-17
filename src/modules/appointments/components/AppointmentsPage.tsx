@@ -5,24 +5,19 @@
  * Mobile-first appointment system with touch optimization
  */
 
-import { Suspense, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { Calendar as CalendarIcon, Settings } from 'lucide-react'
-import { Button } from '@/shared/components/ui/button'
+import Link from 'next/link'
+import { Suspense, useMemo, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { formatDateForDisplay, formatDateForAPI } from '@/shared/utils/dateUtils'
+import { cn } from '@/shared/utils'
+import { formatDateForAPI, formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { useAppointmentsByDate, useDeleteAppointment } from '../hooks/useAppointments'
 import type { AppointmentBlock } from '../types/timeline'
-import { cn } from '@/shared/utils'
-import { 
-  MonthGrid, 
-  DayTimeline, 
-  DayTimelineSkeleton,
-  useAppointmentCalendar 
-} from './calendar'
-import { QuickBookingDialog } from './dialogs'
 import { AppointmentDetailDialog } from './AppointmentDetailDialog'
+import { DayTimeline, DayTimelineSkeleton, MonthGrid, useAppointmentCalendar } from './calendar'
+import { QuickBookingDialog } from './dialogs'
 import { EditAppointmentDialog } from './EditAppointmentDialog'
 
 export function AppointmentsPage() {
@@ -43,48 +38,32 @@ export function AppointmentsPage() {
     closeDialogs,
     isToday,
     formatDateKey,
-    isExceptionAppointment
+    isExceptionAppointment,
   } = useAppointmentCalendar()
 
   // Edit dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [appointmentToEdit, setAppointmentToEdit] = useState<AppointmentBlock | null>(null)
-  
+
   // Delete appointment hook
   const deleteAppointment = useDeleteAppointment(currentOrganization?.id || '')
 
-
-
   // Load appointments for selected date to get real stats
   const { data: dayAppointments = [] } = useAppointmentsByDate(
-    currentOrganization?.id || '', 
+    currentOrganization?.id || '',
     selectedDate
   )
-  
+
   // Calculate real appointment stats for selected date
+  // V6.1 simplified appointment stats - no status field exists
   const appointmentStats = useMemo(() => {
     const stats = {
       total: dayAppointments.length,
-      scheduled: 0,
-      completed: 0,
-      cancelled: 0
+      scheduled: dayAppointments.length, // V6.1: All existing appointments are "scheduled"
+      completed: 0, // V6.1: No status tracking, keep 0 for UI compatibility
+      cancelled: 0, // V6.1: Cancelled appointments are deleted, not marked
     }
-    
-    dayAppointments.forEach(apt => {
-      switch (apt.status) {
-        case 'scheduled':
-        case 'confirmed':
-          stats.scheduled++
-          break
-        case 'completed':
-          stats.completed++
-          break
-        case 'cancelled':
-          stats.cancelled++
-          break
-      }
-    })
-    
+
     return stats
   }, [dayAppointments])
 
@@ -109,27 +88,27 @@ export function AppointmentsPage() {
             <div>
               <h1 className="text-3xl font-bold">Termine</h1>
               <p className="text-sm text-muted-foreground">
-                {appointmentStats.total} Termin{appointmentStats.total !== 1 ? 'e' : ''} am {formatDateForDisplay(selectedDate)}
+                {appointmentStats.total} Termin{appointmentStats.total !== 1 ? 'e' : ''} am{' '}
+                {formatDateForDisplay(selectedDate)}
               </p>
             </div>
           </div>
-          
+
           {/* Header Actions */}
           <div className="flex items-center gap-2">
-            
             {/* Quick Actions */}
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={goToToday}
               className={cn(
-                "hidden sm:flex",
-                isToday(selectedDate) && "bg-primary/10 text-primary border-primary/20"
+                'hidden sm:flex',
+                isToday(selectedDate) && 'bg-primary/10 text-primary border-primary/20'
               )}
             >
               Heute
             </Button>
-            
+
             {/* Settings */}
             <Button asChild variant="ghost" size="sm">
               <Link href={`/org/${currentOrganization.slug}/appointments/settings`}>
@@ -137,7 +116,6 @@ export function AppointmentsPage() {
                 <span className="sr-only">Einstellungen</span>
               </Link>
             </Button>
-            
           </div>
         </div>
       </div>
@@ -162,7 +140,7 @@ export function AppointmentsPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Timeline Main */}
           <div className="col-span-3 overflow-hidden">
             <Suspense fallback={<DayTimelineSkeleton className="h-full" />}>
@@ -187,7 +165,7 @@ export function AppointmentsPage() {
               className="w-full"
             />
           </div>
-          
+
           {/* Timeline */}
           <div className="flex-1 overflow-hidden">
             <Suspense fallback={<DayTimelineSkeleton className="h-full" />}>
@@ -202,7 +180,6 @@ export function AppointmentsPage() {
         </div>
       </div>
 
-
       {/* Quick Booking Dialog (for slot clicks) */}
       <QuickBookingDialog
         isOpen={isBookingDialogOpen && !!selectedSlot}
@@ -211,15 +188,19 @@ export function AppointmentsPage() {
           closeDialogs()
           // React Query will refetch data automatically
         }}
-        initialTimeSlot={selectedSlot ? {
-          start: selectedSlot.time,
-          end: selectedSlot.time, // Will be calculated in dialog
-          date: selectedSlot.date
-        } : undefined}
+        initialTimeSlot={
+          selectedSlot
+            ? {
+                start: selectedSlot.time,
+                end: selectedSlot.time, // Will be calculated in dialog
+                date: selectedSlot.date,
+              }
+            : undefined
+        }
         initialDate={selectedDate}
         isExceptionAppointment={isExceptionAppointment}
       />
-      
+
       {/* Appointment Detail Dialog (for appointment clicks) */}
       <AppointmentDetailDialog
         isOpen={isBookingDialogOpen && !!selectedAppointment}

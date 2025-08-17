@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from "react"
-import { Loader2 } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
+import { Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,12 +10,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
-import { Label } from "@/shared/components/ui/label"
-import { Switch } from "@/shared/components/ui/switch"
-import { type Item } from "@/shared/hooks/business/useItems"
-import { type ProductFormData } from "../hooks/useProductActions"
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Switch } from '@/shared/components/ui/switch'
+import type { Item } from '@/shared/hooks/business/useItems'
+import type { ProductFormData } from '../hooks/useProductActions'
 
 interface ProductDialogProps {
   isOpen: boolean
@@ -26,24 +32,24 @@ interface ProductDialogProps {
   isSubmitting: boolean
 }
 
-export function ProductDialog({ 
-  isOpen, 
-  onClose, 
-  currentItem, 
-  onSave, 
-  isSubmitting 
+export function ProductDialog({
+  isOpen,
+  onClose,
+  currentItem,
+  onSave,
+  isSubmitting,
 }: ProductDialogProps) {
   // Form state
   const [formData, setFormData] = useState<ProductFormData>({
-    name: "",
-    type: "service",
-    default_price: "",
+    name: '',
+    type: 'service',
+    default_price: '',
     is_favorite: false,
     active: true,
     // Service-specific fields
-    duration_minutes: "60",
+    duration_minutes: '60',
     requires_booking: true,
-    booking_buffer_minutes: "0",
+    booking_buffer_minutes: '0',
   })
 
   // Initialize form data when dialog opens
@@ -57,21 +63,21 @@ export function ProductDialog({
           is_favorite: currentItem.is_favorite ?? false,
           active: currentItem.active ?? true,
           // Service-specific fields
-          duration_minutes: currentItem.duration_minutes?.toString() ?? "",
+          duration_minutes: currentItem.duration_minutes?.toString() ?? '',
           requires_booking: currentItem.requires_booking ?? true,
-          booking_buffer_minutes: currentItem.booking_buffer_minutes?.toString() ?? "0",
+          booking_buffer_minutes: currentItem.booking_buffer_minutes?.toString() ?? '0',
         })
       } else {
         setFormData({
-          name: "",
-          type: "service",
-          default_price: "",
+          name: '',
+          type: 'service',
+          default_price: '',
           is_favorite: false,
           active: true,
           // Service-specific fields with defaults
-          duration_minutes: "60", // Default 1 hour for new services
+          duration_minutes: '60', // Default 1 hour for new services
           requires_booking: true,
-          booking_buffer_minutes: "0",
+          booking_buffer_minutes: '0',
         })
       }
     }
@@ -80,18 +86,18 @@ export function ProductDialog({
   // Reset service fields when type changes
   useEffect(() => {
     if (formData.type === 'product') {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        duration_minutes: "",
+        duration_minutes: '',
         requires_booking: false,
-        booking_buffer_minutes: "0",
+        booking_buffer_minutes: '0',
       }))
     } else if (formData.type === 'service' && !formData.duration_minutes) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        duration_minutes: "60",
+        duration_minutes: '60',
         requires_booking: true,
-        booking_buffer_minutes: "0",
+        booking_buffer_minutes: '0',
       }))
     }
   }, [formData.type])
@@ -113,10 +119,12 @@ export function ProductDialog({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>{currentItem ? "Produkt bearbeiten" : "Neues Produkt hinzufügen"}</DialogTitle>
+          <DialogTitle>
+            {currentItem ? 'Produkt bearbeiten' : 'Neues Produkt hinzufügen'}
+          </DialogTitle>
           <DialogDescription>
-            Füllen Sie die Felder aus, um{" "}
-            {currentItem ? "das Produkt zu aktualisieren" : "ein neues Produkt hinzuzufügen"}.
+            Füllen Sie die Felder aus, um{' '}
+            {currentItem ? 'das Produkt zu aktualisieren' : 'ein neues Produkt hinzuzufügen'}.
           </DialogDescription>
         </DialogHeader>
 
@@ -133,9 +141,9 @@ export function ProductDialog({
 
           <div className="space-y-2">
             <Label htmlFor="type">Typ</Label>
-            <Select 
-              value={formData.type} 
-              onValueChange={(value: "service" | "product") => 
+            <Select
+              value={formData.type}
+              onValueChange={(value: 'service' | 'product') =>
                 setFormData({ ...formData, type: value })
               }
             >
@@ -190,7 +198,9 @@ export function ProductDialog({
                 <Switch
                   id="requires_booking"
                   checked={formData.requires_booking}
-                  onCheckedChange={(checked) => setFormData({ ...formData, requires_booking: checked })}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, requires_booking: checked })
+                  }
                 />
               </div>
 
@@ -203,7 +213,9 @@ export function ProductDialog({
                   max="60"
                   placeholder="0"
                   value={formData.booking_buffer_minutes}
-                  onChange={(e) => setFormData({ ...formData, booking_buffer_minutes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, booking_buffer_minutes: e.target.value })
+                  }
                 />
                 <p className="text-xs text-muted-foreground">
                   Zusätzliche Zeit zwischen Terminen (0-60 Minuten)
@@ -232,19 +244,15 @@ export function ProductDialog({
         </div>
 
         <DialogFooter className="flex-shrink-0 pt-4">
-          <Button 
-            variant="outline" 
-            onClick={handleClose} 
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Abbrechen
           </Button>
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             disabled={
-              isSubmitting || 
-              !formData.name || 
-              !formData.default_price || 
+              isSubmitting ||
+              !formData.name ||
+              !formData.default_price ||
               (formData.type === 'service' && !formData.duration_minutes)
             }
           >
@@ -254,7 +262,7 @@ export function ProductDialog({
                 Wird gespeichert...
               </>
             ) : (
-              "Speichern"
+              'Speichern'
             )}
           </Button>
         </DialogFooter>

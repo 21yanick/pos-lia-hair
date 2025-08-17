@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { X, Download, RotateCw, ZoomIn, ZoomOut } from 'lucide-react'
+import { Download, RotateCw, X, ZoomIn, ZoomOut } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
 import { remoteDebugger } from '@/shared/utils/remoteDebug'
 
 interface InlinePDFViewerProps {
@@ -11,7 +11,12 @@ interface InlinePDFViewerProps {
   title?: string
 }
 
-export function InlinePDFViewer({ isOpen, pdfUrl, onClose, title = 'PDF Dokument' }: InlinePDFViewerProps) {
+export function InlinePDFViewer({
+  isOpen,
+  pdfUrl,
+  onClose,
+  title = 'PDF Dokument',
+}: InlinePDFViewerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [zoom, setZoom] = useState(100)
@@ -37,7 +42,7 @@ export function InlinePDFViewer({ isOpen, pdfUrl, onClose, title = 'PDF Dokument
 
   const handleDownload = () => {
     remoteDebugger.log('InlinePDFViewer', 'DOWNLOAD_CLICKED', 'User requested download')
-    
+
     try {
       const link = document.createElement('a')
       link.href = pdfUrl
@@ -62,9 +67,7 @@ export function InlinePDFViewer({ isOpen, pdfUrl, onClose, title = 'PDF Dokument
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-white border-b">
-          <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">
-            {title}
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-2">
             {/* Zoom Controls */}
             <button
@@ -74,9 +77,7 @@ export function InlinePDFViewer({ isOpen, pdfUrl, onClose, title = 'PDF Dokument
             >
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="text-sm font-medium px-2">
-              {zoom}%
-            </span>
+            <span className="text-sm font-medium px-2">{zoom}%</span>
             <button
               onClick={() => setZoom(Math.min(200, zoom + 25))}
               className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -149,11 +150,11 @@ export function InlinePDFViewer({ isOpen, pdfUrl, onClose, title = 'PDF Dokument
           <iframe
             src={pdfUrl}
             className="w-full h-full border-0"
-            style={{ 
+            style={{
               transform: `scale(${zoom / 100})`,
               transformOrigin: 'top left',
               width: `${100 / (zoom / 100)}%`,
-              height: `${100 / (zoom / 100)}%`
+              height: `${100 / (zoom / 100)}%`,
             }}
             onLoad={handleIframeLoad}
             onError={handleIframeError}

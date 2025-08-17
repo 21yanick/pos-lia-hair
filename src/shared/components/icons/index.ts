@@ -1,54 +1,54 @@
 /**
  * Centralized Icon Exports
- * 
+ *
  * This file consolidates all lucide-react icons used across the application
  * to enable better tree-shaking and reduce bundle size.
- * 
- * Instead of importing icons individually throughout the app, 
+ *
+ * Instead of importing icons individually throughout the app,
  * import them from this centralized location.
  */
 
 // Most used icons (20+ uses)
-export { 
-  Loader2,
-  CreditCard,
-  CheckCircle,
-  Download,
-  AlertTriangle,
-  Wallet,
-  Search,
-  Calendar,
+export {
   AlertCircle,
-  Trash2,
-  Plus,
-  FileText,
-  ChevronRight,
-  Check,
-  Upload,
-  ChevronLeft,
-  CheckCircle2,
-  Zap,
-  X,
-  Minus,
-  Pencil,
-  ShoppingBag,
-  Smartphone,
-  Package,
-  Heart,
-  Scissors,
-  Mail,
-  Eye,
+  AlertTriangle,
+  ArrowLeft,
+  BarChart4,
+  BookOpen,
   Building,
   Building2,
-  Receipt,
-  TrendingUp,
-  TrendingDown,
+  Calendar,
+  Check,
+  CheckCircle,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
-  FileUp,
-  ArrowLeft,
+  CreditCard,
   DollarSign,
-  BookOpen,
-  BarChart4
+  Download,
+  Eye,
+  FileText,
+  FileUp,
+  Heart,
+  Loader2,
+  Mail,
+  Minus,
+  Package,
+  Pencil,
+  Plus,
+  Receipt,
+  Scissors,
+  Search,
+  ShoppingBag,
+  Smartphone,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  Upload,
+  Wallet,
+  X,
+  Zap,
 } from 'lucide-react'
 
 // Export commonly used icon types

@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -38,7 +38,7 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       const isInWebAppiOS = (window.navigator as any).standalone === true
       const isInWebAppChrome = window.matchMedia('(display-mode: standalone)').matches
-      
+
       setIsInstalled(isStandalone || isInWebAppiOS || isInWebAppChrome)
 
       if (/android/.test(userAgent)) {
@@ -85,13 +85,13 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
     try {
       await installPrompt.prompt()
       const { outcome } = await installPrompt.userChoice
-      
+
       if (outcome === 'accepted') {
         setIsInstalled(true)
         setInstallPrompt(null)
         return true
       }
-      
+
       return false
     } catch (error) {
       console.error('PWA installation failed:', error)
@@ -101,7 +101,7 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
 
   // Platform Support Check
   const isPlatformSupported = platform !== 'unknown'
-  
+
   // Enhanced Install Instructions with better fallbacks
   const getInstallInstructions = useCallback((): string => {
     switch (platform) {
@@ -117,7 +117,7 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
         if (installPrompt) {
           return 'Klicken Sie auf "Als App installieren" um LIA HAIR zu installieren'
         }
-        // Enhanced desktop instructions  
+        // Enhanced desktop instructions
         return 'Chrome: Klicken Sie auf das ⊞ Symbol in der Adressleiste oder ⋮ Menü → "LIA HAIR installieren"'
       default:
         return 'Installation auf diesem Gerät nicht unterstützt'
@@ -141,7 +141,7 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
     isPlatformSupported,
     platform,
     installPrompt,
-    
+
     // Actions
     install,
     canInstall: !!installPrompt && !isInstalled,

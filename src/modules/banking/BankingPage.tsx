@@ -1,30 +1,37 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/shared/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
-import { Button } from "@/shared/components/ui/button"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Skeleton } from "@/shared/components/ui/skeleton"
-import { CreditCard, Building2, AlertCircle, Loader2, ArrowRightLeft, ArrowUpToLine, ArrowDownToLine, Upload, FileBarChart } from "lucide-react"
-import { useBankingData } from './hooks/useBankingData'
-import { CashTransferDialog } from './components/CashTransferDialog'
-import { BankImportDialog } from './components/BankImportDialog'
-import { ProviderImportDialog } from './components/ProviderImportDialog'
-import { OwnerTransactionDialog } from './components/OwnerTransactionDialog'
-import { formatDateForDisplay } from '@/shared/utils/dateUtils'
-import { 
-  EnhancedProviderTables,
-  EnhancedBankTables
-} from './components/intelligent'
-import { ReconciliationReportTab } from './components/ReconciliationReportTab'
+import {
+  AlertCircle,
+  ArrowDownToLine,
+  ArrowRightLeft,
+  ArrowUpToLine,
+  Building2,
+  CreditCard,
+  FileBarChart,
+  Loader2,
+  Upload,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import { Skeleton } from '@/shared/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { supabase } from '@/shared/lib/supabase/client'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
+import { BankImportDialog } from './components/BankImportDialog'
+import { CashTransferDialog } from './components/CashTransferDialog'
+import { EnhancedBankTables, EnhancedProviderTables } from './components/intelligent'
+import { OwnerTransactionDialog } from './components/OwnerTransactionDialog'
+import { ProviderImportDialog } from './components/ProviderImportDialog'
+import { ReconciliationReportTab } from './components/ReconciliationReportTab'
+import { useBankingData } from './hooks/useBankingData'
 
 export function BankingPage() {
   // Selection state for click-to-connect
   const [selectedSale, setSelectedSale] = useState<string | null>(null)
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
-  
+
   // Bank matching state (simplified for EnhancedBankTables)
   const [selectedBankTransaction, setSelectedBankTransaction] = useState<string | null>(null)
   const [selectedBankItems, setSelectedBankItems] = useState<string[]>([])
@@ -48,7 +55,7 @@ export function BankingPage() {
     transactionType: 'deposit' | 'expense' | 'withdrawal'
   }>({ isOpen: false, transactionType: 'deposit' })
 
-  // Real data from Banking API  
+  // Real data from Banking API
   const {
     unmatchedSales,
     unmatchedProviderReports,
@@ -59,7 +66,7 @@ export function BankingPage() {
     refetchData,
     bankAccounts,
     ownerBalance,
-    handleProviderImportSuccess
+    handleProviderImportSuccess,
   } = useBankingData()
 
   // Get first bank account (Raiffeisen)
@@ -68,10 +75,10 @@ export function BankingPage() {
   // Provider matching (Tab 1)
   const handleProviderMatchClick = async () => {
     if (!selectedSale || !selectedProvider) return
-    
+
     setIsMatching(true)
     const success = await handleProviderMatch(selectedSale, selectedProvider)
-    
+
     if (success) {
       setSelectedSale(null)
       setSelectedProvider(null)
@@ -158,7 +165,9 @@ export function BankingPage() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       setCurrentUserId(session?.user?.id || null)
     }
     getUser()
@@ -170,7 +179,7 @@ export function BankingPage() {
       <div className="text-center sm:text-left">
         <h1 className="text-2xl sm:text-3xl font-bold">Banking</h1>
       </div>
-      
+
       {/* Action Buttons - Separated from Header */}
       <div className="w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto lg:max-w-none lg:mx-0">
@@ -186,7 +195,7 @@ export function BankingPage() {
               <div className="text-xs opacity-75">Geld in Bank einzahlen</div>
             </div>
           </Button>
-          
+
           <Button
             onClick={() => openCashTransferDialog('from_bank')}
             variant="outline"
@@ -198,9 +207,9 @@ export function BankingPage() {
               <div className="text-xs opacity-75">Geld von Bank abheben</div>
             </div>
           </Button>
-          
+
           {/* Owner Transaction Buttons */}
-          <Button 
+          <Button
             onClick={() => openOwnerTransactionDialog('deposit')}
             variant="outline"
             className="h-14 sm:h-12 flex items-center justify-center gap-3 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-4 py-3 transition-all active:scale-95 group"
@@ -211,8 +220,8 @@ export function BankingPage() {
               <div className="text-xs opacity-75">Geld ins Geschäft</div>
             </div>
           </Button>
-          
-          <Button 
+
+          <Button
             onClick={() => openOwnerTransactionDialog('withdrawal')}
             variant="outline"
             className="h-14 sm:h-12 flex items-center justify-center gap-3 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground px-4 py-3 transition-all active:scale-95 group"
@@ -232,12 +241,7 @@ export function BankingPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             {error}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-2"
-              onClick={refetchData}
-            >
+            <Button variant="outline" size="sm" className="ml-2" onClick={refetchData}>
               Retry
             </Button>
           </AlertDescription>
@@ -274,17 +278,19 @@ export function BankingPage() {
             {isLoading ? (
               <Skeleton className="h-8 w-24 mb-2" />
             ) : (
-              <div className={`text-3xl font-bold ${
-                ownerBalance && ownerBalance.net_balance > 0 
-                  ? 'text-primary' 
-                  : ownerBalance && ownerBalance.net_balance < 0 
-                    ? 'text-destructive'
-                    : 'text-muted-foreground'
-              }`}>
-                {ownerBalance ? 
-                  `${ownerBalance.net_balance > 0 ? '+' : ''}${ownerBalance.net_balance.toFixed(2)}` : 
-                  '0.00'
-                } CHF
+              <div
+                className={`text-3xl font-bold ${
+                  ownerBalance && ownerBalance.net_balance > 0
+                    ? 'text-primary'
+                    : ownerBalance && ownerBalance.net_balance < 0
+                      ? 'text-destructive'
+                      : 'text-muted-foreground'
+                }`}
+              >
+                {ownerBalance
+                  ? `${ownerBalance.net_balance > 0 ? '+' : ''}${ownerBalance.net_balance.toFixed(2)}`
+                  : '0.00'}{' '}
+                CHF
               </div>
             )}
             <p className="text-sm text-muted-foreground flex items-center mt-2">
@@ -293,12 +299,11 @@ export function BankingPage() {
             </p>
             {ownerBalance && (
               <p className="text-xs text-muted-foreground mt-1">
-                {ownerBalance.net_balance > 0 
-                  ? 'Business schuldet Owner' 
-                  : ownerBalance.net_balance < 0 
+                {ownerBalance.net_balance > 0
+                  ? 'Business schuldet Owner'
+                  : ownerBalance.net_balance < 0
                     ? 'Owner schuldet Business'
-                    : 'Ausgeglichen'
-                }
+                    : 'Ausgeglichen'}
               </p>
             )}
           </CardContent>
@@ -330,17 +335,26 @@ export function BankingPage() {
       {/* Three-Tab System - Mobile Optimized */}
       <Tabs defaultValue="provider" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 h-12 sm:h-10">
-          <TabsTrigger value="provider" className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm">
+          <TabsTrigger
+            value="provider"
+            className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm"
+          >
             <CreditCard className="h-4 w-4 sm:h-4 sm:w-4 flex-shrink-0" />
             <span className="hidden sm:inline">Provider-Gebühren</span>
             <span className="sm:hidden font-medium">Provider</span>
           </TabsTrigger>
-          <TabsTrigger value="bank" className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm">
+          <TabsTrigger
+            value="bank"
+            className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm"
+          >
             <Building2 className="h-4 w-4 sm:h-4 sm:w-4 flex-shrink-0" />
             <span className="hidden sm:inline">Bank-Abgleich</span>
             <span className="sm:hidden font-medium">Bank</span>
           </TabsTrigger>
-          <TabsTrigger value="report" className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm">
+          <TabsTrigger
+            value="report"
+            className="h-11 sm:h-9 px-2 sm:px-3 flex items-center justify-center gap-2 sm:gap-1 text-xs sm:text-sm"
+          >
             <FileBarChart className="h-4 w-4 sm:h-4 sm:w-4 flex-shrink-0" />
             <span className="hidden sm:inline">Abgleich-Bericht</span>
             <span className="sm:hidden font-medium">Bericht</span>
@@ -352,7 +366,7 @@ export function BankingPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">POS Sales ↔ Provider Settlements</h2>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={openProviderImportDialog}
                 variant="outline"
                 className="flex items-center gap-2"
@@ -360,7 +374,7 @@ export function BankingPage() {
                 <Upload className="h-4 w-4" />
                 Import TWINT/SumUp
               </Button>
-              <Button 
+              <Button
                 onClick={handleProviderMatchClick}
                 disabled={!selectedSale || !selectedProvider || isMatching}
               >
@@ -389,7 +403,7 @@ export function BankingPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Bank Settlement & Matching</h2>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={openBankImportDialog}
                 variant="outline"
                 className="flex items-center gap-2"
@@ -400,7 +414,6 @@ export function BankingPage() {
               </Button>
             </div>
           </div>
-
 
           {/* Enhanced Bank Tables - 2 Column Design with Settlement Detection */}
           <EnhancedBankTables

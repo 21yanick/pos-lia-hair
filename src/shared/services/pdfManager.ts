@@ -1,16 +1,16 @@
 /**
  * Simple PDF Manager - Direct window.open approach
- * 
+ *
  * BEFORE: Complex EnterprisePDFProvider modal system (355+ lines)
  * AFTER:  Simple window.open for PDF viewing (~20 lines)
- * 
+ *
  * This is the planned simplification from our refactoring.
  */
 
 class SimplePdfManager {
   /**
    * Open PDF in new tab - Simple approach
-   * 
+   *
    * BEFORE: Complex modal system with setModalHandler, proxy URLs, mobile workarounds
    * AFTER:  Direct window.open (much simpler, works reliably)
    */

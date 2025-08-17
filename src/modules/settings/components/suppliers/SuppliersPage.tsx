@@ -1,22 +1,34 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
-import { Badge } from "@/shared/components/ui/badge"
-import { useToast } from "@/shared/hooks/core/useToast"
-import { Plus, Search, Filter, Users, Building2, Upload } from "lucide-react"
-import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
-import { SupplierList } from './SupplierList'
-import { getSuppliers } from '@/shared/services/supplierServices'
-import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
-import { supabase } from "@/shared/lib/supabase/client"
-import type { Supplier, SupplierCategory } from '@/shared/types/suppliers'
+import { Building2, Filter, Plus, Search, Upload, Users } from 'lucide-react'
 import Link from 'next/link'
-import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useEffect, useState } from 'react'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
+import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { Input } from '@/shared/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useToast } from '@/shared/hooks/core/useToast'
+import { supabase } from '@/shared/lib/supabase/client'
+import { getSuppliers } from '@/shared/services/supplierServices'
+import type { Supplier, SupplierCategory } from '@/shared/types/suppliers'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import { SupplierList } from './SupplierList'
 
 interface SuppliersPageProps {
   hideHeader?: boolean
@@ -25,26 +37,27 @@ interface SuppliersPageProps {
 export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
   const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
-  
+
   // 🔗 Helper: Organization-aware URL builder
-  const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
-  
+  const getOrgUrl = (path: string) =>
+    currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
+
   // State
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  
+
   // Filter State
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [activeFilter, setActiveFilter] = useState<string>('all')
-  
+
   // Stats State
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
-    categories: {} as Record<SupplierCategory, number>
+    categories: {} as Record<SupplierCategory, number>,
   })
 
   // Load current user
@@ -65,33 +78,35 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
       if (!currentOrganization) {
         throw new Error('Keine Organisation ausgewählt')
       }
-      
+
       const { data, count } = await getSuppliers(currentOrganization.id, {
         active_only: activeFilter === 'active',
-        category: categoryFilter !== 'all' ? categoryFilter as SupplierCategory : undefined,
-        search: searchQuery || undefined
+        category: categoryFilter !== 'all' ? (categoryFilter as SupplierCategory) : undefined,
+        search: searchQuery || undefined,
       })
-      
+
       setSuppliers(data)
-      
+
       // Calculate stats
-      const activeCount = data.filter(s => s.is_active).length
-      const categoryStats = data.reduce((acc, supplier) => {
-        acc[supplier.category] = (acc[supplier.category] || 0) + 1
-        return acc
-      }, {} as Record<SupplierCategory, number>)
-      
+      const activeCount = data.filter((s) => s.is_active).length
+      const categoryStats = data.reduce(
+        (acc, supplier) => {
+          acc[supplier.category] = (acc[supplier.category] || 0) + 1
+          return acc
+        },
+        {} as Record<SupplierCategory, number>
+      )
+
       setStats({
         total: count || data.length,
         active: activeCount,
-        categories: categoryStats
+        categories: categoryStats,
       })
-      
     } catch (error) {
       toast({
-        title: "Fehler",
-        description: "Lieferanten konnten nicht geladen werden",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Lieferanten konnten nicht geladen werden',
+        variant: 'destructive',
       })
     } finally {
       setLoading(false)
@@ -107,19 +122,19 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
   const handleSupplierCreated = (supplier: Supplier) => {
     loadSuppliers() // Refresh list
     toast({
-      title: "Erfolg",
-      description: "Lieferant wurde erfolgreich erstellt"
+      title: 'Erfolg',
+      description: 'Lieferant wurde erfolgreich erstellt',
     })
   }
 
   // Filtered stats for display
   const displayStats = {
     ...stats,
-    filtered: suppliers.length
+    filtered: suppliers.length,
   }
 
   return (
-    <div className={hideHeader ? "space-y-6" : "container mx-auto p-4 sm:p-6 space-y-6"}>
+    <div className={hideHeader ? 'space-y-6' : 'container mx-auto p-4 sm:p-6 space-y-6'}>
       {/* Header with Navigation */}
       {!hideHeader && (
         <SettingsHeader
@@ -128,13 +143,13 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
           actions={
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
               <Button variant="outline" asChild className="w-full sm:w-auto">
-                <Link href={getOrgUrl("/settings/import")}>
+                <Link href={getOrgUrl('/settings/import')}>
                   <Upload className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">CSV Import</span>
                   <span className="sm:hidden">Import</span>
                 </Link>
               </Button>
-              
+
               {currentUserId && (
                 <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
@@ -151,13 +166,13 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
       {hideHeader && (
         <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 sm:space-x-2 mb-4">
           <Button variant="outline" asChild className="w-full sm:w-auto">
-            <Link href={getOrgUrl("/settings/import")}>
+            <Link href={getOrgUrl('/settings/import')}>
               <Upload className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">CSV Import</span>
               <span className="sm:hidden">Import</span>
             </Link>
           </Button>
-          
+
           {currentUserId && (
             <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
@@ -182,7 +197,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Aktiv</CardTitle>
@@ -195,7 +210,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Top Kategorie</CardTitle>
@@ -208,10 +223,13 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
                   {Math.max(...Object.values(displayStats.categories))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {SUPPLIER_CATEGORIES[
-                    Object.entries(displayStats.categories)
-                      .reduce((a, b) => a[1] > b[1] ? a : b)[0] as SupplierCategory
-                  ]}
+                  {
+                    SUPPLIER_CATEGORIES[
+                      Object.entries(displayStats.categories).reduce((a, b) =>
+                        a[1] > b[1] ? a : b
+                      )[0] as SupplierCategory
+                    ]
+                  }
                 </p>
               </>
             ) : (
@@ -219,7 +237,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
             )}
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Kategorien</CardTitle>
@@ -227,9 +245,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Object.keys(displayStats.categories).length}</div>
-            <p className="text-xs text-muted-foreground">
-              verschiedene Kategorien
-            </p>
+            <p className="text-xs text-muted-foreground">verschiedene Kategorien</p>
           </CardContent>
         </Card>
       </div>
@@ -253,7 +269,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
                 />
               </div>
             </div>
-            
+
             {/* Category Filter */}
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
@@ -268,7 +284,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
                 ))}
               </SelectContent>
             </Select>
-            
+
             {/* Active Filter */}
             <Select value={activeFilter} onValueChange={setActiveFilter}>
               <SelectTrigger className="w-full sm:w-[160px]">
@@ -288,16 +304,10 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
       <Card>
         <CardHeader>
           <CardTitle>Lieferanten ({suppliers.length})</CardTitle>
-          <CardDescription>
-            Übersicht aller Lieferanten mit Details und Aktionen
-          </CardDescription>
+          <CardDescription>Übersicht aller Lieferanten mit Details und Aktionen</CardDescription>
         </CardHeader>
         <CardContent>
-          <SupplierList 
-            suppliers={suppliers}
-            loading={loading}
-            onSupplierUpdated={loadSuppliers}
-          />
+          <SupplierList suppliers={suppliers} loading={loading} onSupplierUpdated={loadSuppliers} />
         </CardContent>
       </Card>
 

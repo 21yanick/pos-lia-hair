@@ -1,16 +1,15 @@
-"use client"
+'use client'
 
-import { Badge } from "@/shared/components/ui/badge"
-import { 
-  CheckCircle2, 
-  Target, 
-  AlertCircle, 
-  Zap,
-  Eye,
-  Clock
-} from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Eye, Target, Zap } from 'lucide-react'
+import { Badge } from '@/shared/components/ui/badge'
 
-export type MatchStatus = 'none' | 'high_confidence' | 'medium_confidence' | 'low_confidence' | 'matched' | 'processing'
+export type MatchStatus =
+  | 'none'
+  | 'high_confidence'
+  | 'medium_confidence'
+  | 'low_confidence'
+  | 'matched'
+  | 'processing'
 
 interface MatchableRowIndicatorProps {
   status: MatchStatus
@@ -19,11 +18,11 @@ interface MatchableRowIndicatorProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-export function MatchableRowIndicator({ 
-  status, 
-  confidence, 
-  className = "",
-  size = 'sm'
+export function MatchableRowIndicator({
+  status,
+  confidence,
+  className = '',
+  size = 'sm',
 }: MatchableRowIndicatorProps) {
   const getIndicatorConfig = () => {
     switch (status) {
@@ -32,41 +31,43 @@ export function MatchableRowIndicator({
           icon: <Zap className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'}`} />,
           text: confidence ? `${confidence}%` : 'Auto-Match',
           variant: 'default' as const,
-          className: 'bg-green-100 text-green-800 border-green-200 animate-pulse'
+          className: 'bg-green-100 text-green-800 border-green-200 animate-pulse',
         }
-      
+
       case 'medium_confidence':
         return {
           icon: <Target className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'}`} />,
           text: confidence ? `${confidence}%` : 'Gut',
           variant: 'secondary' as const,
-          className: 'bg-blue-100 text-blue-800 border-blue-200'
+          className: 'bg-blue-100 text-blue-800 border-blue-200',
         }
-      
+
       case 'low_confidence':
         return {
           icon: <Eye className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'}`} />,
           text: confidence ? `${confidence}%` : 'Review',
           variant: 'outline' as const,
-          className: 'bg-yellow-50 text-yellow-700 border-yellow-200'
+          className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
         }
-      
+
       case 'matched':
         return {
-          icon: <CheckCircle2 className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} text-green-600`} />,
+          icon: (
+            <CheckCircle2 className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} text-green-600`} />
+          ),
           text: 'Matched',
           variant: 'outline' as const,
-          className: 'bg-green-50 text-green-700 border-green-300'
+          className: 'bg-green-50 text-green-700 border-green-300',
         }
-      
+
       case 'processing':
         return {
           icon: <Clock className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} animate-spin`} />,
           text: 'Processing...',
           variant: 'outline' as const,
-          className: 'bg-blue-50 text-blue-700 border-blue-200'
+          className: 'bg-blue-50 text-blue-700 border-blue-200',
         }
-      
+
       case 'none':
       default:
         return null
@@ -74,16 +75,18 @@ export function MatchableRowIndicator({
   }
 
   const config = getIndicatorConfig()
-  
+
   if (!config) return null
 
   return (
-    <Badge 
+    <Badge
       variant={config.variant}
       className={`${config.className} ${className} flex items-center gap-1 ${
-        size === 'sm' ? 'text-xs px-1.5 py-0.5' : 
-        size === 'md' ? 'text-sm px-2 py-1' : 
-        'text-sm px-3 py-1.5'
+        size === 'sm'
+          ? 'text-xs px-1.5 py-0.5'
+          : size === 'md'
+            ? 'text-sm px-2 py-1'
+            : 'text-sm px-3 py-1.5'
       }`}
     >
       {config.icon}
@@ -101,12 +104,12 @@ interface MatchableTableRowProps {
   className?: string
 }
 
-export function MatchableTableRow({ 
-  status, 
-  confidence, 
-  children, 
+export function MatchableTableRow({
+  status,
+  confidence,
+  children,
   onClick,
-  className = ""
+  className = '',
 }: MatchableTableRowProps) {
   const getRowClassName = () => {
     switch (status) {
@@ -126,7 +129,7 @@ export function MatchableTableRow({
   }
 
   return (
-    <tr 
+    <tr
       className={`transition-all duration-200 ${getRowClassName()} ${
         onClick ? 'cursor-pointer' : ''
       } ${className}`}

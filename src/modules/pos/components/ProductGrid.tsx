@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { Loader2, Search, X, Scissors, Package, Heart } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
-import { Card, CardContent } from "@/shared/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
-import { Badge } from "@/shared/components/ui/badge"
-import { useItems } from "@/shared/hooks/business/useItems"
-import type { ProductTab } from "@/shared/hooks/business/usePOSState"
-import type { Item } from "@/shared/hooks/business/useItems"
+import { Heart, Loader2, Package, Scissors, Search, X } from 'lucide-react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import { Input } from '@/shared/components/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
+import type { Item } from '@/shared/hooks/business/useItems'
+import { useItems } from '@/shared/hooks/business/useItems'
+import type { ProductTab } from '@/shared/hooks/business/usePOSState'
 
 interface ProductGridProps {
   activeTab: ProductTab
@@ -33,9 +33,9 @@ export function ProductGrid({
   const filteredItems = (items || []).filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesTab =
-      (activeTab === "services" && item.type === "service") ||
-      (activeTab === "products" && item.type === "product") ||
-      (activeTab === "favorites" && item.is_favorite)
+      (activeTab === 'services' && item.type === 'service') ||
+      (activeTab === 'products' && item.type === 'product') ||
+      (activeTab === 'favorites' && item.is_favorite)
 
     return matchesSearch && matchesTab && item.active // Nur aktive Items anzeigen
   })
@@ -46,7 +46,10 @@ export function ProductGrid({
       <div className="mb-4 space-y-3 flex-shrink-0">
         {/* Suchfeld */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+            size={18}
+          />
           <Input
             placeholder="Suche..."
             className="pl-10 pr-10 h-10"
@@ -54,9 +57,9 @@ export function ProductGrid({
             onChange={(e) => onSearchChange(e.target.value)}
           />
           {searchQuery && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
               onClick={onClearSearch}
             >
@@ -66,7 +69,11 @@ export function ProductGrid({
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as ProductTab)} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => onTabChange(value as ProductTab)}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="favorites" className="flex items-center gap-2">
               <Heart size={14} />
@@ -98,8 +105,8 @@ export function ProductGrid({
                 key={item.id}
                 className="cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={(e) => {
-                  e.preventDefault();
-                  onAddToCart(item);
+                  e.preventDefault()
+                  onAddToCart(item)
                 }}
               >
                 <CardContent className="p-4 flex flex-col items-center text-center min-h-[120px]">
@@ -109,29 +116,23 @@ export function ProductGrid({
                       <Heart size={14} className="text-accent fill-current" />
                     </div>
                   )}
-                  
+
                   {/* Service/Product Icon */}
-                  <div className={`mb-3 p-2 rounded-md ${
-                    item.type === "service" 
-                      ? "bg-primary/10 text-primary" 
-                      : "bg-secondary/80 text-secondary-foreground"
-                  }`}>
-                    {item.type === "service" ? (
-                      <Scissors size={18} />
-                    ) : (
-                      <Package size={18} />
-                    )}
+                  <div
+                    className={`mb-3 p-2 rounded-md ${
+                      item.type === 'service'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-secondary/80 text-secondary-foreground'
+                    }`}
+                  >
+                    {item.type === 'service' ? <Scissors size={18} /> : <Package size={18} />}
                   </div>
-                  
+
                   {/* Item Name */}
-                  <div className="font-medium text-sm mb-3 line-clamp-2 flex-1">
-                    {item.name}
-                  </div>
-                  
+                  <div className="font-medium text-sm mb-3 line-clamp-2 flex-1">{item.name}</div>
+
                   {/* Price */}
-                  <div className="text-sm font-semibold">
-                    CHF {item.default_price.toFixed(2)}
-                  </div>
+                  <div className="text-sm font-semibold">CHF {item.default_price.toFixed(2)}</div>
                 </CardContent>
               </Card>
             ))}

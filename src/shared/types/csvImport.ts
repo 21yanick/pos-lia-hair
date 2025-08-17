@@ -1,7 +1,7 @@
 // CSV Import Type Definitions
 // Extends existing import system with CSV-specific functionality
 
-import { ItemImport, SaleImport, ExpenseImport } from '@/shared/types/import'
+import type { ExpenseImport, ItemImport, SaleImport } from '@/shared/types/import'
 
 // =================================
 // CSV Data Types
@@ -25,7 +25,14 @@ export interface ParsedCsvData {
 // Column Mapping Types
 // =================================
 
-export type CsvImportType = 'items' | 'sales' | 'expenses' | 'users' | 'owner_transactions' | 'bank_accounts' | 'suppliers'
+export type CsvImportType =
+  | 'items'
+  | 'sales'
+  | 'expenses'
+  | 'users'
+  | 'owner_transactions'
+  | 'bank_accounts'
+  | 'suppliers'
 
 // Field definitions for each import type
 export interface ItemFieldMapping {
@@ -101,7 +108,14 @@ export interface SupplierFieldMapping {
   notes?: string
 }
 
-export type FieldMapping = ItemFieldMapping | SaleFieldMapping | ExpenseFieldMapping | UserFieldMapping | OwnerTransactionFieldMapping | BankAccountFieldMapping | SupplierFieldMapping
+export type FieldMapping =
+  | ItemFieldMapping
+  | SaleFieldMapping
+  | ExpenseFieldMapping
+  | UserFieldMapping
+  | OwnerTransactionFieldMapping
+  | BankAccountFieldMapping
+  | SupplierFieldMapping
 
 // =================================
 // Column Mapping Configuration
@@ -166,7 +180,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Name des Produkts oder Service',
-      example: 'Haarschnitt Damen'
+      example: 'Haarschnitt Damen',
     },
     {
       key: 'default_price',
@@ -174,7 +188,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'number',
       description: 'Preis in CHF',
-      example: '65.00'
+      example: '65.00',
     },
     {
       key: 'type',
@@ -183,7 +197,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['service', 'product'],
       description: 'Produkt oder Service',
-      example: 'service'
+      example: 'service',
     },
     {
       key: 'is_favorite',
@@ -192,7 +206,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
       description: 'Als Favorit markieren',
-      example: 'true'
+      example: 'true',
     },
     {
       key: 'active',
@@ -201,8 +215,8 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
       description: 'Aktiv/Inaktiv Status',
-      example: 'true'
-    }
+      example: 'true',
+    },
   ],
   sales: [
     {
@@ -211,7 +225,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'date',
       description: 'Verkaufsdatum (YYYY-MM-DD)',
-      example: '2024-01-15'
+      example: '2024-01-15',
     },
     {
       key: 'time',
@@ -219,7 +233,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'time',
       description: 'Verkaufszeit (HH:MM)',
-      example: '14:30'
+      example: '14:30',
     },
     {
       key: 'total_amount',
@@ -227,7 +241,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'number',
       description: 'Verkaufsbetrag in CHF',
-      example: '65.00'
+      example: '65.00',
     },
     {
       key: 'payment_method',
@@ -236,7 +250,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['cash', 'twint', 'sumup'],
       description: 'Art der Zahlung',
-      example: 'cash'
+      example: 'cash',
     },
     {
       key: 'items',
@@ -244,7 +258,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Items im Format: "Name:Preis;Name2:Preis2" (Semikolon-getrennt)',
-      example: 'Haarschnitt Damen:60.00;Styling:25.00'
+      example: 'Haarschnitt Damen:60.00;Styling:25.00',
     },
     {
       key: 'notes',
@@ -252,8 +266,8 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Zusätzliche Bemerkungen',
-      example: 'Stammkunde'
-    }
+      example: 'Stammkunde',
+    },
   ],
   expenses: [
     {
@@ -262,7 +276,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'date',
       description: 'Ausgabendatum (YYYY-MM-DD)',
-      example: '2024-01-15'
+      example: '2024-01-15',
     },
     {
       key: 'amount',
@@ -270,7 +284,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'number',
       description: 'Ausgabenbetrag in CHF',
-      example: '150.00'
+      example: '150.00',
     },
     {
       key: 'description',
@@ -278,7 +292,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Was wurde gekauft/bezahlt',
-      example: 'Miete Januar'
+      example: 'Miete Januar',
     },
     {
       key: 'category',
@@ -287,7 +301,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['rent', 'supplies', 'salary', 'utilities', 'insurance', 'other'],
       description: 'Ausgabenkategorie',
-      example: 'rent'
+      example: 'rent',
     },
     {
       key: 'payment_method',
@@ -296,7 +310,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['bank', 'cash', 'überweisung', 'bar'],
       description: 'Art der Zahlung',
-      example: 'bank'
+      example: 'bank',
     },
     {
       key: 'supplier_name',
@@ -304,7 +318,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Name des Lieferanten/Empfängers',
-      example: 'Migros'
+      example: 'Migros',
     },
     {
       key: 'invoice_number',
@@ -312,7 +326,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Externe Rechnungsnummer',
-      example: 'RE-2024-001'
+      example: 'RE-2024-001',
     },
     {
       key: 'notes',
@@ -320,8 +334,8 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Zusätzliche Bemerkungen',
-      example: 'Monatliche Miete'
-    }
+      example: 'Monatliche Miete',
+    },
   ],
   users: [
     {
@@ -330,7 +344,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Vollständiger Name des Benutzers',
-      example: 'Maria Müller'
+      example: 'Maria Müller',
     },
     {
       key: 'username',
@@ -338,7 +352,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Eindeutiger Benutzername',
-      example: 'maria.mueller'
+      example: 'maria.mueller',
     },
     {
       key: 'email',
@@ -346,7 +360,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'E-Mail Adresse',
-      example: 'maria@salon.ch'
+      example: 'maria@salon.ch',
     },
     {
       key: 'role',
@@ -355,7 +369,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['admin', 'staff'],
       description: 'Benutzerrolle',
-      example: 'staff'
+      example: 'staff',
     },
     {
       key: 'active',
@@ -364,8 +378,8 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
       description: 'Aktiv/Inaktiv Status',
-      example: 'true'
-    }
+      example: 'true',
+    },
   ],
   owner_transactions: [
     {
@@ -375,7 +389,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['deposit', 'expense', 'withdrawal'],
       description: 'Art der Transaktion',
-      example: 'deposit'
+      example: 'deposit',
     },
     {
       key: 'amount',
@@ -383,7 +397,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'number',
       description: 'Transaktionsbetrag in CHF',
-      example: '2000.00'
+      example: '2000.00',
     },
     {
       key: 'description',
@@ -391,7 +405,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Beschreibung der Transaktion',
-      example: 'Eigenkapital Einlage'
+      example: 'Eigenkapital Einlage',
     },
     {
       key: 'transaction_date',
@@ -399,7 +413,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'date',
       description: 'Transaktionsdatum (YYYY-MM-DD)',
-      example: '2024-01-15'
+      example: '2024-01-15',
     },
     {
       key: 'payment_method',
@@ -408,7 +422,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['bank_transfer', 'private_card', 'private_cash'],
       description: 'Art der Zahlung',
-      example: 'bank_transfer'
+      example: 'bank_transfer',
     },
     {
       key: 'notes',
@@ -416,8 +430,8 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Zusätzliche Bemerkungen',
-      example: 'Startkapital für Salon'
-    }
+      example: 'Startkapital für Salon',
+    },
   ],
   bank_accounts: [
     {
@@ -426,7 +440,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Name/Bezeichnung des Kontos',
-      example: 'Geschäftskonto UBS'
+      example: 'Geschäftskonto UBS',
     },
     {
       key: 'bank_name',
@@ -434,7 +448,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Name der Bank',
-      example: 'UBS AG'
+      example: 'UBS AG',
     },
     {
       key: 'iban',
@@ -442,7 +456,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'IBAN Nummer',
-      example: 'CH93 0076 2011 6238 5295 7'
+      example: 'CH93 0076 2011 6238 5295 7',
     },
     {
       key: 'account_number',
@@ -450,7 +464,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Interne Kontonummer',
-      example: '123456789'
+      example: '123456789',
     },
     {
       key: 'current_balance',
@@ -458,7 +472,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'number',
       description: 'Startguthaben in CHF',
-      example: '5000.00'
+      example: '5000.00',
     },
     {
       key: 'is_active',
@@ -467,7 +481,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
       description: 'Konto aktiv/inaktiv',
-      example: 'true'
+      example: 'true',
     },
     {
       key: 'notes',
@@ -475,8 +489,8 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Zusätzliche Bemerkungen',
-      example: 'Hauptgeschäftskonto'
-    }
+      example: 'Hauptgeschäftskonto',
+    },
   ],
   suppliers: [
     {
@@ -485,16 +499,27 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: true,
       type: 'string',
       description: 'Name des Lieferanten',
-      example: 'Migros'
+      example: 'Migros',
     },
     {
       key: 'category',
       label: 'Kategorie',
       required: true,
       type: 'enum',
-      enumValues: ['beauty_supplies', 'equipment', 'utilities', 'rent', 'insurance', 'professional_services', 'retail', 'online_marketplace', 'real_estate', 'other'],
+      enumValues: [
+        'beauty_supplies',
+        'equipment',
+        'utilities',
+        'rent',
+        'insurance',
+        'professional_services',
+        'retail',
+        'online_marketplace',
+        'real_estate',
+        'other',
+      ],
       description: 'Lieferantenkategorie',
-      example: 'beauty_supplies'
+      example: 'beauty_supplies',
     },
     {
       key: 'contact_email',
@@ -502,7 +527,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Kontakt E-Mail Adresse',
-      example: 'info@migros.ch'
+      example: 'info@migros.ch',
     },
     {
       key: 'contact_phone',
@@ -510,7 +535,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Kontakt Telefonnummer',
-      example: '+41 44 123 45 67'
+      example: '+41 44 123 45 67',
     },
     {
       key: 'website',
@@ -518,7 +543,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Website URL',
-      example: 'https://www.migros.ch'
+      example: 'https://www.migros.ch',
     },
     {
       key: 'address_line1',
@@ -526,7 +551,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Strassenadresse',
-      example: 'Limmatstrasse 152'
+      example: 'Limmatstrasse 152',
     },
     {
       key: 'address_line2',
@@ -534,7 +559,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Zusätzliche Adressinformationen',
-      example: '3. Stock, c/o Schmidt'
+      example: '3. Stock, c/o Schmidt',
     },
     {
       key: 'city',
@@ -542,7 +567,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Stadt/Ort',
-      example: 'Zürich'
+      example: 'Zürich',
     },
     {
       key: 'postal_code',
@@ -550,7 +575,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Postleitzahl',
-      example: '8005'
+      example: '8005',
     },
     {
       key: 'country',
@@ -558,7 +583,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Land (Default: CH)',
-      example: 'CH'
+      example: 'CH',
     },
     {
       key: 'iban',
@@ -566,7 +591,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'IBAN Nummer für Zahlungen',
-      example: 'CH93 0076 2011 6238 5295 7'
+      example: 'CH93 0076 2011 6238 5295 7',
     },
     {
       key: 'vat_number',
@@ -574,7 +599,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Mehrwertsteuernummer',
-      example: 'CHE-123.456.789'
+      example: 'CHE-123.456.789',
     },
     {
       key: 'is_active',
@@ -583,7 +608,7 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       type: 'enum',
       enumValues: ['true', 'false', 'ja', 'nein', '1', '0'],
       description: 'Lieferant aktiv/inaktiv',
-      example: 'true'
+      example: 'true',
     },
     {
       key: 'notes',
@@ -591,9 +616,9 @@ export const FIELD_DEFINITIONS: Record<CsvImportType, FieldDefinition[]> = {
       required: false,
       type: 'string',
       description: 'Zusätzliche Bemerkungen',
-      example: 'Hauptlieferant für Kosmetik'
-    }
-  ]
+      example: 'Hauptlieferant für Kosmetik',
+    },
+  ],
 }
 
 // =================================

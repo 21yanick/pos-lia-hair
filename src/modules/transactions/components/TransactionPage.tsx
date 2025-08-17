@@ -1,40 +1,46 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Button } from '@/shared/components/ui/button'
-import { Badge } from '@/shared/components/ui/badge'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
-import { 
-  Search, 
-  Filter, 
-  FileText, 
-  Banknote,
-  Clock,
-  CheckCircle2,
-  XCircle,
+import {
   AlertCircle,
+  Banknote,
+  CheckCircle2,
+  Clock,
   Download,
+  FileText,
+  Filter,
   Info,
-  Users
+  Search,
+  Users,
+  XCircle,
 } from 'lucide-react'
-import { DateRange } from 'react-day-picker'
-import { useTransactionsQuery, useInvalidateTransactions } from '../hooks/useTransactionsQuery'
-import { usePdfActions } from '../hooks/usePdfActions'
-import { useDebounce } from '../hooks/useDebounce'
-import { 
-  type TransactionSearchQuery, 
-  type QuickFilterPreset,
-  type UnifiedTransaction
-} from '../types/unifiedTransactions'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { DateRange } from 'react-day-picker'
+import { toast } from 'sonner'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { Checkbox } from '@/shared/components/ui/checkbox'
+import { Input } from '@/shared/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
+import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
 import { formatCurrency } from '@/shared/utils'
 import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
-import { DateRangePicker } from './DateRangePicker'
-import { toast } from 'sonner'
-import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
+import { useDebounce } from '../hooks/useDebounce'
+import { usePdfActions } from '../hooks/usePdfActions'
+import { useInvalidateTransactions, useTransactionsQuery } from '../hooks/useTransactionsQuery'
+import type {
+  QuickFilterPreset,
+  TransactionSearchQuery,
+  UnifiedTransaction,
+} from '../types/unifiedTransactions'
 import { CustomerAssignDialog } from './CustomerAssignDialog'
+import { DateRangePicker } from './DateRangePicker'
 
 // Filter State
 interface ActiveFilters {
@@ -44,12 +50,12 @@ interface ActiveFilters {
 }
 
 // Quick Filters Component
-const QuickFilters = ({ 
+const QuickFilters = ({
   activeFilters,
   onFiltersChange,
-  dateRange, 
-  onDateRangeChange 
-}: { 
+  dateRange,
+  onDateRangeChange,
+}: {
   activeFilters: ActiveFilters
   onFiltersChange: (filters: ActiveFilters) => void
   dateRange?: DateRange
@@ -74,7 +80,7 @@ const QuickFilters = ({
   const handleDateFilterClick = (preset: QuickFilterPreset) => {
     const newFilters = {
       ...activeFilters,
-      dateFilter: activeFilters.dateFilter === preset ? null : preset
+      dateFilter: activeFilters.dateFilter === preset ? null : preset,
     }
     onFiltersChange(newFilters)
     if (dateRange) {
@@ -84,23 +90,23 @@ const QuickFilters = ({
 
   const handleTypeFilterClick = (preset: QuickFilterPreset) => {
     const newTypeFilters = activeFilters.typeFilters.includes(preset)
-      ? activeFilters.typeFilters.filter(f => f !== preset)
+      ? activeFilters.typeFilters.filter((f) => f !== preset)
       : [...activeFilters.typeFilters, preset]
-    
+
     onFiltersChange({
       ...activeFilters,
-      typeFilters: newTypeFilters
+      typeFilters: newTypeFilters,
     })
   }
 
   const handleStatusFilterClick = (preset: QuickFilterPreset) => {
     const newStatusFilters = activeFilters.statusFilters.includes(preset)
-      ? activeFilters.statusFilters.filter(f => f !== preset)
+      ? activeFilters.statusFilters.filter((f) => f !== preset)
       : [...activeFilters.statusFilters, preset]
-    
+
     onFiltersChange({
       ...activeFilters,
-      statusFilters: newStatusFilters
+      statusFilters: newStatusFilters,
     })
   }
 
@@ -111,7 +117,7 @@ const QuickFilters = ({
         {dateFilters.map(({ preset, label }) => (
           <Button
             key={preset}
-            variant={activeFilters.dateFilter === preset ? "default" : "outline"}
+            variant={activeFilters.dateFilter === preset ? 'default' : 'outline'}
             size="sm"
             onClick={() => handleDateFilterClick(preset)}
             className="text-xs"
@@ -125,13 +131,13 @@ const QuickFilters = ({
           placeholder="Zeitraum"
         />
       </div>
-      
+
       {/* Type Filters */}
       <div className="flex flex-wrap gap-1">
         {typeFilters.map(({ preset, label }) => (
           <Button
             key={preset}
-            variant={activeFilters.typeFilters.includes(preset) ? "default" : "outline"}
+            variant={activeFilters.typeFilters.includes(preset) ? 'default' : 'outline'}
             size="sm"
             onClick={() => handleTypeFilterClick(preset)}
             className="text-xs"
@@ -140,13 +146,13 @@ const QuickFilters = ({
           </Button>
         ))}
       </div>
-      
+
       {/* Status Filters */}
       <div className="flex flex-wrap gap-1">
         {statusFilters.map(({ preset, label }) => (
           <Button
             key={preset}
-            variant={activeFilters.statusFilters.includes(preset) ? "default" : "outline"}
+            variant={activeFilters.statusFilters.includes(preset) ? 'default' : 'outline'}
             size="sm"
             onClick={() => handleStatusFilterClick(preset)}
             className="text-xs"
@@ -160,10 +166,10 @@ const QuickFilters = ({
 }
 
 // PDF Status Icon with mobile optimization
-const PdfStatusIcon = ({ 
-  transaction, 
-  onPdfAction 
-}: { 
+const PdfStatusIcon = ({
+  transaction,
+  onPdfAction,
+}: {
   transaction: UnifiedTransaction
   onPdfAction?: (transaction: UnifiedTransaction) => void
 }) => {
@@ -176,25 +182,25 @@ const PdfStatusIcon = ({
         return {
           icon: <FileText className="w-4 h-4 text-green-600" />,
           tooltip: 'PDF verfügbar - Tippen zum Öffnen',
-          clickable: true
+          clickable: true,
         }
       case 'missing':
         return {
           icon: <FileText className="w-4 h-4 text-red-500" />,
           tooltip: 'PDF fehlt - Tippen zum Generieren',
-          clickable: true
+          clickable: true,
         }
       case 'not_needed':
         return {
           icon: <div className="w-4 h-4 text-muted-foreground">—</div>,
           tooltip: 'Kein PDF erforderlich',
-          clickable: false
+          clickable: false,
         }
       default:
         return {
           icon: <FileText className="w-4 h-4 text-muted-foreground" />,
           tooltip: 'PDF Status unbekannt',
-          clickable: false
+          clickable: false,
         }
     }
   }
@@ -212,7 +218,7 @@ const PdfStatusIcon = ({
     clickTimeoutRef.current = setTimeout(() => {
       setIsProcessing(true)
       onPdfAction(transaction)
-      
+
       // Reset processing state after action
       setTimeout(() => {
         setIsProcessing(false)
@@ -244,9 +250,10 @@ const PdfStatusIcon = ({
       onClick={handleClick}
       className={`
         p-2 -m-2 rounded-lg transition-colors touch-manipulation
-        ${iconConfig.clickable 
-          ? 'hover:bg-muted active:bg-muted/80 cursor-pointer' 
-          : 'cursor-default'
+        ${
+          iconConfig.clickable
+            ? 'hover:bg-muted active:bg-muted/80 cursor-pointer'
+            : 'cursor-default'
         }
       `}
       title={iconConfig.tooltip}
@@ -259,11 +266,16 @@ const PdfStatusIcon = ({
 // Helper functions
 const getTypeCode = (transactionType: string): string => {
   switch (transactionType) {
-    case 'sale': return 'VK'
-    case 'expense': return 'AG'
-    case 'cash_movement': return 'CM'
-    case 'bank_transaction': return 'BT'
-    default: return '??'
+    case 'sale':
+      return 'VK'
+    case 'expense':
+      return 'AG'
+    case 'cash_movement':
+      return 'CM'
+    case 'bank_transaction':
+      return 'BT'
+    default:
+      return '??'
   }
 }
 
@@ -273,19 +285,19 @@ const getQuickFilterQuery = (preset: QuickFilterPreset): Partial<TransactionSear
   thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay())
   const thisMonthStart = new Date()
   thisMonthStart.setDate(1)
-  
+
   switch (preset) {
     case 'today':
       return { dateFrom: today, dateTo: today }
     case 'this_week':
-      return { 
-        dateFrom: thisWeekStart.toISOString().split('T')[0], 
-        dateTo: today 
+      return {
+        dateFrom: thisWeekStart.toISOString().split('T')[0],
+        dateTo: today,
       }
     case 'this_month':
-      return { 
-        dateFrom: thisMonthStart.toISOString().split('T')[0], 
-        dateTo: today 
+      return {
+        dateFrom: thisMonthStart.toISOString().split('T')[0],
+        dateTo: today,
       }
     case 'with_pdf':
       return { hasPdf: true }
@@ -308,21 +320,22 @@ export default function TransactionPage() {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     dateFilter: null,
     typeFilters: [],
-    statusFilters: []
+    statusFilters: [],
   })
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  
+
   // Customer Assignment Dialog State
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
-  const [selectedTransactionForCustomer, setSelectedTransactionForCustomer] = useState<UnifiedTransaction | null>(null)
+  const [selectedTransactionForCustomer, setSelectedTransactionForCustomer] =
+    useState<UnifiedTransaction | null>(null)
 
   // Debounced search
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
   // Build query
   const query = useMemo<TransactionSearchQuery>(() => {
-    let q: TransactionSearchQuery = {}
-    
+    const q: TransactionSearchQuery = {}
+
     // Search
     if (debouncedSearchQuery.trim()) {
       const trimmed = debouncedSearchQuery.trim()
@@ -332,32 +345,32 @@ export default function TransactionPage() {
         q.description = trimmed
       }
     }
-    
+
     // Date filter
     if (activeFilters.dateFilter) {
       Object.assign(q, getQuickFilterQuery(activeFilters.dateFilter))
     }
-    
+
     // Date range
     if (dateRange?.from && dateRange?.to) {
       q.dateFrom = dateRange.from.toISOString().split('T')[0]
       q.dateTo = dateRange.to.toISOString().split('T')[0]
     }
-    
+
     // Type filters
     if (activeFilters.typeFilters.length > 0) {
       for (const preset of activeFilters.typeFilters) {
         Object.assign(q, getQuickFilterQuery(preset))
       }
     }
-    
+
     // Status filters
     if (activeFilters.statusFilters.length > 0) {
       for (const preset of activeFilters.statusFilters) {
         Object.assign(q, getQuickFilterQuery(preset))
       }
     }
-    
+
     return q
   }, [debouncedSearchQuery, activeFilters, dateRange])
 
@@ -373,16 +386,16 @@ export default function TransactionPage() {
       byType: { sale: 0, expense: 0 },
       withPdf: 0,
       withoutPdf: 0,
-      totalAmount: 0
+      totalAmount: 0,
     }
 
-    transactions.forEach(tx => {
+    transactions.forEach((tx) => {
       if (tx.transaction_type === 'sale') s.byType.sale++
       else if (tx.transaction_type === 'expense') s.byType.expense++
-      
+
       if (tx.has_pdf) s.withPdf++
       else s.withoutPdf++
-      
+
       s.totalAmount += tx.amount || 0
     })
 
@@ -404,14 +417,15 @@ export default function TransactionPage() {
     setActiveFilters({
       dateFilter: null,
       typeFilters: [],
-      statusFilters: []
+      statusFilters: [],
     })
     setDateRange(undefined)
   }
 
-  const hasActiveFilters = searchQuery || 
-    activeFilters.dateFilter || 
-    activeFilters.typeFilters.length > 0 || 
+  const hasActiveFilters =
+    searchQuery ||
+    activeFilters.dateFilter ||
+    activeFilters.typeFilters.length > 0 ||
     activeFilters.statusFilters.length > 0 ||
     dateRange
 
@@ -424,14 +438,14 @@ export default function TransactionPage() {
           <h1 className="text-3xl font-bold">Transaktionen</h1>
           <p className="text-muted-foreground">Übersicht und Verwaltung</p>
         </div>
-        
+
         {/* Bulk Actions */}
         {selectedTransactions.length > 0 && (
           <Button
             variant="outline"
             size="sm"
             onClick={async () => {
-              const selected = transactions.filter(tx => selectedTransactions.includes(tx.id))
+              const selected = transactions.filter((tx) => selectedTransactions.includes(tx.id))
               await pdfActions.downloadMultiplePdfs(selected)
               setSelectedTransactions([])
             }}
@@ -452,12 +466,10 @@ export default function TransactionPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(stats.totalAmount)}
-            </p>
+            <p className="text-xs text-muted-foreground">{formatCurrency(stats.totalAmount)}</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Verkäufe</CardTitle>
@@ -467,7 +479,7 @@ export default function TransactionPage() {
             <div className="text-2xl font-bold">{stats.byType.sale}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ausgaben</CardTitle>
@@ -477,7 +489,7 @@ export default function TransactionPage() {
             <div className="text-2xl font-bold">{stats.byType.expense}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Mit PDF</CardTitle>
@@ -485,9 +497,7 @@ export default function TransactionPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.withPdf}</div>
-            <p className="text-xs text-muted-foreground">
-              von {stats.withPdf + stats.withoutPdf}
-            </p>
+            <p className="text-xs text-muted-foreground">von {stats.withPdf + stats.withoutPdf}</p>
           </CardContent>
         </Card>
       </div>
@@ -507,11 +517,7 @@ export default function TransactionPage() {
               />
             </div>
             {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearAllFilters}
-              >
+              <Button variant="outline" size="sm" onClick={handleClearAllFilters}>
                 Filter löschen
               </Button>
             )}
@@ -532,9 +538,7 @@ export default function TransactionPage() {
         <CardHeader>
           <CardTitle>Transaktionen</CardTitle>
           {transactions.length > 0 && (
-            <CardDescription>
-              {transactions.length} Einträge
-            </CardDescription>
+            <CardDescription>{transactions.length} Einträge</CardDescription>
           )}
         </CardHeader>
         <CardContent>
@@ -544,7 +548,9 @@ export default function TransactionPage() {
             </div>
           ) : transactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {hasActiveFilters ? 'Keine Transaktionen gefunden' : 'Noch keine Transaktionen vorhanden'}
+              {hasActiveFilters
+                ? 'Keine Transaktionen gefunden'
+                : 'Noch keine Transaktionen vorhanden'}
             </div>
           ) : (
             <div className="space-y-4 w-full max-w-full overflow-hidden">
@@ -553,15 +559,14 @@ export default function TransactionPage() {
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={selectedTransactions.length === transactions.length}
-                    onCheckedChange={(checked) => 
-                      setSelectedTransactions(checked ? transactions.map(tx => tx.id) : [])
+                    onCheckedChange={(checked) =>
+                      setSelectedTransactions(checked ? transactions.map((tx) => tx.id) : [])
                     }
                   />
                   <span className="text-sm font-medium">
-                    {selectedTransactions.length > 0 ? 
-                      `${selectedTransactions.length} ausgewählt` : 
-                      'Alle auswählen'
-                    }
+                    {selectedTransactions.length > 0
+                      ? `${selectedTransactions.length} ausgewählt`
+                      : 'Alle auswählen'}
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground hidden sm:block">
@@ -571,9 +576,11 @@ export default function TransactionPage() {
 
               {/* Transaction Cards */}
               {transactions.map((transaction) => (
-                <div key={transaction.id} className="border rounded-lg p-4 w-full max-w-full overflow-hidden hover:bg-muted/50 transition-colors">
+                <div
+                  key={transaction.id}
+                  className="border rounded-lg p-4 w-full max-w-full overflow-hidden hover:bg-muted/50 transition-colors"
+                >
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 w-full max-w-full overflow-hidden">
-                    
                     {/* Main Content */}
                     <div className="space-y-2 flex-1 min-w-0 max-w-full overflow-hidden">
                       {/* Top Row - Checkbox, Type, Receipt Number */}
@@ -584,12 +591,16 @@ export default function TransactionPage() {
                             if (checked) {
                               setSelectedTransactions([...selectedTransactions, transaction.id])
                             } else {
-                              setSelectedTransactions(selectedTransactions.filter(id => id !== transaction.id))
+                              setSelectedTransactions(
+                                selectedTransactions.filter((id) => id !== transaction.id)
+                              )
                             }
                           }}
                           className="flex-shrink-0"
                         />
-                        <TransactionTypeBadge typeCode={getTypeCode(transaction.transaction_type)} />
+                        <TransactionTypeBadge
+                          typeCode={getTypeCode(transaction.transaction_type)}
+                        />
                         {transaction.receipt_number && (
                           <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-1 rounded flex-shrink-0">
                             {transaction.receipt_number}
@@ -599,12 +610,15 @@ export default function TransactionPage() {
                           {formatDateForDisplay(transaction.transaction_date)}
                         </span>
                       </div>
-                      
+
                       {/* Description */}
-                      <h3 className="font-medium text-base leading-tight break-words" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
+                      <h3
+                        className="font-medium text-base leading-tight break-words"
+                        style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                      >
                         {transaction.description || 'Keine Beschreibung'}
                       </h3>
-                      
+
                       {/* Meta Info */}
                       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground max-w-full overflow-hidden">
                         <span className="text-xs flex-shrink-0">
@@ -612,42 +626,46 @@ export default function TransactionPage() {
                         </span>
                         {/* Customer Badge */}
                         {transaction.customer_name && (
-                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 max-w-32 sm:max-w-none">
-                            <span className="truncate">
-                              👤 {transaction.customer_name}
-                            </span>
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-primary/10 text-primary border-primary/20 max-w-32 sm:max-w-none"
+                          >
+                            <span className="truncate">👤 {transaction.customer_name}</span>
                           </Badge>
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Right Side - Amount and Actions */}
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-shrink-0">
                       {/* Amount - mobile first */}
                       <div className="text-right order-1 sm:order-2 flex-shrink-0">
-                        <div className={`text-lg font-bold whitespace-nowrap ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <div
+                          className={`text-lg font-bold whitespace-nowrap ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                        >
                           {formatCurrency(transaction.amount)}
                         </div>
                       </div>
-                      
+
                       {/* Actions - mobile second */}
                       <div className="flex items-center justify-end order-2 sm:order-1 sm:justify-start flex-shrink-0">
                         {/* PDF Action */}
-                        <PdfStatusIcon
-                          transaction={transaction}
-                          onPdfAction={handlePdfAction}
-                        />
-                        
+                        <PdfStatusIcon transaction={transaction} onPdfAction={handlePdfAction} />
+
                         {/* Customer Action - nur für Sales */}
                         {transaction.transaction_type === 'sale' && (
                           <button
                             type="button"
                             onClick={() => handleCustomerAssign(transaction)}
                             className="p-2 rounded-lg transition-colors touch-manipulation hover:bg-muted active:bg-muted/80 cursor-pointer flex-shrink-0"
-                            title={transaction.customer_name ? `Kunde: ${transaction.customer_name}` : 'Kunde zuweisen'}
+                            title={
+                              transaction.customer_name
+                                ? `Kunde: ${transaction.customer_name}`
+                                : 'Kunde zuweisen'
+                            }
                           >
-                            <Users 
-                              className={`h-4 w-4 ${transaction.customer_name ? 'text-primary' : 'text-muted-foreground'}`} 
+                            <Users
+                              className={`h-4 w-4 ${transaction.customer_name ? 'text-primary' : 'text-muted-foreground'}`}
                             />
                           </button>
                         )}

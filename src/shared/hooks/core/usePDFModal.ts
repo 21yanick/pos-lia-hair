@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 interface PDFModalState {
   url: string
@@ -16,10 +16,10 @@ interface UsePDFModalReturn {
 
 /**
  * Simple PDF Modal Hook
- * 
+ *
  * BEFORE: Complex EnterprisePDFProvider (355 lines)
  * AFTER:  Simple hook-based PDF viewing (~20 lines)
- * 
+ *
  * Usage:
  * const { pdf, isOpen, openPDF, closePDF } = usePDFModal()
  * openPDF('/path/to/file.pdf', 'Document Title')

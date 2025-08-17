@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useSmartRedirect } from '@/shared/hooks/core/useSmartRedirect'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Loader2 } from 'lucide-react'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { useSmartRedirect } from '@/shared/hooks/core/useSmartRedirect'
 
 export function SmartRedirectPage() {
   const { isRedirecting, targetUrl } = useSmartRedirect()
@@ -19,9 +19,7 @@ export function SmartRedirectPage() {
             <CardTitle>Leite weiter...</CardTitle>
             <CardDescription>
               {targetUrl && (
-                <span className="text-sm text-muted-foreground">
-                  Weiterleitung zu: {targetUrl}
-                </span>
+                <span className="text-sm text-muted-foreground">Weiterleitung zu: {targetUrl}</span>
               )}
             </CardDescription>
           </CardHeader>
@@ -29,7 +27,6 @@ export function SmartRedirectPage() {
       </div>
     )
   }
-
 
   // Default fallback - shouldn't normally reach here
   return (

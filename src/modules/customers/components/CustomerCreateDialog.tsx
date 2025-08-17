@@ -1,22 +1,22 @@
 'use client'
 
+import { Loader2, Plus } from 'lucide-react'
 import { useState } from 'react'
-import { Plus, Loader2 } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/shared/components/ui/dialog'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useCustomerActions } from '../hooks/useCustomerActions'
+import { useToast } from '@/shared/hooks/core/useToast'
 import type { CustomerFormData } from '@/shared/services/customerService'
+import { useCustomerActions } from '../hooks/useCustomerActions'
 
 interface CustomerCreateDialogProps {
   isOpen: boolean
@@ -32,7 +32,7 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
   const [formData, setFormData] = useState<CustomerFormData>({
     name: '',
     phone: '',
-    email: ''
+    email: '',
   })
 
   const [errors, setErrors] = useState<Partial<CustomerFormData>>({})
@@ -54,14 +54,14 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     try {
       const result = await createCustomer.mutateAsync({
         name: formData.name.trim(),
         phone: formData.phone.trim() || undefined,
-        email: formData.email.trim() || undefined
+        email: formData.email.trim() || undefined,
       })
 
       toast({
@@ -75,7 +75,7 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
       toast({
         title: 'Fehler',
         description: 'Kunde konnte nicht erstellt werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }
@@ -87,10 +87,10 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
   }
 
   const handleInputChange = (field: keyof CustomerFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
+      setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
   }
 
@@ -103,7 +103,8 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
             Neuen Kunden erstellen
           </DialogTitle>
           <DialogDescription>
-            Erstellen Sie einen neuen Kunden. Name ist erforderlich, Telefon und E-Mail sind optional.
+            Erstellen Sie einen neuen Kunden. Name ist erforderlich, Telefon und E-Mail sind
+            optional.
           </DialogDescription>
         </DialogHeader>
 
@@ -118,9 +119,7 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
               placeholder="z.B. Maria Müller"
               className={errors.name ? 'border-destructive' : ''}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name}</p>
-            )}
+            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
           </div>
 
           {/* Phone Field */}
@@ -134,9 +133,7 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
               placeholder="z.B. +41 79 123 45 67"
               className={errors.phone ? 'border-destructive' : ''}
             />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone}</p>
-            )}
+            {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
           </div>
 
           {/* Email Field */}
@@ -150,27 +147,20 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
               placeholder="z.B. maria@example.com"
               className={errors.email ? 'border-destructive' : ''}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
-            )}
+            {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
           </div>
 
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={handleClose}
               disabled={createCustomer.isPending}
             >
               Abbrechen
             </Button>
-            <Button 
-              type="submit" 
-              disabled={createCustomer.isPending || !formData.name.trim()}
-            >
-              {createCustomer.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" disabled={createCustomer.isPending || !formData.name.trim()}>
+              {createCustomer.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Kunde erstellen
             </Button>
           </DialogFooter>

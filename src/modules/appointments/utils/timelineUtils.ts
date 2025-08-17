@@ -3,17 +3,17 @@
  * Business logic for day timeline generation and calculations
  */
 
-import { addMinutes, isSameDay, startOfDay, setHours, setMinutes } from 'date-fns'
-import { formatTimeShort24h, timeToMinutes } from '@/shared/utils/dateUtils'
-import type { 
-  TimeSlot, 
-  AppointmentBlock, 
-  TimelineHour, 
-  TimelineData, 
-  SlotStatus,
-  WorkingPeriod 
-} from '../types/timeline'
+import { addMinutes, isSameDay, setHours, setMinutes, startOfDay } from 'date-fns'
 import type { BusinessSettings, DayWorkingHours } from '@/shared/types/businessSettings'
+import { formatTimeShort24h, timeToMinutes } from '@/shared/utils/dateUtils'
+import type {
+  AppointmentBlock,
+  SlotStatus,
+  TimelineData,
+  TimelineHour,
+  TimeSlot,
+  WorkingPeriod,
+} from '../types/timeline'
 
 /**
  * Generate complete timeline data for a specific date
@@ -25,18 +25,18 @@ export function generateTimelineData(
 ): TimelineData {
   // Get day working hours
   const dayHours = getDayWorkingHours(date, businessSettings)
-  
+
   // Check if this is a closed day (for exception slots)
   const isClosedDay = !dayHours || dayHours.closed
-  
+
   // Determine timeline bounds
   const displayPrefs = businessSettings?.display_preferences
   const startHour = displayPrefs?.timelineStart ? parseTimeToHour(displayPrefs.timelineStart) : 8
   const endHour = displayPrefs?.timelineEnd ? parseTimeToHour(displayPrefs.timelineEnd) : 19
-  
+
   // Get slot interval from booking rules
   const slotInterval = businessSettings?.booking_rules?.slotInterval || 15
-  
+
   // Generate all time slots
   const hours = generateTimelineHours(
     date,
@@ -47,22 +47,24 @@ export function generateTimelineData(
     appointments,
     isClosedDay
   )
-  
+
   return {
     date,
     hours,
     startHour,
     endHour,
     slotInterval,
-    businessHours: dayHours ? {
-      start: dayHours.start,
-      end: dayHours.end,
-      breaks: dayHours.breaks
-    } : {
-      start: '09:00',
-      end: '18:00', 
-      breaks: []
-    }
+    businessHours: dayHours
+      ? {
+          start: dayHours.start,
+          end: dayHours.end,
+          breaks: dayHours.breaks,
+        }
+      : {
+          start: '09:00',
+          end: '18:00',
+          breaks: [],
+        },
   }
 }
 
@@ -79,20 +81,20 @@ function generateTimelineHours(
   isClosedDay: boolean = false
 ): TimelineHour[] {
   const hours: TimelineHour[] = []
-  
+
   for (let hour = startHour; hour <= endHour; hour++) {
     const timeLabel = formatHour(hour)
     const slots = generateSlotsForHour(date, hour, slotInterval, dayHours, isClosedDay)
     const hourAppointments = getAppointmentsForHour(appointments, hour)
-    
+
     hours.push({
       hour,
       timeLabel,
       slots,
-      appointments: hourAppointments
+      appointments: hourAppointments,
     })
   }
-  
+
   return hours
 }
 
@@ -108,31 +110,35 @@ function generateSlotsForHour(
 ): TimeSlot[] {
   const slots: TimeSlot[] = []
   const slotsPerHour = 60 / slotInterval
-  
+
   for (let i = 0; i < slotsPerHour; i++) {
     const minutes = i * slotInterval
     const time = formatTime(hour, minutes)
     const slotDate = setMinutes(setHours(startOfDay(date), hour), minutes)
-    
+
     const status = determineSlotStatus(time, dayHours, isClosedDay)
-    
+
     slots.push({
       time,
       date: slotDate,
       status,
       duration: slotInterval,
       isClickable: status === 'available' || status === 'exception',
-      breakReason: status === 'break' ? getBreakReason(time, dayHours) : undefined
+      breakReason: status === 'break' ? getBreakReason(time, dayHours) : undefined,
     })
   }
-  
+
   return slots
 }
 
 /**
  * Determine slot status based on business hours and breaks
  */
-function determineSlotStatus(time: string, dayHours: DayWorkingHours | null, isClosedDay: boolean = false): SlotStatus {
+function determineSlotStatus(
+  time: string,
+  dayHours: DayWorkingHours | null,
+  isClosedDay: boolean = false
+): SlotStatus {
   if (!dayHours || dayHours.closed) {
     // If this is a closed day but we want to show exception slots
     if (isClosedDay) {
@@ -140,11 +146,11 @@ function determineSlotStatus(time: string, dayHours: DayWorkingHours | null, isC
     }
     return 'closed'
   }
-  
+
   const timeMinutes = parseTimeToMinutes(time)
   const startMinutes = parseTimeToMinutes(dayHours.start)
   const endMinutes = parseTimeToMinutes(dayHours.end)
-  
+
   // Check if outside business hours
   if (timeMinutes < startMinutes || timeMinutes >= endMinutes) {
     // If this is a closed day, allow exception appointments outside hours
@@ -153,62 +159,76 @@ function determineSlotStatus(time: string, dayHours: DayWorkingHours | null, isC
     }
     return 'closed'
   }
-  
+
   // Check if during break
   for (const breakPeriod of dayHours.breaks) {
     const breakStart = parseTimeToMinutes(breakPeriod.start)
     const breakEnd = parseTimeToMinutes(breakPeriod.end)
-    
+
     if (timeMinutes >= breakStart && timeMinutes < breakEnd) {
       return 'break'
     }
   }
-  
+
   // Available by default (will be updated with appointments)
   return 'available'
 }
 
 /**
  * Get appointments that START in a specific hour
- * 
+ *
  * Fixed: Only return appointments that start in this hour to prevent duplicates.
  * Multi-hour appointments will be rendered with correct height from their start hour.
- * 
+ *
  * Examples:
  * - 09:15-09:45 → shows in hour 9 only
  * - 09:45-10:15 → shows in hour 9 only (starts at 9:45)
  * - 09:30-11:30 → shows in hour 9 only (starts at 9:30)
  */
-function getAppointmentsForHour(appointments: AppointmentBlock[], hour: number): AppointmentBlock[] {
+function getAppointmentsForHour(
+  appointments: AppointmentBlock[],
+  hour: number
+): AppointmentBlock[] {
   // Define hour boundaries in minutes since midnight
-  const hourStartMinutes = hour * 60        // e.g., hour 9 = 540 minutes (09:00)
-  const hourEndMinutes = (hour + 1) * 60    // e.g., hour 9 = 600 minutes (10:00)
-  
-  const filteredAppointments = appointments.filter(appointment => {
+  const hourStartMinutes = hour * 60 // e.g., hour 9 = 540 minutes (09:00)
+  const hourEndMinutes = (hour + 1) * 60 // e.g., hour 9 = 600 minutes (10:00)
+
+  const filteredAppointments = appointments.filter((appointment) => {
     // Convert appointment times to minutes since midnight
     const appointmentStartMinutes = timeToMinutes(appointment.startTime)
-    
+
     // Only include appointments that START in this hour
     // This prevents multi-hour appointments from appearing in multiple hours
-    const startsInThisHour = appointmentStartMinutes >= hourStartMinutes && 
-                            appointmentStartMinutes < hourEndMinutes
-    
+    const startsInThisHour =
+      appointmentStartMinutes >= hourStartMinutes && appointmentStartMinutes < hourEndMinutes
+
     return startsInThisHour
   })
-  
+
   return filteredAppointments
 }
 
 /**
  * Get working hours for a specific date
  */
-function getDayWorkingHours(date: Date, businessSettings: BusinessSettings | null): DayWorkingHours | null {
+function getDayWorkingHours(
+  date: Date,
+  businessSettings: BusinessSettings | null
+): DayWorkingHours | null {
   if (!businessSettings?.working_hours) return null
-  
+
   const dayIndex = date.getDay()
-  const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+  const weekDays = [
+    'sunday',
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+  ] as const
   const weekDay = weekDays[dayIndex]
-  
+
   return businessSettings.working_hours[weekDay] || null
 }
 
@@ -217,22 +237,23 @@ function getDayWorkingHours(date: Date, businessSettings: BusinessSettings | nul
  */
 function getBreakReason(time: string, dayHours: DayWorkingHours | null): string | undefined {
   if (!dayHours) return undefined
-  
+
   const timeMinutes = parseTimeToMinutes(time)
-  
+
   for (const breakPeriod of dayHours.breaks) {
     const breakStart = parseTimeToMinutes(breakPeriod.start)
     const breakEnd = parseTimeToMinutes(breakPeriod.end)
-    
+
     if (timeMinutes >= breakStart && timeMinutes < breakEnd) {
       // Simple break naming - could be enhanced
-      if (breakStart >= 720 && breakStart <= 840) { // 12:00-14:00 range
+      if (breakStart >= 720 && breakStart <= 840) {
+        // 12:00-14:00 range
         return 'Mittagspause'
       }
       return 'Pause'
     }
   }
-  
+
   return undefined
 }
 
@@ -248,14 +269,14 @@ export function calculateAppointmentPosition(
   const startMinutes = parseTimeToMinutes(appointment.startTime)
   const endMinutes = parseTimeToMinutes(appointment.endTime)
   const duration = endMinutes - startMinutes
-  
+
   // Calculate position within the starting hour
   const minutesIntoHour = startMinutes % 60
-  
+
   // Position relative to the current hour (where appointment starts)
   const top = (minutesIntoHour / 60) * hourHeight
   const height = (duration / 60) * hourHeight
-  
+
   return { top, height }
 }
 
@@ -268,21 +289,21 @@ export function isSlotAvailable(
   duration: number = 60 // Default appointment duration
 ): boolean {
   if (slot.status !== 'available') return false
-  
+
   const slotStart = parseTimeToMinutes(slot.time)
   const slotEnd = slotStart + duration
-  
+
   // Check for conflicts with existing appointments
   for (const appointment of appointments) {
     const appointmentStart = parseTimeToMinutes(appointment.startTime)
     const appointmentEnd = parseTimeToMinutes(appointment.endTime)
-    
+
     // Check if there's an overlap
     if (slotStart < appointmentEnd && slotEnd > appointmentStart) {
       return false
     }
   }
-  
+
   return true
 }
 
@@ -295,20 +316,20 @@ export function findNextAvailableSlot(
   duration: number = 60
 ): TimeSlot | null {
   const afterMinutes = parseTimeToMinutes(afterTime)
-  
+
   for (const hour of timelineData.hours) {
     for (const slot of hour.slots) {
       const slotMinutes = parseTimeToMinutes(slot.time)
-      
+
       if (slotMinutes >= afterMinutes) {
-        const appointments = timelineData.hours.flatMap(h => h.appointments)
+        const appointments = timelineData.hours.flatMap((h) => h.appointments)
         if (isSlotAvailable(slot, appointments, duration)) {
           return slot
         }
       }
     }
   }
-  
+
   return null
 }
 
@@ -373,9 +394,9 @@ export function getCurrentTime(): string {
  */
 export function isTimeInPast(time: string, date: Date): boolean {
   if (!isSameDay(date, new Date())) return false
-  
+
   const currentMinutes = parseTimeToMinutes(getCurrentTime())
   const timeMinutes = parseTimeToMinutes(time)
-  
+
   return timeMinutes < currentMinutes
 }

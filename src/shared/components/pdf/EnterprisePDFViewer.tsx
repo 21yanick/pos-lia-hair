@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { X, Download, ExternalLink, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { Download, ExternalLink, RotateCcw, X, ZoomIn, ZoomOut } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 
 // Dynamic imports to avoid build issues with canvas node bindings
@@ -13,17 +13,17 @@ import { supabase } from '@/shared/lib/supabase/client'
 interface EnterprisePDFViewerProps {
   isOpen: boolean
   pdfUrl: string
-  originalUrl?: string  // Fallback URL for download/external actions
+  originalUrl?: string // Fallback URL for download/external actions
   onClose: () => void
   title?: string
 }
 
-export function EnterprisePDFViewer({ 
-  isOpen, 
-  pdfUrl, 
+export function EnterprisePDFViewer({
+  isOpen,
+  pdfUrl,
   originalUrl,
-  onClose, 
-  title = 'PDF Dokument' 
+  onClose,
+  title = 'PDF Dokument',
 }: EnterprisePDFViewerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +38,7 @@ export function EnterprisePDFViewer({
       setIsPackageReady(false)
       return
     }
-    
+
     const checkPackages = async () => {
       try {
         // Check if packages are available without importing them during build
@@ -48,7 +48,7 @@ export function EnterprisePDFViewer({
         setIsPackageReady(false)
       }
     }
-    
+
     checkPackages()
   }, [])
 
@@ -59,13 +59,15 @@ export function EnterprisePDFViewer({
     const fetchPDF = async () => {
       setIsLoading(true)
       setError(null)
-      
+
       try {
         // Check if this is an API proxy URL (needs auth)
         if (pdfUrl.startsWith('/api/pdf/')) {
           // Get auth token following existing patterns
-          const { data: { session } } = await supabase.auth.getSession()
-          
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+
           if (!session?.access_token) {
             throw new Error('Authentication required')
           }
@@ -73,7 +75,7 @@ export function EnterprisePDFViewer({
           // Fetch PDF with Authorization header
           const response = await fetch(pdfUrl, {
             headers: {
-              'Authorization': `Bearer ${session.access_token}`,
+              Authorization: `Bearer ${session.access_token}`,
             },
           })
 
@@ -89,7 +91,7 @@ export function EnterprisePDFViewer({
           // Direct URL (originalUrl fallback)
           setPdfBlobUrl(pdfUrl)
         }
-        
+
         setIsLoading(false)
       } catch (error) {
         console.error('[EnterprisePDFViewer] PDF loading failed:', error)
@@ -111,14 +113,14 @@ export function EnterprisePDFViewer({
   const handleDownload = async () => {
     // Use originalUrl for download if available, fallback to pdfUrl
     const downloadUrl = originalUrl || pdfUrl
-    
+
     try {
       // Create download link
       const link = document.createElement('a')
       link.href = downloadUrl
       link.download = `${title}.pdf`
       link.style.display = 'none'
-      
+
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -165,9 +167,7 @@ export function EnterprisePDFViewer({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-white border-b">
-            <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">
-              {title}
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">{title}</h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDownload}
@@ -258,12 +258,12 @@ export function EnterprisePDFViewer({
 }
 
 // Enhanced viewer component (will be uncommented after package installation)
-function EnhancedPDFViewer({ 
-  isOpen, 
-  pdfUrl, 
+function EnhancedPDFViewer({
+  isOpen,
+  pdfUrl,
   originalUrl,
-  onClose, 
-  title 
+  onClose,
+  title,
 }: EnterprisePDFViewerProps) {
   // This will be implemented once packages are available
   // const defaultLayoutPluginInstance = defaultLayoutPlugin()
@@ -294,9 +294,7 @@ function EnhancedPDFViewer({
       <div className="flex flex-col h-full">
         {/* Header with enhanced controls */}
         <div className="flex items-center justify-between p-4 bg-white border-b">
-          <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">
-            {title}
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
@@ -338,7 +336,7 @@ function EnhancedPDFViewer({
             />
           </Worker>
           */}
-          
+
           {/* Temporary fallback */}
           <div className="flex items-center justify-center h-full text-white">
             <div className="text-center">

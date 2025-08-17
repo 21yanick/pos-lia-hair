@@ -1,9 +1,9 @@
 /**
  * React Query-powered Reports Hook
- * 
+ *
  * High-performance replacement for useReports with:
  * - Granular caching strategies
- * - Optimized parallel queries  
+ * - Optimized parallel queries
  * - Background refetching
  * - Smart cache invalidation
  * - 100% Legacy compatibility
@@ -13,30 +13,28 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
-
-// Import optimized service functions
-import {
-  getCurrentCashBalance,
-  getTodayStats,
-  getRecentTransactions,
-  getWeekStats,
-  getMonthStats,
-  getRecentActivities,
-  getMonthlyTrends,
-  getProductCount,
-  getYearTotal,
-  type DashboardTransaction,
-  type ActivityItem,
-  type MonthlyData,
-  type TodayStatsData,
-  type WeekStatsData,
-  type MonthStatsData,
-  type YearTotalData
-} from '@/shared/services/dashboardService'
-
 // Legacy compatibility imports
 import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
+import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
+// Import optimized service functions
+import {
+  type ActivityItem,
+  type DashboardTransaction,
+  getCurrentCashBalance,
+  getMonthlyTrends,
+  getMonthStats,
+  getProductCount,
+  getRecentActivities,
+  getRecentTransactions,
+  getTodayStats,
+  getWeekStats,
+  getYearTotal,
+  type MonthlyData,
+  type MonthStatsData,
+  type TodayStatsData,
+  type WeekStatsData,
+  type YearTotalData,
+} from '@/shared/services/dashboardService'
 
 // ========================================
 // Legacy Compatible Types
@@ -85,9 +83,9 @@ interface UseReportsQueryReturn {
   loading: boolean
   error: string | null
   refreshDashboard: () => Promise<void>
-  
+
   // Cash Balance Functions (delegated, Legacy Compatible)
-  getCurrentCashBalance: () => Promise<{success: boolean, balance: number}>
+  getCurrentCashBalance: () => Promise<{ success: boolean; balance: number }>
   getCashMovementsForMonth: (start: Date, end: Date) => Promise<any>
   getCashMovementsForDate: (date: string) => Promise<any>
   cashLoading: boolean
@@ -96,7 +94,7 @@ interface UseReportsQueryReturn {
 
 /**
  * React Query-powered Reports Hook
- * 
+ *
  * Features:
  * - Granular queries with optimal caching
  * - Background refetching for real-time data
@@ -107,7 +105,7 @@ interface UseReportsQueryReturn {
 export function useReports(): UseReportsQueryReturn {
   const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
-  
+
   const organizationId = currentOrganization?.id
   const today = new Date().toISOString().split('T')[0]
   const currentYear = new Date().getFullYear()
@@ -123,7 +121,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: cashBalance = 0,
     isLoading: isBalanceLoading,
-    error: balanceError
+    error: balanceError,
   } = useQuery({
     queryKey: queryKeys.business.dashboard.balance(organizationId || ''),
     queryFn: () => getCurrentCashBalance(organizationId!),
@@ -135,7 +133,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: todayStatsData,
     isLoading: isTodayLoading,
-    error: todayError
+    error: todayError,
   } = useQuery<TodayStatsData>({
     queryKey: queryKeys.business.dashboard.todayStats(organizationId || '', today),
     queryFn: () => getTodayStats(organizationId!),
@@ -147,7 +145,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: recentTransactions = [],
     isLoading: isTransactionsLoading,
-    error: transactionsError
+    error: transactionsError,
   } = useQuery<DashboardTransaction[]>({
     queryKey: queryKeys.business.dashboard.recentTransactions(organizationId || '', 10),
     queryFn: () => getRecentTransactions(organizationId!, 10),
@@ -159,7 +157,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: weekStatsData,
     isLoading: isWeekLoading,
-    error: weekError
+    error: weekError,
   } = useQuery<WeekStatsData>({
     queryKey: queryKeys.business.dashboard.weekStats(organizationId || '', ''),
     queryFn: () => getWeekStats(organizationId!),
@@ -170,7 +168,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: monthStatsData,
     isLoading: isMonthLoading,
-    error: monthError
+    error: monthError,
   } = useQuery<MonthStatsData>({
     queryKey: queryKeys.business.dashboard.monthStats(organizationId || '', ''),
     queryFn: () => getMonthStats(organizationId!),
@@ -181,7 +179,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: recentActivities = [],
     isLoading: isActivitiesLoading,
-    error: activitiesError
+    error: activitiesError,
   } = useQuery<ActivityItem[]>({
     queryKey: queryKeys.business.dashboard.recentActivities(organizationId || '', 10),
     queryFn: () => getRecentActivities(organizationId!, 10),
@@ -193,7 +191,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: monthlyTrendData = [],
     isLoading: isTrendsLoading,
-    error: trendsError
+    error: trendsError,
   } = useQuery<MonthlyData[]>({
     queryKey: queryKeys.business.dashboard.monthlyTrends(organizationId || '', 12),
     queryFn: () => getMonthlyTrends(organizationId!, 12),
@@ -204,7 +202,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: productCount = 0,
     isLoading: isProductsLoading,
-    error: productsError
+    error: productsError,
   } = useQuery<number>({
     queryKey: queryKeys.business.dashboard.productCount(organizationId || ''),
     queryFn: () => getProductCount(organizationId!),
@@ -215,7 +213,7 @@ export function useReports(): UseReportsQueryReturn {
   const {
     data: yearTotalData,
     isLoading: isYearLoading,
-    error: yearError
+    error: yearError,
   } = useQuery<YearTotalData>({
     queryKey: queryKeys.business.dashboard.yearTotal(organizationId || '', currentYear),
     queryFn: () => getYearTotal(organizationId!, currentYear),
@@ -226,33 +224,55 @@ export function useReports(): UseReportsQueryReturn {
   // ========================================
   // Combined Loading and Error States
   // ========================================
-  const isLoading = isBalanceLoading || isTodayLoading || isTransactionsLoading || 
-                   isWeekLoading || isMonthLoading || isActivitiesLoading || 
-                   isTrendsLoading || isProductsLoading || isYearLoading
+  const isLoading =
+    isBalanceLoading ||
+    isTodayLoading ||
+    isTransactionsLoading ||
+    isWeekLoading ||
+    isMonthLoading ||
+    isActivitiesLoading ||
+    isTrendsLoading ||
+    isProductsLoading ||
+    isYearLoading
 
-  const error = balanceError || todayError || transactionsError || 
-               weekError || monthError || activitiesError || 
-               trendsError || productsError || yearError
+  const error =
+    balanceError ||
+    todayError ||
+    transactionsError ||
+    weekError ||
+    monthError ||
+    activitiesError ||
+    trendsError ||
+    productsError ||
+    yearError
 
   // ========================================
   // Legacy Compatible Data Assembly
   // ========================================
 
   // Calculate last 30 days trend (simplified for now)
-  const calculateLast30DaysTrend = (): { revenue: number; trend: 'up' | 'down' | 'stable'; percentage: number } => {
+  const calculateLast30DaysTrend = (): {
+    revenue: number
+    trend: 'up' | 'down' | 'stable'
+    percentage: number
+  } => {
     const currentMonthRevenue = monthStatsData?.revenue || 0
-    const previousMonthRevenue = monthlyTrendData && monthlyTrendData.length >= 2 ? monthlyTrendData[monthlyTrendData.length - 2]?.revenue || 0 : 0
-    
+    const previousMonthRevenue =
+      monthlyTrendData && monthlyTrendData.length >= 2
+        ? monthlyTrendData[monthlyTrendData.length - 2]?.revenue || 0
+        : 0
+
     if (previousMonthRevenue === 0) {
       return { revenue: currentMonthRevenue, trend: 'stable', percentage: 0 }
     }
-    
-    const percentageChange = ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
-    
+
+    const percentageChange =
+      ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
+
     return {
       revenue: currentMonthRevenue,
       trend: percentageChange > 5 ? 'up' : percentageChange < -5 ? 'down' : 'stable',
-      percentage: Math.abs(percentageChange)
+      percentage: Math.abs(percentageChange),
     }
   }
 
@@ -261,37 +281,37 @@ export function useReports(): UseReportsQueryReturn {
     // Today's data
     todayRevenue: todayStatsData?.revenue || 0,
     todayTransactions: todayStatsData?.transactions || 0,
-    
+
     // Week/Month data
     weekRevenue: weekStatsData?.revenue || 0,
     monthRevenue: monthStatsData?.revenue || 0,
-    
+
     // Products
     activeProducts: productCount || 0,
-    
+
     // Payment methods (from today's stats)
     paymentMethods: todayStatsData?.paymentMethods || { cash: 0, twint: 0, sumup: 0 },
-    
+
     // Recent data
     recentTransactions: recentTransactions || [],
-    
+
     // Extended dashboard data
     dashboardStatsData: {
       cashBalance: cashBalance || 0,
       thisMonth: {
         revenue: monthStatsData?.revenue || 0,
         expenses: monthStatsData?.expenses || 0,
-        profit: monthStatsData?.profit || 0
+        profit: monthStatsData?.profit || 0,
       },
       last30Days: calculateLast30DaysTrend(),
       yearTotal: {
         revenue: yearTotalData?.revenue || 0,
         expenses: yearTotalData?.expenses || 0,
-        profit: yearTotalData?.profit || 0
-      }
+        profit: yearTotalData?.profit || 0,
+      },
     },
     monthlyTrendData: monthlyTrendData || [],
-    recentActivities: recentActivities || []
+    recentActivities: recentActivities || [],
   }
 
   // ========================================
@@ -302,15 +322,33 @@ export function useReports(): UseReportsQueryReturn {
 
     // Invalidate all dashboard queries for fresh data
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.balance(organizationId) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.todayStats(organizationId, today) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.recentTransactions(organizationId, 10) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.weekStats(organizationId, '') }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.monthStats(organizationId, '') }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.recentActivities(organizationId, 10) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.monthlyTrends(organizationId, 12) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.productCount(organizationId) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.business.dashboard.yearTotal(organizationId, currentYear) })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.balance(organizationId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.todayStats(organizationId, today),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.recentTransactions(organizationId, 10),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.weekStats(organizationId, ''),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.monthStats(organizationId, ''),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.recentActivities(organizationId, 10),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.monthlyTrends(organizationId, 12),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.productCount(organizationId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.business.dashboard.yearTotal(organizationId, currentYear),
+      }),
     ])
   }
 
@@ -323,7 +361,7 @@ export function useReports(): UseReportsQueryReturn {
     loading: isLoading,
     error: error?.message || null,
     refreshDashboard,
-    
+
     // Cash Balance Functions (delegated to maintain compatibility)
     getCurrentCashBalance: cashBalanceHook.getCurrentCashBalance,
     getCashMovementsForMonth: cashBalanceHook.getCashMovementsForMonth,
@@ -335,7 +373,7 @@ export function useReports(): UseReportsQueryReturn {
 
 // Export types for compatibility
 export type {
-  DashboardTransaction,
   ActivityItem,
-  MonthlyData
+  DashboardTransaction,
+  MonthlyData,
 } from '@/shared/services/dashboardService'

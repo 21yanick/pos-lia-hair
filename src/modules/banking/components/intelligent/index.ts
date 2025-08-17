@@ -3,12 +3,12 @@
 // =====================================================
 // Smart matching components for Phase 2 UI integration
 
+export { BankSettlementConnector } from './BankSettlementConnector'
+export { EnhancedBankTables } from './EnhancedBankTables'
+export { EnhancedProviderTables } from './EnhancedProviderTables'
+export { getMatchStatus, MatchableRowIndicator, MatchableTableRow } from './MatchableRowIndicator'
 export { ProviderAutoMatchButton } from './ProviderAutoMatchButton'
 export { ProviderAutoMatchButtonV2 } from './ProviderAutoMatchButtonV2'
-export { ProviderMatchPreview } from './ProviderMatchPreview'
-export { MatchableRowIndicator, MatchableTableRow, getMatchStatus } from './MatchableRowIndicator'
-export { EnhancedProviderTables } from './EnhancedProviderTables'
-export { EnhancedBankTables } from './EnhancedBankTables'
 export { ProviderMatchConnector } from './ProviderMatchConnector'
-export { BankSettlementConnector } from './BankSettlementConnector'
+export { ProviderMatchPreview } from './ProviderMatchPreview'
 export { ProviderSummaryDashboard } from './ProviderSummaryDashboard'

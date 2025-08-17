@@ -1,33 +1,51 @@
-"use client"
+'use client'
 
-import { useState, useRef } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Progress } from "@/shared/components/ui/progress"
-import { Separator } from "@/shared/components/ui/separator"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table"
-import { 
-  Upload, 
-  FileSpreadsheet,
-  CheckCircle,
+import {
   AlertCircle,
-  Loader2,
-  FileX,
-  ArrowRight,
   ArrowLeft,
-  RefreshCw,
+  ArrowRight,
   Calendar,
-  Database,
+  CheckCircle,
   CreditCard,
-  DollarSign
-} from "lucide-react"
-
-import { previewProviderFile, importProviderFile } from '../services/providerImporter'
-import type { ProviderImportPreview, ProviderImportResult } from '../types/provider'
+  Database,
+  DollarSign,
+  FileSpreadsheet,
+  FileX,
+  Loader2,
+  RefreshCw,
+  Upload,
+} from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
+import { Progress } from '@/shared/components/ui/progress'
+import { Separator } from '@/shared/components/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table'
 import { formatDateForDisplay } from '@/shared/utils/dateUtils'
+import { importProviderFile, previewProviderFile } from '../services/providerImporter'
+import type { ProviderImportPreview, ProviderImportResult } from '../types/provider'
 
 type ImportStep = 'upload' | 'preview' | 'confirm'
 
@@ -47,11 +65,11 @@ interface ImportState {
   error: string | null
 }
 
-export function ProviderImportDialog({ 
-  isOpen, 
-  userId, 
-  onClose, 
-  onSuccess 
+export function ProviderImportDialog({
+  isOpen,
+  userId,
+  onClose,
+  onSuccess,
 }: ProviderImportDialogProps) {
   const [state, setState] = useState<ImportState>({
     step: 'upload',
@@ -59,9 +77,9 @@ export function ProviderImportDialog({
     preview: null,
     result: null,
     loading: false,
-    error: null
+    error: null,
   })
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // =====================================================
@@ -75,7 +93,7 @@ export function ProviderImportDialog({
       preview: null,
       result: null,
       loading: false,
-      error: null
+      error: null,
     })
   }
 
@@ -94,37 +112,37 @@ export function ProviderImportDialog({
 
     // Validate file type
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      setState(prev => ({ 
-        ...prev, 
-        error: 'Please select a CSV file. TWINT and SumUp exports should be in CSV format.' 
+      setState((prev) => ({
+        ...prev,
+        error: 'Please select a CSV file. TWINT and SumUp exports should be in CSV format.',
       }))
       return
     }
 
     // Validate file size (10MB max)
     if (file.size > 10 * 1024 * 1024) {
-      setState(prev => ({ 
-        ...prev, 
-        error: 'File size too large. Please select a file smaller than 10MB.' 
+      setState((prev) => ({
+        ...prev,
+        error: 'File size too large. Please select a file smaller than 10MB.',
       }))
       return
     }
 
-    setState(prev => ({ 
-      ...prev, 
-      file, 
-      error: null 
+    setState((prev) => ({
+      ...prev,
+      file,
+      error: null,
     }))
   }
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     const file = event.dataTransfer.files[0]
-    
+
     if (file) {
       // Simulate file input change
       const fakeEvent = {
-        target: { files: [file] }
+        target: { files: [file] },
       } as React.ChangeEvent<HTMLInputElement>
       handleFileSelect(fakeEvent)
     }
@@ -141,25 +159,25 @@ export function ProviderImportDialog({
   const handleGeneratePreview = async () => {
     if (!state.file) return
 
-    setState(prev => ({ 
-      ...prev, 
-      loading: true, 
-      error: null 
+    setState((prev) => ({
+      ...prev,
+      loading: true,
+      error: null,
     }))
 
     try {
       const preview = await previewProviderFile(state.file)
-      setState(prev => ({ 
-        ...prev, 
-        preview, 
+      setState((prev) => ({
+        ...prev,
+        preview,
         step: 'preview',
-        loading: false 
+        loading: false,
       }))
     } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
+      setState((prev) => ({
+        ...prev,
         error: error instanceof Error ? error.message : 'Failed to preview file',
-        loading: false 
+        loading: false,
       }))
     }
   }
@@ -171,20 +189,20 @@ export function ProviderImportDialog({
   const handleConfirmImport = async () => {
     if (!state.preview) return
 
-    setState(prev => ({ 
-      ...prev, 
-      loading: true, 
-      error: null 
+    setState((prev) => ({
+      ...prev,
+      loading: true,
+      error: null,
     }))
 
     try {
       const result = await importProviderFile(state.preview, userId)
-      
-      setState(prev => ({ 
-        ...prev, 
-        result, 
+
+      setState((prev) => ({
+        ...prev,
+        result,
         step: 'confirm',
-        loading: false 
+        loading: false,
       }))
 
       // Notify parent of successful import
@@ -195,10 +213,10 @@ export function ProviderImportDialog({
         }, 3000) // Longer delay to ensure DB commit
       }
     } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
+      setState((prev) => ({
+        ...prev,
         error: error instanceof Error ? error.message : 'Failed to import file',
-        loading: false 
+        loading: false,
       }))
     }
   }
@@ -209,7 +227,7 @@ export function ProviderImportDialog({
 
   const goBack = () => {
     if (state.step === 'preview') {
-      setState(prev => ({ ...prev, step: 'upload' }))
+      setState((prev) => ({ ...prev, step: 'upload' }))
     }
   }
 
@@ -233,19 +251,19 @@ export function ProviderImportDialog({
           onChange={handleFileSelect}
           className="hidden"
         />
-        
+
         <div className="flex flex-col items-center space-y-4">
           <div className="p-4 bg-primary/10 rounded-full">
             <FileSpreadsheet className="h-8 w-8 text-primary dark:text-blue-400" />
           </div>
-          
+
           <div>
             <h3 className="text-lg font-medium">Provider CSV hochladen</h3>
             <p className="text-sm text-muted-foreground mt-1">
               TWINT oder SumUp CSV Datei hier ablegen oder zum Durchsuchen klicken
             </p>
           </div>
-          
+
           <Button variant="outline">
             <Upload className="h-4 w-4 mr-2" />
             CSV Datei auswählen
@@ -265,10 +283,7 @@ export function ProviderImportDialog({
                   {(state.file.size / 1024).toFixed(1)} KB
                 </p>
               </div>
-              <Button 
-                onClick={handleGeneratePreview}
-                disabled={state.loading}
-              >
+              <Button onClick={handleGeneratePreview} disabled={state.loading}>
                 {state.loading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
@@ -280,7 +295,6 @@ export function ProviderImportDialog({
           </CardContent>
         </Card>
       )}
-
     </div>
   )
 
@@ -314,9 +328,9 @@ export function ProviderImportDialog({
                 <div className="text-sm text-muted-foreground">Duplicates</div>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <div className="font-medium">Total Amount</div>
@@ -333,7 +347,8 @@ export function ProviderImportDialog({
               <div>
                 <div className="font-medium">Date Range</div>
                 <div className="text-muted-foreground">
-                  {formatDateForDisplay(state.preview.dateRange.from)} - {formatDateForDisplay(state.preview.dateRange.to)}
+                  {formatDateForDisplay(state.preview.dateRange.from)} -{' '}
+                  {formatDateForDisplay(state.preview.dateRange.to)}
                 </div>
               </div>
             </div>
@@ -374,9 +389,7 @@ export function ProviderImportDialog({
                 <TableBody>
                   {state.preview.newRecords.slice(0, 5).map((record, index) => (
                     <TableRow key={index}>
-                      <TableCell>
-                        {formatDateForDisplay(record.transaction_date)}
-                      </TableCell>
+                      <TableCell>{formatDateForDisplay(record.transaction_date)}</TableCell>
                       <TableCell className="font-mono text-xs">
                         {record.provider_transaction_id.substring(0, 12)}...
                       </TableCell>
@@ -393,7 +406,7 @@ export function ProviderImportDialog({
                   ))}
                 </TableBody>
               </Table>
-              
+
               {state.preview.newRecords.length > 5 && (
                 <div className="mt-3 text-sm text-muted-foreground text-center">
                   ... and {state.preview.newRecords.length - 5} more records
@@ -409,8 +422,8 @@ export function ProviderImportDialog({
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          
-          <Button 
+
+          <Button
             onClick={handleConfirmImport}
             disabled={!state.preview.importable || state.loading}
           >
@@ -446,16 +459,15 @@ export function ProviderImportDialog({
                   <FileX className="h-8 w-8 text-destructive dark:text-red-400" />
                 </div>
               )}
-              
+
               <div className="flex-1">
                 <h3 className="text-lg font-semibold">
                   {success ? 'Import Completed Successfully!' : 'Import Failed'}
                 </h3>
                 <p className="text-muted-foreground">
-                  {success 
+                  {success
                     ? `${state.result.recordsImported} records imported in ${state.result.processingTimeMs}ms`
-                    : 'The import process encountered errors'
-                  }
+                    : 'The import process encountered errors'}
                 </p>
               </div>
             </div>
@@ -510,9 +522,7 @@ export function ProviderImportDialog({
 
         {/* Close Button */}
         <div className="flex justify-center">
-          <Button onClick={handleClose}>
-            Close
-          </Button>
+          <Button onClick={handleClose}>Close</Button>
         </div>
       </div>
     )
@@ -531,48 +541,75 @@ export function ProviderImportDialog({
             <span>Provider Import - TWINT & SumUp</span>
           </DialogTitle>
           <DialogDescription>
-            Transaktionsdaten aus TWINT oder SumUp CSV-Exporten importieren und mit POS-Verkäufen abgleichen
+            Transaktionsdaten aus TWINT oder SumUp CSV-Exporten importieren und mit POS-Verkäufen
+            abgleichen
           </DialogDescription>
         </DialogHeader>
 
         {/* Step Indicator */}
         <div className="flex items-center space-x-4 mb-6">
-          <div className={`flex items-center space-x-2 ${
-            state.step === 'upload' ? 'text-primary' : 
-            ['preview', 'confirm'].includes(state.step) ? 'text-chart-3' : 'text-muted-foreground'
-          }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              state.step === 'upload' ? 'bg-primary/10 text-primary' :
-              ['preview', 'confirm'].includes(state.step) ? 'bg-chart-3/10 text-chart-3' : 'bg-muted/50 text-muted-foreground'
-            }`}>
+          <div
+            className={`flex items-center space-x-2 ${
+              state.step === 'upload'
+                ? 'text-primary'
+                : ['preview', 'confirm'].includes(state.step)
+                  ? 'text-chart-3'
+                  : 'text-muted-foreground'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                state.step === 'upload'
+                  ? 'bg-primary/10 text-primary'
+                  : ['preview', 'confirm'].includes(state.step)
+                    ? 'bg-chart-3/10 text-chart-3'
+                    : 'bg-muted/50 text-muted-foreground'
+              }`}
+            >
               1
             </div>
             <span className="font-medium">Hochladen</span>
           </div>
-          
+
           <div className="flex-1 h-px bg-gray-200"></div>
-          
-          <div className={`flex items-center space-x-2 ${
-            state.step === 'preview' ? 'text-primary' :
-            state.step === 'confirm' ? 'text-chart-3' : 'text-muted-foreground'
-          }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              state.step === 'preview' ? 'bg-primary/10 text-primary' :
-              state.step === 'confirm' ? 'bg-chart-3/10 text-chart-3' : 'bg-muted/50 text-muted-foreground'
-            }`}>
+
+          <div
+            className={`flex items-center space-x-2 ${
+              state.step === 'preview'
+                ? 'text-primary'
+                : state.step === 'confirm'
+                  ? 'text-chart-3'
+                  : 'text-muted-foreground'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                state.step === 'preview'
+                  ? 'bg-primary/10 text-primary'
+                  : state.step === 'confirm'
+                    ? 'bg-chart-3/10 text-chart-3'
+                    : 'bg-muted/50 text-muted-foreground'
+              }`}
+            >
               2
             </div>
             <span className="font-medium">Vorschau</span>
           </div>
-          
+
           <div className="flex-1 h-px bg-gray-200"></div>
-          
-          <div className={`flex items-center space-x-2 ${
-            state.step === 'confirm' ? 'text-chart-3' : 'text-muted-foreground'
-          }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              state.step === 'confirm' ? 'bg-chart-3/10 text-chart-3' : 'bg-muted/50 text-muted-foreground'
-            }`}>
+
+          <div
+            className={`flex items-center space-x-2 ${
+              state.step === 'confirm' ? 'text-chart-3' : 'text-muted-foreground'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                state.step === 'confirm'
+                  ? 'bg-chart-3/10 text-chart-3'
+                  : 'bg-muted/50 text-muted-foreground'
+              }`}
+            >
               3
             </div>
             <span className="font-medium">Bestätigen</span>

@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { usePOS } from '../hooks/usePOS'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { usePOS } from '../hooks/usePOS'
+import { ConfirmationDialog } from './ConfirmationDialog'
+import { DeleteConfirmDialog } from './DeleteConfirmDialog'
+import { EditPriceDialog } from './EditPriceDialog'
+import { PaymentDialog } from './PaymentDialog'
 import { ProductGrid } from './ProductGrid'
 import { ShoppingCart } from './ShoppingCart'
-import { PaymentDialog } from './PaymentDialog'
-import { ConfirmationDialog } from './ConfirmationDialog'
-import { EditPriceDialog } from './EditPriceDialog'
-import { DeleteConfirmDialog } from './DeleteConfirmDialog'
 
 export function POSPage() {
   const { currentOrganization, loading } = useCurrentOrganization()

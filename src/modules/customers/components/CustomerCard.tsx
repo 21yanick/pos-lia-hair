@@ -1,13 +1,18 @@
 'use client'
 
+import { Mail, Phone } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Phone, Mail } from 'lucide-react'
-import { Card, CardContent } from '@/shared/components/ui/card'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
+import { Card, CardContent } from '@/shared/components/ui/card'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useCustomerLastVisit } from '../hooks/useCustomerSales'
-import { getInitials, getPrimaryContact, formatRelativeDate, getAvatarColor } from '../utils/customerUtils'
 import type { Customer } from '@/shared/services/customerService'
+import { useCustomerLastVisit } from '../hooks/useCustomerSales'
+import {
+  formatRelativeDate,
+  getAvatarColor,
+  getInitials,
+  getPrimaryContact,
+} from '../utils/customerUtils'
 
 interface CustomerCardProps {
   customer: Customer
@@ -28,7 +33,7 @@ export function CustomerCard({ customer }: CustomerCardProps) {
   }
 
   return (
-    <Card 
+    <Card
       className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02] border border-border"
       onClick={handleCardClick}
     >
@@ -41,9 +46,7 @@ export function CustomerCard({ customer }: CustomerCardProps) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-card-foreground truncate">
-              {customer.name}
-            </h3>
+            <h3 className="font-semibold text-card-foreground truncate">{customer.name}</h3>
           </div>
         </div>
 
@@ -59,7 +62,7 @@ export function CustomerCard({ customer }: CustomerCardProps) {
               <span className="truncate">{primaryContact.value}</span>
             </div>
           )}
-          
+
           {/* Secondary contact (if both phone and email exist) */}
           {customer.phone && customer.email && primaryContact.type === 'phone' && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -67,12 +70,10 @@ export function CustomerCard({ customer }: CustomerCardProps) {
               <span className="truncate">{customer.email}</span>
             </div>
           )}
-          
+
           {/* No contact info */}
           {!primaryContact.type && (
-            <div className="text-sm text-muted-foreground italic">
-              Keine Kontaktdaten
-            </div>
+            <div className="text-sm text-muted-foreground italic">Keine Kontaktdaten</div>
           )}
         </div>
 
@@ -88,9 +89,7 @@ export function CustomerCard({ customer }: CustomerCardProps) {
         {/* No visits */}
         {!lastVisit && (
           <div className="mt-3 pt-3 border-t border-border">
-            <div className="text-xs text-muted-foreground italic">
-              Noch keine Besuche
-            </div>
+            <div className="text-xs text-muted-foreground italic">Noch keine Besuche</div>
           </div>
         )}
       </CardContent>

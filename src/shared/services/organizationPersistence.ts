@@ -28,7 +28,7 @@ class OrganizationPersistence {
     const data: PersistedOrg = {
       id: organizationId,
       slug: organizationSlug,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     // Always save to memory
@@ -70,7 +70,7 @@ class OrganizationPersistence {
 
       // Try different storage methods in order
       switch (this.storageType) {
-        case 'localStorage':
+        case 'localStorage': {
           const localData = localStorage.getItem(STORAGE_KEY)
           if (localData) {
             data = JSON.parse(localData)
@@ -82,20 +82,23 @@ class OrganizationPersistence {
             }
           }
           break
+        }
 
-        case 'sessionStorage':
+        case 'sessionStorage': {
           const sessionData = sessionStorage.getItem(STORAGE_KEY)
           if (sessionData) {
             data = JSON.parse(sessionData)
           }
           break
+        }
 
-        case 'cookie':
+        case 'cookie': {
           const cookieData = this.getCookie(STORAGE_KEY)
           if (cookieData) {
             data = JSON.parse(cookieData)
           }
           break
+        }
 
         case 'memory':
           data = this.memoryCache

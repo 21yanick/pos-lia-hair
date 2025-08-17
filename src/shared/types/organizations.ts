@@ -8,7 +8,7 @@ export interface Organization {
   created_at: string
   updated_at: string
   active: boolean
-  
+
   // Business Contact Info
   address?: string
   city?: string
@@ -17,7 +17,7 @@ export interface Organization {
   email?: string
   website?: string
   uid?: string
-  
+
   // Settings JSON
   settings: OrganizationSettings
 }
@@ -84,7 +84,7 @@ export interface InviteUserData {
 }
 
 // Permission System Types
-export type Permission = 
+export type Permission =
   | 'pos.create_sale'
   | 'pos.view_sales'
   | 'pos.manage_items'
@@ -165,12 +165,12 @@ export interface OrganizationContextType {
   userRole: OrganizationRole | null
   loading: boolean
   error: string | null
-  
+
   // Actions
   switchOrganization: (organizationId: string) => Promise<void>
   refreshOrganizations: () => Promise<void>
   hasPermission: (permission: Permission) => boolean
-  
+
   // Organization Management (for owners/admins)
   createOrganization?: (data: CreateOrganizationData) => Promise<Organization>
   updateOrganization?: (id: string, data: UpdateOrganizationData) => Promise<void>
@@ -189,7 +189,7 @@ export interface AuthContextType {
   user: User | null
   loading: boolean
   isAuthenticated: boolean
-  
+
   // Actions
   signOut: () => Promise<void>
   hasPermission: (permission: Permission) => boolean // Deprecated - use useOrganizationPermissions

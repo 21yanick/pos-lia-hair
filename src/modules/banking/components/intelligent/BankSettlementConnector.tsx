@@ -1,11 +1,12 @@
-"use client"
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
+
 interface BankSettlementConnectorProps {
   selectedItems: string[]
-  highlightedItems?: string[]  // Auto-highlighted potential matches
-  highlightedScores?: Map<string, number>  // Scores for highlighted items
-  selectedBankTransaction?: string | null  // For manual connections
+  highlightedItems?: string[] // Auto-highlighted potential matches
+  highlightedScores?: Map<string, number> // Scores for highlighted items
+  selectedBankTransaction?: string | null // For manual connections
   containerRef: React.RefObject<HTMLDivElement>
 }
 
@@ -21,12 +22,12 @@ interface ConnectionLine {
   itemIds: string[]
 }
 
-export function BankSettlementConnector({ 
+export function BankSettlementConnector({
   selectedItems,
   highlightedItems = [],
   highlightedScores = new Map(),
   selectedBankTransaction,
-  containerRef
+  containerRef,
 }: BankSettlementConnectorProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [lines, setLines] = useState<ConnectionLine[]>([])
@@ -50,7 +51,9 @@ export function BankSettlementConnector({
       }
 
       // Find the selected bank transaction row
-      const bankRow = container.querySelector(`[data-bank-id="${bankTransactionId}"]`) as HTMLElement
+      const bankRow = container.querySelector(
+        `[data-bank-id="${bankTransactionId}"]`
+      ) as HTMLElement
       if (!bankRow) return
 
       const bankRect = bankRow.getBoundingClientRect()
@@ -68,9 +71,9 @@ export function BankSettlementConnector({
 
             // Use real calculated score for selected items too
             const realScore = highlightedScores.get(itemId) || 100
-            
+
             // console.log(`🎯 Creating connection line for SELECTED item ${itemId}: realScore=${realScore}`)
-            
+
             newLines.push({
               x1: bankX,
               y1: bankY,
@@ -80,7 +83,7 @@ export function BankSettlementConnector({
               isSelected: true,
               isHighlighted: highlightedItems.includes(itemId),
               matchType: 'single',
-              itemIds: [itemId]
+              itemIds: [itemId],
             })
           }
         })
@@ -102,9 +105,9 @@ export function BankSettlementConnector({
 
             // Use actual calculated score or fallback to 75
             const actualScore = highlightedScores.get(itemId) || 75
-            
+
             // console.log(`🔗 Creating connection line for highlighted item ${itemId}: score=${actualScore}`)
-            
+
             newLines.push({
               x1: bankX,
               y1: bankY,
@@ -114,7 +117,7 @@ export function BankSettlementConnector({
               isSelected: false,
               isHighlighted: true,
               matchType: 'single',
-              itemIds: [itemId]
+              itemIds: [itemId],
             })
           }
         })
@@ -132,7 +135,7 @@ export function BankSettlementConnector({
     }
 
     window.addEventListener('resize', handleResize)
-    
+
     // Also recalculate when container size changes (e.g., scrolling)
     const resizeObserver = new ResizeObserver(handleResize)
     if (containerRef.current) {
@@ -145,14 +148,19 @@ export function BankSettlementConnector({
     }
   }, [selectedItems, highlightedItems, highlightedScores, selectedBankTransaction, containerRef])
 
-  const getLineColor = (confidence: number, isSelected: boolean, isHighlighted: boolean, matchType: string) => {
+  const getLineColor = (
+    confidence: number,
+    isSelected: boolean,
+    isHighlighted: boolean,
+    matchType: string
+  ) => {
     // Show selected lines with full opacity, highlighted with lower opacity
     if (!isSelected && !isHighlighted) {
       return 'transparent'
     }
-    
+
     // console.log(`🎨 Line color for confidence=${confidence}, selected=${isSelected}, highlighted=${isHighlighted}`)
-    
+
     // Selected items get stronger colors
     if (isSelected) {
       if (confidence >= 90) {
@@ -166,7 +174,7 @@ export function BankSettlementConnector({
       }
       return '#6b7280' // Gray-500 for poor selected matches
     }
-    
+
     // Highlighted items get softer colors
     if (isHighlighted) {
       if (confidence >= 90) {
@@ -180,25 +188,30 @@ export function BankSettlementConnector({
       }
       return '#9ca3af' // Gray-400 for poor highlighted
     }
-    
+
     return '#6b7280' // Default gray
   }
 
-  const getLineWidth = (confidence: number, isSelected: boolean, isHighlighted: boolean, matchType: string) => {
+  const getLineWidth = (
+    confidence: number,
+    isSelected: boolean,
+    isHighlighted: boolean,
+    matchType: string
+  ) => {
     if (!isSelected && !isHighlighted) return 0
-    
+
     // Selected items get thicker lines
     if (isSelected) {
       if (confidence >= 90) return 4 // Thick for excellent
       if (confidence >= 80) return 3 // Medium for good
       return 2 // Thin for fair
     }
-    
+
     // Highlighted items get thinner lines
     if (isHighlighted) {
       return 2 // Always thin for highlighted
     }
-    
+
     return 2 // Default
   }
 
@@ -212,10 +225,10 @@ export function BankSettlementConnector({
 
   const getLineLabel = (confidence: number, matchType: string, itemCount: number) => {
     const percentage = Math.round(confidence)
-    
+
     // Simple percentage display for better clarity
-    let label = `${percentage}%`
-    
+    const label = `${percentage}%`
+
     if (matchType === 'settlement_group') {
       return `${label} Settlement`
     }
@@ -234,7 +247,7 @@ export function BankSettlementConnector({
       style={{
         width: '100%',
         height: '100%',
-        overflow: 'visible'
+        overflow: 'visible',
       }}
     >
       <defs>
@@ -243,7 +256,7 @@ export function BankSettlementConnector({
           <stop offset="0%" stopColor="hsl(var(--payment-twint))" stopOpacity="0.8" />
           <stop offset="100%" stopColor="hsl(var(--payment-twint))" stopOpacity="1" />
         </linearGradient>
-        
+
         {/* Arrow marker for settlement groups */}
         <marker
           id="settlementArrow"
@@ -256,7 +269,7 @@ export function BankSettlementConnector({
         >
           <path d="M0,0 L0,6 L9,3 z" fill="hsl(var(--payment-twint))" />
         </marker>
-        
+
         {/* Arrow marker for combinations */}
         <marker
           id="combinationArrow"
@@ -269,7 +282,7 @@ export function BankSettlementConnector({
         >
           <path d="M0,0 L0,6 L9,3 z" fill="hsl(var(--payment-sumup))" />
         </marker>
-        
+
         {/* Arrow marker for singles */}
         <marker
           id="singleArrow"
@@ -282,7 +295,7 @@ export function BankSettlementConnector({
         >
           <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
         </marker>
-        
+
         {/* Arrow marker for selected items */}
         <marker
           id="selectedArrow"
@@ -310,12 +323,17 @@ export function BankSettlementConnector({
             orient="auto"
             markerUnits="strokeWidth"
           >
-            <path 
-              d="M0,0 L0,6 L9,3 z" 
-              fill={getLineColor(line.confidence, line.isSelected, line.isHighlighted, line.matchType)} 
+            <path
+              d="M0,0 L0,6 L9,3 z"
+              fill={getLineColor(
+                line.confidence,
+                line.isSelected,
+                line.isHighlighted,
+                line.matchType
+              )}
             />
           </marker>
-          
+
           {/* Main line - render if selected OR highlighted */}
           {(line.isSelected || line.isHighlighted) && (
             <line
@@ -324,17 +342,27 @@ export function BankSettlementConnector({
               x2={line.x2}
               y2={line.y2}
               stroke={
-                line.matchType === 'settlement_group' 
-                  ? 'url(#settlementGradient)' 
-                  : getLineColor(line.confidence, line.isSelected, line.isHighlighted, line.matchType)
+                line.matchType === 'settlement_group'
+                  ? 'url(#settlementGradient)'
+                  : getLineColor(
+                      line.confidence,
+                      line.isSelected,
+                      line.isHighlighted,
+                      line.matchType
+                    )
               }
-              strokeWidth={getLineWidth(line.confidence, line.isSelected, line.isHighlighted, line.matchType)}
+              strokeWidth={getLineWidth(
+                line.confidence,
+                line.isSelected,
+                line.isHighlighted,
+                line.matchType
+              )}
               strokeDasharray={getLineStyle(line.matchType)}
               markerEnd={`url(#arrow-${line.itemIds.join('-')}-${index})`}
               className="transition-all duration-300"
             />
           )}
-          
+
           {/* Confidence badge in the middle of the line */}
           {(line.isSelected || line.isHighlighted) && (
             <g>
@@ -344,7 +372,12 @@ export function BankSettlementConnector({
                 width="50"
                 height="24"
                 rx="12"
-                fill={getLineColor(line.confidence, line.isSelected, line.isHighlighted, line.matchType)}
+                fill={getLineColor(
+                  line.confidence,
+                  line.isSelected,
+                  line.isHighlighted,
+                  line.matchType
+                )}
                 className="transition-all duration-300"
                 opacity="0.9"
               />
@@ -361,7 +394,7 @@ export function BankSettlementConnector({
               </text>
             </g>
           )}
-          
+
           {/* Visual indicator for settlement groups */}
           {(line.isSelected || line.isHighlighted) && line.matchType === 'settlement_group' && (
             <circle
@@ -372,12 +405,7 @@ export function BankSettlementConnector({
               className="transition-all duration-300"
               opacity="0.8"
             >
-              <animate
-                attributeName="r"
-                values="8;12;8"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+              <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
             </circle>
           )}
         </g>

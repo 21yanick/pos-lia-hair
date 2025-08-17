@@ -1,9 +1,9 @@
 /**
  * Expenses Service Functions
- * 
+ *
  * Pure business logic functions for expense operations
  * Extracted from useExpenses hook for React Query migration
- * 
+ *
  * Features:
  * - Multi-tenant security (organization-scoped)
  * - Comprehensive error handling
@@ -18,8 +18,13 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { Database } from '@/types/supabase'
-import { getTodaySwissString, formatDateForAPI, getFirstDayOfMonth, getLastDayOfMonth } from '@/shared/utils/dateUtils'
+import {
+  formatDateForAPI,
+  getFirstDayOfMonth,
+  getLastDayOfMonth,
+  getTodaySwissString,
+} from '@/shared/utils/dateUtils'
+import type { Database } from '@/types/database'
 
 // ========================================
 // Utility Functions
@@ -30,21 +35,23 @@ import { getTodaySwissString, formatDateForAPI, getFirstDayOfMonth, getLastDayOf
  * Removes/replaces characters that are not URL-safe
  */
 function sanitizeFileName(fileName: string): string {
-  return fileName
-    // Replace umlauts
-    .replace(/ä/g, 'ae')
-    .replace(/ö/g, 'oe') 
-    .replace(/ü/g, 'ue')
-    .replace(/Ä/g, 'Ae')
-    .replace(/Ö/g, 'Oe')
-    .replace(/Ü/g, 'Ue')
-    .replace(/ß/g, 'ss')
-    // Replace spaces and special chars with underscores
-    .replace(/[^a-zA-Z0-9.-]/g, '_')
-    // Remove multiple consecutive underscores
-    .replace(/_+/g, '_')
-    // Remove leading/trailing underscores
-    .replace(/^_|_$/g, '')
+  return (
+    fileName
+      // Replace umlauts
+      .replace(/ä/g, 'ae')
+      .replace(/ö/g, 'oe')
+      .replace(/ü/g, 'ue')
+      .replace(/Ä/g, 'Ae')
+      .replace(/Ö/g, 'Oe')
+      .replace(/Ü/g, 'Ue')
+      .replace(/ß/g, 'ss')
+      // Replace spaces and special chars with underscores
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      // Remove multiple consecutive underscores
+      .replace(/_+/g, '_')
+      // Remove leading/trailing underscores
+      .replace(/^_|_$/g, '')
+  )
 }
 
 // ========================================
@@ -52,8 +59,13 @@ function sanitizeFileName(fileName: string): string {
 // ========================================
 
 export type Expense = Database['public']['Tables']['expenses']['Row']
-export type ExpenseInsert = Omit<Database['public']['Tables']['expenses']['Insert'], 'id' | 'created_at'>
-export type ExpenseUpdate = Partial<Omit<Database['public']['Tables']['expenses']['Update'], 'id' | 'created_at'>> & { id: string }
+export type ExpenseInsert = Omit<
+  Database['public']['Tables']['expenses']['Insert'],
+  'id' | 'created_at'
+>
+export type ExpenseUpdate = Partial<
+  Omit<Database['public']['Tables']['expenses']['Update'], 'id' | 'created_at'>
+> & { id: string }
 
 // Enhanced type with supplier relation
 export type ExpenseWithSupplier = Expense & {
@@ -70,37 +82,45 @@ export type ExpenseWithSupplier = Expense & {
 
 export type ExpenseCategory = 'rent' | 'supplies' | 'salary' | 'utilities' | 'insurance' | 'other'
 
-export type ExpenseQueryResult = {
-  success: true
-  data: ExpenseWithSupplier[]
-} | {
-  success: false
-  error: string
-}
+export type ExpenseQueryResult =
+  | {
+      success: true
+      data: ExpenseWithSupplier[]
+    }
+  | {
+      success: false
+      error: string
+    }
 
-export type ExpenseMutationResult = {
-  success: true
-  data: Expense
-  document?: any // Document from receipt upload
-} | {
-  success: false
-  error: string
-}
+export type ExpenseMutationResult =
+  | {
+      success: true
+      data: Expense
+      document?: any // Document from receipt upload
+    }
+  | {
+      success: false
+      error: string
+    }
 
-export type ExpenseDeleteResult = {
-  success: true
-} | {
-  success: false
-  error: string
-}
+export type ExpenseDeleteResult =
+  | {
+      success: true
+    }
+  | {
+      success: false
+      error: string
+    }
 
-export type DocumentUploadResult = {
-  success: true
-  document: any
-} | {
-  success: false
-  error: string
-}
+export type DocumentUploadResult =
+  | {
+      success: true
+      document: any
+    }
+  | {
+      success: false
+      error: string
+    }
 
 export type ExpenseStats = {
   totalAmount: number
@@ -146,7 +166,10 @@ function validateExpenseData(data: ExpenseInsert): void {
 /**
  * Get all expenses for an organization
  */
-export async function getExpenses(organizationId: string, limit?: number): Promise<ExpenseQueryResult> {
+export async function getExpenses(
+  organizationId: string,
+  limit?: number
+): Promise<ExpenseQueryResult> {
   try {
     const validOrgId = validateOrganizationId(organizationId)
 
@@ -179,20 +202,20 @@ export async function getExpenses(organizationId: string, limit?: number): Promi
     }
 
     // Transform data to include supplier relation
-    const expensesWithSupplier = (data || []).map(expense => ({
+    const expensesWithSupplier = (data || []).map((expense) => ({
       ...expense,
-      supplier: expense.suppliers || null
+      supplier: expense.suppliers || null,
     }))
 
     return {
       success: true,
-      data: expensesWithSupplier
+      data: expensesWithSupplier,
     }
   } catch (err: any) {
     console.error('Error in getExpenses:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Laden der Ausgaben'
+      error: err.message || 'Fehler beim Laden der Ausgaben',
     }
   }
 }
@@ -201,8 +224,8 @@ export async function getExpenses(organizationId: string, limit?: number): Promi
  * Get expenses by date range
  */
 export async function getExpensesByDateRange(
-  organizationId: string, 
-  startDate: string, 
+  organizationId: string,
+  startDate: string,
   endDate: string
 ): Promise<ExpenseQueryResult> {
   try {
@@ -233,20 +256,20 @@ export async function getExpensesByDateRange(
     }
 
     // Transform data to include supplier relation
-    const expensesWithSupplier = (data || []).map(expense => ({
+    const expensesWithSupplier = (data || []).map((expense) => ({
       ...expense,
-      supplier: expense.suppliers || null
+      supplier: expense.suppliers || null,
     }))
 
     return {
       success: true,
-      data: expensesWithSupplier
+      data: expensesWithSupplier,
     }
   } catch (err: any) {
     console.error('Error in getExpensesByDateRange:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Laden der Ausgaben'
+      error: err.message || 'Fehler beim Laden der Ausgaben',
     }
   }
 }
@@ -258,7 +281,7 @@ export async function getCurrentMonthExpenses(organizationId: string): Promise<E
   const now = new Date()
   const startDate = formatDateForAPI(getFirstDayOfMonth(now))
   const endDate = formatDateForAPI(getLastDayOfMonth(now))
-  
+
   return await getExpensesByDateRange(organizationId, startDate, endDate)
 }
 
@@ -266,7 +289,7 @@ export async function getCurrentMonthExpenses(organizationId: string): Promise<E
  * Create a new expense
  */
 export async function createExpense(
-  data: ExpenseInsert, 
+  data: ExpenseInsert,
   organizationId: string,
   receiptFile?: File
 ): Promise<ExpenseMutationResult> {
@@ -293,26 +316,26 @@ export async function createExpense(
     let uploadResult = null
     if (receiptFile) {
       const documentUpload = await uploadExpenseReceipt(expense.id, receiptFile, organizationId)
-      
+
       if (!documentUpload.success) {
         // Delete expense if upload fails
         await supabase.from('expenses').delete().eq('id', expense.id)
         throw new Error(documentUpload.error || 'Beleg-Upload fehlgeschlagen')
       }
-      
+
       uploadResult = documentUpload.document
     }
 
     return {
       success: true,
       data: expense,
-      document: uploadResult
+      document: uploadResult,
     }
   } catch (err: any) {
     console.error('Error in createExpense:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Erstellen der Ausgabe'
+      error: err.message || 'Fehler beim Erstellen der Ausgabe',
     }
   }
 }
@@ -321,12 +344,12 @@ export async function createExpense(
  * Update an existing expense
  */
 export async function updateExpense(
-  updates: ExpenseUpdate, 
+  updates: ExpenseUpdate,
   organizationId: string
 ): Promise<ExpenseMutationResult> {
   try {
     const validOrgId = validateOrganizationId(organizationId)
-    
+
     if (!updates.id) {
       throw new Error('Expense ID ist erforderlich')
     }
@@ -346,13 +369,13 @@ export async function updateExpense(
 
     return {
       success: true,
-      data
+      data,
     }
   } catch (err: any) {
     console.error('Error in updateExpense:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Aktualisieren der Ausgabe'
+      error: err.message || 'Fehler beim Aktualisieren der Ausgabe',
     }
   }
 }
@@ -360,7 +383,10 @@ export async function updateExpense(
 /**
  * Delete an expense
  */
-export async function deleteExpense(expenseId: string, organizationId: string): Promise<ExpenseDeleteResult> {
+export async function deleteExpense(
+  expenseId: string,
+  organizationId: string
+): Promise<ExpenseDeleteResult> {
   try {
     const validOrgId = validateOrganizationId(organizationId)
 
@@ -394,13 +420,13 @@ export async function deleteExpense(expenseId: string, organizationId: string): 
     }
 
     return {
-      success: true
+      success: true,
     }
   } catch (err: any) {
     console.error('Error in deleteExpense:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Löschen der Ausgabe'
+      error: err.message || 'Fehler beim Löschen der Ausgabe',
     }
   }
 }
@@ -413,7 +439,7 @@ export async function deleteExpense(expenseId: string, organizationId: string): 
  * Upload expense receipt
  */
 export async function uploadExpenseReceipt(
-  expenseId: string, 
+  expenseId: string,
   file: File,
   organizationId: string
 ): Promise<DocumentUploadResult> {
@@ -431,10 +457,8 @@ export async function uploadExpenseReceipt(
     const sanitizedFileName = sanitizeFileName(file.name)
     const fileName = `${expenseId}-${Date.now()}-${sanitizedFileName}`
     const filePath = `${validOrgId}/expense-receipts/${fileName}`
-    
-    const { error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file)
+
+    const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file)
 
     if (uploadError) {
       // console.error('Error uploading file:', uploadError)
@@ -451,7 +475,7 @@ export async function uploadExpenseReceipt(
         payment_method: null, // Expense receipts don't have specific payment method
         document_date: getTodaySwissString(),
         user_id: userId,
-        organization_id: validOrgId // 🔒 Security: Organization-scoped
+        organization_id: validOrgId, // 🔒 Security: Organization-scoped
       })
       .select()
       .single()
@@ -463,13 +487,13 @@ export async function uploadExpenseReceipt(
 
     return {
       success: true,
-      document
+      document,
     }
   } catch (err: any) {
     console.error('Error in uploadExpenseReceipt:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Hochladen des Belegs'
+      error: err.message || 'Fehler beim Hochladen des Belegs',
     }
   }
 }
@@ -478,7 +502,7 @@ export async function uploadExpenseReceipt(
  * Replace existing expense receipt
  */
 export async function replaceExpenseReceipt(
-  expenseId: string, 
+  expenseId: string,
   newFile: File,
   organizationId: string
 ): Promise<DocumentUploadResult> {
@@ -511,16 +535,13 @@ export async function replaceExpenseReceipt(
           const { error: storageError } = await supabase.storage
             .from('documents')
             .remove([doc.file_path])
-          
+
           if (storageError) {
             // console.warn('Warning: Could not delete old file:', storageError.message)
           }
         }
 
-        const { error: deleteError } = await supabase
-          .from('documents')
-          .delete()
-          .eq('id', doc.id)
+        const { error: deleteError } = await supabase.from('documents').delete().eq('id', doc.id)
 
         if (deleteError) {
           // console.warn('Warning: Could not delete old document record:', deleteError.message)
@@ -532,7 +553,7 @@ export async function replaceExpenseReceipt(
     const sanitizedFileName = sanitizeFileName(newFile.name)
     const fileName = `${expenseId}-${Date.now()}-${sanitizedFileName}`
     const filePath = `${validOrgId}/expense-receipts/${fileName}`
-    
+
     const { error: uploadError } = await supabase.storage
       .from('documents')
       .upload(filePath, newFile)
@@ -556,7 +577,7 @@ export async function replaceExpenseReceipt(
         payment_method: null,
         document_date: getTodaySwissString(),
         user_id: userId,
-        organization_id: validOrgId // 🔒 Security: Organization-scoped
+        organization_id: validOrgId, // 🔒 Security: Organization-scoped
       })
       .select()
       .single()
@@ -568,13 +589,13 @@ export async function replaceExpenseReceipt(
 
     return {
       success: true,
-      document
+      document,
     }
   } catch (err: any) {
     console.error('Error in replaceExpenseReceipt:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Ersetzen des Belegs'
+      error: err.message || 'Fehler beim Ersetzen des Belegs',
     }
   }
 }
@@ -583,7 +604,7 @@ export async function replaceExpenseReceipt(
  * Generate placeholder receipt for physical receipts
  */
 export async function generatePlaceholderReceipt(
-  expenseId: string, 
+  expenseId: string,
   organizationId: string,
   archiveLocation?: string
 ): Promise<DocumentUploadResult> {
@@ -612,39 +633,44 @@ export async function generatePlaceholderReceipt(
     // Import PDF libraries dynamically
     const React = await import('react')
     // Try both default and named import for better compatibility
-    const PlaceholderReceiptPDFModule = await import('@/shared/components/pdf/PlaceholderReceiptPDF')
-    const PlaceholderReceiptPDF = PlaceholderReceiptPDFModule.default || PlaceholderReceiptPDFModule.PlaceholderReceiptPDF
+    const PlaceholderReceiptPDFModule = await import(
+      '@/shared/components/pdf/PlaceholderReceiptPDF'
+    )
+    const PlaceholderReceiptPDF =
+      PlaceholderReceiptPDFModule.default || PlaceholderReceiptPDFModule.PlaceholderReceiptPDF
     const { pdf } = await import('@react-pdf/renderer')
-    
+
     // Load Business Settings
-    const { getBusinessSettings, resolveLogoUrl } = await import('@/shared/services/businessSettingsService')
+    const { getBusinessSettings, resolveLogoUrl } = await import(
+      '@/shared/services/businessSettingsService'
+    )
     const businessSettings = await getBusinessSettings()
-    
+
     // Resolve logo URL for PDF context (Development: localhost -> Docker internal URL)
-    const resolvedBusinessSettings = businessSettings ? {
-      ...businessSettings,
-      logo_url: resolveLogoUrl(businessSettings.logo_url)
-    } : null
-    
+    const resolvedBusinessSettings = businessSettings
+      ? {
+          ...businessSettings,
+          logo_url: resolveLogoUrl(businessSettings.logo_url),
+        }
+      : null
+
     // Generate PDF
-    const pdfComponent = React.createElement(PlaceholderReceiptPDF, { 
-      expense, 
+    const pdfComponent = React.createElement(PlaceholderReceiptPDF, {
+      expense,
       archiveLocation: archiveLocation || 'Physisches Archiv',
       createdBy: userData.user.email || 'System',
-      businessSettings: resolvedBusinessSettings
+      businessSettings: resolvedBusinessSettings,
     }) as any
-    
+
     const blob = await pdf(pdfComponent).toBlob()
     const fileName = `placeholder-beleg-${expense.id}.pdf`
     const filePath = `${validOrgId}/expense_receipts/${fileName}`
-    
+
     // Upload to Storage
-    const { error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, blob, {
-        contentType: 'application/pdf',
-        upsert: true
-      })
+    const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, blob, {
+      contentType: 'application/pdf',
+      upsert: true,
+    })
 
     if (uploadError) {
       // console.error('Error uploading placeholder PDF:', uploadError)
@@ -661,7 +687,7 @@ export async function generatePlaceholderReceipt(
         payment_method: null, // Use null like in uploadExpenseReceipt
         document_date: getTodaySwissString(), // Use current date like in uploadExpenseReceipt
         user_id: userId,
-        organization_id: validOrgId // 🔒 Security: Organization-scoped
+        organization_id: validOrgId, // 🔒 Security: Organization-scoped
       })
       .select()
       .single()
@@ -673,13 +699,13 @@ export async function generatePlaceholderReceipt(
 
     return {
       success: true,
-      document
+      document,
     }
   } catch (err: any) {
     console.error('Error in generatePlaceholderReceipt:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Erstellen des Platzhalter-Belegs'
+      error: err.message || 'Fehler beim Erstellen des Platzhalter-Belegs',
     }
   }
 }
@@ -694,10 +720,10 @@ export async function generatePlaceholderReceipt(
 export function calculateExpenseStats(expenses: ExpenseWithSupplier[]): ExpenseStats {
   const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0)
   const totalCash = expenses
-    .filter(expense => expense.payment_method === 'cash')
+    .filter((expense) => expense.payment_method === 'cash')
     .reduce((sum, expense) => sum + expense.amount, 0)
   const totalBank = expenses
-    .filter(expense => expense.payment_method === 'bank')
+    .filter((expense) => expense.payment_method === 'bank')
     .reduce((sum, expense) => sum + expense.amount, 0)
 
   const byCategory: Record<ExpenseCategory, number> = {
@@ -706,10 +732,10 @@ export function calculateExpenseStats(expenses: ExpenseWithSupplier[]): ExpenseS
     salary: 0,
     utilities: 0,
     insurance: 0,
-    other: 0
+    other: 0,
   }
 
-  expenses.forEach(expense => {
+  expenses.forEach((expense) => {
     const category = expense.category as ExpenseCategory
     if (byCategory[category] !== undefined) {
       byCategory[category] += expense.amount
@@ -721,24 +747,26 @@ export function calculateExpenseStats(expenses: ExpenseWithSupplier[]): ExpenseS
     totalCash,
     totalBank,
     count: expenses.length,
-    byCategory
+    byCategory,
   }
 }
 
 /**
  * Group expenses by category
  */
-export function groupExpensesByCategory(expenses: ExpenseWithSupplier[]): Record<ExpenseCategory, ExpenseWithSupplier[]> {
+export function groupExpensesByCategory(
+  expenses: ExpenseWithSupplier[]
+): Record<ExpenseCategory, ExpenseWithSupplier[]> {
   const grouped: Record<ExpenseCategory, ExpenseWithSupplier[]> = {
     rent: [],
     supplies: [],
     salary: [],
     utilities: [],
     insurance: [],
-    other: []
+    other: [],
   }
 
-  expenses.forEach(expense => {
+  expenses.forEach((expense) => {
     const category = expense.category as ExpenseCategory
     if (grouped[category]) {
       grouped[category].push(expense)
@@ -758,5 +786,5 @@ export const EXPENSE_CATEGORIES: Record<ExpenseCategory, string> = {
   salary: 'Löhne & Gehälter',
   utilities: 'Strom, Wasser, Gas',
   insurance: 'Versicherungen',
-  other: 'Sonstiges'
+  other: 'Sonstiges',
 }

@@ -1,8 +1,8 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/shared/lib/supabase/client'
 import { queryKeys } from '@/shared/lib/react-query/queryKeys'
+import { supabase } from '@/shared/lib/supabase/client'
 import { validateOrganizationId } from '@/shared/services/customerService'
 import type { Sale } from '@/shared/services/salesService'
 
@@ -30,7 +30,7 @@ export const useCustomerSales = (customerId: string, organizationId: string) => 
     queryKey: queryKeys.business.customers.sales(organizationId, customerId),
     queryFn: async () => {
       const validOrgId = validateOrganizationId(organizationId)
-      
+
       const { data, error } = await supabase
         .from('sales')
         .select(`
@@ -53,15 +53,15 @@ export const useCustomerSales = (customerId: string, organizationId: string) => 
         .eq('status', 'completed') // Only completed sales
         .order('created_at', { ascending: false })
         .limit(10) // Only show last 10 sales
-      
+
       if (error) {
         throw new Error(`Error fetching customer sales: ${error.message}`)
       }
-      
+
       return (data || []) as SaleWithItems[]
     },
-    staleTime: 2 * 60 * 1000,   // 2 minutes
-    gcTime: 10 * 60 * 1000,     // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     enabled: !!customerId && !!organizationId,
   })
 }
@@ -74,7 +74,7 @@ export const useCustomerLastVisit = (customerId: string, organizationId: string)
     queryKey: queryKeys.business.customers.lastVisit(organizationId, customerId),
     queryFn: async () => {
       const validOrgId = validateOrganizationId(organizationId)
-      
+
       const { data, error } = await supabase
         .from('sales')
         .select('created_at')
@@ -84,7 +84,7 @@ export const useCustomerLastVisit = (customerId: string, organizationId: string)
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
-      
+
       if (error) {
         if (error.code === 'PGRST116') {
           // No sales found
@@ -92,11 +92,11 @@ export const useCustomerLastVisit = (customerId: string, organizationId: string)
         }
         throw new Error(`Error fetching last visit: ${error.message}`)
       }
-      
+
       return data?.created_at || null
     },
-    staleTime: 5 * 60 * 1000,   // 5 minutes  
-    gcTime: 15 * 60 * 1000,     // 15 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
     enabled: !!customerId && !!organizationId,
   })
 }
@@ -109,30 +109,30 @@ export const useCustomerSalesStats = (customerId: string, organizationId: string
     queryKey: queryKeys.business.customers.salesStats(organizationId, customerId),
     queryFn: async () => {
       const validOrgId = validateOrganizationId(organizationId)
-      
+
       const { data, error } = await supabase
         .from('sales')
         .select('total_amount, created_at')
         .eq('customer_id', customerId)
         .eq('organization_id', validOrgId)
         .eq('status', 'completed')
-      
+
       if (error) {
         throw new Error(`Error fetching customer sales stats: ${error.message}`)
       }
-      
+
       const sales = data || []
       const totalSpent = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount), 0)
       const visitCount = sales.length
-      
+
       return {
         totalSpent,
         visitCount,
-        sales
+        sales,
       }
     },
-    staleTime: 10 * 60 * 1000,  // 10 minutes
-    gcTime: 30 * 60 * 1000,     // 30 minutes 
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
     enabled: !!customerId && !!organizationId,
   })
 }

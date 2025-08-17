@@ -11,25 +11,25 @@ export function getCurrentYearMonth(): string {
 export function getMonthOptions() {
   const options = []
   const currentDate = new Date()
-  
+
   // Die letzten 12 Monate
   for (let i = 0; i < 12; i++) {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
     const year = date.getFullYear()
     const month = date.getMonth() + 1
     const value = `${year}-${month.toString().padStart(2, '0')}`
-    const label = date.toLocaleDateString("de-CH", { month: "long", year: "numeric" })
+    const label = date.toLocaleDateString('de-CH', { month: 'long', year: 'numeric' })
     options.push({ value, label })
   }
-  
+
   return options
 }
 
 export function formatMonthYear(yearMonth: string): string {
   const [year, month] = yearMonth.split('-').map(Number)
-  return new Date(year, month - 1, 1).toLocaleDateString("de-CH", { 
-    month: "long", 
-    year: "numeric"
+  return new Date(year, month - 1, 1).toLocaleDateString('de-CH', {
+    month: 'long',
+    year: 'numeric',
   })
 }
 

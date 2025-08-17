@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import type { ProviderMatchCandidate } from '../../services/matchingTypes'
@@ -19,10 +19,10 @@ interface ConnectionLine {
   matchId: string
 }
 
-export function ProviderMatchConnector({ 
-  matchCandidates, 
+export function ProviderMatchConnector({
+  matchCandidates,
   selectedMatches,
-  containerRef
+  containerRef,
 }: ProviderMatchConnectorProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [lines, setLines] = useState<ConnectionLine[]>([])
@@ -36,7 +36,7 @@ export function ProviderMatchConnector({
 
       const container = containerRef.current
       const containerRect = container.getBoundingClientRect()
-      
+
       const newLines: ConnectionLine[] = []
 
       matchCandidates.forEach((candidate) => {
@@ -44,9 +44,13 @@ export function ProviderMatchConnector({
         const isSelected = selectedMatches.includes(matchId)
 
         // Find the sale row
-        const saleRow = container.querySelector(`[data-sale-id="${candidate.sale.id}"]`) as HTMLElement
-        // Find the provider row  
-        const providerRow = container.querySelector(`[data-provider-id="${candidate.providerReport.id}"]`) as HTMLElement
+        const saleRow = container.querySelector(
+          `[data-sale-id="${candidate.sale.id}"]`
+        ) as HTMLElement
+        // Find the provider row
+        const providerRow = container.querySelector(
+          `[data-provider-id="${candidate.providerReport.id}"]`
+        ) as HTMLElement
 
         if (saleRow && providerRow) {
           const saleRect = saleRow.getBoundingClientRect()
@@ -55,7 +59,7 @@ export function ProviderMatchConnector({
           // Calculate positions relative to container
           const saleY = saleRect.top - containerRect.top + saleRect.height / 2
           const providerY = providerRect.top - containerRect.top + providerRect.height / 2
-          
+
           // X positions: end of left table to start of right table
           const saleX = saleRect.right - containerRect.left
           const providerX = providerRect.left - containerRect.left
@@ -67,7 +71,7 @@ export function ProviderMatchConnector({
             y2: providerY,
             confidence: candidate.confidence,
             isSelected,
-            matchId
+            matchId,
           })
         }
       })
@@ -84,7 +88,7 @@ export function ProviderMatchConnector({
     }
 
     window.addEventListener('resize', handleResize)
-    
+
     // Also recalculate when container size changes (e.g., scrolling)
     const resizeObserver = new ResizeObserver(handleResize)
     if (containerRef.current) {
@@ -102,7 +106,7 @@ export function ProviderMatchConnector({
     if (!isSelected) {
       return 'transparent' // Hide unselected lines
     }
-    
+
     if (confidence >= 95) {
       return 'hsl(var(--success))' // Success color for high confidence
     }
@@ -117,7 +121,7 @@ export function ProviderMatchConnector({
 
   const getLineWidth = (confidence: number, isSelected: boolean) => {
     if (!isSelected) return 0 // No width for transparent lines
-    
+
     if (confidence >= 95) return 4 // Thicker for high confidence
     if (confidence >= 80) return 3
     return 2
@@ -132,7 +136,7 @@ export function ProviderMatchConnector({
       style={{
         width: '100%',
         height: '100%',
-        overflow: 'visible'
+        overflow: 'visible',
       }}
     >
       {/* Connection lines */}
@@ -150,16 +154,16 @@ export function ProviderMatchConnector({
               className="transition-all duration-300"
             />
           )}
-          
+
           {/* Arrow head for selected lines */}
           {line.isSelected && (
             <polygon
-              points={`${line.x2-8},${line.y2-4} ${line.x2},${line.y2} ${line.x2-8},${line.y2+4}`}
+              points={`${line.x2 - 8},${line.y2 - 4} ${line.x2},${line.y2} ${line.x2 - 8},${line.y2 + 4}`}
               fill={getLineColor(line.confidence, line.isSelected)}
               className="transition-all duration-300"
             />
           )}
-          
+
           {/* Confidence badge in the middle of the line */}
           {line.isSelected && (
             <g>

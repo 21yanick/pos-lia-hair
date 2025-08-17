@@ -4,19 +4,16 @@
 // Intelligent matching between POS Sales and Provider Reports
 // Handles TWINT and SumUp transaction reconciliation
 
+import type { UnmatchedProviderReport, UnmatchedSaleForProvider } from '../types/banking'
 import { intelligentMatchingService } from './intelligentMatching'
 import type {
+  MatchingConfig,
+  MatchingServiceResult,
+  ProviderAutoMatchResult,
   ProviderMatchCandidate,
   ProviderMatchResult,
-  ProviderAutoMatchResult,
-  MatchingConfig,
-  MatchingServiceResult
 } from './matchingTypes'
 import { DEFAULT_MATCHING_CONFIG } from './matchingTypes'
-import type {
-  UnmatchedSaleForProvider,
-  UnmatchedProviderReport
-} from '../types/banking'
 
 // =====================================================
 // PROVIDER MATCHING SERVICE
@@ -40,7 +37,7 @@ export class ProviderMatchingService {
   ): Promise<MatchingServiceResult<ProviderMatchResult>> {
     try {
       this.matchingCore.startPerformanceTracking()
-      
+
       const candidates: ProviderMatchCandidate[] = []
       let candidatesAnalyzed = 0
 
@@ -48,7 +45,7 @@ export class ProviderMatchingService {
       for (const sale of sales) {
         for (const report of reports) {
           const candidate = this.analyzeProviderMatch(sale, report)
-          
+
           // Only include candidates with reasonable confidence
           if (candidate.confidence >= this.config.provider.mediumConfidenceThreshold) {
             candidates.push(candidate)
@@ -62,12 +59,13 @@ export class ProviderMatchingService {
 
       // Categorize candidates
       const autoMatchable = candidates.filter(
-        c => c.confidence >= this.config.provider.autoMatchThreshold
+        (c) => c.confidence >= this.config.provider.autoMatchThreshold
       )
-      
+
       const reviewRequired = candidates.filter(
-        c => c.confidence < this.config.provider.autoMatchThreshold && 
-            c.confidence >= this.config.provider.mediumConfidenceThreshold
+        (c) =>
+          c.confidence < this.config.provider.autoMatchThreshold &&
+          c.confidence >= this.config.provider.mediumConfidenceThreshold
       )
 
       const result: ProviderMatchResult = {
@@ -78,21 +76,20 @@ export class ProviderMatchingService {
           totalCandidates: candidates.length,
           autoMatchCount: autoMatchable.length,
           reviewCount: reviewRequired.length,
-          highestConfidence: candidates.length > 0 ? candidates[0].confidence : 0
-        }
+          highestConfidence: candidates.length > 0 ? candidates[0].confidence : 0,
+        },
       }
 
       const metrics = this.matchingCore.getPerformanceMetrics({
         candidatesAnalyzed,
-        algorithmsUsed: ['provider_matching', 'amount_analysis', 'date_analysis']
+        algorithmsUsed: ['provider_matching', 'amount_analysis', 'date_analysis'],
       })
 
       return {
         success: true,
         data: result,
-        metrics
+        metrics,
       }
-
     } catch (error) {
       return {
         success: false,
@@ -100,8 +97,8 @@ export class ProviderMatchingService {
           type: 'algorithm',
           message: `Provider matching failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           details: error,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       }
     }
   }
@@ -117,13 +114,13 @@ export class ProviderMatchingService {
     const scores = {
       providerMatch: 0,
       amountMatch: 0,
-      dateMatch: 0
+      dateMatch: 0,
     }
 
     const details = {
       amountDifference: 0,
       daysDifference: 0,
-      providerMatches: false
+      providerMatches: false,
     }
 
     // 1. PROVIDER MATCH (Mandatory - 60 points)
@@ -142,7 +139,7 @@ export class ProviderMatchingService {
       report.gross_amount,
       this.config.provider.tolerances
     )
-    
+
     scores.amountMatch = amountAnalysis.score
     details.amountDifference = amountAnalysis.difference
 
@@ -151,7 +148,7 @@ export class ProviderMatchingService {
       sale.created_at,
       report.transaction_date
     )
-    
+
     scores.dateMatch = dateAnalysis.score
     details.daysDifference = dateAnalysis.daysDifference
 
@@ -159,11 +156,16 @@ export class ProviderMatchingService {
     const confidence = this.matchingCore.calculateConfidence(scores, {
       providerMatch: this.config.provider.scores.providerMatchWeight,
       amountMatch: this.config.provider.scores.amountMatchWeight,
-      dateMatch: this.config.provider.scores.dateMatchWeight
+      dateMatch: this.config.provider.scores.dateMatchWeight,
     })
 
     // 5. GENERATE MATCH REASONS
-    const matchReasons = this.generateProviderMatchReasons(scores, details, amountAnalysis, dateAnalysis)
+    const matchReasons = this.generateProviderMatchReasons(
+      scores,
+      details,
+      amountAnalysis,
+      dateAnalysis
+    )
 
     return {
       sale,
@@ -171,7 +173,7 @@ export class ProviderMatchingService {
       confidence,
       matchReasons,
       scores,
-      details
+      details,
     }
   }
 
@@ -184,10 +186,10 @@ export class ProviderMatchingService {
   ): Promise<MatchingServiceResult<ProviderAutoMatchResult>> {
     try {
       this.matchingCore.startPerformanceTracking()
-      
+
       // Filter to only high-confidence matches
       const autoMatchableCandidates = candidates.filter(
-        c => c.confidence >= this.config.provider.autoMatchThreshold
+        (c) => c.confidence >= this.config.provider.autoMatchThreshold
       )
 
       // Remove conflicts (same sale or report matched multiple times)
@@ -203,15 +205,19 @@ export class ProviderMatchingService {
           // Here we would call the actual API to create the match
           // For now, we'll simulate the success
           const matchSuccess = true // await this.createProviderMatch(candidate)
-          
+
           if (matchSuccess) {
             matchedPairs++
             processedCandidates.push(candidate)
           } else {
-            errors.push(`Failed to match Sale ${candidate.sale.id} with Report ${candidate.providerReport.id}`)
+            errors.push(
+              `Failed to match Sale ${candidate.sale.id} with Report ${candidate.providerReport.id}`
+            )
           }
         } catch (error) {
-          errors.push(`Error matching Sale ${candidate.sale.id}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          errors.push(
+            `Error matching Sale ${candidate.sale.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          )
         }
       }
 
@@ -219,20 +225,19 @@ export class ProviderMatchingService {
         success: errors.length === 0,
         matchedPairs,
         errors,
-        processedCandidates
+        processedCandidates,
       }
 
       const metrics = this.matchingCore.getPerformanceMetrics({
         candidatesAnalyzed: finalCandidates.length,
-        algorithmsUsed: ['auto_matching', 'conflict_resolution']
+        algorithmsUsed: ['auto_matching', 'conflict_resolution'],
       })
 
       return {
         success: true,
         data: result,
-        metrics
+        metrics,
       }
-
     } catch (error) {
       return {
         success: false,
@@ -240,8 +245,8 @@ export class ProviderMatchingService {
           type: 'algorithm',
           message: `Auto-match execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           details: error,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       }
     }
   }
@@ -291,7 +296,7 @@ export class ProviderMatchingService {
       confidence: 0,
       matchReasons: [`✗ ${reason}`],
       scores: { providerMatch: 0, amountMatch: 0, dateMatch: 0 },
-      details: { amountDifference: 0, daysDifference: 0, providerMatches: false }
+      details: { amountDifference: 0, daysDifference: 0, providerMatches: false },
     }
   }
 
@@ -347,10 +352,10 @@ export class ProviderMatchingService {
       confidence: { high: 0, medium: 0, low: 0 },
       providers: { twint: 0, sumup: 0 },
       amounts: { exact: 0, close: 0, different: 0 },
-      dates: { sameDay: 0, nextDay: 0, week: 0, far: 0 }
+      dates: { sameDay: 0, nextDay: 0, week: 0, far: 0 },
     }
 
-    result.candidates.forEach(candidate => {
+    result.candidates.forEach((candidate) => {
       // Confidence levels
       if (candidate.confidence >= this.config.provider.highConfidenceThreshold) {
         stats.confidence.high++

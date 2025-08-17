@@ -1,9 +1,7 @@
-"use client"
+'use client'
 
-import { CheckCircle, Pencil } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
-import { Label } from "@/shared/components/ui/label"
+import { CheckCircle, Pencil } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,8 +9,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/components/ui/dialog"
-import type { CartItem } from "@/shared/hooks/business/useSales"
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import type { CartItem } from '@/shared/hooks/business/useSales'
 
 interface EditPriceDialogProps {
   isOpen: boolean
@@ -42,7 +42,8 @@ export function EditPriceDialog({
             Preis bearbeiten
           </DialogTitle>
           <DialogDescription className="text-base text-muted-foreground mt-2">
-            Passen Sie den Preis für <span className="font-semibold text-foreground">{editingItem?.name}</span> an.
+            Passen Sie den Preis für{' '}
+            <span className="font-semibold text-foreground">{editingItem?.name}</span> an.
           </DialogDescription>
         </DialogHeader>
 
@@ -64,7 +65,7 @@ export function EditPriceDialog({
                 autoFocus
               />
             </div>
-            
+
             {editingItem && (
               <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                 <div className="flex justify-between text-sm">
@@ -87,14 +88,10 @@ export function EditPriceDialog({
         </div>
 
         <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6">
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="w-full sm:w-auto"
-          >
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Abbrechen
           </Button>
-          <Button 
+          <Button
             onClick={onSave}
             disabled={!editPrice || parseFloat(editPrice) < 0}
             className="w-full sm:w-auto"

@@ -1,12 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { CheckCircle, CreditCard, Loader2, Wallet, Smartphone, Zap } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
-import { Label } from "@/shared/components/ui/label"
-import { Badge } from "@/shared/components/ui/badge"
-import { Separator } from "@/shared/components/ui/separator"
+import { CheckCircle, CreditCard, Loader2, Smartphone, Wallet, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { CustomerAutocomplete } from '@/shared/components/customer'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -14,11 +12,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/components/ui/dialog"
-import type { PaymentMethod } from "@/shared/hooks/business/usePOSState"
-import type { CartItem, CreateSaleData } from "@/shared/hooks/business/useSales"
-import type { Customer } from "@/shared/services/customerService"
-import { CustomerAutocomplete } from "@/shared/components/customer"
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import { Separator } from '@/shared/components/ui/separator'
+import type { PaymentMethod } from '@/shared/hooks/business/usePOSState'
+import type { CartItem, CreateSaleData } from '@/shared/hooks/business/useSales'
+import type { Customer } from '@/shared/services/customerService'
 
 interface PaymentDialogProps {
   isOpen: boolean
@@ -27,10 +27,10 @@ interface PaymentDialogProps {
   selectedPaymentMethod: PaymentMethod | null
   cashReceived: string
   loading: boolean
-  selectedCustomer: Customer | null  // 🆕 Customer Selection
+  selectedCustomer: Customer | null // 🆕 Customer Selection
   onPaymentMethodChange: (method: PaymentMethod) => void
   onCashReceivedChange: (amount: string) => void
-  onCustomerChange: (customer: Customer | null) => void  // 🆕 Customer Handler
+  onCustomerChange: (customer: Customer | null) => void // 🆕 Customer Handler
   onPayment: (data: CreateSaleData) => void
   onClose: () => void
 }
@@ -42,10 +42,10 @@ export function PaymentDialog({
   selectedPaymentMethod,
   cashReceived,
   loading,
-  selectedCustomer,  // 🆕 Customer Selection
+  selectedCustomer, // 🆕 Customer Selection
   onPaymentMethodChange,
   onCashReceivedChange,
-  onCustomerChange,  // 🆕 Customer Handler
+  onCustomerChange, // 🆕 Customer Handler
   onPayment,
   onClose,
 }: PaymentDialogProps) {
@@ -53,7 +53,7 @@ export function PaymentDialog({
 
   // Rückgeld berechnen
   useEffect(() => {
-    if (selectedPaymentMethod === "cash" && cashReceived) {
+    if (selectedPaymentMethod === 'cash' && cashReceived) {
       const received = parseFloat(cashReceived) || 0
       setCashChange(Math.max(0, received - cartTotal))
     } else {
@@ -68,17 +68,18 @@ export function PaymentDialog({
       total_amount: cartTotal,
       payment_method: selectedPaymentMethod,
       items: cartItems,
-      received_amount: selectedPaymentMethod === 'cash' ? parseFloat(cashReceived) || cartTotal : undefined,
-      customer_id: selectedCustomer?.id || null,  // 🆕 Customer Integration
-      customer_name: selectedCustomer?.name || null  // 🆕 Customer Name
+      received_amount:
+        selectedPaymentMethod === 'cash' ? parseFloat(cashReceived) || cartTotal : undefined,
+      customer_id: selectedCustomer?.id || null, // 🆕 Customer Integration
+      customer_name: selectedCustomer?.name || null, // 🆕 Customer Name
     }
 
     onPayment(saleData)
   }
 
-  const isPaymentValid = selectedPaymentMethod && 
-    (selectedPaymentMethod !== 'cash' || 
-     (parseFloat(cashReceived) >= cartTotal))
+  const isPaymentValid =
+    selectedPaymentMethod &&
+    (selectedPaymentMethod !== 'cash' || parseFloat(cashReceived) >= cartTotal)
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -91,16 +92,15 @@ export function PaymentDialog({
             Zahlung verarbeiten
           </DialogTitle>
           <DialogDescription className="text-base text-muted-foreground mt-2">
-            Gesamtbetrag: <span className="text-xl font-bold text-primary">CHF {cartTotal.toFixed(2)}</span>
+            Gesamtbetrag:{' '}
+            <span className="text-xl font-bold text-primary">CHF {cartTotal.toFixed(2)}</span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-6 space-y-6">
           {/* 🆕 Customer Selection */}
           <div>
-            <Label className="text-base font-semibold mb-4 block">
-              Kunde (optional)
-            </Label>
+            <Label className="text-base font-semibold mb-4 block">Kunde (optional)</Label>
             <CustomerAutocomplete
               value={selectedCustomer}
               onSelect={onCustomerChange}
@@ -117,62 +117,62 @@ export function PaymentDialog({
             <div className="grid grid-cols-1 gap-3">
               {/* Bargeld */}
               <Button
-                variant={selectedPaymentMethod === "cash" ? "default" : "outline"}
+                variant={selectedPaymentMethod === 'cash' ? 'default' : 'outline'}
                 className={`h-14 justify-start text-left p-4 ${
-                  selectedPaymentMethod === "cash" 
-                    ? "bg-payment-cash text-payment-cash-foreground hover:bg-payment-cash/90"
-                    : "hover:bg-payment-cash/10 hover:border-payment-cash"
+                  selectedPaymentMethod === 'cash'
+                    ? 'bg-payment-cash text-payment-cash-foreground hover:bg-payment-cash/90'
+                    : 'hover:bg-payment-cash/10 hover:border-payment-cash'
                 }`}
-                onClick={() => onPaymentMethodChange("cash")}
+                onClick={() => onPaymentMethodChange('cash')}
               >
                 <Wallet className="mr-3" size={20} />
                 <div className="flex-1">
                   <div className="font-semibold">Bargeld</div>
                   <div className="text-xs opacity-80">Sofortige Zahlung</div>
                 </div>
-                {selectedPaymentMethod === "cash" && <CheckCircle size={20} />}
+                {selectedPaymentMethod === 'cash' && <CheckCircle size={20} />}
               </Button>
 
               {/* TWINT */}
               <Button
-                variant={selectedPaymentMethod === "twint" ? "default" : "outline"}
+                variant={selectedPaymentMethod === 'twint' ? 'default' : 'outline'}
                 className={`h-14 justify-start text-left p-4 ${
-                  selectedPaymentMethod === "twint"
-                    ? "bg-payment-twint text-payment-twint-foreground hover:bg-payment-twint/90"
-                    : "hover:bg-payment-twint/10 hover:border-payment-twint"
+                  selectedPaymentMethod === 'twint'
+                    ? 'bg-payment-twint text-payment-twint-foreground hover:bg-payment-twint/90'
+                    : 'hover:bg-payment-twint/10 hover:border-payment-twint'
                 }`}
-                onClick={() => onPaymentMethodChange("twint")}
+                onClick={() => onPaymentMethodChange('twint')}
               >
                 <Smartphone className="mr-3" size={20} />
                 <div className="flex-1">
                   <div className="font-semibold">TWINT</div>
                   <div className="text-xs opacity-80">Mobile Zahlung</div>
                 </div>
-                {selectedPaymentMethod === "twint" && <CheckCircle size={20} />}
+                {selectedPaymentMethod === 'twint' && <CheckCircle size={20} />}
               </Button>
 
               {/* SumUp */}
               <Button
-                variant={selectedPaymentMethod === "sumup" ? "default" : "outline"}
+                variant={selectedPaymentMethod === 'sumup' ? 'default' : 'outline'}
                 className={`h-14 justify-start text-left p-4 ${
-                  selectedPaymentMethod === "sumup"
-                    ? "bg-payment-sumup text-payment-sumup-foreground hover:bg-payment-sumup/90"
-                    : "hover:bg-payment-sumup/10 hover:border-payment-sumup"
+                  selectedPaymentMethod === 'sumup'
+                    ? 'bg-payment-sumup text-payment-sumup-foreground hover:bg-payment-sumup/90'
+                    : 'hover:bg-payment-sumup/10 hover:border-payment-sumup'
                 }`}
-                onClick={() => onPaymentMethodChange("sumup")}
+                onClick={() => onPaymentMethodChange('sumup')}
               >
                 <CreditCard className="mr-3" size={20} />
                 <div className="flex-1">
                   <div className="font-semibold">SumUp (Karte)</div>
                   <div className="text-xs opacity-80">Kreditkarte & EC-Karte</div>
                 </div>
-                {selectedPaymentMethod === "sumup" && <CheckCircle size={20} />}
+                {selectedPaymentMethod === 'sumup' && <CheckCircle size={20} />}
               </Button>
             </div>
           </div>
 
           {/* Bargeld-Eingabe */}
-          {selectedPaymentMethod === "cash" && (
+          {selectedPaymentMethod === 'cash' && (
             <div className="space-y-4 p-4 bg-payment-cash/5 border border-payment-cash/20 rounded-xl">
               <Label htmlFor="cashReceived" className="text-base font-semibold">
                 Erhaltener Betrag
@@ -187,13 +187,15 @@ export function PaymentDialog({
                 onChange={(e) => onCashReceivedChange(e.target.value)}
                 className="text-lg h-12"
               />
-              
+
               {cashReceived && (
                 <div className="space-y-2">
                   <Separator />
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Erhaltener Betrag:</span>
-                    <span className="font-semibold">CHF {parseFloat(cashReceived || "0").toFixed(2)}</span>
+                    <span className="font-semibold">
+                      CHF {parseFloat(cashReceived || '0').toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Verkaufsbetrag:</span>
@@ -202,7 +204,9 @@ export function PaymentDialog({
                   <Separator />
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-lg">Rückgeld:</span>
-                    <span className={`font-bold text-lg ${cashChange >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    <span
+                      className={`font-bold text-lg ${cashChange >= 0 ? 'text-success' : 'text-destructive'}`}
+                    >
                       CHF {cashChange.toFixed(2)}
                     </span>
                   </div>
@@ -213,15 +217,15 @@ export function PaymentDialog({
         </div>
 
         <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={onClose}
             className="w-full sm:w-auto"
             disabled={loading}
           >
             Abbrechen
           </Button>
-          <Button 
+          <Button
             onClick={handlePayment}
             disabled={!isPaymentValid || loading}
             className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"

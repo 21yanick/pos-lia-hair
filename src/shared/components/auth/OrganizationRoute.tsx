@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import type React from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { organizationPersistence } from '@/shared/services/organizationPersistence'
@@ -13,37 +14,38 @@ interface OrganizationRouteProps {
 
 /**
  * 🏢 ORGANIZATION ROUTE GUARD
- * 
+ *
  * Für organization-spezifische Seiten (/org/[slug]/...).
- * 
+ *
  * Verhalten:
  * 1. Wenn USER NOT AUTHENTICATED → Redirect zu /login
- * 2. Wenn USER AUTHENTICATED aber NO ORG ACCESS → Redirect zu /organizations  
+ * 2. Wenn USER AUTHENTICATED aber NO ORG ACCESS → Redirect zu /organizations
  * 3. Wenn USER HAS ORG ACCESS → Zeige Content
- * 
+ *
  * Use Cases:
  * - /org/[slug]/dashboard
  * - /org/[slug]/pos
  * - /org/[slug]/settings
  * - etc.
  */
-export function OrganizationRoute({ 
-  children,
-  fallback
-}: OrganizationRouteProps) {
+export function OrganizationRoute({ children, fallback }: OrganizationRouteProps) {
   const { isAuthenticated, loading: authLoading } = useAuth()
-  const { memberships: userOrganizations, loading: orgLoading, currentOrganization } = useCurrentOrganization()
+  const {
+    memberships: userOrganizations,
+    loading: orgLoading,
+    currentOrganization,
+  } = useCurrentOrganization()
   const router = useRouter()
   const params = useParams()
-  
+
   const slug = params?.slug as string
-  
+
   // Only show loading if:
   // 1. Auth is still loading
   // 2. Organizations are being fetched for the first time
   // 3. We have organizations but none selected yet (while provider is setting it)
   const loading = authLoading || (orgLoading && !userOrganizations)
-  
+
   // Removed debug useEffect - no longer needed
 
   useEffect(() => {
@@ -56,22 +58,15 @@ export function OrganizationRoute({
     // Step 2: If authenticated, check organization access
     if (!orgLoading && isAuthenticated && userOrganizations && slug) {
       const hasAccess = userOrganizations.some(
-        membership => membership.organization.slug === slug
+        (membership) => membership.organization.slug === slug
       )
-      
+
       if (!hasAccess) {
         router.push('/organizations')
         return
       }
     }
-  }, [
-    isAuthenticated, 
-    authLoading, 
-    orgLoading, 
-    userOrganizations, 
-    slug, 
-    router
-  ])
+  }, [isAuthenticated, authLoading, orgLoading, userOrganizations, slug, router])
 
   // Show loading while checking auth + org access
   if (loading) {
@@ -79,16 +74,18 @@ export function OrganizationRoute({
       authLoading,
       orgLoading,
       userOrganizations: !!userOrganizations,
-      reason: authLoading ? 'auth' : (orgLoading && !userOrganizations ? 'org' : 'unknown')
+      reason: authLoading ? 'auth' : orgLoading && !userOrganizations ? 'org' : 'unknown',
     }
-  
-    return fallback || (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          <span>Organisation wird geladen...</span>
+
+    return (
+      fallback || (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            <span>Organisation wird geladen...</span>
+          </div>
         </div>
-      </div>
+      )
     )
   }
 
@@ -97,10 +94,8 @@ export function OrganizationRoute({
   // 2. We have organizations loaded
   // 3. Current organization matches the URL slug OR organization is being set
   if (isAuthenticated && userOrganizations && slug) {
-    const hasAccess = userOrganizations.some(
-      membership => membership.organization.slug === slug
-    )
-      
+    const hasAccess = userOrganizations.some((membership) => membership.organization.slug === slug)
+
     // If user has access and either:
     // - Organization is already set correctly
     // - Organization is being set (provider will handle it)

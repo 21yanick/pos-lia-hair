@@ -1,9 +1,9 @@
 /**
  * Team Management Service Functions
- * 
+ *
  * Pure business logic functions for team management operations
  * Follows existing service patterns from salesService.ts and authService.ts
- * 
+ *
  * Features:
  * - Multi-tenant security (organization-scoped)
  * - Permission-based access control (owner > admin > staff)
@@ -15,7 +15,7 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { Database } from '@/types/supabase'
+import type { Database } from '@/types/database'
 
 // ========================================
 // Types
@@ -24,31 +24,37 @@ import type { Database } from '@/types/supabase'
 export type OrganizationUser = Database['public']['Tables']['organization_users']['Row']
 export type Role = 'owner' | 'admin' | 'staff'
 
-export type RemoveMemberResult = {
-  success: true
-  message: string
-} | {
-  success: false
-  error: string
-}
+export type RemoveMemberResult =
+  | {
+      success: true
+      message: string
+    }
+  | {
+      success: false
+      error: string
+    }
 
-export type ChangeRoleResult = {
-  success: true
-  member: OrganizationUser
-  message: string
-} | {
-  success: false
-  error: string
-}
+export type ChangeRoleResult =
+  | {
+      success: true
+      member: OrganizationUser
+      message: string
+    }
+  | {
+      success: false
+      error: string
+    }
 
-export type ResendInvitationResult = {
-  success: true
-  message: string
-  token?: string // For debugging
-} | {
-  success: false
-  error: string
-}
+export type ResendInvitationResult =
+  | {
+      success: true
+      message: string
+      token?: string // For debugging
+    }
+  | {
+      success: false
+      error: string
+    }
 
 // ========================================
 // Security & Validation
@@ -100,13 +106,13 @@ export async function getUserRole(organizationId: string, userId: string): Promi
 export function canManageMember(userRole: Role, targetRole: Role, isTargetSelf: boolean): boolean {
   // Can't manage yourself
   if (isTargetSelf) return false
-  
+
   // Owner can manage everyone except other owners
   if (userRole === 'owner' && targetRole !== 'owner') return true
-  
+
   // Admin can manage staff only
   if (userRole === 'admin' && targetRole === 'staff') return true
-  
+
   return false
 }
 
@@ -125,21 +131,21 @@ export async function removeMember(
     // Security validation
     const validOrgId = validateOrganizationId(organizationId)
     const currentUserId = await getCurrentUserId()
-    
+
     // Prevent self-removal
     if (currentUserId === targetUserId) {
-      return { 
-        success: false, 
-        error: 'Sie können sich nicht selbst aus dem Team entfernen.' 
+      return {
+        success: false,
+        error: 'Sie können sich nicht selbst aus dem Team entfernen.',
       }
     }
 
     // Get current user's role
     const userRole = await getUserRole(validOrgId, currentUserId)
     if (!userRole) {
-      return { 
-        success: false, 
-        error: 'Sie sind kein Mitglied dieser Organisation.' 
+      return {
+        success: false,
+        error: 'Sie sind kein Mitglied dieser Organisation.',
       }
     }
 
@@ -153,17 +159,17 @@ export async function removeMember(
       .single()
 
     if (targetError || !targetMember) {
-      return { 
-        success: false, 
-        error: 'Mitglied nicht gefunden oder bereits entfernt.' 
+      return {
+        success: false,
+        error: 'Mitglied nicht gefunden oder bereits entfernt.',
       }
     }
 
     // Permission check
     if (!canManageMember(userRole, targetMember.role as Role, false)) {
-      return { 
-        success: false, 
-        error: 'Keine Berechtigung, dieses Mitglied zu entfernen.' 
+      return {
+        success: false,
+        error: 'Keine Berechtigung, dieses Mitglied zu entfernen.',
       }
     }
 
@@ -179,16 +185,15 @@ export async function removeMember(
       throw removeError
     }
 
-    return { 
-      success: true, 
-      message: 'Mitglied wurde erfolgreich aus dem Team entfernt.' 
+    return {
+      success: true,
+      message: 'Mitglied wurde erfolgreich aus dem Team entfernt.',
     }
-
   } catch (err: any) {
     console.error('❌ Fehler beim Entfernen des Mitglieds:', err)
-    return { 
-      success: false, 
-      error: err.message || 'Fehler beim Entfernen des Mitglieds' 
+    return {
+      success: false,
+      error: err.message || 'Fehler beim Entfernen des Mitglieds',
     }
   }
 }
@@ -205,21 +210,21 @@ export async function changeRole(
     // Security validation
     const validOrgId = validateOrganizationId(organizationId)
     const currentUserId = await getCurrentUserId()
-    
+
     // Prevent self-role-change
     if (currentUserId === targetUserId) {
-      return { 
-        success: false, 
-        error: 'Sie können Ihre eigene Rolle nicht ändern.' 
+      return {
+        success: false,
+        error: 'Sie können Ihre eigene Rolle nicht ändern.',
       }
     }
 
     // Get current user's role
     const userRole = await getUserRole(validOrgId, currentUserId)
     if (!userRole) {
-      return { 
-        success: false, 
-        error: 'Sie sind kein Mitglied dieser Organisation.' 
+      return {
+        success: false,
+        error: 'Sie sind kein Mitglied dieser Organisation.',
       }
     }
 
@@ -233,33 +238,33 @@ export async function changeRole(
       .single()
 
     if (targetError || !targetMember) {
-      return { 
-        success: false, 
-        error: 'Mitglied nicht gefunden.' 
+      return {
+        success: false,
+        error: 'Mitglied nicht gefunden.',
       }
     }
 
     // Permission check for current role
     if (!canManageMember(userRole, targetMember.role as Role, false)) {
-      return { 
-        success: false, 
-        error: 'Keine Berechtigung, die Rolle dieses Mitglieds zu ändern.' 
+      return {
+        success: false,
+        error: 'Keine Berechtigung, die Rolle dieses Mitglieds zu ändern.',
       }
     }
 
     // Permission check for new role (can't promote to owner unless you're owner)
     if (newRole === 'owner' && userRole !== 'owner') {
-      return { 
-        success: false, 
-        error: 'Nur der Inhaber kann andere zu Inhabern machen.' 
+      return {
+        success: false,
+        error: 'Nur der Inhaber kann andere zu Inhabern machen.',
       }
     }
 
     // Check if role is actually changing
     if (targetMember.role === newRole) {
-      return { 
-        success: false, 
-        error: 'Das Mitglied hat bereits diese Rolle.' 
+      return {
+        success: false,
+        error: 'Das Mitglied hat bereits diese Rolle.',
       }
     }
 
@@ -279,21 +284,20 @@ export async function changeRole(
 
     const roleLabels = {
       owner: 'Inhaber',
-      admin: 'Administrator', 
-      staff: 'Mitarbeiter'
+      admin: 'Administrator',
+      staff: 'Mitarbeiter',
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       member: updatedMember,
-      message: `Rolle wurde erfolgreich zu ${roleLabels[newRole]} geändert.` 
+      message: `Rolle wurde erfolgreich zu ${roleLabels[newRole]} geändert.`,
     }
-
   } catch (err: any) {
     console.error('❌ Fehler beim Ändern der Rolle:', err)
-    return { 
-      success: false, 
-      error: err.message || 'Fehler beim Ändern der Rolle' 
+    return {
+      success: false,
+      error: err.message || 'Fehler beim Ändern der Rolle',
     }
   }
 }
@@ -310,52 +314,51 @@ export async function resendInvitation(
     // Security validation
     const validOrgId = validateOrganizationId(organizationId)
     const currentUserId = await getCurrentUserId()
-    
+
     // Get current user's role for permission check
     const userRole = await getUserRole(validOrgId, currentUserId)
     if (!userRole) {
-      return { 
-        success: false, 
-        error: 'Sie sind kein Mitglied dieser Organisation.' 
+      return {
+        success: false,
+        error: 'Sie sind kein Mitglied dieser Organisation.',
       }
     }
 
     // Permission check for inviting with specific role
     if (role === 'owner' && userRole !== 'owner') {
-      return { 
-        success: false, 
-        error: 'Nur der Inhaber kann andere als Inhaber einladen.' 
+      return {
+        success: false,
+        error: 'Nur der Inhaber kann andere als Inhaber einladen.',
       }
     }
 
     if (role === 'admin' && userRole === 'staff') {
-      return { 
-        success: false, 
-        error: 'Mitarbeiter können keine Administratoren einladen.' 
+      return {
+        success: false,
+        error: 'Mitarbeiter können keine Administratoren einladen.',
       }
     }
 
     // Use existing invitation service to send new invitation
     const { InvitationService } = await import('./invitationService')
-    
+
     const result = await InvitationService.sendInvitation({
       organizationId: validOrgId,
       email,
       role,
-      invitedBy: currentUserId
+      invitedBy: currentUserId,
     })
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: 'Einladung wurde erfolgreich erneut gesendet.',
-      token: result.token // For debugging
+      token: result.token, // For debugging
     }
-
   } catch (err: any) {
     console.error('❌ Fehler beim erneuten Senden der Einladung:', err)
-    return { 
-      success: false, 
-      error: err.message || 'Fehler beim Senden der Einladung' 
+    return {
+      success: false,
+      error: err.message || 'Fehler beim Senden der Einladung',
     }
   }
 }
@@ -369,7 +372,7 @@ export async function resendInvitation(
  */
 export async function getMemberCount(organizationId: string): Promise<number> {
   const validOrgId = validateOrganizationId(organizationId)
-  
+
   const { count, error } = await supabase
     .from('organization_users')
     .select('*', { count: 'exact', head: true })

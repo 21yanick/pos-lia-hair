@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/shared/lib/supabase/client'
-import { OrganizationMembership } from '@/shared/types/organizations'
+import type { OrganizationMembership } from '@/shared/types/organizations'
 
 // Query Key als Konstante für Konsistenz
 export const ORGANIZATIONS_QUERY_KEY = ['organizations', 'user'] as const
@@ -10,7 +10,7 @@ export const ORGANIZATIONS_QUERY_KEY = ['organizations', 'user'] as const
 // Typsichere Funktion zum Laden der Organisationen
 async function fetchUserOrganizations(): Promise<OrganizationMembership[]> {
   const { data: userData, error: userError } = await supabase.auth.getUser()
-  
+
   if (userError || !userData?.user) {
     return []
   }
@@ -44,12 +44,12 @@ async function fetchUserOrganizations(): Promise<OrganizationMembership[]> {
     .eq('organization.active', true)
     .order('joined_at', { ascending: true })
 
-  console.log('🔍 [DEBUG] Query result:', { 
-    hasData: !!data, 
+  console.log('🔍 [DEBUG] Query result:', {
+    hasData: !!data,
     dataLength: data?.length,
     error: error?.message,
     errorCode: error?.code,
-    errorHint: error?.hint
+    errorHint: error?.hint,
   })
 
   if (error) {
@@ -58,9 +58,9 @@ async function fetchUserOrganizations(): Promise<OrganizationMembership[]> {
   }
 
   // Type-sichere Transformation
-  return (data || []).map(membership => ({
+  return (data || []).map((membership) => ({
     ...membership,
-    organization: membership.organization as any // Supabase Typing Issue
+    organization: membership.organization as any, // Supabase Typing Issue
   }))
 }
 
@@ -71,8 +71,8 @@ export function useOrganizationsQuery(isAuthenticated?: boolean, authLoading?: b
     queryFn: fetchUserOrganizations,
     enabled: isAuthenticated && !authLoading, // Only run when user is authenticated
     staleTime: 5 * 60 * 1000, // 5 Minuten - Daten sind 5 Min gültig
-    gcTime: 10 * 60 * 1000,   // 10 Minuten - Cache bleibt 10 Min erhalten
-    retry: 1,                  // Nur 1 Retry bei Fehler
+    gcTime: 10 * 60 * 1000, // 10 Minuten - Cache bleibt 10 Min erhalten
+    retry: 1, // Nur 1 Retry bei Fehler
     refetchOnWindowFocus: false, // Kein Refetch bei Tab-Wechsel
   })
 }
@@ -80,10 +80,10 @@ export function useOrganizationsQuery(isAuthenticated?: boolean, authLoading?: b
 // Utility Hook zum manuellen Refetch
 export function useRefreshOrganizations() {
   const queryClient = useQueryClient()
-  
+
   return () => {
-    return queryClient.invalidateQueries({ 
-      queryKey: ORGANIZATIONS_QUERY_KEY 
+    return queryClient.invalidateQueries({
+      queryKey: ORGANIZATIONS_QUERY_KEY,
     })
   }
 }

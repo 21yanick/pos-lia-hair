@@ -2,7 +2,7 @@
 // Handles all PDF generation for import processes
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { SaleImport, ExpenseImport } from '@/shared/types/import'
+import type { ExpenseImport, SaleImport } from '@/shared/types/import'
 
 // =================================
 // Progress Callback Type
@@ -15,15 +15,15 @@ type ProgressCallback = (progress: number, phase: string) => void
 // =================================
 
 async function uploadPDFToStorage(
-  pdfBlob: Blob, 
-  filePath: string, 
+  pdfBlob: Blob,
+  filePath: string,
   fileName: string
 ): Promise<void> {
   const { error: uploadError } = await supabase.storage
     .from('documents')
     .upload(filePath, pdfBlob, {
       contentType: 'application/pdf',
-      upsert: true
+      upsert: true,
     })
 
   if (uploadError) {
@@ -33,24 +33,20 @@ async function uploadPDFToStorage(
   // console.log(`✅ PDF uploaded: ${filePath}`)
 }
 
-async function createDocumentRecord(
-  documentData: {
-    type: 'receipt' | 'daily_report' | 'expense_receipt'
-    reference_type: 'sale' | 'report' | 'expense'
-    reference_id: string
-    file_name: string
-    file_path: string
-    file_size: number
-    mime_type: string
-    document_date: string
-    user_id: string
-    notes: string
-    payment_method?: string
-  }
-): Promise<void> {
-  const { error: docError } = await supabase
-    .from('documents')
-    .insert(documentData)
+async function createDocumentRecord(documentData: {
+  type: 'receipt' | 'daily_report' | 'expense_receipt'
+  reference_type: 'sale' | 'report' | 'expense'
+  reference_id: string
+  file_name: string
+  file_path: string
+  file_size: number
+  mime_type: string
+  document_date: string
+  user_id: string
+  notes: string
+  payment_method?: string
+}): Promise<void> {
+  const { error: docError } = await supabase.from('documents').insert(documentData)
 
   if (docError) {
     throw new Error(`Document Record Error: ${docError.message}`)
@@ -64,16 +60,16 @@ async function createDocumentRecord(
 // =================================
 
 export async function generateReceiptPDFsForSales(
-  sales: SaleImport[], 
+  sales: SaleImport[],
   targetUserId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
   updateProgress(95, 'Generiere Receipt PDFs...')
-  
+
   let generatedPDFs = 0
-  
+
   // console.log('🔍 PDF Generation Debug - Input sales:', sales.length)
-  
+
   // Get all recent sales for this user with complete data
   const { data: recentSales, error: salesError } = await supabase
     .from('sales')
@@ -98,23 +94,23 @@ export async function generateReceiptPDFsForSales(
     .eq('user_id', targetUserId)
     .order('created_at', { ascending: false })
     .limit(sales.length * 2) // Get more than we imported to be safe
-  
+
   // console.log('🔍 PDF Generation Debug - Found sales:', recentSales?.length || 0)
-  
+
   if (salesError) {
     // console.error('🔍 PDF Generation Error:', salesError)
     throw new Error(`Fehler beim Abrufen der Sales für PDF-Generation: ${salesError.message}`)
   }
-  
+
   if (!recentSales || recentSales.length === 0) {
     // console.warn('🔍 PDF Generation - No sales found for user:', targetUserId)
     return 0
   }
-  
+
   // For each sale, generate actual PDF
   for (const sale of recentSales) {
     // console.log(`🔍 Processing sale ${sale.id} for PDF generation...`)
-    
+
     // Check if document already exists
     const { data: existingDoc } = await supabase
       .from('documents')
@@ -122,12 +118,12 @@ export async function generateReceiptPDFsForSales(
       .eq('reference_type', 'sale')
       .eq('reference_id', sale.id)
       .maybeSingle()
-    
+
     if (existingDoc) {
       // console.log(`🔍 Document already exists for sale ${sale.id}, skipping`)
       continue // Skip if document already exists
     }
-    
+
     try {
       // Transform sale data for PDF component
       const saleForPDF = {
@@ -144,45 +140,46 @@ export async function generateReceiptPDFsForSales(
         net_amount: null,
         settlement_status: 'pending' as const,
         settlement_date: null,
-        provider_reference_id: null
+        provider_reference_id: null,
       }
-      
-      const itemsForPDF = sale.sale_items?.map(item => ({
-        id: item.id,
-        item_id: item.items?.id || '',
-        name: item.items?.name || 'Unknown Item',
-        price: item.price || 0,
-        total: item.price || 0, // For single items, total equals price  
-        quantity: 1, // Import always assumes quantity 1
-        notes: item.notes || '',
-        type: item.items?.type || 'service'
-      })) || []
-      
+
+      const itemsForPDF =
+        sale.sale_items?.map((item) => ({
+          id: item.id,
+          item_id: item.items?.id || '',
+          name: item.items?.name || 'Unknown Item',
+          price: item.price || 0,
+          total: item.price || 0, // For single items, total equals price
+          quantity: 1, // Import always assumes quantity 1
+          notes: item.notes || '',
+          type: item.items?.type || 'service',
+        })) || []
+
       // console.log(`🔍 Generating PDF for sale ${sale.id}...`)
-      
+
       // Generate actual PDF using React-PDF
       try {
         // Import PDF library dynamically
         const { pdf } = await import('@react-pdf/renderer')
         const { ReceiptPDF } = await import('@/shared/components/pdf/ReceiptPDF')
         const { createElement } = await import('react')
-        
+
         // Generate PDF blob
         const pdfDocument = createElement(ReceiptPDF, {
           sale: saleForPDF,
-          items: itemsForPDF
+          items: itemsForPDF,
         })
-        
+
         const pdfBlob = await pdf(pdfDocument).toBlob()
-        
+
         // console.log(`🔍 PDF generated successfully, size: ${pdfBlob.size} bytes`)
-        
+
         // Upload to Supabase Storage
         const fileName = `receipt_${sale.id}.pdf`
         const filePath = `documents/receipts/${fileName}`
-        
+
         await uploadPDFToStorage(pdfBlob, filePath, fileName)
-        
+
         // Create document record in database
         await createDocumentRecord({
           type: 'receipt',
@@ -192,19 +189,21 @@ export async function generateReceiptPDFsForSales(
           file_path: filePath,
           file_size: pdfBlob.size,
           mime_type: 'application/pdf',
-          document_date: sale.created_at ? sale.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          document_date: sale.created_at
+            ? sale.created_at.split('T')[0]
+            : new Date().toISOString().split('T')[0],
           user_id: targetUserId,
-          notes: 'Import: Receipt automatisch generiert'
+          notes: 'Import: Receipt automatisch generiert',
         })
-        
+
         generatedPDFs++
-        
       } catch (pdfError) {
         console.error(`❌ PDF Library Error für Sale ${sale.id}:`, pdfError)
-        
+
         // Fallback: Create placeholder PDF if React-PDF fails
-        const placeholderPDF = new Blob([
-          `%PDF-1.4
+        const placeholderPDF = new Blob(
+          [
+            `%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</ProcSet[/PDF/Text]>>>>endobj
@@ -217,14 +216,16 @@ xref
 trailer<</Size 4/Root 1 0 R>>
 startxref
 228
-%%EOF`
-        ], { type: 'application/pdf' })
-        
+%%EOF`,
+          ],
+          { type: 'application/pdf' }
+        )
+
         const fileName = `receipt_${sale.id}.pdf`
         const filePath = `documents/receipts/${fileName}`
-        
+
         await uploadPDFToStorage(placeholderPDF, filePath, fileName)
-        
+
         await createDocumentRecord({
           type: 'receipt',
           reference_type: 'sale',
@@ -233,20 +234,21 @@ startxref
           file_path: filePath,
           file_size: placeholderPDF.size,
           mime_type: 'application/pdf',
-          document_date: sale.created_at ? sale.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          document_date: sale.created_at
+            ? sale.created_at.split('T')[0]
+            : new Date().toISOString().split('T')[0],
           user_id: targetUserId,
-          notes: 'Import: Placeholder Receipt (PDF generation failed)'
+          notes: 'Import: Placeholder Receipt (PDF generation failed)',
         })
-        
+
         generatedPDFs++
       }
-      
     } catch (error) {
       console.error(`❌ Receipt PDF Generation Fehler für Sale ${sale.id}:`, error)
       // Continue with next sale
     }
   }
-  
+
   return generatedPDFs
 }
 
@@ -256,11 +258,11 @@ startxref
 
 // LEGACY: Daily Reports disabled - Banking Module will replace Daily Reports
 export async function generateDailyReportPDFs(
-  sales: SaleImport[], 
-  expenses: ExpenseImport[], 
+  sales: SaleImport[],
+  expenses: ExpenseImport[],
   targetUserId: string,
   updateProgress: ProgressCallback
-): Promise<{ id: string, filePath: string }[]> {
+): Promise<{ id: string; filePath: string }[]> {
   // Function disabled - Banking Module will replace Daily Reports
   // console.warn('DailyReportPDF generation disabled - Banking Module will replace Daily Reports')
   updateProgress(97, 'Daily Report PDFs deaktiviert (Banking Module Migration)')
@@ -276,16 +278,16 @@ export async function generateDailyReportPDFs(
 // =================================
 
 export async function generateExpenseReceiptPDFs(
-  expenses: ExpenseImport[], 
+  expenses: ExpenseImport[],
   targetUserId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
   updateProgress(98, 'Generiere Expense Receipt PDFs...')
-  
+
   let generatedPDFs = 0
-  
+
   // console.log(`🔍 Generating Expense Receipt PDFs for ${expenses.length} expenses`)
-  
+
   // Get the actual expenses from database (they should be created by now)
   const { data: dbExpenses, error: expensesError } = await supabase
     .from('expenses')
@@ -293,17 +295,17 @@ export async function generateExpenseReceiptPDFs(
     .eq('user_id', targetUserId)
     .order('created_at', { ascending: false })
     .limit(expenses.length * 2) // Get more than imported to be safe
-  
+
   if (expensesError) {
     // console.error('🔍 Error loading expenses for PDF generation:', expensesError)
     return 0
   }
-  
+
   if (!dbExpenses || dbExpenses.length === 0) {
     // console.warn('🔍 No expenses found for PDF generation')
     return 0
   }
-  
+
   for (const dbExpense of dbExpenses) {
     try {
       // Check if document already exists for this expense
@@ -314,35 +316,37 @@ export async function generateExpenseReceiptPDFs(
         .eq('reference_type', 'expense')
         .eq('reference_id', dbExpense.id)
         .maybeSingle()
-      
+
       if (existingDoc) {
         // console.log(`🔍 Document already exists for expense ${dbExpense.id}, skipping`)
         continue
       }
-      
+
       // console.log(`🔍 Generating PDF for expense ${dbExpense.id}...`)
-      
+
       try {
         // Import PDF libraries dynamically
         const { pdf } = await import('@react-pdf/renderer')
-        const { PlaceholderReceiptPDF } = await import('@/shared/components/pdf/PlaceholderReceiptPDF')
+        const { PlaceholderReceiptPDF } = await import(
+          '@/shared/components/pdf/PlaceholderReceiptPDF'
+        )
         const { createElement } = await import('react')
-        
+
         // Generate PDF blob
         const pdfDocument = createElement(PlaceholderReceiptPDF, {
-          expense: dbExpense
+          expense: dbExpense,
         })
-        
+
         const pdfBlob = await pdf(pdfDocument).toBlob()
-        
+
         // console.log(`🔍 Expense PDF generated, size: ${pdfBlob.size} bytes`)
-        
+
         // Upload to Supabase Storage
         const fileName = `import-expense-${dbExpense.id}.pdf`
         const filePath = `documents/expense_receipts/${fileName}`
-        
+
         await uploadPDFToStorage(pdfBlob, filePath, fileName)
-        
+
         // Create document record in database
         await createDocumentRecord({
           type: 'expense_receipt',
@@ -355,17 +359,17 @@ export async function generateExpenseReceiptPDFs(
           document_date: dbExpense.payment_date,
           user_id: targetUserId,
           notes: 'Import: Physischer Beleg archiviert - Original nicht digital verfügbar',
-          payment_method: dbExpense.payment_method
+          payment_method: dbExpense.payment_method,
         })
-        
+
         generatedPDFs++
-        
       } catch (pdfError) {
         console.error(`❌ Expense PDF Library Error für ${dbExpense.id}:`, pdfError)
-        
+
         // Fallback: Create placeholder text PDF
-        const placeholderPDF = new Blob([
-          `%PDF-1.4
+        const placeholderPDF = new Blob(
+          [
+            `%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Resources<</ProcSet[/PDF/Text]>>>>endobj
@@ -378,14 +382,16 @@ xref
 trailer<</Size 4/Root 1 0 R>>
 startxref
 228
-%%EOF`
-        ], { type: 'application/pdf' })
-        
+%%EOF`,
+          ],
+          { type: 'application/pdf' }
+        )
+
         const fileName = `import-expense-${dbExpense.id}.pdf`
         const filePath = `documents/expense_receipts/${fileName}`
-        
+
         await uploadPDFToStorage(placeholderPDF, filePath, fileName)
-        
+
         await createDocumentRecord({
           type: 'expense_receipt',
           reference_type: 'expense',
@@ -397,18 +403,17 @@ startxref
           document_date: dbExpense.payment_date,
           user_id: targetUserId,
           notes: 'Import: Placeholder Receipt (PDF generation failed)',
-          payment_method: dbExpense.payment_method
+          payment_method: dbExpense.payment_method,
         })
-        
+
         generatedPDFs++
       }
-      
     } catch (error) {
       console.error(`❌ PDF Generation Fehler für Expense ${dbExpense.id}:`, error)
       // Continue with next expense
     }
   }
-  
+
   // console.log(`🎉 Expense Receipt PDF Generation completed: ${generatedPDFs} PDFs created`)
   return generatedPDFs
 }

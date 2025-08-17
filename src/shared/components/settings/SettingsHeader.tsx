@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 interface SettingsHeaderProps {
@@ -13,7 +13,7 @@ interface SettingsHeaderProps {
   backText?: string
   badge?: {
     text: string
-    variant?: "default" | "secondary" | "destructive" | "outline"
+    variant?: 'default' | 'secondary' | 'destructive' | 'outline'
   }
   actions?: React.ReactNode
 }
@@ -21,15 +21,16 @@ interface SettingsHeaderProps {
 export function SettingsHeader({
   title,
   description,
-  backLink = "/settings",
-  backText = "Zurück zu Einstellungen",
+  backLink = '/settings',
+  backText = 'Zurück zu Einstellungen',
   badge,
-  actions
+  actions,
 }: SettingsHeaderProps) {
   const { currentOrganization } = useCurrentOrganization()
-  
+
   // 🔗 Helper: Organization-aware URL builder
-  const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
+  const getOrgUrl = (path: string) =>
+    currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
 
   return (
     <div className="space-y-4">
@@ -49,22 +50,16 @@ export function SettingsHeader({
           <div className="flex items-center space-x-3">
             <h1 className="text-3xl font-bold">{title}</h1>
             {badge && (
-              <Badge variant={badge.variant || "default"} className="px-3 py-1">
+              <Badge variant={badge.variant || 'default'} className="px-3 py-1">
                 {badge.text}
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground max-w-2xl">
-            {description}
-          </p>
+          <p className="text-muted-foreground max-w-2xl">{description}</p>
         </div>
-        
+
         {/* Action Buttons */}
-        {actions && (
-          <div className="flex items-center space-x-2">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex items-center space-x-2">{actions}</div>}
       </div>
     </div>
   )

@@ -3,8 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
 import { supabase } from '@/shared/lib/supabase/client'
-import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
 
 export interface CashMovement {
   id?: string
@@ -31,27 +31,38 @@ interface UseCashMovementsQueryReturn {
   movements: CashMovement[]
   isLoading: boolean
   error: string | null // Legacy compatible: string instead of Error
-  
+
   // Query Info (React Query specific)
   isBalanceLoading: boolean
   isMovementsLoading: boolean
   isFetching: boolean
   isStale: boolean
-  
+
   // Core Functions (Legacy Compatible)
   createCashMovement: (movement: CashMovementInput) => Promise<CashMovement>
-  reverseCashMovement: (referenceId: string, referenceType: 'sale' | 'expense') => Promise<CashMovement | null>
+  reverseCashMovement: (
+    referenceId: string,
+    referenceType: 'sale' | 'expense'
+  ) => Promise<CashMovement | null>
   createCashAdjustment: (amount: number, reason: string) => Promise<CashMovement | null>
-  
+
   // Convenience Functions (Legacy Compatible)
   createSaleCashMovement: (saleId: string, amount: number) => Promise<CashMovement | null>
-  createExpenseCashMovement: (expenseId: string, amount: number, category: string, description: string) => Promise<CashMovement | null>
-  
+  createExpenseCashMovement: (
+    expenseId: string,
+    amount: number,
+    category: string,
+    description: string
+  ) => Promise<CashMovement | null>
+
   // Queries (Legacy Compatible)
   getCurrentBalance: () => Promise<number>
   getCashMovementsForPeriod: (startDate: Date, endDate: Date) => Promise<CashMovement[]>
-  getCashMovementsByReference: (referenceId: string, referenceType: 'sale' | 'expense' | 'adjustment') => Promise<CashMovement[]>
-  
+  getCashMovementsByReference: (
+    referenceId: string,
+    referenceType: 'sale' | 'expense' | 'adjustment'
+  ) => Promise<CashMovement[]>
+
   // Query Management (React Query specific)
   refetchBalance: () => Promise<any>
   refetchMovements: () => Promise<any>
@@ -60,7 +71,7 @@ interface UseCashMovementsQueryReturn {
 
 /**
  * React Query-powered Cash Movements Hook
- * 
+ *
  * Features:
  * - Real-time cash balance tracking
  * - Automatic cache invalidation on movements
@@ -71,7 +82,7 @@ interface UseCashMovementsQueryReturn {
 export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
   const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
-  
+
   const organizationId = currentOrganization?.id
 
   // ========================================
@@ -83,7 +94,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
     error: balanceError,
     refetch: refetchBalance,
     isStale: isBalanceStale,
-    isFetching: isBalanceFetching
+    isFetching: isBalanceFetching,
   } = useQuery({
     queryKey: queryKeys.business.cash.balance(organizationId || ''),
     queryFn: async () => {
@@ -92,7 +103,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       }
 
       const { data, error } = await supabase.rpc('get_current_cash_balance_for_org', {
-        org_id: organizationId
+        org_id: organizationId,
       })
 
       if (error) {
@@ -101,11 +112,11 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       }
 
       const balance = data || 0
-      
+
       if (process.env.NODE_ENV === 'development') {
         // console.log('🟢 React Query: Cash balance loaded:', balance)
       }
-      
+
       return balance
     },
     enabled: !!organizationId,
@@ -114,8 +125,8 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
     refetchInterval: 1000 * 60, // Refetch every minute for real-time updates
     refetchOnWindowFocus: true,
     meta: {
-      errorMessage: 'Fehler beim Laden des Kassenstands'
-    }
+      errorMessage: 'Fehler beim Laden des Kassenstands',
+    },
   })
 
   // ========================================
@@ -127,7 +138,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
     error: movementsError,
     refetch: refetchMovements,
     isStale: isMovementsStale,
-    isFetching: isMovementsFetching
+    isFetching: isMovementsFetching,
   } = useQuery({
     queryKey: queryKeys.business.cash.movements(organizationId || ''),
     queryFn: async () => {
@@ -153,8 +164,8 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
     staleTime: cacheConfig.cashMovements.staleTime,
     gcTime: cacheConfig.cashMovements.gcTime,
     meta: {
-      errorMessage: 'Fehler beim Laden der Kassenbewegungen'
-    }
+      errorMessage: 'Fehler beim Laden der Kassenbewegungen',
+    },
   })
 
   // ========================================
@@ -191,7 +202,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
           reference_type: movement.reference_type,
           reference_id: movement.reference_id,
           user_id: userData.user.id,
-          organization_id: organizationId
+          organization_id: organizationId,
         })
         .select()
         .single()
@@ -207,11 +218,11 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.cash.balance(organizationId) 
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.cash.balance(organizationId),
       })
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.cash.movements(organizationId) 
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.cash.movements(organizationId),
       })
 
       // Snapshot the previous values
@@ -223,13 +234,11 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       ) as CashMovement[]
 
       // Optimistically update the balance
-      const balanceChange = newMovement.type === 'cash_in' 
-        ? newMovement.amount 
-        : -newMovement.amount
-      
-      queryClient.setQueryData(
-        queryKeys.business.cash.balance(organizationId),
-        (old: number = 0) => Math.max(0, old + balanceChange)
+      const balanceChange =
+        newMovement.type === 'cash_in' ? newMovement.amount : -newMovement.amount
+
+      queryClient.setQueryData(queryKeys.business.cash.balance(organizationId), (old: number = 0) =>
+        Math.max(0, old + balanceChange)
       )
 
       // Optimistically add the movement to the list
@@ -237,7 +246,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
         ...newMovement,
         id: `temp-${Date.now()}`,
         created_at: new Date().toISOString(),
-        user_id: 'current-user' // Will be replaced by real data
+        user_id: 'current-user', // Will be replaced by real data
       }
 
       queryClient.setQueryData(
@@ -264,13 +273,13 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
           )
         }
       }
-      
+
       toast.error(error.message || 'Fehler beim Erstellen der Kassenbewegung')
     },
     onSuccess: (data, variables) => {
       const actionType = variables.type === 'cash_in' ? 'Einzahlung' : 'Auszahlung'
       toast.success(`${actionType} erfolgreich erstellt`)
-      
+
       if (process.env.NODE_ENV === 'development') {
         // console.log('🟢 React Query: Cash movement created:', data)
       }
@@ -278,19 +287,19 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
     onSettled: () => {
       // Always refetch after mutation to ensure data consistency
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.cash.balance(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.cash.balance(organizationId),
         })
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.cash.movements(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.cash.movements(organizationId),
         })
-        
+
         // Also invalidate related financial data
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.reports.financial(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.reports.financial(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -299,12 +308,12 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
   const invalidateAll = async () => {
     if (organizationId) {
       await Promise.all([
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.cash.balance(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.cash.balance(organizationId),
         }),
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.cash.movements(organizationId) 
-        })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.cash.movements(organizationId),
+        }),
       ])
     }
   }
@@ -312,11 +321,14 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
   // ========================================
   // Legacy Compatible Helper Functions
   // ========================================
-  
+
   // Reverse Cash Movement (Legacy Compatible)
-  const reverseCashMovement = async (referenceId: string, referenceType: 'sale' | 'expense'): Promise<CashMovement | null> => {
+  const reverseCashMovement = async (
+    referenceId: string,
+    referenceType: 'sale' | 'expense'
+  ): Promise<CashMovement | null> => {
     if (!organizationId) throw new Error('No organization selected')
-    
+
     // Find original movement
     const { data: originalMovements, error: findError } = await supabase
       .from('cash_movements')
@@ -324,52 +336,58 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       .eq('reference_id', referenceId)
       .eq('reference_type', referenceType)
       .eq('organization_id', organizationId)
-    
+
     if (findError || !originalMovements || originalMovements.length === 0) {
       return null
     }
-    
+
     const originalMovement = originalMovements[0] as CashMovement
     const reverseType = originalMovement.type === 'cash_in' ? 'cash_out' : 'cash_in'
-    
+
     return createMovementMutation.mutateAsync({
       amount: originalMovement.amount,
       type: reverseType,
       description: `Stornierung: ${originalMovement.description}`,
       reference_type: 'adjustment',
-      reference_id: referenceId
+      reference_id: referenceId,
     })
   }
-  
+
   // Create Cash Adjustment (Legacy Compatible)
-  const createCashAdjustment = async (amount: number, reason: string): Promise<CashMovement | null> => {
+  const createCashAdjustment = async (
+    amount: number,
+    reason: string
+  ): Promise<CashMovement | null> => {
     const type = amount > 0 ? 'cash_in' : 'cash_out'
     const absoluteAmount = Math.abs(amount)
-    
+
     return createMovementMutation.mutateAsync({
       amount: absoluteAmount,
       type,
       description: `Kassenanpassung: ${reason}`,
-      reference_type: 'adjustment'
+      reference_type: 'adjustment',
     })
   }
-  
+
   // Create Sale Cash Movement (Legacy Compatible)
-  const createSaleCashMovement = async (saleId: string, amount: number): Promise<CashMovement | null> => {
+  const createSaleCashMovement = async (
+    saleId: string,
+    amount: number
+  ): Promise<CashMovement | null> => {
     return createMovementMutation.mutateAsync({
       amount,
       type: 'cash_in',
       description: `Barzahlung (Verkauf: ${saleId})`,
       reference_type: 'sale',
-      reference_id: saleId
+      reference_id: saleId,
     })
   }
-  
+
   // Create Expense Cash Movement (Legacy Compatible)
   const createExpenseCashMovement = async (
-    expenseId: string, 
-    amount: number, 
-    category: string, 
+    expenseId: string,
+    amount: number,
+    category: string,
     description: string
   ): Promise<CashMovement | null> => {
     return createMovementMutation.mutateAsync({
@@ -377,14 +395,17 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       type: 'cash_out',
       description: `${category}: ${description}`,
       reference_type: 'expense',
-      reference_id: expenseId
+      reference_id: expenseId,
     })
   }
-  
+
   // Get Cash Movements for Period (Legacy Compatible)
-  const getCashMovementsForPeriod = async (startDate: Date, endDate: Date): Promise<CashMovement[]> => {
+  const getCashMovementsForPeriod = async (
+    startDate: Date,
+    endDate: Date
+  ): Promise<CashMovement[]> => {
     if (!organizationId) throw new Error('No organization selected')
-    
+
     const { data, error } = await supabase
       .from('cash_movements')
       .select('*')
@@ -392,18 +413,18 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       .gte('created_at', startDate.toISOString())
       .lte('created_at', endDate.toISOString())
       .order('created_at', { ascending: false })
-    
+
     if (error) throw new Error('Fehler beim Laden der Bargeld-Bewegungen')
     return data || []
   }
-  
+
   // Get Cash Movements by Reference (Legacy Compatible)
   const getCashMovementsByReference = async (
-    referenceId: string, 
+    referenceId: string,
     referenceType: 'sale' | 'expense' | 'adjustment'
   ): Promise<CashMovement[]> => {
     if (!organizationId) throw new Error('No organization selected')
-    
+
     const { data, error } = await supabase
       .from('cash_movements')
       .select('*')
@@ -411,11 +432,11 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       .eq('reference_type', referenceType)
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
-    
+
     if (error) throw new Error('Fehler beim Laden der Bargeld-Bewegungen')
     return data || []
   }
-  
+
   // Get Current Balance (Legacy Compatible)
   const getCurrentBalance = async (): Promise<number> => {
     await refetchBalance()
@@ -439,27 +460,27 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
     movements,
     isLoading,
     error: error?.message || null, // Legacy compatible: string error
-    
+
     // Query Info (React Query specific)
     isBalanceLoading,
     isMovementsLoading,
     isFetching,
     isStale,
-    
+
     // Core Functions (Legacy Compatible)
     createCashMovement: createMovementMutation.mutateAsync,
     reverseCashMovement,
     createCashAdjustment,
-    
+
     // Convenience Functions (Legacy Compatible)
     createSaleCashMovement,
     createExpenseCashMovement,
-    
+
     // Queries (Legacy Compatible)
     getCurrentBalance,
     getCashMovementsForPeriod,
     getCashMovementsByReference,
-    
+
     // Query Management (React Query specific)
     refetchBalance,
     refetchMovements,

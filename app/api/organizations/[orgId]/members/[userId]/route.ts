@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import * as TeamService from '@/shared/services/teamService'
 
 /**
@@ -14,9 +14,9 @@ export async function DELETE(
 
     if (!orgId || !userId) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Organization ID und User ID sind erforderlich' 
+        {
+          success: false,
+          error: 'Organization ID und User ID sind erforderlich',
         },
         { status: 400 }
       )
@@ -27,9 +27,9 @@ export async function DELETE(
 
     if (!result.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: result.error 
+        {
+          success: false,
+          error: result.error,
         },
         { status: 400 }
       )
@@ -37,19 +37,17 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: result.message
+      message: result.message,
     })
-
   } catch (error) {
     console.error('Remove member API error:', error)
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Unerwarteter Fehler beim Entfernen des Mitglieds' 
+      {
+        success: false,
+        error: 'Unerwarteter Fehler beim Entfernen des Mitglieds',
       },
       { status: 500 }
     )
   }
 }
-

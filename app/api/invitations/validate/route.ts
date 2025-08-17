@@ -1,29 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { InvitationService } from '@/shared/services/invitationService';
+import { type NextRequest, NextResponse } from 'next/server'
+import { InvitationService } from '@/shared/services/invitationService'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { token } = body;
+    const body = await request.json()
+    const { token } = body
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Token ist erforderlich' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Token ist erforderlich' }, { status: 400 })
     }
 
     // Validate invitation token
-    const validation = await InvitationService.validateInvitation(token);
+    const validation = await InvitationService.validateInvitation(token)
 
     if (!validation.valid) {
       return NextResponse.json(
-        { 
+        {
           valid: false,
-          error: validation.error 
+          error: validation.error,
         },
         { status: 400 }
-      );
+      )
     }
 
     return NextResponse.json({
@@ -37,18 +34,17 @@ export async function POST(request: NextRequest) {
         expiresAt: new Date(validation.invitation!.exp * 1000).toISOString(),
       },
       organization: validation.organization,
-    });
-
+    })
   } catch (error) {
-    console.error('Validate invitation API error:', error);
-    
+    console.error('Validate invitation API error:', error)
+
     return NextResponse.json(
-      { 
+      {
         valid: false,
-        error: 'Token-Validierung fehlgeschlagen' 
+        error: 'Token-Validierung fehlgeschlagen',
       },
       { status: 500 }
-    );
+    )
   }
 }
 
@@ -57,5 +53,5 @@ export async function GET() {
     message: 'Invitation Validation API',
     usage: 'POST /api/invitations/validate',
     required: ['token'],
-  });
+  })
 }

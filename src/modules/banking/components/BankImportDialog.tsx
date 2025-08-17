@@ -1,31 +1,42 @@
-"use client"
+'use client'
 
-import { useState, useRef } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Progress } from "@/shared/components/ui/progress"
-import { Separator } from "@/shared/components/ui/separator"
-import { 
-  Upload, 
-  FileSpreadsheet,
-  CheckCircle,
+import {
   AlertCircle,
-  Loader2,
-  FileX,
-  ArrowRight,
   ArrowLeft,
-  RefreshCw,
+  ArrowRight,
   Calendar,
-  Database
-} from "lucide-react"
-
-import { previewCAMTFile, importCAMTFile } from '../services/camtImporter'
-import type { ImportPreviewData, ImportExecutionResult } from '../types/banking'
-import { formatDateForAPI } from '@/shared/utils/dateUtils'
+  CheckCircle,
+  Database,
+  FileSpreadsheet,
+  FileX,
+  Loader2,
+  RefreshCw,
+  Upload,
+} from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
+import { Progress } from '@/shared/components/ui/progress'
+import { Separator } from '@/shared/components/ui/separator'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { formatDateForAPI } from '@/shared/utils/dateUtils'
+import { importCAMTFile, previewCAMTFile } from '../services/camtImporter'
+import type { ImportExecutionResult, ImportPreviewData } from '../types/banking'
 
 type ImportStep = 'upload' | 'preview' | 'confirm'
 
@@ -46,25 +57,25 @@ interface ImportState {
   error: string | null
 }
 
-export function BankImportDialog({ 
-  isOpen, 
-  bankAccountId, 
-  userId, 
-  onClose, 
-  onSuccess 
+export function BankImportDialog({
+  isOpen,
+  bankAccountId,
+  userId,
+  onClose,
+  onSuccess,
 }: BankImportDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   // 🔒 Multi-Tenant Organization Context
   const { currentOrganization } = useCurrentOrganization()
-  
+
   const [state, setState] = useState<ImportState>({
     step: 'upload',
     file: null,
     preview: null,
     result: null,
     loading: false,
-    error: null
+    error: null,
   })
 
   // Reset state when dialog opens/closes
@@ -75,7 +86,7 @@ export function BankImportDialog({
       preview: null,
       result: null,
       loading: false,
-      error: null
+      error: null,
     })
     onClose()
   }
@@ -87,17 +98,17 @@ export function BankImportDialog({
 
     // Validate file type
     if (!file.name.toLowerCase().endsWith('.xml')) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        error: 'Bitte wählen Sie eine XML-Datei aus (CAMT.053 Format)'
+        error: 'Bitte wählen Sie eine XML-Datei aus (CAMT.053 Format)',
       }))
       return
     }
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       file,
-      error: null
+      error: null,
     }))
   }
 
@@ -105,21 +116,21 @@ export function BankImportDialog({
   const handleDrop = (event: React.DragEvent) => {
     event.preventDefault()
     const file = event.dataTransfer.files[0]
-    
+
     if (!file) return
-    
+
     if (!file.name.toLowerCase().endsWith('.xml')) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        error: 'Bitte wählen Sie eine XML-Datei aus (CAMT.053 Format)'
+        error: 'Bitte wählen Sie eine XML-Datei aus (CAMT.053 Format)',
       }))
       return
     }
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       file,
-      error: null
+      error: null,
     }))
   }
 
@@ -131,19 +142,19 @@ export function BankImportDialog({
   const handleParseFile = async () => {
     if (!state.file) return
 
-    setState(prev => ({ ...prev, loading: true, error: null }))
+    setState((prev) => ({ ...prev, loading: true, error: null }))
 
     try {
       const xmlContent = await state.file.text()
-      
+
       // Preview only - NO DATABASE WRITES
       const result = await previewCAMTFile(xmlContent, state.file.name, bankAccountId)
-      
+
       if (!result.success || !result.preview) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           loading: false,
-          error: result.errors.join(', ') || 'Fehler beim Parsen der Datei'
+          error: result.errors.join(', ') || 'Fehler beim Parsen der Datei',
         }))
         return
       }
@@ -159,22 +170,21 @@ export function BankImportDialog({
         importable: result.preview.importable,
         statementPeriod: {
           from: formatDateForAPI(result.preview.statement.fromDateTime),
-          to: formatDateForAPI(result.preview.statement.toDateTime)
-        }
+          to: formatDateForAPI(result.preview.statement.toDateTime),
+        },
       }
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
         preview,
-        step: 'preview'
+        step: 'preview',
       }))
-
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Unbekannter Fehler beim Parsen'
+        error: error instanceof Error ? error.message : 'Unbekannter Fehler beim Parsen',
       }))
     }
   }
@@ -183,7 +193,7 @@ export function BankImportDialog({
   const handleExecuteImport = async () => {
     if (!state.file || !state.preview) return
 
-    setState(prev => ({ ...prev, loading: true, error: null }))
+    setState((prev) => ({ ...prev, loading: true, error: null }))
 
     try {
       // 🔒 Security: Organization required
@@ -193,57 +203,56 @@ export function BankImportDialog({
 
       const xmlContent = await state.file.text()
       const result = await importCAMTFile(
-        xmlContent, 
-        state.file.name, 
-        bankAccountId, 
+        xmlContent,
+        state.file.name,
+        bankAccountId,
         userId,
         currentOrganization.id // ✅ CRITICAL FIX: Organization security
       )
 
       if (result.success && result.importResult) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           loading: false,
           result: result.importResult!,
-          step: 'confirm'
+          step: 'confirm',
         }))
-        
+
         // Trigger data refresh in parent
         onSuccess()
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           loading: false,
-          error: result.errors.join(', ') || 'Import fehlgeschlagen'
+          error: result.errors.join(', ') || 'Import fehlgeschlagen',
         }))
       }
-
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Unbekannter Import-Fehler'
+        error: error instanceof Error ? error.message : 'Unbekannter Import-Fehler',
       }))
     }
   }
 
   // Navigation
   const goBack = () => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       step: prev.step === 'preview' ? 'upload' : 'upload',
-      error: null
+      error: null,
     }))
   }
 
   const goToUpload = () => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       step: 'upload',
       file: null,
       preview: null,
       result: null,
-      error: null
+      error: null,
     }))
   }
 
@@ -252,9 +261,7 @@ export function BankImportDialog({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Bank Import</h3>
-        <p className="text-muted-foreground">
-          Raiffeisen CAMT.053 XML Datei hochladen
-        </p>
+        <p className="text-muted-foreground">Raiffeisen CAMT.053 XML Datei hochladen</p>
       </div>
 
       {/* File Upload Area */}
@@ -276,11 +283,9 @@ export function BankImportDialog({
           <div className="mx-auto w-12 h-12 bg-accent rounded-full flex items-center justify-center">
             <Upload className="h-6 w-6 text-accent-foreground" />
           </div>
-          
+
           <div>
-            <p className="text-sm font-medium">
-              XML-Datei hier ablegen oder klicken zum Auswählen
-            </p>
+            <p className="text-sm font-medium">XML-Datei hier ablegen oder klicken zum Auswählen</p>
             <p className="text-xs text-muted-foreground mt-1">
               Unterstützt: CAMT.053 XML Format (Raiffeisen)
             </p>
@@ -321,10 +326,7 @@ export function BankImportDialog({
         <Button variant="outline" onClick={handleClose}>
           Abbrechen
         </Button>
-        <Button 
-          onClick={handleParseFile}
-          disabled={!state.file || state.loading}
-        >
+        <Button onClick={handleParseFile} disabled={!state.file || state.loading}>
           {state.loading ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
@@ -340,9 +342,7 @@ export function BankImportDialog({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Import Vorschau</h3>
-        <p className="text-muted-foreground">
-          Überprüfen Sie die Import-Details vor dem Import
-        </p>
+        <p className="text-muted-foreground">Überprüfen Sie die Import-Details vor dem Import</p>
       </div>
 
       {/* File Info */}
@@ -367,52 +367,45 @@ export function BankImportDialog({
               <div className="text-2xl font-bold text-primary">
                 {state.preview?.totalEntries || 0}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Total Einträge
-              </div>
+              <div className="text-sm text-muted-foreground">Total Einträge</div>
             </div>
             <div className="text-center p-4 bg-chart-3/10 rounded">
               <div className="text-2xl font-bold text-chart-3">
                 {state.preview?.newEntries || 0}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Neue Einträge
-              </div>
+              <div className="text-sm text-muted-foreground">Neue Einträge</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Duplicate & Error Summary */}
-      {(state.preview?.duplicateEntries || 0) > 0 || (state.preview?.errorEntries || 0) > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {(state.preview?.duplicateEntries || 0) > 0 && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>{state.preview?.duplicateEntries}</strong> Duplikate gefunden
-                <br />
-                <span className="text-xs text-muted-foreground">
-                  Diese werden übersprungen
-                </span>
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {(state.preview?.errorEntries || 0) > 0 && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>{state.preview?.errorEntries}</strong> Fehlerhafte Einträge
-                <br />
-                <span className="text-xs">
-                  Diese können nicht importiert werden
-                </span>
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-      )}
+      {(state.preview?.duplicateEntries || 0) > 0 ||
+        ((state.preview?.errorEntries || 0) > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(state.preview?.duplicateEntries || 0) > 0 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>{state.preview?.duplicateEntries}</strong> Duplikate gefunden
+                  <br />
+                  <span className="text-xs text-muted-foreground">Diese werden übersprungen</span>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {(state.preview?.errorEntries || 0) > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>{state.preview?.errorEntries}</strong> Fehlerhafte Einträge
+                  <br />
+                  <span className="text-xs">Diese können nicht importiert werden</span>
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        ))}
 
       {/* Warnings */}
       <div className="space-y-3">
@@ -424,19 +417,26 @@ export function BankImportDialog({
             </AlertDescription>
           </Alert>
         )}
-        
+
         {state.preview?.periodOverlap && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Zeitraum überschneidet sich mit bestehenden Importen. Überprüfen Sie Duplikate sorgfältig.
+              Zeitraum überschneidet sich mit bestehenden Importen. Überprüfen Sie Duplikate
+              sorgfältig.
             </AlertDescription>
           </Alert>
         )}
       </div>
 
       {/* Import Decision */}
-      <Card className={state.preview?.importable ? 'border-green-200 dark:border-green-800' : 'border-destructive'}>
+      <Card
+        className={
+          state.preview?.importable
+            ? 'border-green-200 dark:border-green-800'
+            : 'border-destructive'
+        }
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             {state.preview?.importable ? (
@@ -449,10 +449,9 @@ export function BankImportDialog({
                 {state.preview?.importable ? 'Import möglich' : 'Import nicht möglich'}
               </p>
               <p className="text-sm text-muted-foreground">
-                {state.preview?.importable 
+                {state.preview?.importable
                   ? `${state.preview.newEntries} neue Transaktionen werden importiert`
-                  : 'Keine neuen Einträge oder Validierungsfehler gefunden'
-                }
+                  : 'Keine neuen Einträge oder Validierungsfehler gefunden'}
               </p>
             </div>
           </div>
@@ -465,7 +464,7 @@ export function BankImportDialog({
           <ArrowLeft className="h-4 w-4 mr-2" />
           Zurück
         </Button>
-        <Button 
+        <Button
           onClick={handleExecuteImport}
           disabled={!state.preview?.importable || state.loading}
         >
@@ -474,7 +473,9 @@ export function BankImportDialog({
           ) : (
             <Database className="h-4 w-4 mr-2" />
           )}
-          {state.loading ? 'Importiere...' : `${state.preview?.newEntries || 0} Einträge importieren`}
+          {state.loading
+            ? 'Importiere...'
+            : `${state.preview?.newEntries || 0} Einträge importieren`}
         </Button>
       </div>
     </div>
@@ -503,9 +504,9 @@ export function BankImportDialog({
               Transaktionen erfolgreich importiert
             </div>
           </div>
-          
+
           <Separator className="my-4" />
-          
+
           <div className="space-y-2 text-sm">
             <div className="flex justify-between items-start gap-4">
               <span className="text-muted-foreground flex-shrink-0">Datei:</span>
@@ -526,7 +527,8 @@ export function BankImportDialog({
       <Alert>
         <RefreshCw className="h-4 w-4" />
         <AlertDescription>
-          Die neuen Transaktionen sind jetzt in Tab 2 (Bank-Abgleich) verfügbar und können mit internen Einträgen verknüpft werden.
+          Die neuen Transaktionen sind jetzt in Tab 2 (Bank-Abgleich) verfügbar und können mit
+          internen Einträgen verknüpft werden.
         </AlertDescription>
       </Alert>
 
@@ -535,9 +537,7 @@ export function BankImportDialog({
         <Button variant="outline" onClick={goToUpload}>
           Neuer Import
         </Button>
-        <Button onClick={handleClose}>
-          Schließen
-        </Button>
+        <Button onClick={handleClose}>Schließen</Button>
       </div>
     </div>
   )
@@ -556,21 +556,24 @@ export function BankImportDialog({
           {/* Progress Indicator */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <span className={`text-sm ${state.step === 'upload' ? 'font-medium text-primary' : 'text-muted-foreground'}`}>
+              <span
+                className={`text-sm ${state.step === 'upload' ? 'font-medium text-primary' : 'text-muted-foreground'}`}
+              >
                 1. Upload
               </span>
-              <span className={`text-sm ${state.step === 'preview' ? 'font-medium text-primary' : 'text-muted-foreground'}`}>
+              <span
+                className={`text-sm ${state.step === 'preview' ? 'font-medium text-primary' : 'text-muted-foreground'}`}
+              >
                 2. Vorschau
               </span>
-              <span className={`text-sm ${state.step === 'confirm' ? 'font-medium text-primary' : 'text-muted-foreground'}`}>
+              <span
+                className={`text-sm ${state.step === 'confirm' ? 'font-medium text-primary' : 'text-muted-foreground'}`}
+              >
                 3. Bestätigung
               </span>
             </div>
-            <Progress 
-              value={
-                state.step === 'upload' ? 33 : 
-                state.step === 'preview' ? 66 : 100
-              } 
+            <Progress
+              value={state.step === 'upload' ? 33 : state.step === 'preview' ? 66 : 100}
               className="h-2"
             />
           </div>

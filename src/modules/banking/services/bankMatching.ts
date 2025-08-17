@@ -1,25 +1,22 @@
 // =====================================================
-// Bank Matching Service - Tab 2 Logic  
+// Bank Matching Service - Tab 2 Logic
 // =====================================================
 // Intelligent matching between Bank Transactions and Available Items
 // Handles single matches, combinations, bulk detection, and provider summaries
 
+import type { AvailableForBankMatching, UnmatchedBankTransaction } from '../types/banking'
 import { intelligentMatchingService } from './intelligentMatching'
 import type {
   BankMatchCandidate,
   BankMatchSuggestion,
   BankMatchType,
-  ProviderSummary,
-  ProviderSummaryDashboard,
   BulkDetectionResult,
   MatchingConfig,
-  MatchingServiceResult
+  MatchingServiceResult,
+  ProviderSummary,
+  ProviderSummaryDashboard,
 } from './matchingTypes'
 import { DEFAULT_MATCHING_CONFIG } from './matchingTypes'
-import type {
-  UnmatchedBankTransaction,
-  AvailableForBankMatching
-} from '../types/banking'
 
 // =====================================================
 // BANK MATCHING SERVICE
@@ -43,7 +40,7 @@ export class BankMatchingService {
   ): Promise<MatchingServiceResult<BankMatchSuggestion>> {
     try {
       this.matchingCore.startPerformanceTracking()
-      
+
       const allCandidates: BankMatchCandidate[] = []
       let candidatesAnalyzed = 0
 
@@ -61,7 +58,9 @@ export class BankMatchingService {
       }
 
       // 3. Combination matches (if no high-confidence single/bulk match found)
-      const hasSafeMatch = allCandidates.some(c => c.confidence >= this.config.bank.topSuggestionThreshold)
+      const hasSafeMatch = allCandidates.some(
+        (c) => c.confidence >= this.config.bank.topSuggestionThreshold
+      )
       if (!hasSafeMatch) {
         const combinationMatches = this.findCombinationMatches(bankTransaction, availableItems)
         allCandidates.push(...combinationMatches)
@@ -70,7 +69,7 @@ export class BankMatchingService {
 
       // Filter and sort candidates
       const filteredCandidates = allCandidates
-        .filter(c => c.confidence >= this.config.bank.showSuggestionThreshold)
+        .filter((c) => c.confidence >= this.config.bank.showSuggestionThreshold)
         .sort((a, b) => b.confidence - a.confidence)
 
       // Take top candidates (max 10)
@@ -79,30 +78,31 @@ export class BankMatchingService {
       const suggestion: BankMatchSuggestion = {
         bankTransactionId: bankTransaction.id,
         topCandidates,
-        bulkDetection: bulkDetection.detected ? {
-          provider: bulkDetection.provider!,
-          items: bulkDetection.items,
-          totalAmount: bulkDetection.totalAmount,
-          confidence: bulkDetection.confidence
-        } : undefined,
+        bulkDetection: bulkDetection.detected
+          ? {
+              provider: bulkDetection.provider!,
+              items: bulkDetection.items,
+              totalAmount: bulkDetection.totalAmount,
+              confidence: bulkDetection.confidence,
+            }
+          : undefined,
         summary: {
           bestConfidence: topCandidates.length > 0 ? topCandidates[0].confidence : 0,
           totalSuggestions: topCandidates.length,
-          hasBulkMatch: bulkDetection.detected
-        }
+          hasBulkMatch: bulkDetection.detected,
+        },
       }
 
       const metrics = this.matchingCore.getPerformanceMetrics({
         candidatesAnalyzed,
-        algorithmsUsed: ['single_matching', 'bulk_detection', 'combination_matching']
+        algorithmsUsed: ['single_matching', 'bulk_detection', 'combination_matching'],
       })
 
       return {
         success: true,
         data: suggestion,
-        metrics
+        metrics,
       }
-
     } catch (error) {
       return {
         success: false,
@@ -110,8 +110,8 @@ export class BankMatchingService {
           type: 'algorithm',
           message: `Bank matching failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           details: error,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       }
     }
   }
@@ -125,12 +125,12 @@ export class BankMatchingService {
   ): Promise<MatchingServiceResult<ProviderSummaryDashboard>> {
     try {
       this.matchingCore.startPerformanceTracking()
-      
+
       const summaries: ProviderSummary[] = []
-      
+
       // Group items by provider/type
       const groupedItems = this.groupItemsByProvider(availableItems)
-      
+
       // TWINT items
       if (groupedItems.twint.length > 0) {
         summaries.push({
@@ -139,7 +139,7 @@ export class BankMatchingService {
           icon: '🟦',
           itemCount: groupedItems.twint.length,
           totalAmount: groupedItems.twint.reduce((sum, item) => sum + item.amount, 0),
-          items: groupedItems.twint
+          items: groupedItems.twint,
         })
       }
 
@@ -147,11 +147,11 @@ export class BankMatchingService {
       if (groupedItems.sumup.length > 0) {
         summaries.push({
           provider: 'sumup',
-          displayName: 'SumUp', 
+          displayName: 'SumUp',
           icon: '🟧',
           itemCount: groupedItems.sumup.length,
           totalAmount: groupedItems.sumup.reduce((sum, item) => sum + item.amount, 0),
-          items: groupedItems.sumup
+          items: groupedItems.sumup,
         })
       }
 
@@ -163,7 +163,7 @@ export class BankMatchingService {
           icon: '💰',
           itemCount: groupedItems.cash.length,
           totalAmount: groupedItems.cash.reduce((sum, item) => sum + item.amount, 0),
-          items: groupedItems.cash
+          items: groupedItems.cash,
         })
       }
 
@@ -175,7 +175,7 @@ export class BankMatchingService {
           icon: '🏢',
           itemCount: groupedItems.owner.length,
           totalAmount: groupedItems.owner.reduce((sum, item) => sum + item.amount, 0),
-          items: groupedItems.owner
+          items: groupedItems.owner,
         })
       }
 
@@ -184,20 +184,19 @@ export class BankMatchingService {
       const dashboard: ProviderSummaryDashboard = {
         summaries,
         grandTotal,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       }
 
       const metrics = this.matchingCore.getPerformanceMetrics({
         candidatesAnalyzed: availableItems.length,
-        algorithmsUsed: ['provider_grouping', 'summary_calculation']
+        algorithmsUsed: ['provider_grouping', 'summary_calculation'],
       })
 
       return {
         success: true,
         data: dashboard,
-        metrics
+        metrics,
       }
-
     } catch (error) {
       return {
         success: false,
@@ -205,8 +204,8 @@ export class BankMatchingService {
           type: 'algorithm',
           message: `Provider summary generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           details: error,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       }
     }
   }
@@ -223,7 +222,7 @@ export class BankMatchingService {
 
     for (const item of availableItems) {
       const candidate = this.analyzeSingleMatch(bankTransaction, item)
-      
+
       if (candidate.confidence >= this.config.bank.showSuggestionThreshold) {
         candidates.push(candidate)
       }
@@ -240,7 +239,7 @@ export class BankMatchingService {
       amountAccuracy: 0,
       dateProximity: 0,
       descriptionMatch: 0,
-      itemCountPenalty: 0
+      itemCountPenalty: 0,
     }
 
     // 1. Amount accuracy (70% weight)
@@ -271,10 +270,15 @@ export class BankMatchingService {
     const confidence = this.matchingCore.calculateConfidence(scores, {
       amountAccuracy: this.config.bank.scores.amountAccuracyWeight,
       dateProximity: this.config.bank.scores.dateProximityWeight,
-      descriptionMatch: this.config.bank.scores.descriptionMatchWeight
+      descriptionMatch: this.config.bank.scores.descriptionMatchWeight,
     })
 
-    const matchReasons = this.generateBankMatchReasons(scores, amountAnalysis, dateAnalysis, descriptionAnalysis)
+    const matchReasons = this.generateBankMatchReasons(
+      scores,
+      amountAnalysis,
+      dateAnalysis,
+      descriptionAnalysis
+    )
 
     return {
       bankTransaction,
@@ -287,8 +291,8 @@ export class BankMatchingService {
         totalAmount: item.amount,
         amountDifference: amountAnalysis.difference,
         itemCount: 1,
-        providerDetected: this.matchingCore.detectProvider(bankTransaction.description)
-      }
+        providerDetected: this.matchingCore.detectProvider(bankTransaction.description),
+      },
     }
   }
 
@@ -301,19 +305,33 @@ export class BankMatchingService {
     availableItems: AvailableForBankMatching[]
   ): BulkDetectionResult {
     const detectedProvider = this.matchingCore.detectProvider(bankTransaction.description)
-    
+
     if (!detectedProvider) {
-      return { detected: false, confidence: 0, items: [], totalAmount: 0, amountDifference: 0, reasons: [] }
+      return {
+        detected: false,
+        confidence: 0,
+        items: [],
+        totalAmount: 0,
+        amountDifference: 0,
+        reasons: [],
+      }
     }
 
     // Filter items by detected provider
-    const providerItems = availableItems.filter(item => {
+    const providerItems = availableItems.filter((item) => {
       const itemDesc = item.description.toLowerCase()
       return itemDesc.includes(detectedProvider)
     })
 
     if (providerItems.length === 0) {
-      return { detected: false, confidence: 0, items: [], totalAmount: 0, amountDifference: 0, reasons: [] }
+      return {
+        detected: false,
+        confidence: 0,
+        items: [],
+        totalAmount: 0,
+        amountDifference: 0,
+        reasons: [],
+      }
     }
 
     // Try different combinations of provider items
@@ -325,7 +343,14 @@ export class BankMatchingService {
     )
 
     if (!bestCombination) {
-      return { detected: false, confidence: 0, items: [], totalAmount: 0, amountDifference: 0, reasons: [] }
+      return {
+        detected: false,
+        confidence: 0,
+        items: [],
+        totalAmount: 0,
+        amountDifference: 0,
+        reasons: [],
+      }
     }
 
     const confidence = this.calculateBulkConfidence(
@@ -337,12 +362,12 @@ export class BankMatchingService {
     const reasons = [
       `✓ ${detectedProvider.toUpperCase()} Provider erkannt`,
       `✓ ${bestCombination.items.length} Items gefunden`,
-      `✓ Summe: ${bestCombination.totalAmount.toFixed(2)} CHF`
+      `✓ Summe: ${bestCombination.totalAmount.toFixed(2)} CHF`,
     ]
 
     if (bestCombination.amountDifference === 0) {
       reasons.push('✓ Exakte Summe')
-    } else if (bestCombination.amountDifference <= 0.10) {
+    } else if (bestCombination.amountDifference <= 0.1) {
       reasons.push('✓ Summe sehr nah')
     }
 
@@ -353,7 +378,7 @@ export class BankMatchingService {
       items: bestCombination.items,
       totalAmount: bestCombination.totalAmount,
       amountDifference: bestCombination.amountDifference,
-      reasons
+      reasons,
     }
   }
 
@@ -383,9 +408,9 @@ export class BankMatchingService {
     // Amount accuracy bonus
     if (combination.amountDifference === 0) {
       confidence += 30
-    } else if (combination.amountDifference <= 0.10) {
+    } else if (combination.amountDifference <= 0.1) {
       confidence += 25
-    } else if (combination.amountDifference <= 1.00) {
+    } else if (combination.amountDifference <= 1.0) {
       confidence += 15
     }
 
@@ -412,17 +437,17 @@ export class BankMatchingService {
       matchType: 'provider_bulk',
       matchReasons: bulkDetection.reasons,
       scores: {
-        amountAccuracy: bulkDetection.amountDifference <= 0.10 ? 90 : 70,
+        amountAccuracy: bulkDetection.amountDifference <= 0.1 ? 90 : 70,
         dateProximity: 50, // Bulk transactions can span multiple days
         descriptionMatch: 80, // High since provider was detected
-        itemCountPenalty: Math.max(0, (bulkDetection.items.length - 3) * -5)
+        itemCountPenalty: Math.max(0, (bulkDetection.items.length - 3) * -5),
       },
       details: {
         totalAmount: bulkDetection.totalAmount,
         amountDifference: bulkDetection.amountDifference,
         itemCount: bulkDetection.items.length,
-        providerDetected: bulkDetection.provider
-      }
+        providerDetected: bulkDetection.provider,
+      },
     }
 
     return [candidate]
@@ -437,7 +462,7 @@ export class BankMatchingService {
     availableItems: AvailableForBankMatching[]
   ): BankMatchCandidate[] {
     const candidates: BankMatchCandidate[] = []
-    
+
     // Find best combinations using the core service
     const combinations = this.matchingCore.findBestCombinations(
       bankTransaction.amount,
@@ -447,9 +472,10 @@ export class BankMatchingService {
     )
 
     // Convert top combinations to candidates
-    for (const combination of combinations.slice(0, 5)) { // Top 5 combinations
+    for (const combination of combinations.slice(0, 5)) {
+      // Top 5 combinations
       const candidate = this.createCombinationCandidate(bankTransaction, combination)
-      
+
       if (candidate.confidence >= this.config.bank.showSuggestionThreshold) {
         candidates.push(candidate)
       }
@@ -466,21 +492,21 @@ export class BankMatchingService {
       amountAccuracy: combination.score,
       dateProximity: this.calculateCombinationDateScore(bankTransaction, combination.items),
       descriptionMatch: 30, // Lower for combinations
-      itemCountPenalty: Math.max(0, (combination.itemCount - 2) * -5)
+      itemCountPenalty: Math.max(0, (combination.itemCount - 2) * -5),
     }
 
     const confidence = this.matchingCore.calculateConfidence(scores, {
       amountAccuracy: this.config.bank.scores.amountAccuracyWeight,
       dateProximity: this.config.bank.scores.dateProximityWeight,
-      descriptionMatch: this.config.bank.scores.descriptionMatchWeight
+      descriptionMatch: this.config.bank.scores.descriptionMatchWeight,
     })
 
     const matchReasons = [
       `⚡ Kombination aus ${combination.itemCount} Items`,
       `✓ Summe: ${combination.totalAmount.toFixed(2)} CHF`,
-      combination.amountDifference === 0 
-        ? '✓ Exakte Summe' 
-        : `⚠ Diff: ${combination.amountDifference.toFixed(2)} CHF`
+      combination.amountDifference === 0
+        ? '✓ Exakte Summe'
+        : `⚠ Diff: ${combination.amountDifference.toFixed(2)} CHF`,
     ]
 
     return {
@@ -494,8 +520,8 @@ export class BankMatchingService {
         totalAmount: combination.totalAmount,
         amountDifference: combination.amountDifference,
         itemCount: combination.itemCount,
-        providerDetected: this.matchingCore.detectProvider(bankTransaction.description)
-      }
+        providerDetected: this.matchingCore.detectProvider(bankTransaction.description),
+      },
     }
   }
 
@@ -505,12 +531,12 @@ export class BankMatchingService {
   ): number {
     const bankDate = new Date(bankTransaction.transaction_date)
     let totalScore = 0
-    
+
     for (const item of items) {
       const dateAnalysis = this.matchingCore.analyzeDateMatch(bankDate, item.date)
       totalScore += dateAnalysis.score
     }
-    
+
     return totalScore / items.length // Average date score
   }
 
@@ -524,12 +550,12 @@ export class BankMatchingService {
       sumup: [] as AvailableForBankMatching[],
       cash: [] as AvailableForBankMatching[],
       owner: [] as AvailableForBankMatching[],
-      other: [] as AvailableForBankMatching[]
+      other: [] as AvailableForBankMatching[],
     }
 
     for (const item of items) {
       const desc = item.description.toLowerCase()
-      
+
       if (desc.includes('twint')) {
         groups.twint.push(item)
       } else if (desc.includes('sumup')) {

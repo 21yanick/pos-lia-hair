@@ -3,22 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
 import {
-  getBusinessSettings,
-  upsertBusinessSettings,
-  uploadLogo,
   deleteLogo,
-  validateBusinessSettings
+  getBusinessSettings,
+  uploadLogo,
+  upsertBusinessSettings,
+  validateBusinessSettings,
 } from '@/shared/services/businessSettingsService'
-import { queryKeys, cacheConfig } from '@/shared/lib/react-query'
-import type { 
-  BusinessSettings, 
-  BusinessSettingsFormData 
-} from '@/shared/types/businessSettings'
+import type { BusinessSettings, BusinessSettingsFormData } from '@/shared/types/businessSettings'
 
 /**
  * React Query-powered Business Settings Hook
- * 
+ *
  * Features:
  * - Automatic caching and deduplication
  * - Background refetching
@@ -34,12 +31,12 @@ interface UseBusinessSettingsQueryReturn {
   saving: boolean
   uploading: boolean
   error: Error | null
-  
+
   // Query Info
   isStale: boolean
   isFetching: boolean
   isSuccess: boolean
-  
+
   // Actions
   loadSettings: () => Promise<any>
   updateSettings: (data: BusinessSettingsFormData) => Promise<void>
@@ -47,11 +44,11 @@ interface UseBusinessSettingsQueryReturn {
   deleteCompanyLogo: () => Promise<void>
   uploadAppLogo: (file: File, theme: 'light' | 'dark') => Promise<void>
   deleteAppLogo: (theme: 'light' | 'dark') => Promise<void>
-  
+
   // Utilities
   getFormattedAddress: () => string
   isConfigured: boolean
-  
+
   // Query Management
   refetch: () => Promise<any>
   invalidate: () => Promise<void>
@@ -60,7 +57,7 @@ interface UseBusinessSettingsQueryReturn {
 export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
   const { currentOrganization } = useCurrentOrganization()
   const queryClient = useQueryClient()
-  
+
   const organizationId = currentOrganization?.id
 
   // ========================================
@@ -73,7 +70,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
     isStale,
     isFetching,
     isSuccess,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: queryKeys.business.settings.detail(organizationId || ''),
     queryFn: async () => {
@@ -93,8 +90,8 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       return failureCount < 2
     },
     meta: {
-      errorMessage: 'Fehler beim Laden der Geschäftseinstellungen'
-    }
+      errorMessage: 'Fehler beim Laden der Geschäftseinstellungen',
+    },
   })
 
   // ========================================
@@ -105,7 +102,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       if (!organizationId) {
         throw new Error('No organization selected')
       }
-      
+
       // Validate first
       const validation = validateBusinessSettings(data)
       if (!validation.isValid) {
@@ -119,8 +116,8 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       if (!organizationId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: queryKeys.business.settings.detail(organizationId) 
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.business.settings.detail(organizationId),
       })
 
       // Snapshot the previous value
@@ -136,7 +133,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
           return {
             ...old,
             ...newData,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           }
         }
       )
@@ -152,7 +149,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
           context.previousSettings
         )
       }
-      
+
       toast.error(error.message || 'Fehler beim Speichern der Einstellungen')
     },
     onSuccess: () => {
@@ -161,11 +158,11 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
     onSettled: () => {
       // Always refetch after mutation
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.settings.detail(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.settings.detail(organizationId),
         })
       }
-    }
+    },
   })
 
   // ========================================
@@ -178,7 +175,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       }
 
       const { url, path } = await uploadLogo(file)
-      
+
       // Update settings with new logo
       await upsertBusinessSettings({
         company_name: settings.company_name || '',
@@ -204,14 +201,14 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       toast.success('Logo erfolgreich hochgeladen')
       // Invalidate to refetch updated settings
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.settings.detail(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.settings.detail(organizationId),
         })
       }
     },
     onError: (error) => {
       toast.error(error.message || 'Fehler beim Hochladen des Logos')
-    }
+    },
   })
 
   // ========================================
@@ -224,7 +221,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       }
 
       await deleteLogo(settings.logo_storage_path)
-      
+
       // Update settings without logo
       await upsertBusinessSettings({
         company_name: settings.company_name || '',
@@ -247,14 +244,14 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
     onSuccess: () => {
       toast.success('Logo erfolgreich entfernt')
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.settings.detail(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.settings.detail(organizationId),
         })
       }
     },
     onError: (error) => {
       toast.error(error.message || 'Fehler beim Entfernen des Logos')
-    }
+    },
   })
 
   // ========================================
@@ -267,7 +264,7 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       }
 
       const { url, path } = await uploadLogo(file, `app-logo-${theme}`)
-      
+
       // Update settings with new app logo
       await upsertBusinessSettings({
         company_name: settings.company_name || '',
@@ -286,7 +283,8 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
         logo_url: settings.logo_url,
         logo_storage_path: settings.logo_storage_path,
         app_logo_light_url: theme === 'light' ? url : settings.app_logo_light_url,
-        app_logo_light_storage_path: theme === 'light' ? path : settings.app_logo_light_storage_path,
+        app_logo_light_storage_path:
+          theme === 'light' ? path : settings.app_logo_light_storage_path,
         app_logo_dark_url: theme === 'dark' ? url : settings.app_logo_dark_url,
         app_logo_dark_storage_path: theme === 'dark' ? path : settings.app_logo_dark_storage_path,
       })
@@ -297,15 +295,15 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       const themeLabel = data.theme === 'light' ? 'Helles' : 'Dunkles'
       toast.success(`${themeLabel} App-Logo erfolgreich hochgeladen`)
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.settings.detail(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.settings.detail(organizationId),
         })
       }
     },
     onError: (error, variables) => {
       const themeLabel = variables.theme === 'light' ? 'hellen' : 'dunklen'
       toast.error(error.message || `Fehler beim Hochladen des ${themeLabel} App-Logos`)
-    }
+    },
   })
 
   // ========================================
@@ -317,16 +315,17 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
         throw new Error('No settings available')
       }
 
-      const storagePath = theme === 'light' 
-        ? settings.app_logo_light_storage_path 
-        : settings.app_logo_dark_storage_path
+      const storagePath =
+        theme === 'light'
+          ? settings.app_logo_light_storage_path
+          : settings.app_logo_dark_storage_path
 
       if (!storagePath) {
         throw new Error('No app logo to delete')
       }
 
       await deleteLogo(storagePath)
-      
+
       // Update settings without app logo
       await upsertBusinessSettings({
         company_name: settings.company_name || '',
@@ -345,9 +344,11 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
         logo_url: settings.logo_url,
         logo_storage_path: settings.logo_storage_path,
         app_logo_light_url: theme === 'light' ? undefined : settings.app_logo_light_url,
-        app_logo_light_storage_path: theme === 'light' ? undefined : settings.app_logo_light_storage_path,
+        app_logo_light_storage_path:
+          theme === 'light' ? undefined : settings.app_logo_light_storage_path,
         app_logo_dark_url: theme === 'dark' ? undefined : settings.app_logo_dark_url,
-        app_logo_dark_storage_path: theme === 'dark' ? undefined : settings.app_logo_dark_storage_path,
+        app_logo_dark_storage_path:
+          theme === 'dark' ? undefined : settings.app_logo_dark_storage_path,
       })
 
       return theme
@@ -356,15 +357,15 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
       const themeLabel = theme === 'light' ? 'Helles' : 'Dunkles'
       toast.success(`${themeLabel} App-Logo erfolgreich entfernt`)
       if (organizationId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.business.settings.detail(organizationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.business.settings.detail(organizationId),
         })
       }
     },
     onError: (error, theme) => {
       const themeLabel = theme === 'light' ? 'hellen' : 'dunklen'
       toast.error(error.message || `Fehler beim Entfernen des ${themeLabel} App-Logos`)
-    }
+    },
   })
 
   // ========================================
@@ -372,21 +373,21 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
   // ========================================
   const getFormattedAddress = () => {
     if (!settings) return ''
-    
+
     const parts = [
       settings.company_address,
-      settings.company_postal_code && settings.company_city 
+      settings.company_postal_code && settings.company_city
         ? `${settings.company_postal_code} ${settings.company_city}`
         : settings.company_city,
     ].filter(Boolean)
-    
+
     return parts.join(', ')
   }
 
   const invalidate = async () => {
     if (organizationId) {
-      await queryClient.invalidateQueries({ 
-        queryKey: queryKeys.business.settings.detail(organizationId) 
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.business.settings.detail(organizationId),
       })
     }
   }
@@ -399,28 +400,31 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
     settings: settings || null,
     loading,
     saving: updateMutation.isPending,
-    uploading: uploadLogoMutation.isPending || deleteLogoMutation.isPending || 
-               uploadAppLogoMutation.isPending || deleteAppLogoMutation.isPending,
+    uploading:
+      uploadLogoMutation.isPending ||
+      deleteLogoMutation.isPending ||
+      uploadAppLogoMutation.isPending ||
+      deleteAppLogoMutation.isPending,
     error: error as Error | null,
-    
+
     // Query Info
     isStale,
     isFetching,
     isSuccess,
-    
-    // Actions  
+
+    // Actions
     loadSettings: refetch, // Compatibility with old interface
     updateSettings: updateMutation.mutateAsync,
     uploadCompanyLogo: uploadLogoMutation.mutateAsync,
     deleteCompanyLogo: deleteLogoMutation.mutateAsync,
-    uploadAppLogo: (file: File, theme: 'light' | 'dark') => 
+    uploadAppLogo: (file: File, theme: 'light' | 'dark') =>
       uploadAppLogoMutation.mutateAsync({ file, theme }),
     deleteAppLogo: deleteAppLogoMutation.mutateAsync,
-    
+
     // Utilities
     getFormattedAddress,
     isConfigured: Boolean(settings?.company_name),
-    
+
     // Query Management
     refetch,
     invalidate,

@@ -1,8 +1,8 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/shared/lib/supabase/client'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { supabase } from '@/shared/lib/supabase/client'
 
 interface TeamMember {
   id: string
@@ -19,7 +19,7 @@ interface TeamMember {
 }
 
 // Query Key Factory
-export const getTeamMembersQueryKey = (organizationId: string) => 
+export const getTeamMembersQueryKey = (organizationId: string) =>
   ['team-members', organizationId] as const
 
 // Fetch function
@@ -64,7 +64,7 @@ export function useTeamMembersQuery() {
     queryFn: () => fetchTeamMembers(organizationId!),
     enabled: !!organizationId,
     staleTime: 2 * 60 * 1000, // 2 minutes - team data changes less frequently
-    gcTime: 5 * 60 * 1000,    // 5 minutes cache
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
     retry: 1,
   })
 }

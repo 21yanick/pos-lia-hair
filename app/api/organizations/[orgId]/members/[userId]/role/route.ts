@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import * as TeamService from '@/shared/services/teamService'
 
 /**
@@ -16,9 +16,9 @@ export async function PATCH(
 
     if (!orgId || !userId) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Organization ID und User ID sind erforderlich' 
+        {
+          success: false,
+          error: 'Organization ID und User ID sind erforderlich',
         },
         { status: 400 }
       )
@@ -26,9 +26,9 @@ export async function PATCH(
 
     if (!role || !['owner', 'admin', 'staff'].includes(role)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Gültige Rolle ist erforderlich (owner, admin, staff)' 
+        {
+          success: false,
+          error: 'Gültige Rolle ist erforderlich (owner, admin, staff)',
         },
         { status: 400 }
       )
@@ -39,9 +39,9 @@ export async function PATCH(
 
     if (!result.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: result.error 
+        {
+          success: false,
+          error: result.error,
         },
         { status: 400 }
       )
@@ -50,16 +50,15 @@ export async function PATCH(
     return NextResponse.json({
       success: true,
       data: result.member,
-      message: result.message
+      message: result.message,
     })
-
   } catch (error) {
     console.error('Change role API error:', error)
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Unerwarteter Fehler beim Ändern der Rolle' 
+      {
+        success: false,
+        error: 'Unerwarteter Fehler beim Ändern der Rolle',
       },
       { status: 500 }
     )

@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { Suspense, lazy } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { lazy, Suspense } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 
 // Create a single lazy-loaded chart component
-const LazyChart = lazy(() => import("./LazyMonthlyChart"))
+const LazyChart = lazy(() => import('./LazyMonthlyChart'))
 
 export type MonthlyData = {
   month: string
@@ -21,16 +21,16 @@ interface MonthlyTrendChartProps {
 
 const chartConfig = {
   revenue: {
-    label: "Umsatz",
-    color: "var(--chart-3)", // Grün aus tweakcn palette
+    label: 'Umsatz',
+    color: 'var(--chart-3)', // Grün aus tweakcn palette
   },
   expenses: {
-    label: "Ausgaben", 
-    color: "var(--chart-4)", // Orange aus tweakcn palette
+    label: 'Ausgaben',
+    color: 'var(--chart-4)', // Orange aus tweakcn palette
   },
   profit: {
-    label: "Gewinn",
-    color: "var(--chart-1)", // Primary Purple aus tweakcn palette
+    label: 'Gewinn',
+    color: 'var(--chart-1)', // Primary Purple aus tweakcn palette
   },
 }
 

@@ -5,26 +5,26 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { supabase } from '@/shared/lib/supabase/client'
 import {
-  getUnmatchedSalesForProvider,
-  getUnmatchedProviderReports,
-  getUnmatchedBankTransactions,
-  getAvailableForBankMatching,
-  getBankingStats,
-  createProviderMatch,
-  createBankMatch,
-  getBankAccounts,
-  type UnmatchedSaleForProvider,
-  type UnmatchedProviderReport,
-  type UnmatchedBankTransaction,
   type AvailableForBankMatching,
+  type BankAccount,
   type BankingStats,
-  type BankAccount
+  createBankMatch,
+  createProviderMatch,
+  getAvailableForBankMatching,
+  getBankAccounts,
+  getBankingStats,
+  getUnmatchedBankTransactions,
+  getUnmatchedProviderReports,
+  getUnmatchedSalesForProvider,
+  type UnmatchedBankTransaction,
+  type UnmatchedProviderReport,
+  type UnmatchedSaleForProvider,
 } from '../services/bankingApi'
 import { getOwnerBalance, type OwnerBalance } from '../services/ownerTransactionsApi'
-import { supabase } from '@/shared/lib/supabase/client'
-import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 // =====================================================
 // HOOK INTERFACE
@@ -34,29 +34,36 @@ export interface UseBankingDataReturn {
   // Tab 1 Data
   unmatchedSales: UnmatchedSaleForProvider[]
   unmatchedProviderReports: UnmatchedProviderReport[]
-  
+
   // Tab 2 Data
   unmatchedBankTransactions: UnmatchedBankTransaction[]
   availableForMatching: AvailableForBankMatching[]
-  
+
   // Bank Accounts
   bankAccounts: BankAccount[] | null
-  
+
   // Owner Balance
   ownerBalance: OwnerBalance | null
-  
+
   // Stats
   stats: BankingStats | null
-  
+
   // Loading states
   isLoading: boolean
   error: string | null
-  
+
   // Actions
   handleProviderMatch: (saleId: string, providerReportId: string) => Promise<boolean>
-  handleBankMatch: (bankTransactionId: string, matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction', id: string, amount: number }>) => Promise<boolean>
+  handleBankMatch: (
+    bankTransactionId: string,
+    matchedItems: Array<{
+      type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction'
+      id: string
+      amount: number
+    }>
+  ) => Promise<boolean>
   refetchData: () => Promise<void>
-  
+
   // Provider Import Actions
   handleProviderImportSuccess: () => Promise<void>
 }
@@ -68,18 +75,22 @@ export interface UseBankingDataReturn {
 export function useBankingData(): UseBankingDataReturn {
   // State for Tab 1 (Provider Reconciliation)
   const [unmatchedSales, setUnmatchedSales] = useState<UnmatchedSaleForProvider[]>([])
-  const [unmatchedProviderReports, setUnmatchedProviderReports] = useState<UnmatchedProviderReport[]>([])
-  
+  const [unmatchedProviderReports, setUnmatchedProviderReports] = useState<
+    UnmatchedProviderReport[]
+  >([])
+
   // State for Tab 2 (Bank Reconciliation)
-  const [unmatchedBankTransactions, setUnmatchedBankTransactions] = useState<UnmatchedBankTransaction[]>([])
+  const [unmatchedBankTransactions, setUnmatchedBankTransactions] = useState<
+    UnmatchedBankTransaction[]
+  >([])
   const [availableForMatching, setAvailableForMatching] = useState<AvailableForBankMatching[]>([])
-  
+
   // Bank accounts
   const [bankAccounts, setBankAccounts] = useState<BankAccount[] | null>(null)
-  
+
   // Owner Balance
   const [ownerBalance, setOwnerBalance] = useState<OwnerBalance | null>(null)
-  
+
   // Stats and UI state
   const [stats, setStats] = useState<BankingStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -103,7 +114,9 @@ export function useBankingData(): UseBankingDataReturn {
       }
 
       // Get current user ID for Owner Balance
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       const userId = session?.user?.id
 
       // Fetch all data in parallel for performance with ORGANIZATION SECURITY
@@ -114,7 +127,7 @@ export function useBankingData(): UseBankingDataReturn {
         matchingResult,
         statsResult,
         accountsResult,
-        ownerBalanceResult
+        ownerBalanceResult,
       ] = await Promise.all([
         getUnmatchedSalesForProvider(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
         getUnmatchedProviderReports(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
@@ -122,7 +135,7 @@ export function useBankingData(): UseBankingDataReturn {
         getAvailableForBankMatching(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
         getBankingStats(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
         getBankAccounts(currentOrganization.id), // 🔒 SECURITY: Organization-scoped
-        userId ? getOwnerBalance(userId) : Promise.resolve({ data: null, error: null })
+        userId ? getOwnerBalance(userId) : Promise.resolve({ data: null, error: null }),
       ])
 
       // Check for errors and update state with proper type guards
@@ -170,9 +183,9 @@ export function useBankingData(): UseBankingDataReturn {
       if (ownerBalanceResult.data && !ownerBalanceResult.error) {
         setOwnerBalance(ownerBalanceResult.data)
       }
-
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error fetching banking data'
+      const errorMessage =
+        err instanceof Error ? err.message : 'Unknown error fetching banking data'
       setError(errorMessage)
       // console.error('Error fetching banking data:', err)
     } finally {
@@ -184,29 +197,34 @@ export function useBankingData(): UseBankingDataReturn {
   // MATCHING ACTIONS
   // =====================================================
 
-  const handleProviderMatch = async (saleId: string, providerReportId: string): Promise<boolean> => {
+  const handleProviderMatch = async (
+    saleId: string,
+    providerReportId: string
+  ): Promise<boolean> => {
     try {
       const result = await createProviderMatch(saleId, providerReportId)
-      
+
       if (result.success) {
         // Remove matched items from local state (Tab 1)
-        setUnmatchedSales(prev => prev.filter(sale => sale.id !== saleId))
-        setUnmatchedProviderReports(prev => prev.filter(report => report.id !== providerReportId))
-        
+        setUnmatchedSales((prev) => prev.filter((sale) => sale.id !== saleId))
+        setUnmatchedProviderReports((prev) =>
+          prev.filter((report) => report.id !== providerReportId)
+        )
+
         // Refresh Tab 2 data - matched sale should now appear in available_for_bank_matching
         const [matchingResult, statsResult] = await Promise.all([
           getAvailableForBankMatching(currentOrganization!.id), // 🔒 SECURITY: Organization-scoped
-          getBankingStats(currentOrganization!.id) // 🔒 SECURITY: Organization-scoped
+          getBankingStats(currentOrganization!.id), // 🔒 SECURITY: Organization-scoped
         ])
-        
+
         if (matchingResult.data && !matchingResult.error) {
           setAvailableForMatching(matchingResult.data as AvailableForBankMatching[])
         }
-        
+
         if (statsResult.data && !statsResult.error) {
           setStats(statsResult.data)
         }
-        
+
         return true
       } else {
         throw new Error((result.error as any)?.message || 'Failed to create provider match')
@@ -220,30 +238,28 @@ export function useBankingData(): UseBankingDataReturn {
   }
 
   const handleBankMatch = async (
-    bankTransactionId: string, 
-    matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement', id: string, amount: number }>
+    bankTransactionId: string,
+    matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement'; id: string; amount: number }>
   ): Promise<boolean> => {
     try {
       const result = await createBankMatch(bankTransactionId, matchedItems)
-      
+
       if (result.success) {
         // Remove matched items from local state
-        setUnmatchedBankTransactions(prev => 
-          prev.filter(transaction => transaction.id !== bankTransactionId)
+        setUnmatchedBankTransactions((prev) =>
+          prev.filter((transaction) => transaction.id !== bankTransactionId)
         )
-        
+
         // Remove matched items from available list
-        const matchedIds = matchedItems.map(item => item.id)
-        setAvailableForMatching(prev => 
-          prev.filter(item => !matchedIds.includes(item.id))
-        )
-        
+        const matchedIds = matchedItems.map((item) => item.id)
+        setAvailableForMatching((prev) => prev.filter((item) => !matchedIds.includes(item.id)))
+
         // Refresh stats
         const statsResult = await getBankingStats(currentOrganization!.id) // 🔒 SECURITY: Organization-scoped
         if (statsResult.data && !statsResult.error) {
           setStats(statsResult.data)
         }
-        
+
         return true
       } else {
         throw new Error((result.error as any)?.message || 'Failed to create bank match')
@@ -284,31 +300,31 @@ export function useBankingData(): UseBankingDataReturn {
     // Tab 1 Data
     unmatchedSales,
     unmatchedProviderReports,
-    
+
     // Tab 2 Data
     unmatchedBankTransactions,
     availableForMatching,
-    
+
     // Bank Accounts
     bankAccounts,
-    
+
     // Owner Balance
     ownerBalance,
-    
+
     // Stats
     stats,
-    
+
     // UI State
     isLoading,
     error,
-    
+
     // Actions
     handleProviderMatch,
     handleBankMatch,
     refetchData: fetchAllData,
-    
+
     // Provider Import Actions
-    handleProviderImportSuccess
+    handleProviderImportSuccess,
   }
 }
 

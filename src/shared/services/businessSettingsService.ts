@@ -1,16 +1,16 @@
-// Business Settings Service  
+// Business Settings Service
 // CRUD operations for company data and configuration (Multi-Tenant)
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { 
-  BusinessSettings, 
-  BusinessSettingsFormData,
-  WorkingHours,
+import type {
   BookingRules,
+  BusinessSettings,
+  BusinessSettingsFormData,
+  DayWorkingHours,
   DisplayPreferences,
   VacationPeriod,
   WeekDay,
-  DayWorkingHours
+  WorkingHours,
 } from '@/shared/types/businessSettings'
 
 // Helper function to get current organization ID
@@ -23,19 +23,15 @@ async function getCurrentOrganizationId(): Promise<string> {
     if (storedOrgId) {
       return storedOrgId
     }
-    
+
     // Then try to extract from URL
     const path = window.location.pathname
-    const match = path.match(/^\/org\/([^\/]+)/)
+    const match = path.match(/^\/org\/([^/]+)/)
     if (match) {
       const slug = match[1]
       // Get organization ID by slug
-      const { data } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('slug', slug)
-        .single()
-      
+      const { data } = await supabase.from('organizations').select('id').eq('slug', slug).single()
+
       if (data?.id) {
         // Store for next time
         sessionStorage.setItem('currentOrganizationId', data.id)
@@ -53,14 +49,14 @@ async function getCurrentOrganizationId(): Promise<string> {
 export async function getBusinessSettings(): Promise<BusinessSettings | null> {
   try {
     const organizationId = await getCurrentOrganizationId()
-    
+
     if (process.env.NODE_ENV === 'development') {
       // console.log('🔍 DEBUG business_settings request:', {
       //   organizationId,
       //   filter: `organization_id=eq.${organizationId}`,
       // })
 
-      // Get current user/session for debugging  
+      // Get current user/session for debugging
       const { data: user } = await supabase.auth.getUser()
       // console.log('🔍 DEBUG current user:', {
       //   userId: user?.user?.id,
@@ -75,9 +71,9 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
       .select('*')
       .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
       .maybeSingle()
-    
+
     const requestTime = Date.now() - requestStart
-    
+
     if (process.env.NODE_ENV === 'development') {
       // console.log('🔍 DEBUG business_settings response:', {
       //   requestTime: `${requestTime}ms`,
@@ -107,23 +103,29 @@ export async function upsertBusinessSettings(
 ): Promise<BusinessSettings> {
   try {
     const organizationId = await getCurrentOrganizationId()
-    
+
     // Get current user for audit trail
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
     if (userError || !user) throw new Error('User not authenticated')
 
     const { data, error } = await supabase
       .from('business_settings')
-      .upsert({
-        organization_id: organizationId, // 🔒 Multi-Tenant Security
-        ...settingsData,
-        // Audit trail is handled by database triggers
-        // created_by: auto-set on INSERT
-        // updated_by: auto-set on UPDATE
-        // updated_at: auto-set by trigger
-      }, {
-        onConflict: 'organization_id' // 🔒 One settings record per organization
-      })
+      .upsert(
+        {
+          organization_id: organizationId, // 🔒 Multi-Tenant Security
+          ...settingsData,
+          // Audit trail is handled by database triggers
+          // created_by: auto-set on INSERT
+          // updated_by: auto-set on UPDATE
+          // updated_at: auto-set by trigger
+        },
+        {
+          onConflict: 'organization_id', // 🔒 One settings record per organization
+        }
+      )
       .select()
       .single()
 
@@ -139,16 +141,19 @@ export async function upsertBusinessSettings(
 // Logo Upload Operations
 // =================================
 
-export async function uploadLogo(file: File, prefix: string = 'logo'): Promise<{
+export async function uploadLogo(
+  file: File,
+  prefix: string = 'logo'
+): Promise<{
   url: string
   path: string
 }> {
   try {
-    // console.log('🔍 DEBUG uploadLogo START:', { 
-    //   fileName: file.name, 
-    //   fileSize: file.size, 
+    // console.log('🔍 DEBUG uploadLogo START:', {
+    //   fileName: file.name,
+    //   fileSize: file.size,
     //   fileType: file.type,
-    //   prefix 
+    //   prefix
     // })
 
     const organizationId = await getCurrentOrganizationId()
@@ -161,7 +166,8 @@ export async function uploadLogo(file: File, prefix: string = 'logo'): Promise<{
       throw new Error('Only JPEG, PNG and SVG files are allowed')
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB
       // console.error('🚨 File too large:', file.size)
       throw new Error('Logo file must be smaller than 5MB')
     }
@@ -180,23 +186,19 @@ export async function uploadLogo(file: File, prefix: string = 'logo'): Promise<{
     }
 
     // Upload new file
-    const { data, error } = await supabase.storage
-      .from('business-logos')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
+    const { data, error } = await supabase.storage.from('business-logos').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+    })
 
     if (error) throw error
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('business-logos')
-      .getPublicUrl(fileName)
+    const { data: urlData } = supabase.storage.from('business-logos').getPublicUrl(fileName)
 
     return {
       url: urlData.publicUrl,
-      path: fileName
+      path: fileName,
     }
   } catch (error) {
     console.error('Error uploading logo:', error)
@@ -206,9 +208,7 @@ export async function uploadLogo(file: File, prefix: string = 'logo'): Promise<{
 
 export async function deleteLogo(logoPath: string): Promise<void> {
   try {
-    const { error } = await supabase.storage
-      .from('business-logos')
-      .remove([logoPath])
+    const { error } = await supabase.storage.from('business-logos').remove([logoPath])
 
     if (error) throw error
   } catch (error) {
@@ -235,7 +235,10 @@ export function validateBusinessSettings(settings: BusinessSettingsFormData): {
   }
 
   // Email validation
-  if (settings.company_email && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(settings.company_email)) {
+  if (
+    settings.company_email &&
+    !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(settings.company_email)
+  ) {
     errors.company_email = 'Invalid email address'
   }
 
@@ -251,7 +254,7 @@ export function validateBusinessSettings(settings: BusinessSettingsFormData): {
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   }
 }
 
@@ -266,13 +269,13 @@ export function validateBusinessSettings(settings: BusinessSettingsFormData): {
  */
 export function resolveLogoUrl(logoUrl: string | undefined): string | undefined {
   if (!logoUrl) return undefined
-  
+
   // Only resolve URLs in development environment and server-side context
   if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
     // Convert localhost Supabase URLs to Docker-internal URLs (Kong API Gateway)
     return logoUrl.replace('localhost:8000', 'supabase-kong:8000')
   }
-  
+
   // Return original URL in production or client-side contexts
   return logoUrl
 }
@@ -287,11 +290,11 @@ export function resolveLogoUrl(logoUrl: string | undefined): string | undefined 
 export async function updateWorkingHours(workingHours: WorkingHours): Promise<BusinessSettings> {
   try {
     const organizationId = await getCurrentOrganizationId()
-    
+
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        working_hours: workingHours
+        working_hours: workingHours,
       })
       .eq('organization_id', organizationId)
       .select()
@@ -311,11 +314,11 @@ export async function updateWorkingHours(workingHours: WorkingHours): Promise<Bu
 export async function updateBookingRules(bookingRules: BookingRules): Promise<BusinessSettings> {
   try {
     const organizationId = await getCurrentOrganizationId()
-    
+
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        booking_rules: bookingRules
+        booking_rules: bookingRules,
       })
       .eq('organization_id', organizationId)
       .select()
@@ -332,14 +335,16 @@ export async function updateBookingRules(bookingRules: BookingRules): Promise<Bu
 /**
  * Update display preferences for the organization
  */
-export async function updateDisplayPreferences(displayPreferences: DisplayPreferences): Promise<BusinessSettings> {
+export async function updateDisplayPreferences(
+  displayPreferences: DisplayPreferences
+): Promise<BusinessSettings> {
   try {
     const organizationId = await getCurrentOrganizationId()
-    
+
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        display_preferences: displayPreferences
+        display_preferences: displayPreferences,
       })
       .eq('organization_id', organizationId)
       .select()
@@ -356,14 +361,16 @@ export async function updateDisplayPreferences(displayPreferences: DisplayPrefer
 /**
  * Update vacation periods for the organization
  */
-export async function updateVacationPeriods(vacationPeriods: VacationPeriod[]): Promise<BusinessSettings> {
+export async function updateVacationPeriods(
+  vacationPeriods: VacationPeriod[]
+): Promise<BusinessSettings> {
   try {
     const organizationId = await getCurrentOrganizationId()
-    
+
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        vacation_periods: vacationPeriods
+        vacation_periods: vacationPeriods,
       })
       .eq('organization_id', organizationId)
       .select()
@@ -386,7 +393,7 @@ export async function addVacationPeriod(vacationPeriod: VacationPeriod): Promise
     if (!currentSettings) {
       throw new Error('Business settings not found')
     }
-    
+
     const updatedVacationPeriods = [...(currentSettings.vacation_periods || []), vacationPeriod]
     return await updateVacationPeriods(updatedVacationPeriods)
   } catch (error) {
@@ -404,8 +411,10 @@ export async function removeVacationPeriod(index: number): Promise<BusinessSetti
     if (!currentSettings) {
       throw new Error('Business settings not found')
     }
-    
-    const updatedVacationPeriods = (currentSettings.vacation_periods || []).filter((_, i) => i !== index)
+
+    const updatedVacationPeriods = (currentSettings.vacation_periods || []).filter(
+      (_, i) => i !== index
+    )
     return await updateVacationPeriods(updatedVacationPeriods)
   } catch (error) {
     console.error('Error removing vacation period:', error)
@@ -424,31 +433,39 @@ export async function isOrganizationOpen(date: Date, time: string): Promise<bool
   try {
     const settings = await getBusinessSettings()
     if (!settings?.working_hours) return false
-    
+
     // Get day of week
-    const weekdays: WeekDay[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    const weekdays: WeekDay[] = [
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ]
     const dayOfWeek = weekdays[date.getDay()]
     const dayHours = settings.working_hours[dayOfWeek]
-    
+
     // Check if day is closed
     if (dayHours.closed) return false
-    
+
     // Check if time is within working hours
     if (time < dayHours.start || time >= dayHours.end) return false
-    
+
     // Check break times
-    const isInBreak = dayHours.breaks.some(breakTime => 
-      time >= breakTime.start && time < breakTime.end
+    const isInBreak = dayHours.breaks.some(
+      (breakTime) => time >= breakTime.start && time < breakTime.end
     )
     if (isInBreak) return false
-    
+
     // Check vacation periods
     const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
-    const isOnVacation = (settings.vacation_periods || []).some(vacation =>
-      dateStr >= vacation.start && dateStr <= vacation.end
+    const isOnVacation = (settings.vacation_periods || []).some(
+      (vacation) => dateStr >= vacation.start && dateStr <= vacation.end
     )
     if (isOnVacation) return false
-    
+
     return true
   } catch (error) {
     console.error('Error checking organization hours:', error)
@@ -463,10 +480,18 @@ export async function getWorkingHoursForDay(date: Date): Promise<DayWorkingHours
   try {
     const settings = await getBusinessSettings()
     if (!settings?.working_hours) return null
-    
-    const weekdays: WeekDay[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+
+    const weekdays: WeekDay[] = [
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ]
     const dayOfWeek = weekdays[date.getDay()]
-    
+
     return settings.working_hours[dayOfWeek]
   } catch (error) {
     console.error('Error getting working hours for day:', error)
@@ -481,37 +506,37 @@ export async function generateAvailableTimeSlots(date: Date): Promise<string[]> 
   try {
     const settings = await getBusinessSettings()
     if (!settings?.working_hours || !settings?.booking_rules) return []
-    
+
     const dayHours = await getWorkingHoursForDay(date)
     if (!dayHours || dayHours.closed) return []
-    
+
     const slots: string[] = []
     const { slotInterval } = settings.booking_rules
-    
+
     // Parse start and end times
     const [startHour, startMinute] = dayHours.start.split(':').map(Number)
     const [endHour, endMinute] = dayHours.end.split(':').map(Number)
-    
+
     let currentTime = startHour * 60 + startMinute // Convert to minutes
     const endTime = endHour * 60 + endMinute
-    
+
     while (currentTime < endTime) {
       const hours = Math.floor(currentTime / 60)
       const minutes = currentTime % 60
       const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-      
+
       // Check if time is not during a break
-      const isInBreak = dayHours.breaks.some(breakTime => 
-        timeStr >= breakTime.start && timeStr < breakTime.end
+      const isInBreak = dayHours.breaks.some(
+        (breakTime) => timeStr >= breakTime.start && timeStr < breakTime.end
       )
-      
+
       if (!isInBreak) {
         slots.push(timeStr)
       }
-      
+
       currentTime += slotInterval
     }
-    
+
     return slots
   } catch (error) {
     console.error('Error generating time slots:', error)
@@ -531,34 +556,42 @@ export function validateWorkingHours(workingHours: WorkingHours): {
   errors: Record<string, string>
 } {
   const errors: Record<string, string> = {}
-  
-  const weekdays: WeekDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-  
-  weekdays.forEach(day => {
+
+  const weekdays: WeekDay[] = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ]
+
+  weekdays.forEach((day) => {
     const dayHours = workingHours[day]
-    
+
     if (!dayHours.closed) {
       // Validate time format and range
       if (dayHours.start >= dayHours.end) {
         errors[`${day}_hours`] = `${day}: Start time must be before end time`
       }
-      
+
       // Validate breaks
       dayHours.breaks.forEach((breakTime, index) => {
         if (breakTime.start >= breakTime.end) {
           errors[`${day}_break_${index}`] = `${day}: Break start must be before break end`
         }
-        
+
         if (breakTime.start < dayHours.start || breakTime.end > dayHours.end) {
           errors[`${day}_break_${index}_range`] = `${day}: Break must be within working hours`
         }
       })
     }
   })
-  
+
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   }
 }
 
@@ -570,17 +603,17 @@ export function validateVacationPeriod(vacation: VacationPeriod): {
   errors: Record<string, string>
 } {
   const errors: Record<string, string> = {}
-  
+
   if (!vacation.reason.trim()) {
     errors.reason = 'Reason is required'
   }
-  
+
   if (vacation.start > vacation.end) {
     errors.dates = 'Start date must be before or equal to end date'
   }
-  
+
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   }
 }

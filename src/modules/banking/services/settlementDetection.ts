@@ -4,11 +4,8 @@
 // Enhanced settlement detection for Banking Tab 2
 // Identifies TWINT/SumUp settlements and groupings
 
+import type { AvailableForBankMatching, UnmatchedBankTransaction } from '../types/banking'
 import { intelligentMatchingService } from './intelligentMatching'
-import type {
-  UnmatchedBankTransaction,
-  AvailableForBankMatching
-} from '../types/banking'
 
 // =====================================================
 // SETTLEMENT DETECTION TYPES
@@ -52,7 +49,7 @@ export class SettlementDetectionService {
     const groups = this.generateSettlementGroups(availableItems)
 
     // 2. Analyze each group against the bank transaction
-    const analyzedGroups = groups.map(group => 
+    const analyzedGroups = groups.map((group) =>
       this.analyzeSettlementGroup(bankTransaction, group)
     )
 
@@ -70,7 +67,7 @@ export class SettlementDetectionService {
       primarySettlement,
       confidence,
       bankTransaction,
-      recommendedAction
+      recommendedAction,
     }
   }
 
@@ -79,9 +76,7 @@ export class SettlementDetectionService {
     const groups: SettlementGroup[] = []
 
     // TWINT Settlement Group
-    const twintItems = items.filter(item => 
-      this.isTwintItem(item)
-    )
+    const twintItems = items.filter((item) => this.isTwintItem(item))
     if (twintItems.length > 0) {
       groups.push({
         provider: 'twint',
@@ -89,64 +84,56 @@ export class SettlementDetectionService {
         icon: '🟦',
         items: twintItems,
         totalAmount: twintItems.reduce((sum, item) => sum + item.amount, 0),
-        settlementPeriod: this.getSettlementPeriod(twintItems)
+        settlementPeriod: this.getSettlementPeriod(twintItems),
       })
     }
 
     // SumUp Settlement Group
-    const sumupItems = items.filter(item => 
-      this.isSumUpItem(item)
-    )
+    const sumupItems = items.filter((item) => this.isSumUpItem(item))
     if (sumupItems.length > 0) {
       groups.push({
         provider: 'sumup',
         displayName: 'SumUp Settlement',
-        icon: '🟧', 
+        icon: '🟧',
         items: sumupItems,
         totalAmount: sumupItems.reduce((sum, item) => sum + item.amount, 0),
-        settlementPeriod: this.getSettlementPeriod(sumupItems)
+        settlementPeriod: this.getSettlementPeriod(sumupItems),
       })
     }
 
     // Expenses Group
-    const expenseItems = items.filter(item => 
-      item.item_type === 'expense'
-    )
+    const expenseItems = items.filter((item) => item.item_type === 'expense')
     if (expenseItems.length > 0) {
       groups.push({
         provider: 'expenses',
         displayName: 'Ausgaben',
         icon: '💰',
         items: expenseItems,
-        totalAmount: expenseItems.reduce((sum, item) => sum + item.amount, 0)
+        totalAmount: expenseItems.reduce((sum, item) => sum + item.amount, 0),
       })
     }
 
     // Cash Movement Group
-    const cashItems = items.filter(item => 
-      item.item_type === 'cash_movement'
-    )
+    const cashItems = items.filter((item) => item.item_type === 'cash_movement')
     if (cashItems.length > 0) {
       groups.push({
         provider: 'cash',
         displayName: 'Cash Transfers',
         icon: '💵',
         items: cashItems,
-        totalAmount: cashItems.reduce((sum, item) => sum + item.amount, 0)
+        totalAmount: cashItems.reduce((sum, item) => sum + item.amount, 0),
       })
     }
 
     // Owner Transaction Group
-    const ownerItems = items.filter(item => 
-      item.item_type === 'owner_transaction'
-    )
+    const ownerItems = items.filter((item) => item.item_type === 'owner_transaction')
     if (ownerItems.length > 0) {
       groups.push({
         provider: 'owner',
         displayName: 'Owner Transaktionen',
         icon: '🏢',
         items: ownerItems,
-        totalAmount: ownerItems.reduce((sum, item) => sum + item.amount, 0)
+        totalAmount: ownerItems.reduce((sum, item) => sum + item.amount, 0),
       })
     }
 
@@ -162,7 +149,7 @@ export class SettlementDetectionService {
     const amountAnalysis = this.matchingCore.analyzeAmountMatch(
       bankTransaction.amount,
       group.totalAmount,
-      { exactAmountTolerance: 0.00, closeAmountTolerance: 0.10, maxAmountTolerance: 2.00 }
+      { exactAmountTolerance: 0.0, closeAmountTolerance: 0.1, maxAmountTolerance: 2.0 }
     )
 
     // 2. Provider detection in bank description (25% weight)
@@ -176,11 +163,11 @@ export class SettlementDetectionService {
 
     // Calculate confidence
     let confidence = 0
-    
-    // Amount matching score
-    confidence += amountAnalysis.score * 0.70
 
-    // Provider detection score  
+    // Amount matching score
+    confidence += amountAnalysis.score * 0.7
+
+    // Provider detection score
     if (providerDetected) {
       confidence += 100 * 0.25
     }
@@ -199,7 +186,7 @@ export class SettlementDetectionService {
       ...group,
       confidence: Math.round(confidence),
       isDetected: confidence >= 85,
-      matchedTransaction: confidence >= 70 ? bankTransaction : undefined
+      matchedTransaction: confidence >= 70 ? bankTransaction : undefined,
     }
   }
 
@@ -210,7 +197,7 @@ export class SettlementDetectionService {
   ): SettlementGroup | undefined {
     // Sort by confidence and return the best
     const sortedGroups = groups
-      .filter(g => g.confidence && g.confidence >= 70)
+      .filter((g) => g.confidence && g.confidence >= 70)
       .sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
 
     return sortedGroups.length > 0 ? sortedGroups[0] : undefined
@@ -223,14 +210,17 @@ export class SettlementDetectionService {
   ): 'auto_select' | 'suggest' | 'review' {
     if (!primarySettlement) return 'review'
 
-    if (confidence >= 95 && primarySettlement.provider === 'twint' || primarySettlement.provider === 'sumup') {
+    if (
+      (confidence >= 95 && primarySettlement.provider === 'twint') ||
+      primarySettlement.provider === 'sumup'
+    ) {
       return 'auto_select' // Very high confidence settlement
     }
-    
+
     if (confidence >= 85) {
       return 'suggest' // High confidence, suggest selection
     }
-    
+
     return 'review' // Lower confidence, manual review needed
   }
 
@@ -240,14 +230,12 @@ export class SettlementDetectionService {
 
   private isTwintItem(item: AvailableForBankMatching): boolean {
     const desc = item.description.toLowerCase()
-    return desc.includes('twint') || 
-           desc.includes('(twint)')
+    return desc.includes('twint') || desc.includes('(twint)')
   }
 
   private isSumUpItem(item: AvailableForBankMatching): boolean {
     const desc = item.description.toLowerCase()
-    return desc.includes('sumup') || 
-           desc.includes('(sumup net)')
+    return desc.includes('sumup') || desc.includes('(sumup net)')
   }
 
   private detectProviderInDescription(
@@ -255,30 +243,34 @@ export class SettlementDetectionService {
     groupProvider: SettlementGroup['provider']
   ): boolean {
     const desc = bankDescription.toLowerCase()
-    
+
     switch (groupProvider) {
       case 'twint':
-        return desc.includes('twint') || 
-               desc.includes('acquiring') ||
-               desc.includes('gutschrift twint')
-      
+        return (
+          desc.includes('twint') || desc.includes('acquiring') || desc.includes('gutschrift twint')
+        )
+
       case 'sumup':
-        return desc.includes('sumup') ||
-               desc.includes('payments ltd') ||
-               desc.includes('sumup payments')
-      
+        return (
+          desc.includes('sumup') || desc.includes('payments ltd') || desc.includes('sumup payments')
+        )
+
       case 'cash':
-        return desc.includes('cash') ||
-               desc.includes('transfer') ||
-               desc.includes('abhebung') ||
-               desc.includes('einzahlung')
-      
+        return (
+          desc.includes('cash') ||
+          desc.includes('transfer') ||
+          desc.includes('abhebung') ||
+          desc.includes('einzahlung')
+        )
+
       case 'owner':
-        return desc.includes('owner') ||
-               desc.includes('inhaber') ||
-               desc.includes('entnahme') ||
-               desc.includes('einlage')
-      
+        return (
+          desc.includes('owner') ||
+          desc.includes('inhaber') ||
+          desc.includes('entnahme') ||
+          desc.includes('einlage')
+        )
+
       default:
         return false
     }
@@ -286,7 +278,7 @@ export class SettlementDetectionService {
 
   private getSettlementPeriod(items: AvailableForBankMatching[]): string {
     if (items.length === 0) return ''
-    
+
     // Use the month of the first item as settlement period
     const firstDate = new Date(items[0].date)
     return `${firstDate.getFullYear()}-${String(firstDate.getMonth() + 1).padStart(2, '0')}`
@@ -316,8 +308,10 @@ export class SettlementDetectionService {
     totalAmount: number
     primaryProvider?: string
   } {
-    const detectedGroups = result.groups.filter(g => g.isDetected).length
-    const highConfidenceGroups = result.groups.filter(g => g.confidence && g.confidence >= 95).length
+    const detectedGroups = result.groups.filter((g) => g.isDetected).length
+    const highConfidenceGroups = result.groups.filter(
+      (g) => g.confidence && g.confidence >= 95
+    ).length
     const totalAmount = result.groups.reduce((sum, g) => sum + g.totalAmount, 0)
 
     return {
@@ -325,7 +319,7 @@ export class SettlementDetectionService {
       detectedGroups,
       highConfidenceGroups,
       totalAmount,
-      primaryProvider: result.primarySettlement?.provider
+      primaryProvider: result.primarySettlement?.provider,
     }
   }
 }

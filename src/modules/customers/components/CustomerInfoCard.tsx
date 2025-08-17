@@ -1,17 +1,22 @@
 'use client'
 
+import { Check, Mail, Pencil, Phone, User, X } from 'lucide-react'
 import { useState } from 'react'
-import { Pencil, X, Check, Phone, Mail, User } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Switch } from '@/shared/components/ui/switch'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import { useToast } from '@/shared/hooks/core/useToast'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/shared/components/ui/tooltip'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useCustomerActions } from '../hooks/useCustomerActions'
+import { useToast } from '@/shared/hooks/core/useToast'
 import type { Customer, CustomerFormData } from '@/shared/services/customerService'
+import { useCustomerActions } from '../hooks/useCustomerActions'
 
 interface CustomerInfoCardProps {
   customer: Customer
@@ -29,7 +34,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
   const [editValues, setEditValues] = useState<Partial<CustomerFormData>>({
     name: customer.name,
     phone: customer.phone || '',
-    email: customer.email || ''
+    email: customer.email || '',
   })
 
   const startEdit = (field: EditField) => {
@@ -38,7 +43,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
     setEditValues({
       name: customer.name,
       phone: customer.phone || '',
-      email: customer.email || ''
+      email: customer.email || '',
     })
   }
 
@@ -47,15 +52,18 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
     setEditValues({
       name: customer.name,
       phone: customer.phone || '',
-      email: customer.email || ''
+      email: customer.email || '',
     })
   }
 
   const saveField = async (field: keyof CustomerFormData) => {
     const newValue = editValues[field]?.trim()
-    const oldValue = field === 'phone' ? customer.phone || '' : 
-                    field === 'email' ? customer.email || '' : 
-                    customer.name
+    const oldValue =
+      field === 'phone'
+        ? customer.phone || ''
+        : field === 'email'
+          ? customer.email || ''
+          : customer.name
 
     // Check if value changed
     if (newValue === oldValue) {
@@ -68,7 +76,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
       toast({
         title: 'Fehler',
         description: 'Name ist erforderlich.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
       return
     }
@@ -78,33 +86,32 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
       toast({
         title: 'Fehler',
         description: 'Ungültige E-Mail-Adresse.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
       return
     }
 
     try {
       const updateData = {
-        [field]: newValue || undefined
+        [field]: newValue || undefined,
       }
 
       await updateCustomer.mutateAsync({
         customerId: customer.id,
-        data: updateData
+        data: updateData,
       })
 
       setEditingField(null)
-      
+
       toast({
         title: 'Aktualisiert',
         description: `${field === 'name' ? 'Name' : field === 'phone' ? 'Telefon' : 'E-Mail'} wurde aktualisiert.`,
       })
-
     } catch (error) {
       toast({
         title: 'Fehler',
         description: 'Änderung konnte nicht gespeichert werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }
@@ -115,19 +122,18 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
     try {
       await updateCustomer.mutateAsync({
         customerId: customer.id,
-        data: { is_active: newStatus }
+        data: { is_active: newStatus },
       })
-      
+
       toast({
         title: 'Status aktualisiert',
         description: `Kunde ist jetzt ${newStatus ? 'aktiv' : 'inaktiv'}.`,
       })
-
     } catch (error) {
       toast({
         title: 'Fehler',
         description: 'Status konnte nicht geändert werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }
@@ -148,9 +154,12 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
     type: string = 'text'
   ) => {
     const isEditing = editingField === field
-    const currentValue = field === 'phone' ? customer.phone || '' : 
-                        field === 'email' ? customer.email || '' : 
-                        customer.name
+    const currentValue =
+      field === 'phone'
+        ? customer.phone || ''
+        : field === 'email'
+          ? customer.email || ''
+          : customer.name
     const displayValue = currentValue || `Keine ${label.toLowerCase()}`
 
     return (
@@ -159,25 +168,20 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
           {icon}
           {label}
         </Label>
-        
+
         {isEditing ? (
           <div className="flex gap-2">
             <Input
               type={type}
               value={editValues[field] || ''}
-              onChange={(e) => setEditValues(prev => ({ ...prev, [field]: e.target.value }))}
+              onChange={(e) => setEditValues((prev) => ({ ...prev, [field]: e.target.value }))}
               onBlur={() => saveField(field)}
               onKeyDown={(e) => handleKeyDown(e, field)}
               placeholder={placeholder}
               autoFocus
               className="flex-1 min-w-0"
             />
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={cancelEdit}
-              className="shrink-0"
-            >
+            <Button size="sm" variant="ghost" onClick={cancelEdit} className="shrink-0">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -189,7 +193,9 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
                   className="group cursor-pointer hover:bg-muted rounded p-2 -m-2 transition-colors flex items-center justify-between min-w-0"
                   onClick={() => startEdit(field)}
                 >
-                  <span className={`flex-1 truncate ${!currentValue ? 'text-muted-foreground italic' : ''}`}>
+                  <span
+                    className={`flex-1 truncate ${!currentValue ? 'text-muted-foreground italic' : ''}`}
+                  >
                     {displayValue}
                   </span>
                   <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity shrink-0 ml-2" />
@@ -214,12 +220,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {renderEditableField(
-          'name',
-          'Name',
-          <User className="h-4 w-4" />,
-          'z.B. Maria Müller'
-        )}
+        {renderEditableField('name', 'Name', <User className="h-4 w-4" />, 'z.B. Maria Müller')}
 
         {renderEditableField(
           'phone',
@@ -250,11 +251,13 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
                       onCheckedChange={toggleStatus}
                       disabled={updateCustomer.isPending}
                     />
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      customer.is_active 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                        : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        customer.is_active
+                          ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                          : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                      }`}
+                    >
                       {customer.is_active ? 'Aktiv' : 'Inaktiv'}
                     </span>
                   </div>
@@ -274,7 +277,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
             {new Date(customer.created_at).toLocaleDateString('de-DE', {
               day: '2-digit',
               month: '2-digit',
-              year: 'numeric'
+              year: 'numeric',
             })}
           </div>
         </div>

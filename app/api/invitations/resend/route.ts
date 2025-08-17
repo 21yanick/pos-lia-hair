@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import * as TeamService from '@/shared/services/teamService'
 
 /**
  * POST /api/invitations/resend
  * Resend invitation (creates new JWT token)
- * 
+ *
  * Since we're using JWT-only approach, this creates a new invitation
  * rather than resending an existing one from a database
  */
@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
 
     if (!email || !role || !organizationId) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Email, Rolle und Organization ID sind erforderlich' 
+        {
+          success: false,
+          error: 'Email, Rolle und Organization ID sind erforderlich',
         },
         { status: 400 }
       )
@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
 
     if (!['owner', 'admin', 'staff'].includes(role)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Gültige Rolle ist erforderlich (owner, admin, staff)' 
+        {
+          success: false,
+          error: 'Gültige Rolle ist erforderlich (owner, admin, staff)',
         },
         { status: 400 }
       )
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Gültige Email-Adresse ist erforderlich' 
+        {
+          success: false,
+          error: 'Gültige Email-Adresse ist erforderlich',
         },
         { status: 400 }
       )
@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: result.error 
+        {
+          success: false,
+          error: result.error,
         },
         { status: 400 }
       )
@@ -60,16 +60,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: result.message
+      message: result.message,
     })
-
   } catch (error) {
     console.error('Resend invitation API error:', error)
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Unerwarteter Fehler beim Senden der Einladung' 
+      {
+        success: false,
+        error: 'Unerwarteter Fehler beim Senden der Einladung',
       },
       { status: 500 }
     )
@@ -81,6 +80,6 @@ export async function GET() {
     message: 'Resend Invitation API',
     usage: 'POST /api/invitations/resend',
     required: ['email', 'role', 'organizationId'],
-    note: 'Creates new JWT invitation token (JWT-only approach)'
+    note: 'Creates new JWT invitation token (JWT-only approach)',
   })
 }

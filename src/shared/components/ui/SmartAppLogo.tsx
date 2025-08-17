@@ -1,9 +1,9 @@
 'use client'
 
+import { ImageIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
 import { cn } from '@/shared/utils'
-import { ImageIcon } from 'lucide-react'
 
 interface SmartAppLogoProps {
   /** Custom CSS classes */
@@ -24,7 +24,7 @@ const sizeClasses = {
   sm: 'h-6 w-auto max-w-24',
   md: 'h-8 w-auto max-w-32',
   lg: 'h-10 w-auto max-w-40',
-  xl: 'h-12 w-auto max-w-48'
+  xl: 'h-12 w-auto max-w-48',
 }
 
 export function SmartAppLogo({
@@ -33,7 +33,7 @@ export function SmartAppLogo({
   size = 'md',
   forceTheme,
   fallback,
-  onClick
+  onClick,
 }: SmartAppLogoProps) {
   const { theme, resolvedTheme } = useTheme()
   const { settings } = useBusinessSettings()
@@ -61,11 +61,13 @@ export function SmartAppLogo({
 
   // Default fallback component
   const defaultFallback = (
-    <div className={cn(
-      'flex items-center justify-center bg-muted rounded border border-border',
-      sizeClasses[size],
-      className
-    )}>
+    <div
+      className={cn(
+        'flex items-center justify-center bg-muted rounded border border-border',
+        sizeClasses[size],
+        className
+      )}
+    >
       <ImageIcon className="h-4 w-4 text-muted-foreground" />
     </div>
   )
@@ -99,12 +101,12 @@ export function SmartAppLogo({
 // Utility hook to check logo availability
 export function useAppLogoStatus() {
   const { settings } = useBusinessSettings()
-  
+
   return {
     hasLightLogo: Boolean(settings?.app_logo_light_url),
     hasDarkLogo: Boolean(settings?.app_logo_dark_url),
     hasAnyLogo: Boolean(settings?.app_logo_light_url || settings?.app_logo_dark_url),
     lightLogoUrl: settings?.app_logo_light_url,
-    darkLogoUrl: settings?.app_logo_dark_url
+    darkLogoUrl: settings?.app_logo_dark_url,
   }
 }

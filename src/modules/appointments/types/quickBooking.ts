@@ -15,9 +15,9 @@ export interface ServiceSelection {
 }
 
 export interface BookingTimeSlot {
-  start: string    // "11:00"  
-  end: string      // "12:30"
-  date: Date       // Full date for this booking
+  start: string // "11:00"
+  end: string // "12:30"
+  date: Date // Full date for this booking
 }
 
 export interface QuickBookingFormData {
@@ -25,16 +25,16 @@ export interface QuickBookingFormData {
   selectedServices: ServiceSelection[]
   totalDuration: number
   timeSlot: BookingTimeSlot | null
-  
-  // Step 2: Customer  
+
+  // Step 2: Customer
   customerId: string | null
   customerName: string
   customerPhone: string | null
   notes: string
   isWalkIn: boolean
-  
+
   // Exception Appointment
-  isExceptionAppointment: boolean  // True if booked outside working hours
+  isExceptionAppointment: boolean // True if booked outside working hours
 }
 
 export interface QuickBookingDialogProps {
@@ -43,7 +43,7 @@ export interface QuickBookingDialogProps {
   onSuccess?: () => void
   initialTimeSlot?: BookingTimeSlot
   initialDate?: Date
-  isExceptionAppointment?: boolean  // True if this is an exception appointment outside working hours
+  isExceptionAppointment?: boolean // True if this is an exception appointment outside working hours
 }
 
 export interface ServiceStepProps {
@@ -62,7 +62,11 @@ export interface CustomerStepProps {
   customerPhone: string | null
   notes: string
   isWalkIn: boolean
-  onCustomerChange: (customerId: string | null, customerName: string, customerPhone: string | null) => void
+  onCustomerChange: (
+    customerId: string | null,
+    customerName: string,
+    customerPhone: string | null
+  ) => void
   onWalkInToggle: (isWalkIn: boolean) => void
   onNotesChange: (notes: string) => void
   // Summary data for display
@@ -70,4 +74,3 @@ export interface CustomerStepProps {
   timeSlot: BookingTimeSlot | null
   totalDuration: number
 }
-

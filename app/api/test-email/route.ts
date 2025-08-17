@@ -1,15 +1,18 @@
-import { Resend } from 'resend';
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { Resend } from 'resend'
 
 export async function POST() {
   try {
     if (!process.env.RESEND_API_KEY) {
-      return NextResponse.json({ 
-        error: 'RESEND_API_KEY nicht konfiguriert' 
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'RESEND_API_KEY nicht konfiguriert',
+        },
+        { status: 500 }
+      )
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const { data, error } = await resend.emails.send({
       from: 'Lia Hair POS <noreply@lia-hair.ch>',
       to: ['bullenmarkt@pm.me'],
@@ -36,30 +39,33 @@ export async function POST() {
           </p>
         </div>
       `,
-    });
+    })
 
     if (error) {
-      console.error('Resend error:', error);
-      return NextResponse.json({ error }, { status: 400 });
+      console.error('Resend error:', error)
+      return NextResponse.json({ error }, { status: 400 })
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       data,
-      message: 'Test Email successfully sent!' 
-    });
+      message: 'Test Email successfully sent!',
+    })
   } catch (error) {
-    console.error('API error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to send email',
-      details: error 
-    }, { status: 500 });
+    console.error('API error:', error)
+    return NextResponse.json(
+      {
+        error: 'Failed to send email',
+        details: error,
+      },
+      { status: 500 }
+    )
   }
 }
 
 export async function GET() {
-  return NextResponse.json({ 
+  return NextResponse.json({
     message: 'Email Test API is ready',
-    endpoint: 'POST /api/test-email'
-  });
+    endpoint: 'POST /api/test-email',
+  })
 }

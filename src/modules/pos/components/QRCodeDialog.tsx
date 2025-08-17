@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import QRCode from "react-qr-code"
-import { QrCode, Download, Copy, Check, X } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
+import { Check, Copy, Download, QrCode, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import QRCode from 'react-qr-code'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/components/ui/dialog"
-import { useToast } from "@/shared/hooks/core/useToast"
+} from '@/shared/components/ui/dialog'
+import { useToast } from '@/shared/hooks/core/useToast'
 
 interface QRCodeDialogProps {
   isOpen: boolean
@@ -36,17 +36,17 @@ export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps)
       await navigator.clipboard.writeText(receiptUrl)
       setCopied(true)
       toast({
-        title: "Link kopiert",
-        description: "Der Link zur Quittung wurde in die Zwischenablage kopiert.",
+        title: 'Link kopiert',
+        description: 'Der Link zur Quittung wurde in die Zwischenablage kopiert.',
       })
-      
+
       // Reset after 3 seconds
       setTimeout(() => setCopied(false), 3000)
     } catch (error) {
       toast({
-        title: "Fehler beim Kopieren",
-        description: "Der Link konnte nicht kopiert werden.",
-        variant: "destructive",
+        title: 'Fehler beim Kopieren',
+        description: 'Der Link konnte nicht kopiert werden.',
+        variant: 'destructive',
       })
     }
   }
@@ -62,9 +62,7 @@ export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps)
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
             <QrCode className="text-primary" size={24} />
           </div>
-          <DialogTitle className="text-xl font-bold">
-            📱 Quittung herunterladen
-          </DialogTitle>
+          <DialogTitle className="text-xl font-bold">📱 Quittung herunterladen</DialogTitle>
           <DialogDescription className="text-base">
             Scannen Sie den QR-Code mit Ihrem Smartphone um die Quittung herunterzuladen
           </DialogDescription>
@@ -74,13 +72,7 @@ export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps)
           {/* QR Code Container */}
           <div className="flex justify-center mb-6">
             <div className="p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
-              <QRCode 
-                value={receiptUrl}
-                size={200}
-                level="M"
-                fgColor="#000000"
-                bgColor="#ffffff"
-              />
+              <QRCode value={receiptUrl} size={200} level="M" fgColor="#000000" bgColor="#ffffff" />
             </div>
           </div>
 
@@ -99,21 +91,12 @@ export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps)
 
           {/* Alternative Actions */}
           <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleDirectDownload}
-            >
+            <Button variant="outline" className="w-full" onClick={handleDirectDownload}>
               <Download className="mr-2 h-4 w-4" />
               Direkt öffnen (Desktop)
             </Button>
-            
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleCopyLink}
-              disabled={copied}
-            >
+
+            <Button variant="outline" className="w-full" onClick={handleCopyLink} disabled={copied}>
               {copied ? (
                 <>
                   <Check className="mr-2 h-4 w-4 text-success" />
@@ -130,11 +113,7 @@ export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps)
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="secondary" 
-            onClick={onClose}
-            className="w-full"
-          >
+          <Button variant="secondary" onClick={onClose} className="w-full">
             <X className="mr-2 h-4 w-4" />
             Schließen
           </Button>

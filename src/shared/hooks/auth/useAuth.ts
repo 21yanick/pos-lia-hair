@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/shared/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/shared/lib/supabase/client'
 
 interface AuthReturn {
   user: User | null
@@ -13,13 +13,13 @@ interface AuthReturn {
 
 /**
  * Simplified Auth Hook - Core Authentication Only
- * 
+ *
  * BEFORE: 170+ lines with complex DB loading, deprecated hooks
  * AFTER:  ~40 lines focused only on auth state
- * 
+ *
  * Changes:
  * - Uses Supabase User directly (no DB user table queries)
- * - Stable useEffect without complex callbacks  
+ * - Stable useEffect without complex callbacks
  * - Mounted flag prevents memory leaks
  * - Removed deprecated permission/organization logic
  */
@@ -33,8 +33,11 @@ export function useAuth(): AuthReturn {
     // Initial user load
     const initAuth = async () => {
       try {
-        const { data: { user: authUser }, error } = await supabase.auth.getUser()
-        
+        const {
+          data: { user: authUser },
+          error,
+        } = await supabase.auth.getUser()
+
         if (mounted) {
           setUser(error ? null : authUser)
           setLoading(false)
@@ -51,7 +54,9 @@ export function useAuth(): AuthReturn {
     initAuth()
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (mounted) {
         setUser(session?.user ?? null)
         if (!loading) setLoading(false) // Only set loading false if not already false
@@ -82,7 +87,7 @@ export function useAuth(): AuthReturn {
     user,
     loading,
     isAuthenticated: !!user && !loading,
-    signOut
+    signOut,
   }
 }
 
@@ -91,11 +96,11 @@ export function useAuth(): AuthReturn {
  */
 export function useAuthGuard() {
   const { user, loading, isAuthenticated } = useAuth()
-  
+
   return {
     user,
     loading,
     isAuthenticated,
-    isReady: !loading && !!user
+    isReady: !loading && !!user,
   }
 }

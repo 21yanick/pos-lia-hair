@@ -6,21 +6,36 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { AlertCircle, Banknote, CreditCard, DollarSign, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/components/ui/dialog'
-import { Alert, AlertDescription } from '@/shared/components/ui/alert'
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { Badge } from '@/shared/components/ui/badge'
-import { Loader2, AlertCircle, DollarSign, CreditCard, Banknote } from 'lucide-react'
-import { createOwnerTransaction, type OwnerTransactionInsert } from '../services/ownerTransactionsApi'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { supabase } from '@/shared/lib/supabase/client'
 import { getTodaySwissString } from '@/shared/utils/dateUtils'
-import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import {
+  createOwnerTransaction,
+  type OwnerTransactionInsert,
+} from '../services/ownerTransactionsApi'
 
 // =====================================================
 // COMPONENT INTERFACE
@@ -46,7 +61,7 @@ const getTransactionConfig = (type: 'deposit' | 'expense' | 'withdrawal') => {
         amountLabel: 'Einlage Betrag',
         descriptionPlaceholder: 'z.B. Startkapital Einlage, Liquiditätshilfe',
         color: 'text-primary',
-        bgColor: 'bg-primary/10'
+        bgColor: 'bg-primary/10',
       }
     case 'withdrawal':
       return {
@@ -55,7 +70,7 @@ const getTransactionConfig = (type: 'deposit' | 'expense' | 'withdrawal') => {
         amountLabel: 'Entnahme Betrag',
         descriptionPlaceholder: 'z.B. Gewinnentnahme, Privatentnahme',
         color: 'text-destructive',
-        bgColor: 'bg-destructive/10'
+        bgColor: 'bg-destructive/10',
       }
     case 'expense':
       return {
@@ -64,17 +79,21 @@ const getTransactionConfig = (type: 'deposit' | 'expense' | 'withdrawal') => {
         amountLabel: 'Ausgabe Betrag',
         descriptionPlaceholder: 'z.B. Föhn mit privater Karte gekauft',
         color: 'text-secondary-foreground',
-        bgColor: 'bg-secondary/10'
+        bgColor: 'bg-secondary/10',
       }
   }
 }
 
 const getPaymentMethodIcon = (method: string) => {
   switch (method) {
-    case 'bank_transfer': return <Banknote className="h-4 w-4" />
-    case 'private_card': return <CreditCard className="h-4 w-4" />
-    case 'private_cash': return <DollarSign className="h-4 w-4" />
-    default: return null
+    case 'bank_transfer':
+      return <Banknote className="h-4 w-4" />
+    case 'private_card':
+      return <CreditCard className="h-4 w-4" />
+    case 'private_cash':
+      return <DollarSign className="h-4 w-4" />
+    default:
+      return null
   }
 }
 
@@ -83,18 +102,18 @@ const getAvailablePaymentMethods = (transactionType: 'deposit' | 'expense' | 'wi
     case 'deposit':
       return [
         { value: 'bank_transfer', label: 'Bank Transfer', hint: 'Banking' },
-        { value: 'private_cash', label: 'Privates Bargeld', hint: 'Kassenbuch' }
+        { value: 'private_cash', label: 'Privates Bargeld', hint: 'Kassenbuch' },
       ]
     case 'withdrawal':
       return [
         { value: 'bank_transfer', label: 'Bank Transfer', hint: 'Banking' },
-        { value: 'private_cash', label: 'Privates Bargeld', hint: 'Kassenbuch' }
+        { value: 'private_cash', label: 'Privates Bargeld', hint: 'Kassenbuch' },
       ]
     case 'expense':
       return [
         { value: 'bank_transfer', label: 'Bank Transfer', hint: 'Banking' },
         { value: 'private_card', label: 'Private Karte', hint: 'Owner Record' },
-        { value: 'private_cash', label: 'Privates Bargeld', hint: 'Kassenbuch' }
+        { value: 'private_cash', label: 'Privates Bargeld', hint: 'Kassenbuch' },
       ]
     default:
       return []
@@ -105,39 +124,42 @@ const getAvailablePaymentMethods = (transactionType: 'deposit' | 'expense' | 'wi
 // MAIN COMPONENT
 // =====================================================
 
-export function OwnerTransactionDialog({ 
-  isOpen, 
-  transactionType, 
-  onClose, 
-  onSuccess 
+export function OwnerTransactionDialog({
+  isOpen,
+  transactionType,
+  onClose,
+  onSuccess,
 }: OwnerTransactionDialogProps) {
-  
   // Form State
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
-  const [transactionDate, setTransactionDate] = useState(() => 
-    getTodaySwissString() // Today's date in Swiss timezone
+  const [transactionDate, setTransactionDate] = useState(
+    () => getTodaySwissString() // Today's date in Swiss timezone
   )
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'private_card' | 'private_cash'>('bank_transfer')
+  const [paymentMethod, setPaymentMethod] = useState<
+    'bank_transfer' | 'private_card' | 'private_cash'
+  >('bank_transfer')
   const [notes, setNotes] = useState('')
-  
+
   // UI State
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  
+
   // 🔒 Multi-Tenant Organization Context
   const { currentOrganization } = useCurrentOrganization()
-  
+
   // Get current user
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       setUserId(session?.user?.id || null)
     }
     getUser()
   }, [])
-  
+
   // Reset form when dialog opens/closes
   useEffect(() => {
     if (!isOpen) {
@@ -153,48 +175,48 @@ export function OwnerTransactionDialog({
   // Auto-adjust payment method when transaction type changes
   useEffect(() => {
     const availableMethods = getAvailablePaymentMethods(transactionType)
-    const currentMethodAvailable = availableMethods.some(method => method.value === paymentMethod)
-    
+    const currentMethodAvailable = availableMethods.some((method) => method.value === paymentMethod)
+
     if (!currentMethodAvailable && availableMethods.length > 0) {
       setPaymentMethod(availableMethods[0].value as any)
     }
   }, [transactionType, paymentMethod])
-  
+
   // Get transaction configuration
   const config = getTransactionConfig(transactionType)
-  
+
   // =====================================================
   // FORM SUBMISSION
   // =====================================================
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // 🔒 Security: Organization & User required
     if (!currentOrganization) {
       setError('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
       return
     }
-    
+
     if (!userId) {
       setError('User not authenticated')
       return
     }
-    
+
     if (!amount || !description) {
       setError('Amount and description are required')
       return
     }
-    
+
     const numericAmount = parseFloat(amount)
     if (isNaN(numericAmount) || numericAmount <= 0) {
       setError('Please enter a valid amount greater than 0')
       return
     }
-    
+
     setIsSubmitting(true)
     setError(null)
-    
+
     try {
       // ✅ FIXED: Include organization_id for Multi-Tenant security
       const transactionData: OwnerTransactionInsert = {
@@ -205,19 +227,18 @@ export function OwnerTransactionDialog({
         payment_method: paymentMethod,
         user_id: userId,
         organization_id: currentOrganization.id, // 🔒 CRITICAL FIX: Organization security
-        notes: notes.trim() || null
+        notes: notes.trim() || null,
       }
-      
+
       const { data, error: apiError } = await createOwnerTransaction(transactionData)
-      
+
       if (apiError) {
         throw new Error(apiError.message || 'Failed to create owner transaction')
       }
-      
+
       // Success
       onSuccess?.()
       onClose()
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
       setError(errorMessage)
@@ -226,23 +247,19 @@ export function OwnerTransactionDialog({
       setIsSubmitting(false)
     }
   }
-  
+
   // =====================================================
   // RENDER
   // =====================================================
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className={config.color}>
-            {config.title}
-          </DialogTitle>
-          <DialogDescription>
-            {config.description}
-          </DialogDescription>
+          <DialogTitle className={config.color}>{config.title}</DialogTitle>
+          <DialogDescription>{config.description}</DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Amount Input */}
           <div className="space-y-2">
@@ -259,7 +276,7 @@ export function OwnerTransactionDialog({
               required
             />
           </div>
-          
+
           {/* Description Input */}
           <div className="space-y-2">
             <Label htmlFor="description">Beschreibung *</Label>
@@ -271,7 +288,7 @@ export function OwnerTransactionDialog({
               required
             />
           </div>
-          
+
           {/* Date Input */}
           <div className="space-y-2">
             <Label htmlFor="date">Datum *</Label>
@@ -283,13 +300,13 @@ export function OwnerTransactionDialog({
               required
             />
           </div>
-          
+
           {/* Payment Method Selection */}
           <div className="space-y-2">
             <Label>Zahlungsart</Label>
-            <Select 
-              value={paymentMethod} 
-              onValueChange={(value: 'bank_transfer' | 'private_card' | 'private_cash') => 
+            <Select
+              value={paymentMethod}
+              onValueChange={(value: 'bank_transfer' | 'private_card' | 'private_cash') =>
                 setPaymentMethod(value)
               }
             >
@@ -311,8 +328,7 @@ export function OwnerTransactionDialog({
               </SelectContent>
             </Select>
           </div>
-          
-          
+
           {/* Notes (Optional) */}
           <div className="space-y-2">
             <Label htmlFor="notes">Notizen (optional)</Label>
@@ -324,7 +340,7 @@ export function OwnerTransactionDialog({
               rows={2}
             />
           </div>
-          
+
           {/* Error Display */}
           {error && (
             <Alert variant="destructive">
@@ -332,7 +348,7 @@ export function OwnerTransactionDialog({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <Button

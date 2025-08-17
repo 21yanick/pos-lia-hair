@@ -1,18 +1,31 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useMemo, useCallback } from "react"
-import { Search, Plus, Loader2 } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
-import { Badge } from "@/shared/components/ui/badge"
-import { Switch } from "@/shared/components/ui/switch"
-import { useToast } from "@/shared/hooks/core/useToast"
-import { useItems, type Item } from "@/shared/hooks/business/useItems"
-import { useProductActions } from "../hooks/useProductActions"
-import { ProductCard } from "./ProductCard"
-import { ProductDialog } from "./ProductDialog"
+import { Loader2, Plus, Search } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Input } from '@/shared/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Switch } from '@/shared/components/ui/switch'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table'
+import { type Item, useItems } from '@/shared/hooks/business/useItems'
+import { useToast } from '@/shared/hooks/core/useToast'
+import { useProductActions } from '../hooks/useProductActions'
+import { ProductCard } from './ProductCard'
+import { ProductDialog } from './ProductDialog'
 
 export function ProductsPage() {
   const { items, loading, error, syncAuthUser } = useItems()
@@ -23,12 +36,12 @@ export function ProductsPage() {
     handleToggleActive,
     handleDeleteItem,
     handleManualSync,
-    isSubmitting
+    isSubmitting,
   } = useProductActions()
-  
+
   // UI State
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filter, setFilter] = useState("all")
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filter, setFilter] = useState('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [currentItem, setCurrentItem] = useState<Item | null>(null)
   const [syncDialogOpen, setSyncDialogOpen] = useState(false)
@@ -39,10 +52,10 @@ export function ProductsPage() {
     return items.filter((item) => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesFilter =
-        filter === "all" ||
-        (filter === "services" && item.type === "service") ||
-        (filter === "products" && item.type === "product") ||
-        (filter === "favorites" && item.is_favorite)
+        filter === 'all' ||
+        (filter === 'services' && item.type === 'service') ||
+        (filter === 'products' && item.type === 'product') ||
+        (filter === 'favorites' && item.is_favorite)
 
       return matchesSearch && matchesFilter
     })
@@ -59,14 +72,17 @@ export function ProductsPage() {
     setCurrentItem(null)
   }, [])
 
-  const handleSaveAndClose = useCallback(async (formData: any, currentItem: Item | null) => {
-    const success = await handleSaveItem(formData, currentItem)
-    if (success) {
-      setIsDialogOpen(false)
-      setCurrentItem(null)
-    }
-    return success
-  }, [handleSaveItem])
+  const handleSaveAndClose = useCallback(
+    async (formData: any, currentItem: Item | null) => {
+      const success = await handleSaveItem(formData, currentItem)
+      if (success) {
+        setIsDialogOpen(false)
+        setCurrentItem(null)
+      }
+      return success
+    },
+    [handleSaveItem]
+  )
 
   // Error handling und automatische Synchronisierung
   useEffect(() => {
@@ -74,37 +90,40 @@ export function ProductsPage() {
 
     // Immer allgemeine Fehlermeldung anzeigen
     toast({
-      title: "Fehler aufgetreten",
+      title: 'Fehler aufgetreten',
       description: error,
-      variant: "destructive",
+      variant: 'destructive',
     })
 
     // Berechtigungsfehler speziell behandeln
-    const isPermissionError = error?.includes('nicht berechtigt') || 
-                              error?.includes('permission') || 
-                              error?.includes('not authorized') ||
-                              error?.includes('Forbidden');
-    
+    const isPermissionError =
+      error?.includes('nicht berechtigt') ||
+      error?.includes('permission') ||
+      error?.includes('not authorized') ||
+      error?.includes('Forbidden')
+
     if (isPermissionError) {
       // Wir öffnen schon vorher einen Dialog, um Benutzer zu informieren
-      setSyncDialogOpen(true);
-      setSyncMessage("Automatische Synchronisierung läuft...");
-      
+      setSyncDialogOpen(true)
+      setSyncMessage('Automatische Synchronisierung läuft...')
+
       // Synchronisierung versuchen
-      syncAuthUser().then(result => {
-        if (result.success) {
-          setSyncMessage("Synchronisierung erfolgreich! Die Seite wird neu geladen...");
-          
-          // Kurze Pause zum Lesen der Meldung
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        } else {
-          setSyncMessage(`Fehler bei der Synchronisierung: ${result.error}`);
-        }
-      }).catch(err => {
-        setSyncMessage(`Unerwarteter Fehler: ${err.message}`);
-      });
+      syncAuthUser()
+        .then((result) => {
+          if (result.success) {
+            setSyncMessage('Synchronisierung erfolgreich! Die Seite wird neu geladen...')
+
+            // Kurze Pause zum Lesen der Meldung
+            setTimeout(() => {
+              window.location.reload()
+            }, 1500)
+          } else {
+            setSyncMessage(`Fehler bei der Synchronisierung: ${result.error}`)
+          }
+        })
+        .catch((err) => {
+          setSyncMessage(`Unerwarteter Fehler: ${err.message}`)
+        })
     }
   }, [error, toast, syncAuthUser])
 
@@ -113,16 +132,19 @@ export function ProductsPage() {
       {/* Sync Error Warning */}
       {error && (
         <div className="bg-warning/10 border border-warning/20 p-4 rounded-md">
-          <h3 className="font-semibold text-warning-foreground mb-2">Probleme mit der Datenbankkonfiguration erkannt</h3>
+          <h3 className="font-semibold text-warning-foreground mb-2">
+            Probleme mit der Datenbankkonfiguration erkannt
+          </h3>
           <p className="text-sm text-warning-foreground mb-3">
-            Es scheint ein Problem mit den Datenbankberechtigungen zu geben. Möglicherweise ist Ihr Benutzer nicht korrekt mit der Datenbank verknüpft.
+            Es scheint ein Problem mit den Datenbankberechtigungen zu geben. Möglicherweise ist Ihr
+            Benutzer nicht korrekt mit der Datenbank verknüpft.
           </p>
           <Button onClick={handleManualSync} className="bg-warning hover:bg-warning/90">
             Benutzer synchronisieren
           </Button>
         </div>
       )}
-      
+
       {/* Sync Dialog */}
       {syncDialogOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -130,10 +152,10 @@ export function ProductsPage() {
             <h3 className="font-semibold text-lg mb-3">Benutzer-Synchronisierung</h3>
             <p className="mb-4">{syncMessage}</p>
             <div className="flex justify-end">
-              <Button 
+              <Button
                 onClick={() => setSyncDialogOpen(false)}
                 variant="outline"
-                disabled={syncMessage === "Synchronisiere Benutzer..."}
+                disabled={syncMessage === 'Synchronisiere Benutzer...'}
               >
                 Schließen
               </Button>
@@ -141,12 +163,15 @@ export function ProductsPage() {
           </div>
         </div>
       )}
-      
+
       {/* Header with Search and Add Button */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex flex-1 items-center gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+              size={18}
+            />
             <Input
               placeholder="Suche nach Produkten oder Dienstleistungen..."
               className="pl-10"
@@ -208,16 +233,14 @@ export function ProductsPage() {
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>
-                    <Badge variant={item.type === "service" ? "default" : "secondary"}>
-                      {item.type === "service" ? "Dienstleistung" : "Produkt"}
+                    <Badge variant={item.type === 'service' ? 'default' : 'secondary'}>
+                      {item.type === 'service' ? 'Dienstleistung' : 'Produkt'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {item.type === "service" ? (
+                    {item.type === 'service' ? (
                       <div className="space-y-1">
-                        <div className="text-sm font-medium">
-                          {item.duration_minutes}min
-                        </div>
+                        <div className="text-sm font-medium">{item.duration_minutes}min</div>
                         <div className="flex gap-1">
                           {item.requires_booking && (
                             <Badge variant="outline" className="text-xs">
@@ -238,15 +261,15 @@ export function ProductsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleToggleFavorite(item.id, item.is_favorite ?? false)}
-                      className={item.is_favorite ? "text-warning" : "text-muted-foreground"}
+                      className={item.is_favorite ? 'text-warning' : 'text-muted-foreground'}
                     >
-                      {item.is_favorite ? "⭐" : "☆"}
+                      {item.is_favorite ? '⭐' : '☆'}
                     </Button>
                   </TableCell>
                   <TableCell>
-                    <Switch 
-                      checked={item.active ?? true} 
-                      onCheckedChange={() => handleToggleActive(item.id, item.active ?? true)} 
+                    <Switch
+                      checked={item.active ?? true}
+                      onCheckedChange={() => handleToggleActive(item.id, item.active ?? true)}
                     />
                   </TableCell>
                   <TableCell className="text-right">
@@ -279,9 +302,7 @@ export function ProductsPage() {
             <span>Daten werden geladen...</span>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Keine Einträge gefunden.
-          </div>
+          <div className="text-center py-8 text-muted-foreground">Keine Einträge gefunden.</div>
         ) : (
           filteredItems.map((item) => (
             <ProductCard

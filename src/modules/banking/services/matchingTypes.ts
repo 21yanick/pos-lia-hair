@@ -4,11 +4,11 @@
 // Shared interfaces for smart matching algorithms
 // Used across provider and bank matching services
 
-import type { 
-  UnmatchedSaleForProvider,
-  UnmatchedProviderReport,
+import type {
+  AvailableForBankMatching,
   UnmatchedBankTransaction,
-  AvailableForBankMatching
+  UnmatchedProviderReport,
+  UnmatchedSaleForProvider,
 } from '../types/banking'
 
 // =====================================================
@@ -236,14 +236,14 @@ export const DEFAULT_MATCHING_CONFIG: MatchingConfig = {
     scores: {
       providerMatchWeight: 60,
       amountMatchWeight: 40,
-      dateMatchWeight: 20
+      dateMatchWeight: 20,
     },
     tolerances: {
-      exactAmountTolerance: 0.00,
+      exactAmountTolerance: 0.0,
       closeAmountTolerance: 0.05,
-      maxAmountTolerance: 1.00,
-      maxDaysTolerance: 7
-    }
+      maxAmountTolerance: 1.0,
+      maxDaysTolerance: 7,
+    },
   },
   bank: {
     showSuggestionThreshold: 50,
@@ -252,17 +252,17 @@ export const DEFAULT_MATCHING_CONFIG: MatchingConfig = {
     scores: {
       amountAccuracyWeight: 70,
       dateProximityWeight: 20,
-      descriptionMatchWeight: 10
+      descriptionMatchWeight: 10,
     },
     tolerances: {
-      exactAmountTolerance: 0.00,
+      exactAmountTolerance: 0.0,
       closeAmountTolerance: 0.05,
-      maxAmountTolerance: 1.00,
-      maxBulkTolerance: 2.00,
+      maxAmountTolerance: 1.0,
+      maxBulkTolerance: 2.0,
       maxItemsInCombination: 5,
-      maxBulkItems: 10
-    }
-  }
+      maxBulkItems: 10,
+    },
+  },
 }
 
 // =====================================================

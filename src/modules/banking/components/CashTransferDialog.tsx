@@ -1,16 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/shared/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
-import { Input } from "@/shared/components/ui/input"
-import { Label } from "@/shared/components/ui/label"
-import { Textarea } from "@/shared/components/ui/textarea"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Loader2, ArrowUpToLine, ArrowDownToLine, AlertCircle } from "lucide-react"
-import { supabase } from "@/shared/lib/supabase/client"
-import { useCashBalance } from "@/shared/hooks/business/useCashBalance"
+import { AlertCircle, ArrowDownToLine, ArrowUpToLine, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import { Textarea } from '@/shared/components/ui/textarea'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
+import { supabase } from '@/shared/lib/supabase/client'
 
 interface CashTransferDialogProps {
   isOpen: boolean
@@ -19,9 +26,14 @@ interface CashTransferDialogProps {
   onSuccess: () => void
 }
 
-export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: CashTransferDialogProps) {
-  const [amount, setAmount] = useState("")
-  const [description, setDescription] = useState("")
+export function CashTransferDialog({
+  isOpen,
+  onClose,
+  direction,
+  onSuccess,
+}: CashTransferDialogProps) {
+  const [amount, setAmount] = useState('')
+  const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cashBalance, setCashBalance] = useState<number | null>(null)
@@ -29,7 +41,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
 
   // Use the same cash balance logic as Cash Register
   const { getCurrentCashBalance } = useCashBalance()
-  
+
   // 🔒 Multi-Tenant Organization Context
   const { currentOrganization } = useCurrentOrganization()
 
@@ -47,7 +59,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
     try {
       // Use the same method as Cash Register for consistent balance
       const result = await getCurrentCashBalance()
-      
+
       if (result.success) {
         setCashBalance(result.balance)
       } else {
@@ -64,15 +76,15 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     const numAmount = parseFloat(amount)
     if (!numAmount || numAmount <= 0) {
-      setError("Bitte geben Sie einen gültigen Betrag ein")
+      setError('Bitte geben Sie einen gültigen Betrag ein')
       return
     }
 
     if (!description.trim()) {
-      setError("Bitte geben Sie eine Beschreibung ein")
+      setError('Bitte geben Sie eine Beschreibung ein')
       return
     }
 
@@ -88,12 +100,14 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
     try {
       // 🔒 Security: Organization & User required
       if (!currentOrganization) {
-        throw new Error("Keine Organization ausgewählt. Bitte wählen Sie eine Organization.")
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
       }
 
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Nicht angemeldet")
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('Nicht angemeldet')
 
       // ✅ FIXED: Call the database function with organization_id for Multi-Tenant security
       const { data, error: dbError } = await supabase.rpc('create_bank_transfer_cash_movement', {
@@ -101,7 +115,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
         p_amount: numAmount,
         p_description: description.trim(),
         p_direction: direction,
-        p_organization_id: currentOrganization.id // 🔒 CRITICAL FIX: Organization security
+        p_organization_id: currentOrganization.id, // 🔒 CRITICAL FIX: Organization security
       })
 
       if (dbError) throw dbError
@@ -109,12 +123,11 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
       // Success!
       onSuccess()
       onClose()
-      
+
       // Reset form
-      setAmount("")
-      setDescription("")
+      setAmount('')
+      setDescription('')
       setCashBalance(null)
-      
     } catch (err) {
       console.error('Error creating cash transfer:', err)
       setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
@@ -125,8 +138,8 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
 
   const handleClose = () => {
     if (!isLoading) {
-      setAmount("")
-      setDescription("")
+      setAmount('')
+      setDescription('')
       setError(null)
       setCashBalance(null)
       onClose()
@@ -151,10 +164,9 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
             )}
           </DialogTitle>
           <DialogDescription>
-            {isToBank 
-              ? "Erfassen Sie Bargeld, das Sie zur Bank gebracht haben. Dies wird später mit der entsprechenden Bank-Transaktion abgeglichen."
-              : "Erfassen Sie Bargeld, das Sie von der Bank geholt haben. Dies wird später mit der entsprechenden Bank-Transaktion abgeglichen."
-            }
+            {isToBank
+              ? 'Erfassen Sie Bargeld, das Sie zur Bank gebracht haben. Dies wird später mit der entsprechenden Bank-Transaktion abgeglichen.'
+              : 'Erfassen Sie Bargeld, das Sie von der Bank geholt haben. Dies wird später mit der entsprechenden Bank-Transaktion abgeglichen.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -173,9 +185,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
                 Aktueller Kassenbestand
               </div>
               {loadingBalance ? (
-                <div className="text-lg font-semibold text-muted-foreground">
-                  Laden...
-                </div>
+                <div className="text-lg font-semibold text-muted-foreground">Laden...</div>
               ) : cashBalance !== null ? (
                 <div className="text-lg font-semibold">
                   {cashBalance.toFixed(2)} CHF
@@ -184,9 +194,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
                   )}
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground">
-                  Konnte nicht geladen werden
-                </div>
+                <div className="text-sm text-muted-foreground">Konnte nicht geladen werden</div>
               )}
             </div>
           )}
@@ -210,10 +218,7 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
             <Label htmlFor="description">Beschreibung</Label>
             <Textarea
               id="description"
-              placeholder={isToBank 
-                ? "z.B. Tageseinnahmen einzahlen" 
-                : "z.B. Wechselgeld abheben"
-              }
+              placeholder={isToBank ? 'z.B. Tageseinnahmen einzahlen' : 'z.B. Wechselgeld abheben'}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isLoading}
@@ -223,20 +228,16 @@ export function CashTransferDialog({ isOpen, onClose, direction, onSuccess }: Ca
           </div>
 
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleClose}
-              disabled={isLoading}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
               Abbrechen
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isLoading}
-              className={isToBank 
-                ? "bg-destructive hover:bg-destructive/90" 
-                : "bg-green-600 hover:bg-green-600/90 text-white dark:bg-green-400 dark:hover:bg-green-400/90 dark:text-black"
+              className={
+                isToBank
+                  ? 'bg-destructive hover:bg-destructive/90'
+                  : 'bg-green-600 hover:bg-green-600/90 text-white dark:bg-green-400 dark:hover:bg-green-400/90 dark:text-black'
               }
             >
               {isLoading ? (

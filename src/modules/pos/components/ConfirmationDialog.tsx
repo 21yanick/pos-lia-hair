@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { CheckCircle, Download, QrCode } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
+import { CheckCircle, Download, QrCode } from 'lucide-react'
+import { useState } from 'react'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/components/ui/dialog"
-import { useToast } from "@/shared/hooks/core/useToast"
-import { QRCodeDialog } from "./QRCodeDialog"
-import type { PaymentMethod, TransactionResult } from "@/shared/hooks/business/usePOSState"
+} from '@/shared/components/ui/dialog'
+import type { PaymentMethod, TransactionResult } from '@/shared/hooks/business/usePOSState'
+import { useToast } from '@/shared/hooks/core/useToast'
+import { QRCodeDialog } from './QRCodeDialog'
 
 interface ConfirmationDialogProps {
   isOpen: boolean
@@ -43,9 +43,9 @@ export function ConfirmationDialog({
     } else {
       // console.error('No receipt URL available:', transactionResult)
       toast({
-        title: "PDF nicht verfügbar",
-        description: "Die Quittung konnte nicht erstellt werden.",
-        variant: "destructive",
+        title: 'PDF nicht verfügbar',
+        description: 'Die Quittung konnte nicht erstellt werden.',
+        variant: 'destructive',
       })
     }
   }
@@ -55,19 +55,23 @@ export function ConfirmationDialog({
       setShowQRCode(true)
     } else {
       toast({
-        title: "QR-Code nicht verfügbar",
-        description: "Die Quittung konnte nicht erstellt werden.",
-        variant: "destructive",
+        title: 'QR-Code nicht verfügbar',
+        description: 'Die Quittung konnte nicht erstellt werden.',
+        variant: 'destructive',
       })
     }
   }
 
   const getPaymentMethodLabel = (method: PaymentMethod | null) => {
     switch (method) {
-      case 'cash': return 'Bargeld'
-      case 'twint': return 'TWINT'
-      case 'sumup': return 'SumUp (Karte)'
-      default: return 'Unbekannt'
+      case 'cash':
+        return 'Bargeld'
+      case 'twint':
+        return 'TWINT'
+      case 'sumup':
+        return 'SumUp (Karte)'
+      default:
+        return 'Unbekannt'
     }
   }
 
@@ -88,28 +92,37 @@ export function ConfirmationDialog({
           <div className="bg-muted/50 rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Betrag:</span>
-              <span className="font-bold text-lg">CHF {(transactionResult?.amount || cartTotal).toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Zahlungsmethode:</span>
-              <span className="font-semibold">{getPaymentMethodLabel(transactionResult?.paymentMethod || selectedPaymentMethod)}</span>
+              <span className="font-bold text-lg">
+                CHF {(transactionResult?.amount || cartTotal).toFixed(2)}
+              </span>
             </div>
 
-            {(transactionResult?.paymentMethod === 'cash' || selectedPaymentMethod === 'cash') && (transactionResult?.cashReceived || cashReceived) && (
-              <>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Erhalten:</span>
-                  <span className="font-semibold">CHF {(transactionResult?.cashReceived || parseFloat(cashReceived)).toFixed(2)}</span>
-                </div>
-                {transactionResult?.change && transactionResult.change > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Zahlungsmethode:</span>
+              <span className="font-semibold">
+                {getPaymentMethodLabel(transactionResult?.paymentMethod || selectedPaymentMethod)}
+              </span>
+            </div>
+
+            {(transactionResult?.paymentMethod === 'cash' || selectedPaymentMethod === 'cash') &&
+              (transactionResult?.cashReceived || cashReceived) && (
+                <>
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Rückgeld:</span>
-                    <span className="font-bold text-success">CHF {transactionResult.change.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Erhalten:</span>
+                    <span className="font-semibold">
+                      CHF {(transactionResult?.cashReceived || parseFloat(cashReceived)).toFixed(2)}
+                    </span>
                   </div>
-                )}
-              </>
-            )}
+                  {transactionResult?.change && transactionResult.change > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Rückgeld:</span>
+                      <span className="font-bold text-success">
+                        CHF {transactionResult.change.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
           </div>
 
           {/* Quittung-Aktionen */}
@@ -117,19 +130,11 @@ export function ConfirmationDialog({
             <div className="space-y-3">
               <h4 className="font-semibold text-center">Quittung</h4>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleDownloadPDF}
-                >
+                <Button variant="outline" className="flex-1" onClick={handleDownloadPDF}>
                   <Download className="mr-2 h-4 w-4" />
                   PDF öffnen
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleQRCodeShow}
-                >
+                <Button variant="outline" className="flex-1" onClick={handleQRCodeShow}>
                   <QrCode className="mr-2 h-4 w-4" />
                   QR-Code
                 </Button>
@@ -139,7 +144,7 @@ export function ConfirmationDialog({
         </div>
 
         <DialogFooter className="pt-6">
-          <Button 
+          <Button
             onClick={onStartNewSale}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 font-semibold"
           >

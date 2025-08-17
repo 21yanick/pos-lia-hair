@@ -1,18 +1,30 @@
-"use client"
+'use client'
 
+import { Edit, ExternalLink, Eye, Mail, MoreHorizontal, Phone, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu"
-import { useToast } from "@/shared/hooks/core/useToast"
-import { MoreHorizontal, Edit, Eye, Trash2, ExternalLink, Mail, Phone } from "lucide-react"
-import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
-import { updateSupplier, deleteSupplier } from '@/shared/services/supplierServices'
 import { SupplierEditDialog } from '@/shared/components/supplier/SupplierEditDialog'
 import { SupplierViewDialog } from '@/shared/components/supplier/SupplierViewDialog'
-import { SupplierCard } from './SupplierCard'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/dropdown-menu'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table'
+import { useToast } from '@/shared/hooks/core/useToast'
+import { deleteSupplier, updateSupplier } from '@/shared/services/supplierServices'
 import type { Supplier } from '@/shared/types/suppliers'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import { SupplierCard } from './SupplierCard'
 
 interface SupplierListProps {
   suppliers: Supplier[]
@@ -23,7 +35,7 @@ interface SupplierListProps {
 export function SupplierList({ suppliers, loading, onSupplierUpdated }: SupplierListProps) {
   const { toast } = useToast()
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  
+
   // Dialog states
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -33,20 +45,20 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
     setActionLoading(supplier.id)
     try {
       await updateSupplier(supplier.id, {
-        is_active: !supplier.is_active
+        is_active: !supplier.is_active,
       })
-      
+
       toast({
-        title: "Erfolg",
-        description: `Lieferant wurde ${!supplier.is_active ? 'aktiviert' : 'deaktiviert'}`
+        title: 'Erfolg',
+        description: `Lieferant wurde ${!supplier.is_active ? 'aktiviert' : 'deaktiviert'}`,
       })
-      
+
       onSupplierUpdated()
     } catch (error) {
       toast({
-        title: "Fehler",
-        description: "Status konnte nicht geändert werden",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Status konnte nicht geändert werden',
+        variant: 'destructive',
       })
     } finally {
       setActionLoading(null)
@@ -61,18 +73,18 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
     setActionLoading(supplier.id)
     try {
       await deleteSupplier(supplier.id)
-      
+
       toast({
-        title: "Erfolg",
-        description: "Lieferant wurde gelöscht"
+        title: 'Erfolg',
+        description: 'Lieferant wurde gelöscht',
       })
-      
+
       onSupplierUpdated()
     } catch (error) {
       toast({
-        title: "Fehler",
-        description: "Lieferant konnte nicht gelöscht werden",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Lieferant konnte nicht gelöscht werden',
+        variant: 'destructive',
       })
     } finally {
       setActionLoading(null)
@@ -98,8 +110,8 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
 
   const handleEditSuccess = (updatedSupplier: Supplier) => {
     toast({
-      title: "Erfolg",
-      description: "Lieferant wurde erfolgreich aktualisiert"
+      title: 'Erfolg',
+      description: 'Lieferant wurde erfolgreich aktualisiert',
     })
     onSupplierUpdated()
   }
@@ -160,9 +172,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
 
                 {/* Category */}
                 <TableCell>
-                  <Badge variant="outline">
-                    {SUPPLIER_CATEGORIES[supplier.category]}
-                  </Badge>
+                  <Badge variant="outline">{SUPPLIER_CATEGORIES[supplier.category]}</Badge>
                 </TableCell>
 
                 {/* Contact */}
@@ -171,7 +181,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
                     {supplier.contact_email && (
                       <div className="flex items-center text-sm">
                         <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
-                        <a 
+                        <a
                           href={`mailto:${supplier.contact_email}`}
                           className="text-primary hover:underline truncate"
                           title={supplier.contact_email}
@@ -183,7 +193,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
                     {supplier.contact_phone && (
                       <div className="flex items-center text-sm">
                         <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
-                        <a 
+                        <a
                           href={`tel:${supplier.contact_phone}`}
                           className="text-primary hover:underline"
                         >
@@ -194,7 +204,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
                     {supplier.website && (
                       <div className="flex items-center text-sm">
                         <ExternalLink className="h-3 w-3 mr-1 text-muted-foreground" />
-                        <a 
+                        <a
                           href={supplier.website}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -205,16 +215,14 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
                       </div>
                     )}
                     {!supplier.contact_email && !supplier.contact_phone && !supplier.website && (
-                      <div className="text-sm text-muted-foreground">
-                        Keine Kontaktdaten
-                      </div>
+                      <div className="text-sm text-muted-foreground">Keine Kontaktdaten</div>
                     )}
                   </div>
                 </TableCell>
 
                 {/* Status */}
                 <TableCell>
-                  <Badge variant={supplier.is_active ? "default" : "secondary"}>
+                  <Badge variant={supplier.is_active ? 'default' : 'secondary'}>
                     {supplier.is_active ? 'Aktiv' : 'Inaktiv'}
                   </Badge>
                 </TableCell>
@@ -223,8 +231,8 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         className="h-8 w-8 p-0"
                         disabled={actionLoading === supplier.id}
                       >
@@ -232,28 +240,24 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
-                        onClick={() => handleView(supplier)}
-                      >
+                      <DropdownMenuItem onClick={() => handleView(supplier)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Details anzeigen
                       </DropdownMenuItem>
-                      
-                      <DropdownMenuItem 
-                        onClick={() => handleEdit(supplier)}
-                      >
+
+                      <DropdownMenuItem onClick={() => handleEdit(supplier)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Bearbeiten
                       </DropdownMenuItem>
-                      
+
                       <DropdownMenuItem onClick={() => handleToggleActive(supplier)}>
                         <div className="mr-2 h-4 w-4 flex items-center justify-center">
                           {supplier.is_active ? '⏸' : '▶'}
                         </div>
                         {supplier.is_active ? 'Deaktivieren' : 'Aktivieren'}
                       </DropdownMenuItem>
-                      
-                      <DropdownMenuItem 
+
+                      <DropdownMenuItem
                         onClick={() => handleDelete(supplier)}
                         className="text-destructive"
                       >

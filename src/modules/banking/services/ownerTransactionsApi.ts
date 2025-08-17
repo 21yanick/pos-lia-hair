@@ -7,11 +7,11 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-import { 
-  OwnerTransactionRow, 
-  OwnerTransactionInsert, 
+import type {
+  OwnerBalance,
+  OwnerTransactionInsert,
+  OwnerTransactionRow,
   OwnerTransactionUpdate,
-  OwnerBalance 
 } from '../types/banking'
 
 // =====================================================
@@ -30,18 +30,19 @@ export async function createOwnerTransaction(transaction: OwnerTransactionInsert
     if (ownerError) throw ownerError
 
     // Step 2: Create Cash Movement if private_cash and deposit/withdrawal
-    if (transaction.payment_method === 'private_cash' && 
-        (transaction.transaction_type === 'deposit' || transaction.transaction_type === 'withdrawal')) {
-      
+    if (
+      transaction.payment_method === 'private_cash' &&
+      (transaction.transaction_type === 'deposit' || transaction.transaction_type === 'withdrawal')
+    ) {
       const cashMovementType = transaction.transaction_type === 'deposit' ? 'cash_in' : 'cash_out'
-      const cashDescription = transaction.transaction_type === 'deposit' 
-        ? `Owner Einlage: ${transaction.description}`
-        : `Owner Entnahme: ${transaction.description}`
+      const cashDescription =
+        transaction.transaction_type === 'deposit'
+          ? `Owner Einlage: ${transaction.description}`
+          : `Owner Entnahme: ${transaction.description}`
 
       // ✅ CRITICAL FIX: Include organization_id for Multi-Tenant security
-      const { error: cashError } = await supabase
-        .from('cash_movements')
-        .insert([{
+      const { error: cashError } = await supabase.from('cash_movements').insert([
+        {
           amount: transaction.amount,
           type: cashMovementType,
           description: cashDescription,
@@ -50,16 +51,14 @@ export async function createOwnerTransaction(transaction: OwnerTransactionInsert
           user_id: transaction.user_id,
           organization_id: transaction.organization_id, // 🔒 CRITICAL FIX: Organization security
           movement_type: 'cash_operation',
-          banking_status: 'unmatched'
-        }])
+          banking_status: 'unmatched',
+        },
+      ])
 
       if (cashError) {
         // Rollback: Delete the owner transaction if cash movement fails
-        await supabase
-          .from('owner_transactions')
-          .delete()
-          .eq('id', ownerTransaction.id)
-        
+        await supabase.from('owner_transactions').delete().eq('id', ownerTransaction.id)
+
         throw new Error(`Cash movement creation failed: ${cashError.message}`)
       }
     }
@@ -71,7 +70,9 @@ export async function createOwnerTransaction(transaction: OwnerTransactionInsert
   }
 }
 
-export async function getOwnerTransactions(userId: string): Promise<{ data: OwnerTransactionRow[], error: any }> {
+export async function getOwnerTransactions(
+  userId: string
+): Promise<{ data: OwnerTransactionRow[]; error: any }> {
   try {
     const { data, error } = await supabase
       .from('owner_transactions')
@@ -108,10 +109,7 @@ export async function updateOwnerTransaction(id: string, updates: OwnerTransacti
 
 export async function deleteOwnerTransaction(id: string) {
   try {
-    const { error } = await supabase
-      .from('owner_transactions')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('owner_transactions').delete().eq('id', id)
 
     if (error) throw error
 
@@ -126,7 +124,9 @@ export async function deleteOwnerTransaction(id: string) {
 // OWNER BALANCE CALCULATION
 // =====================================================
 
-export async function getOwnerBalance(userId: string): Promise<{ data: OwnerBalance | null, error: any }> {
+export async function getOwnerBalance(
+  userId: string
+): Promise<{ data: OwnerBalance | null; error: any }> {
   try {
     // TODO: PostgreSQL RPC function 'get_owner_loan_balance' needs to be created in Supabase
     // Temporarily skip RPC call to avoid 502 errors
@@ -141,36 +141,38 @@ export async function getOwnerBalance(userId: string): Promise<{ data: OwnerBala
         .select('amount')
         .eq('user_id', userId)
         .eq('transaction_type', 'deposit'),
-      
+
       supabase
         .from('owner_transactions')
         .select('amount')
         .eq('user_id', userId)
         .eq('transaction_type', 'expense'),
-        
+
       supabase
         .from('owner_transactions')
         .select('amount')
         .eq('user_id', userId)
-        .eq('transaction_type', 'withdrawal')
+        .eq('transaction_type', 'withdrawal'),
     ])
 
-    const total_deposits = depositsResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
-    const total_expenses = expensesResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
-    const total_withdrawals = withdrawalsResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
+    const total_deposits =
+      depositsResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
+    const total_expenses =
+      expensesResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
+    const total_withdrawals =
+      withdrawalsResult.data?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
 
     // Calculate net balance: positive means business owes owner
-    const net_balance = (total_deposits + total_expenses) - total_withdrawals
+    const net_balance = total_deposits + total_expenses - total_withdrawals
 
     const balance: OwnerBalance = {
       total_deposits,
       total_expenses,
       total_withdrawals,
-      net_balance
+      net_balance,
     }
 
     return { data: balance, error: null }
-
   } catch (error) {
     console.error('Error fetching owner balance:', error)
     return { data: null, error }
@@ -206,7 +208,7 @@ export async function getOwnerTransactionsForBanking(userId: string) {
 // =====================================================
 
 export async function markOwnerTransactionAsMatched(
-  ownerTransactionId: string, 
+  ownerTransactionId: string,
   bankTransactionId: string
 ) {
   try {
@@ -214,7 +216,7 @@ export async function markOwnerTransactionAsMatched(
       .from('owner_transactions')
       .update({
         related_bank_transaction_id: bankTransactionId,
-        banking_status: 'matched'
+        banking_status: 'matched',
       })
       .eq('id', ownerTransactionId)
       .select()

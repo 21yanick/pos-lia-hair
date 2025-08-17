@@ -1,43 +1,34 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { Button } from '@/shared/components/ui/button'
-import { Badge } from '@/shared/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/shared/components/ui/dropdown-menu'
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from '@/shared/components/ui/alert-dialog'
-import { 
-  Crown, 
-  Shield, 
-  User, 
-  Users,
-  MoreVertical, 
-  UserMinus, 
-  Settings,
-  Mail
-} from 'lucide-react'
-import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useAuth } from '@/shared/hooks/auth/useAuth'
-import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
-import { useTeamMembersQuery, type TeamMember } from '@/modules/settings/hooks/useTeamMembersQuery'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
+import { Crown, Mail, MoreVertical, Settings, Shield, User, UserMinus, Users } from 'lucide-react'
+import { useState } from 'react'
+import { type TeamMember, useTeamMembersQuery } from '@/modules/settings/hooks/useTeamMembersQuery'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog'
+import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/dropdown-menu'
+import { useAuth } from '@/shared/hooks/auth/useAuth'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
 
 type Role = 'owner' | 'admin' | 'staff'
 
@@ -46,66 +37,69 @@ const ROLE_CONFIG = {
     label: 'Inhaber',
     icon: Crown,
     variant: 'destructive',
-    description: 'Vollzugriff'
+    description: 'Vollzugriff',
   },
   admin: {
     label: 'Administrator',
     icon: Shield,
     variant: 'secondary',
-    description: 'Business-Funktionen'
+    description: 'Business-Funktionen',
   },
   staff: {
-    label: 'Mitarbeiter', 
+    label: 'Mitarbeiter',
     icon: User,
     variant: 'default',
-    description: 'Grundfunktionen'
-  }
+    description: 'Grundfunktionen',
+  },
 } as const
 
 export function TeamMembersList() {
   const [memberToRemove, setMemberToRemove] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const { currentOrganization } = useCurrentOrganization()
   const { user } = useAuth()
   const { role: userRole } = useOrganizationPermissions()
-  
+
   // Load team members with user details
   const { data: teamMembers = [], isLoading: teamLoading, error } = useTeamMembersQuery()
 
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .substring(0, 2)
   }
 
   const canManageMember = (member: TeamMember) => {
-    // Can't manage yourself  
+    // Can't manage yourself
     if (member.user_id === user?.id) return false
-    
+
     // Owner can manage everyone except other owners
     if (userRole === 'owner' && member.role !== 'owner') return true
-    
+
     // Admin can manage staff only
     if (userRole === 'admin' && member.role === 'staff') return true
-    
+
     return false
   }
 
   const handleRemoveMember = async (member: TeamMember) => {
     if (!currentOrganization) return
-    
+
     setIsLoading(true)
-    
+
     try {
       // TODO: Implement remove member API call
-      const response = await fetch(`/api/organizations/${currentOrganization.id}/members/${member.user_id}`, {
-        method: 'DELETE'
-      })
-      
+      const response = await fetch(
+        `/api/organizations/${currentOrganization.id}/members/${member.user_id}`,
+        {
+          method: 'DELETE',
+        }
+      )
+
       if (response.ok) {
         // Refresh the page or update local state
         window.location.reload()
@@ -122,17 +116,20 @@ export function TeamMembersList() {
 
   const handleChangeRole = async (member: TeamMember, newRole: Role) => {
     if (!currentOrganization) return
-    
+
     try {
       // TODO: Implement change role API call
-      const response = await fetch(`/api/organizations/${currentOrganization.id}/members/${member.user_id}/role`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ role: newRole })
-      })
-      
+      const response = await fetch(
+        `/api/organizations/${currentOrganization.id}/members/${member.user_id}/role`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ role: newRole }),
+        }
+      )
+
       if (response.ok) {
         // Refresh the page or update local state
         window.location.reload()
@@ -176,16 +173,24 @@ export function TeamMembersList() {
                     </Avatar>
                     <div className="space-y-1 flex-1 min-w-0 max-w-full overflow-hidden">
                       <div className="font-medium flex items-center gap-2 flex-wrap">
-                        <span className="break-words" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
+                        <span
+                          className="break-words"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                        >
                           {member.user.name}
                         </span>
                         {isCurrentUser && (
-                          <Badge variant="outline" className="text-xs flex-shrink-0">Sie</Badge>
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
+                            Sie
+                          </Badge>
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground flex items-center gap-1 max-w-full overflow-hidden">
                         <Mail className="h-3 w-3 flex-shrink-0" />
-                        <span className="break-words min-w-0" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
+                        <span
+                          className="break-words min-w-0"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                        >
                           {member.user.email}
                         </span>
                       </div>
@@ -196,14 +201,17 @@ export function TeamMembersList() {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-shrink-0 min-w-0">
                     {/* Role and Status Badges */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge 
+                      <Badge
                         variant={roleConfig.variant as any}
                         className="flex items-center gap-1 text-xs flex-shrink-0"
                       >
                         <RoleIcon className="h-3 w-3" />
                         {roleConfig.label}
                       </Badge>
-                      <Badge variant={member.active ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
+                      <Badge
+                        variant={member.active ? 'default' : 'secondary'}
+                        className="text-xs flex-shrink-0"
+                      >
                         {member.active ? 'Aktiv' : 'Inaktiv'}
                       </Badge>
                     </div>
@@ -213,7 +221,7 @@ export function TeamMembersList() {
                       <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">
                         {format(new Date(member.joined_at), 'dd.MM.yyyy', { locale: de })}
                       </div>
-                      
+
                       {canManage && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -222,14 +230,14 @@ export function TeamMembersList() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleChangeRole(member, 'admin')}
                               disabled={member.role === 'admin'}
                             >
                               <Shield className="h-4 w-4 mr-2" />
                               Zu Administrator machen
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleChangeRole(member, 'staff')}
                               disabled={member.role === 'staff'}
                             >
@@ -237,7 +245,7 @@ export function TeamMembersList() {
                               Zu Mitarbeiter machen
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => setMemberToRemove(member)}
                               className="text-destructive"
                             >
@@ -257,16 +265,13 @@ export function TeamMembersList() {
       </div>
 
       {/* Remove Member Confirmation Dialog */}
-      <AlertDialog 
-        open={!!memberToRemove} 
-        onOpenChange={() => setMemberToRemove(null)}
-      >
+      <AlertDialog open={!!memberToRemove} onOpenChange={() => setMemberToRemove(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Mitglied entfernen</AlertDialogTitle>
             <AlertDialogDescription>
-              Sind Sie sicher, dass Sie <strong>{memberToRemove?.user?.name}</strong> aus dem Team entfernen möchten? 
-              Diese Aktion kann nicht rückgängig gemacht werden.
+              Sind Sie sicher, dass Sie <strong>{memberToRemove?.user?.name}</strong> aus dem Team
+              entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

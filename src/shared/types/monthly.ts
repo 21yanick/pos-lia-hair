@@ -16,12 +16,12 @@ export type MonthlyStatsData = {
 }
 
 // Export functionality types
-export type ExportType = 
-  | 'revenue_cash' 
-  | 'revenue_twint' 
-  | 'revenue_sumup' 
-  | 'expenses_cash' 
-  | 'expenses_bank' 
+export type ExportType =
+  | 'revenue_cash'
+  | 'revenue_twint'
+  | 'revenue_sumup'
+  | 'expenses_cash'
+  | 'expenses_bank'
   | 'complete_month'
 
 export type ExportData = {

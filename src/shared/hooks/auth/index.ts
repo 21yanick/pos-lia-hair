@@ -1,3 +1,3 @@
 // Auth Hooks Exports
 
-export { useAuth, useAuthGuard, usePermissions, useLegacyAuth } from './useAuth'
+export { useAuth, useAuthGuard, useLegacyAuth, usePermissions } from './useAuth'

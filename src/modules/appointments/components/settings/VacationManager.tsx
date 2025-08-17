@@ -1,44 +1,79 @@
 'use client'
 
+import {
+  Briefcase,
+  CalendarDays,
+  CalendarIcon,
+  Coffee,
+  Edit,
+  Plane,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/components/ui/alert-dialog'
+import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+import { Calendar } from '@/shared/components/ui/calendar'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { Textarea } from '@/shared/components/ui/textarea'
-import { Badge } from '@/shared/components/ui/badge'
-import { Calendar } from '@/shared/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/components/ui/dialog'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/shared/components/ui/alert-dialog'
-import { CalendarDays, Plus, Edit, Trash2, CalendarIcon, Plane, Coffee, Briefcase } from 'lucide-react'
+import { Textarea } from '@/shared/components/ui/textarea'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
-import { formatDateForDisplay, swissLocale } from '@/shared/utils/dateUtils'
 import type { VacationPeriod } from '@/shared/types/businessSettings'
 import { cn } from '@/shared/utils'
+import { formatDateForDisplay, swissLocale } from '@/shared/utils/dateUtils'
 
 interface VacationManagerProps {
   className?: string
 }
 
 const VACATION_ICONS = {
-  'Urlaub': Plane,
-  'Ferien': Plane,
-  'Feiertag': Coffee,
-  'Geschäftsreise': Briefcase,
-  'Fortbildung': Briefcase,
-  'Krankheit': Coffee,
-  'Sonstiges': CalendarDays
+  Urlaub: Plane,
+  Ferien: Plane,
+  Feiertag: Coffee,
+  Geschäftsreise: Briefcase,
+  Fortbildung: Briefcase,
+  Krankheit: Coffee,
+  Sonstiges: CalendarDays,
 }
 
 const getVacationIcon = (reason: string) => {
-  const key = Object.keys(VACATION_ICONS).find(k => 
+  const key = Object.keys(VACATION_ICONS).find((k) =>
     reason.toLowerCase().includes(k.toLowerCase())
   )
   return key ? VACATION_ICONS[key as keyof typeof VACATION_ICONS] : CalendarDays
 }
 
-const getVacationVariant = (reason: string): "default" | "secondary" | "destructive" | "outline" => {
+const getVacationVariant = (
+  reason: string
+): 'default' | 'secondary' | 'destructive' | 'outline' => {
   if (reason.toLowerCase().includes('urlaub') || reason.toLowerCase().includes('ferien')) {
     return 'default'
   }
@@ -59,12 +94,13 @@ const calculateDays = (start: string, end: string): number => {
 }
 
 export function VacationManager({ className }: VacationManagerProps) {
-  const { settings, loading, saving, addVacationPeriod, removeVacationPeriod } = useBusinessSettingsQuery()
+  const { settings, loading, saving, addVacationPeriod, removeVacationPeriod } =
+    useBusinessSettingsQuery()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [newVacation, setNewVacation] = useState<Partial<VacationPeriod>>({
     start: '',
     end: '',
-    reason: ''
+    reason: '',
   })
   const [datePickerOpen, setDatePickerOpen] = useState<'start' | 'end' | null>(null)
 
@@ -73,7 +109,7 @@ export function VacationManager({ className }: VacationManagerProps) {
   const handleDateSelect = (date: Date | undefined, type: 'start' | 'end') => {
     if (date) {
       const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
-      setNewVacation(prev => ({ ...prev, [type]: dateStr }))
+      setNewVacation((prev) => ({ ...prev, [type]: dateStr }))
       setDatePickerOpen(null)
     }
   }
@@ -91,9 +127,9 @@ export function VacationManager({ className }: VacationManagerProps) {
       await addVacationPeriod({
         start: newVacation.start!,
         end: newVacation.end!,
-        reason: newVacation.reason!.trim()
+        reason: newVacation.reason!.trim(),
       })
-      
+
       setNewVacation({ start: '', end: '', reason: '' })
       setIsAddDialogOpen(false)
     } catch (error) {
@@ -109,8 +145,11 @@ export function VacationManager({ className }: VacationManagerProps) {
     }
   }
 
-  const isFormValid = newVacation.start && newVacation.end && newVacation.reason?.trim() && 
-                     newVacation.start <= newVacation.end
+  const isFormValid =
+    newVacation.start &&
+    newVacation.end &&
+    newVacation.reason?.trim() &&
+    newVacation.start <= newVacation.end
 
   if (loading && !settings) {
     return (
@@ -147,7 +186,7 @@ export function VacationManager({ className }: VacationManagerProps) {
               </CardDescription>
             </div>
           </div>
-          
+
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto">
@@ -163,25 +202,25 @@ export function VacationManager({ className }: VacationManagerProps) {
                   Legen Sie einen Zeitraum fest, in dem Ihr Geschäft geschlossen ist.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 {/* Date Selection */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Startdatum</Label>
-                    <Popover open={datePickerOpen === 'start'} onOpenChange={(open) => 
-                      setDatePickerOpen(open ? 'start' : null)
-                    }>
+                    <Popover
+                      open={datePickerOpen === 'start'}
+                      onOpenChange={(open) => setDatePickerOpen(open ? 'start' : null)}
+                    >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className="w-full justify-start text-left font-normal"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {newVacation.start ? 
-                            formatDateForDisplay(new Date(newVacation.start)) : 
-                            'Datum wählen'
-                          }
+                          {newVacation.start
+                            ? formatDateForDisplay(new Date(newVacation.start))
+                            : 'Datum wählen'}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -196,22 +235,22 @@ export function VacationManager({ className }: VacationManagerProps) {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Enddatum</Label>
-                    <Popover open={datePickerOpen === 'end'} onOpenChange={(open) => 
-                      setDatePickerOpen(open ? 'end' : null)
-                    }>
+                    <Popover
+                      open={datePickerOpen === 'end'}
+                      onOpenChange={(open) => setDatePickerOpen(open ? 'end' : null)}
+                    >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className="w-full justify-start text-left font-normal"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {newVacation.end ? 
-                            formatDateForDisplay(new Date(newVacation.end)) : 
-                            'Datum wählen'
-                          }
+                          {newVacation.end
+                            ? formatDateForDisplay(new Date(newVacation.end))
+                            : 'Datum wählen'}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -236,7 +275,8 @@ export function VacationManager({ className }: VacationManagerProps) {
                 {newVacation.start && newVacation.end && (
                   <div className="bg-muted/50 rounded-lg p-3">
                     <p className="text-sm text-muted-foreground">
-                      Dauer: <span className="font-medium text-foreground">
+                      Dauer:{' '}
+                      <span className="font-medium text-foreground">
                         {calculateDays(newVacation.start, newVacation.end)} Tag
                         {calculateDays(newVacation.start, newVacation.end) !== 1 ? 'e' : ''}
                       </span>
@@ -249,7 +289,9 @@ export function VacationManager({ className }: VacationManagerProps) {
                   <Label>Grund</Label>
                   <Textarea
                     value={newVacation.reason || ''}
-                    onChange={(e) => setNewVacation(prev => ({ ...prev, reason: e.target.value }))}
+                    onChange={(e) =>
+                      setNewVacation((prev) => ({ ...prev, reason: e.target.value }))
+                    }
                     placeholder="z.B. Sommerurlaub, Weihnachtsferien, Fortbildung..."
                     rows={3}
                   />
@@ -259,17 +301,19 @@ export function VacationManager({ className }: VacationManagerProps) {
                 <div className="space-y-2">
                   <Label className="text-sm">Schnellauswahl:</Label>
                   <div className="flex flex-wrap gap-2">
-                    {['Sommerurlaub', 'Weihnachtsferien', 'Fortbildung', 'Feiertag'].map((preset) => (
-                      <Button
-                        key={preset}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setNewVacation(prev => ({ ...prev, reason: preset }))}
-                        className="h-7 text-xs"
-                      >
-                        {preset}
-                      </Button>
-                    ))}
+                    {['Sommerurlaub', 'Weihnachtsferien', 'Fortbildung', 'Feiertag'].map(
+                      (preset) => (
+                        <Button
+                          key={preset}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setNewVacation((prev) => ({ ...prev, reason: preset }))}
+                          className="h-7 text-xs"
+                        >
+                          {preset}
+                        </Button>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -278,10 +322,7 @@ export function VacationManager({ className }: VacationManagerProps) {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Abbrechen
                 </Button>
-                <Button 
-                  onClick={handleAddVacation} 
-                  disabled={!isFormValid || saving}
-                >
+                <Button onClick={handleAddVacation} disabled={!isFormValid || saving}>
                   {saving ? 'Hinzufügen...' : 'Hinzufügen'}
                 </Button>
               </DialogFooter>
@@ -296,8 +337,8 @@ export function VacationManager({ className }: VacationManagerProps) {
             <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Keine Urlaubszeiten</h3>
             <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-              Sie haben noch keine Urlaubszeiten oder Schließungen konfiguriert. 
-              Fügen Sie eine hinzu, um Termine während dieser Zeit zu blockieren.
+              Sie haben noch keine Urlaubszeiten oder Schließungen konfiguriert. Fügen Sie eine
+              hinzu, um Termine während dieser Zeit zu blockieren.
             </p>
             <Button onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -310,33 +351,41 @@ export function VacationManager({ className }: VacationManagerProps) {
               const VacationIcon = getVacationIcon(vacation.reason)
               const days = calculateDays(vacation.start, vacation.end)
               const isUpcoming = new Date(vacation.start) > new Date()
-              const isCurrent = new Date() >= new Date(vacation.start) && new Date() <= new Date(vacation.end)
-              
+              const isCurrent =
+                new Date() >= new Date(vacation.start) && new Date() <= new Date(vacation.end)
+
               return (
                 <div
                   key={index}
                   className={cn(
-                    "border rounded-lg p-4 transition-colors",
-                    isCurrent && "bg-destructive/5 border-destructive/20",
-                    isUpcoming && "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
+                    'border rounded-lg p-4 transition-colors',
+                    isCurrent && 'bg-destructive/5 border-destructive/20',
+                    isUpcoming && 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
                   )}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="flex items-start gap-3 flex-1">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                        isCurrent ? "bg-destructive/10 text-destructive" :
-                        isUpcoming ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400" :
-                        "bg-muted text-muted-foreground"
-                      )}>
+                      <div
+                        className={cn(
+                          'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
+                          isCurrent
+                            ? 'bg-destructive/10 text-destructive'
+                            : isUpcoming
+                              ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
+                              : 'bg-muted text-muted-foreground'
+                        )}
+                      >
                         <VacationIcon className="h-4 w-4" />
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="mb-2">
                           <h4 className="font-medium mb-1">{vacation.reason}</h4>
                           <div className="flex flex-wrap gap-1">
-                            <Badge variant={getVacationVariant(vacation.reason)} className="text-xs">
+                            <Badge
+                              variant={getVacationVariant(vacation.reason)}
+                              className="text-xs"
+                            >
                               {days} Tag{days !== 1 ? 'e' : ''}
                             </Badge>
                             {isCurrent && (
@@ -351,7 +400,7 @@ export function VacationManager({ className }: VacationManagerProps) {
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
                           <span className="font-mono">
                             {formatDateForDisplay(new Date(vacation.start))}
@@ -363,15 +412,19 @@ export function VacationManager({ className }: VacationManagerProps) {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 self-start">
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <Edit className="h-3 w-3" />
                       </Button>
-                      
+
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                          >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </AlertDialogTrigger>
@@ -379,8 +432,8 @@ export function VacationManager({ className }: VacationManagerProps) {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Urlaubszeit löschen</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Möchten Sie "{vacation.reason}" wirklich löschen? 
-                              Diese Aktion kann nicht rückgängig gemacht werden.
+                              Möchten Sie "{vacation.reason}" wirklich löschen? Diese Aktion kann
+                              nicht rückgängig gemacht werden.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

@@ -6,5 +6,5 @@ export default function SettingsBusiness() {
 
 export const metadata = {
   title: 'Geschäfts-Einstellungen | POS LIA HAIR',
-  description: 'Konfigurieren Sie Ihre Firmendaten, Logo und Geschäftseinstellungen'
+  description: 'Konfigurieren Sie Ihre Firmendaten, Logo und Geschäftseinstellungen',
 }

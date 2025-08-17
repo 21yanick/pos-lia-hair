@@ -1,11 +1,18 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
-import { Button } from "@/shared/components/ui/button"
-import { Label } from "@/shared/components/ui/label"
-import { Upload, X } from "lucide-react"
-import { useToast } from "@/shared/hooks/core/useToast"
+import { Upload, X } from 'lucide-react'
+import { useState } from 'react'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
+import { Label } from '@/shared/components/ui/label'
+import { useToast } from '@/shared/hooks/core/useToast'
 
 interface PDFReplaceDialogProps {
   open: boolean
@@ -22,7 +29,7 @@ export function PDFReplaceDialog({
   expenseId,
   expenseDescription,
   onReplaceSuccess,
-  onReplace
+  onReplace,
 }: PDFReplaceDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -31,25 +38,26 @@ export function PDFReplaceDialog({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 10 * 1024 * 1024) { // 10MB Limit
+      if (file.size > 10 * 1024 * 1024) {
+        // 10MB Limit
         toast({
-          title: "Datei zu groß",
-          description: "Die Datei darf maximal 10MB groß sein.",
-          variant: "destructive"
+          title: 'Datei zu groß',
+          description: 'Die Datei darf maximal 10MB groß sein.',
+          variant: 'destructive',
         })
         return
       }
-      
+
       const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
       if (!validTypes.includes(file.type)) {
         toast({
-          title: "Ungültiger Dateityp",
-          description: "Nur PDF, JPG und PNG Dateien sind erlaubt.",
-          variant: "destructive"
+          title: 'Ungültiger Dateityp',
+          description: 'Nur PDF, JPG und PNG Dateien sind erlaubt.',
+          variant: 'destructive',
         })
         return
       }
-      
+
       setSelectedFile(file)
     }
   }
@@ -57,37 +65,37 @@ export function PDFReplaceDialog({
   const handleReplace = async () => {
     if (!selectedFile) {
       toast({
-        title: "Keine Datei ausgewählt",
-        description: "Bitte wählen Sie eine Datei aus.",
-        variant: "destructive"
+        title: 'Keine Datei ausgewählt',
+        description: 'Bitte wählen Sie eine Datei aus.',
+        variant: 'destructive',
       })
       return
     }
 
     try {
       setIsUploading(true)
-      
+
       const result = await onReplace(expenseId, selectedFile)
-      
+
       if (result.success) {
         toast({
-          title: "Beleg erfolgreich ersetzt",
-          description: "Der neue Beleg wurde hochgeladen und der alte ersetzt."
+          title: 'Beleg erfolgreich ersetzt',
+          description: 'Der neue Beleg wurde hochgeladen und der alte ersetzt.',
         })
         onReplaceSuccess()
         handleClose()
       } else {
         toast({
-          title: "Fehler beim Ersetzen",
-          description: result.error || "Ein unbekannter Fehler ist aufgetreten.",
-          variant: "destructive"
+          title: 'Fehler beim Ersetzen',
+          description: result.error || 'Ein unbekannter Fehler ist aufgetreten.',
+          variant: 'destructive',
         })
       }
     } catch (error) {
       toast({
-        title: "Fehler",
-        description: "Ein unerwarteter Fehler ist aufgetreten.",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Ein unerwarteter Fehler ist aufgetreten.',
+        variant: 'destructive',
       })
     } finally {
       setIsUploading(false)
@@ -116,7 +124,7 @@ export function PDFReplaceDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Neue Beleg-Datei</Label>
-            
+
             {!selectedFile ? (
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 <input
@@ -126,8 +134,8 @@ export function PDFReplaceDialog({
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <label 
-                  htmlFor="file-upload" 
+                <label
+                  htmlFor="file-upload"
                   className="cursor-pointer flex flex-col items-center space-y-2"
                 >
                   <Upload className="h-8 w-8 text-muted-foreground" />
@@ -151,12 +159,7 @@ export function PDFReplaceDialog({
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeFile}
-                    className="h-8 w-8 p-0"
-                  >
+                  <Button variant="ghost" size="sm" onClick={removeFile} className="h-8 w-8 p-0">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -166,24 +169,18 @@ export function PDFReplaceDialog({
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
             <p className="text-sm text-amber-800">
-              <strong>Hinweis:</strong> Der alte Beleg wird dauerhaft gelöscht und durch die neue Datei ersetzt.
+              <strong>Hinweis:</strong> Der alte Beleg wird dauerhaft gelöscht und durch die neue
+              Datei ersetzt.
             </p>
           </div>
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={handleClose}
-            disabled={isUploading}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isUploading}>
             Abbrechen
           </Button>
-          <Button 
-            onClick={handleReplace}
-            disabled={!selectedFile || isUploading}
-          >
-            {isUploading ? "Wird ersetzt..." : "Beleg ersetzen"}
+          <Button onClick={handleReplace} disabled={!selectedFile || isUploading}>
+            {isUploading ? 'Wird ersetzt...' : 'Beleg ersetzen'}
           </Button>
         </DialogFooter>
       </DialogContent>

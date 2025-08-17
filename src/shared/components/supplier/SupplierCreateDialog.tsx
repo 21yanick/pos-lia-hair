@@ -1,18 +1,31 @@
-"use client"
+'use client'
 
+import { AlertCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from "@/shared/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
-import { Input } from "@/shared/components/ui/input"
-import { Label } from "@/shared/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
-import { Textarea } from "@/shared/components/ui/textarea"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Loader2, AlertCircle } from "lucide-react"
-import { createSupplier } from '@/shared/services/supplierServices'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Textarea } from '@/shared/components/ui/textarea'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
+import { createSupplier } from '@/shared/services/supplierServices'
 import type { Supplier, SupplierCategory, SupplierFormData } from '@/shared/types/suppliers'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 
 interface SupplierCreateDialogProps {
   open: boolean
@@ -26,13 +39,13 @@ export function SupplierCreateDialog({
   open,
   onOpenChange,
   onSuccess,
-  initialName = "",
-  userId
+  initialName = '',
+  userId,
 }: SupplierCreateDialogProps) {
   const { currentOrganization } = useCurrentOrganization()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [formData, setFormData] = useState<SupplierFormData>({
     name: initialName,
     category: 'other',
@@ -47,7 +60,7 @@ export function SupplierCreateDialog({
     iban: '',
     vat_number: '',
     notes: '',
-    is_active: true
+    is_active: true,
   })
 
   // Reset form when dialog opens/closes
@@ -67,18 +80,18 @@ export function SupplierCreateDialog({
         iban: '',
         vat_number: '',
         notes: '',
-        is_active: true
+        is_active: true,
       })
       setError(null)
     } else if (initialName) {
-      setFormData(prev => ({ ...prev, name: initialName }))
+      setFormData((prev) => ({ ...prev, name: initialName }))
     }
     onOpenChange(newOpen)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name.trim()) {
       setError('Name ist erforderlich')
       return
@@ -129,18 +142,18 @@ export function SupplierCreateDialog({
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="z.B. Migros AG"
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="category">Kategorie *</Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(value: SupplierCategory) => 
-                    setFormData(prev => ({ ...prev, category: value }))
+                  onValueChange={(value: SupplierCategory) =>
+                    setFormData((prev) => ({ ...prev, category: value }))
                   }
                 >
                   <SelectTrigger>
@@ -165,18 +178,22 @@ export function SupplierCreateDialog({
                   id="contact_email"
                   type="email"
                   value={formData.contact_email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, contact_email: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, contact_email: e.target.value }))
+                  }
                   placeholder="info@lieferant.ch"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="contact_phone">Telefon</Label>
                 <Input
                   id="contact_phone"
                   type="tel"
                   value={formData.contact_phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, contact_phone: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, contact_phone: e.target.value }))
+                  }
                   placeholder="+41 44 123 45 67"
                 />
               </div>
@@ -188,7 +205,7 @@ export function SupplierCreateDialog({
                 id="website"
                 type="url"
                 value={formData.website}
-                onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, website: e.target.value }))}
                 placeholder="https://www.lieferant.ch"
               />
             </div>
@@ -200,38 +217,44 @@ export function SupplierCreateDialog({
                 <Input
                   id="address_line1"
                   value={formData.address_line1}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address_line1: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, address_line1: e.target.value }))
+                  }
                   placeholder="Musterstrasse 123"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="address_line2">Adresszusatz</Label>
                 <Input
                   id="address_line2"
                   value={formData.address_line2}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address_line2: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, address_line2: e.target.value }))
+                  }
                   placeholder="c/o, Stockwerk, etc."
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="postal_code">PLZ</Label>
                   <Input
                     id="postal_code"
                     value={formData.postal_code}
-                    onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, postal_code: e.target.value }))
+                    }
                     placeholder="8001"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="city">Ort</Label>
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
                     placeholder="Zürich"
                   />
                 </div>
@@ -241,7 +264,7 @@ export function SupplierCreateDialog({
                   <Input
                     id="country"
                     value={formData.country}
-                    onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, country: e.target.value }))}
                     placeholder="CH"
                   />
                 </div>
@@ -255,17 +278,17 @@ export function SupplierCreateDialog({
                 <Input
                   id="iban"
                   value={formData.iban}
-                  onChange={(e) => setFormData(prev => ({ ...prev, iban: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, iban: e.target.value }))}
                   placeholder="CH93 0076 2011 6238 5295 7"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="vat_number">UID-Nummer</Label>
                 <Input
                   id="vat_number"
                   value={formData.vat_number}
-                  onChange={(e) => setFormData(prev => ({ ...prev, vat_number: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, vat_number: e.target.value }))}
                   placeholder="CHE-123.456.789"
                 />
               </div>
@@ -277,7 +300,7 @@ export function SupplierCreateDialog({
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                 placeholder="Zusätzliche Informationen..."
                 rows={2}
               />

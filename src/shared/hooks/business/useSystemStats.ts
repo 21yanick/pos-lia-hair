@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/shared/lib/supabase/client'
+import { useEffect, useState } from 'react'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { supabase } from '@/shared/lib/supabase/client'
 
 export interface OrganizationStats {
   organizationUsersCount: number
@@ -16,7 +16,7 @@ export function useSystemStats() {
     organizationUsersCount: 0,
     productsCount: 0,
     salesCount: 0,
-    expensesCount: 0
+    expensesCount: 0,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -70,7 +70,7 @@ export function useSystemStats() {
         supabase
           .from('expenses')
           .select('*', { count: 'exact', head: true })
-          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
+          .eq('organization_id', currentOrganization.id), // 🔒 SECURITY: Organization-scoped
       ])
 
       // console.log('Organization Query results:', {
@@ -103,12 +103,11 @@ export function useSystemStats() {
         organizationUsersCount: orgUsersResult.count || 0,
         productsCount: itemsResult.count || 0,
         salesCount: salesResult.count || 0,
-        expensesCount: expensesResult.count || 0
+        expensesCount: expensesResult.count || 0,
       }
 
       // console.log('Final organization stats:', newStats)
       setStats(newStats)
-
     } catch (err: any) {
       console.error('Error loading system stats:', err)
       setError(err.message || 'Fehler beim Laden der Systemstatistiken')
@@ -127,6 +126,6 @@ export function useSystemStats() {
     stats,
     loading,
     error,
-    refetch: loadStats
+    refetch: loadStats,
   }
 }

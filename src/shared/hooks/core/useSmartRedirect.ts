@@ -1,10 +1,17 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { organizationPersistence } from '@/shared/services/organizationPersistence'
 
-type QuickAction = 'appointments' | 'pos' | 'customers' | 'dashboard' | 'transactions' | 'expenses' | 'banking'
+type QuickAction =
+  | 'appointments'
+  | 'pos'
+  | 'customers'
+  | 'dashboard'
+  | 'transactions'
+  | 'expenses'
+  | 'banking'
 
 interface SmartRedirectState {
   isRedirecting: boolean
@@ -18,7 +25,7 @@ export function useSmartRedirect(): SmartRedirectState {
   const [state, setState] = useState<SmartRedirectState>({
     isRedirecting: false,
     hasRedirected: false,
-    targetUrl: null
+    targetUrl: null,
   })
 
   useEffect(() => {
@@ -31,76 +38,82 @@ export function useSmartRedirect(): SmartRedirectState {
     // If no quick parameter, check for stored organization and redirect to dashboard
     if (!quickParam) {
       const storedOrg = organizationPersistence.load()
-      
+
       if (storedOrg) {
         const targetUrl = `/org/${storedOrg.slug}/dashboard`
         console.log('🚀 Smart Redirect - No quick param, redirecting to dashboard:', targetUrl)
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           isRedirecting: true,
-          targetUrl
+          targetUrl,
         }))
-        
+
         router.push(targetUrl)
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           hasRedirected: true,
-          isRedirecting: false
+          isRedirecting: false,
         }))
         return
       }
 
       console.log('🚀 Smart Redirect - No stored organization, redirecting to selection')
       router.push('/organizations')
-      setState(prev => ({ ...prev, hasRedirected: true }))
+      setState((prev) => ({ ...prev, hasRedirected: true }))
       return
     }
 
     // Validate quick parameter
     const validQuickActions: QuickAction[] = [
-      'appointments', 'pos', 'customers', 'dashboard', 
-      'transactions', 'expenses', 'banking'
+      'appointments',
+      'pos',
+      'customers',
+      'dashboard',
+      'transactions',
+      'expenses',
+      'banking',
     ]
 
     if (!validQuickActions.includes(quickParam)) {
       console.log('🚀 Smart Redirect - Invalid quick param, redirecting to selection')
       router.push('/organizations')
-      setState(prev => ({ ...prev, hasRedirected: true }))
+      setState((prev) => ({ ...prev, hasRedirected: true }))
       return
     }
 
     // Try to get stored organization
     const storedOrg = organizationPersistence.load()
-    
+
     if (!storedOrg) {
-      console.log('🚀 Smart Redirect - No stored organization for quick action, redirecting with returnTo')
+      console.log(
+        '🚀 Smart Redirect - No stored organization for quick action, redirecting with returnTo'
+      )
       const organizationUrl = `/organizations?returnTo=${quickParam}`
       router.push(organizationUrl)
-      setState(prev => ({ ...prev, hasRedirected: true }))
+      setState((prev) => ({ ...prev, hasRedirected: true }))
       return
     }
 
     // Build target URL and redirect
     const targetUrl = `/org/${storedOrg.slug}/${quickParam}`
     console.log('🚀 Smart Redirect - Redirecting to:', targetUrl)
-    
-    setState(prev => ({
+
+    setState((prev) => ({
       ...prev,
       isRedirecting: true,
-      targetUrl
+      targetUrl,
     }))
 
     router.push(targetUrl)
-    
+
     // Mark as redirected
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       hasRedirected: true,
-      isRedirecting: false
+      isRedirecting: false,
     }))
-
   }, [router, searchParams, state.hasRedirected])
 
   return state

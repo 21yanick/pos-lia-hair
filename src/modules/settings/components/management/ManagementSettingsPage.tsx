@@ -1,14 +1,26 @@
 'use client'
 
+import { Building2, Tag, Users, Wrench } from 'lucide-react'
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 import { Button } from '@/shared/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
-import { Tag, Users, Wrench, Building2 } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
 import { ExpenseCategoriesForm } from '../business/ExpenseCategoriesForm'
 import { SupplierCategoriesForm } from '../business/SupplierCategoriesForm'
 import { SuppliersPage } from '../suppliers/SuppliersPage'
-import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 
 // Tab Configuration
 const TABS = [
@@ -16,20 +28,20 @@ const TABS = [
     id: 'expense-categories',
     label: 'Ausgaben-Kategorien',
     icon: Tag,
-    title: 'Ausgaben-Kategorien'
+    title: 'Ausgaben-Kategorien',
   },
   {
-    id: 'suppliers', 
+    id: 'suppliers',
     label: 'Lieferanten',
     icon: Building2,
-    title: 'Lieferanten'
+    title: 'Lieferanten',
   },
   {
     id: 'supplier-categories',
-    label: 'Lieferanten-Kategorien', 
+    label: 'Lieferanten-Kategorien',
     icon: Users,
-    title: 'Lieferanten-Kategorien'
-  }
+    title: 'Lieferanten-Kategorien',
+  },
 ] as const
 
 export function ManagementSettingsPage() {
@@ -70,7 +82,7 @@ export function ManagementSettingsPage() {
         {TABS.map((tab) => {
           const Icon = tab.icon
           return (
-            <Button 
+            <Button
               key={tab.id}
               variant={activeTab === tab.id ? 'default' : 'ghost'}
               size="sm"
@@ -93,9 +105,7 @@ export function ManagementSettingsPage() {
               <Tag className="h-5 w-5 text-primary" />
               <CardTitle>Ausgaben-Kategorien</CardTitle>
             </div>
-            <CardDescription>
-              Verwalten Sie Kategorien für die Ausgaben-Erfassung
-            </CardDescription>
+            <CardDescription>Verwalten Sie Kategorien für die Ausgaben-Erfassung</CardDescription>
           </CardHeader>
           <CardContent>
             <ExpenseCategoriesForm />
@@ -103,9 +113,7 @@ export function ManagementSettingsPage() {
         </Card>
       )}
 
-      {activeTab === 'suppliers' && (
-        <SuppliersPage hideHeader={true} />
-      )}
+      {activeTab === 'suppliers' && <SuppliersPage hideHeader={true} />}
 
       {activeTab === 'supplier-categories' && (
         <Card className="border-l-4 border-l-accent">

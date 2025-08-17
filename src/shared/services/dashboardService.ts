@@ -1,8 +1,8 @@
 /**
  * Optimized Dashboard Service Functions
- * 
+ *
  * High-performance database queries designed for React Query caching
- * 
+ *
  * Performance Features:
  * - Batch queries instead of N+1 loops
  * - Parallel execution where possible
@@ -14,7 +14,12 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-import { formatDateForAPI, getSwissDayRange, getFirstDayOfMonth, getLastDayOfMonth } from '@/shared/utils/dateUtils'
+import {
+  formatDateForAPI,
+  getFirstDayOfMonth,
+  getLastDayOfMonth,
+  getSwissDayRange,
+} from '@/shared/utils/dateUtils'
 
 // ========================================
 // Types (imported from legacy for compatibility)
@@ -83,7 +88,7 @@ export type YearTotalData = {
  */
 export async function getCurrentCashBalance(orgId: string): Promise<number> {
   const { data, error } = await supabase.rpc('get_current_cash_balance_for_org', {
-    org_id: orgId
+    org_id: orgId,
   })
 
   if (error) {
@@ -115,23 +120,26 @@ export async function getTodayStats(orgId: string, date?: string): Promise<Today
   }
 
   // Client-side aggregation for optimal performance
-  const todayStats = (sales || []).reduce((acc, sale) => {
-    const amount = parseFloat(sale.total_amount) || 0
-    acc.revenue += amount
-    acc.transactions += 1
-    
-    // Payment method aggregation
-    const method = sale.payment_method as 'cash' | 'twint' | 'sumup'
-    if (method && acc.paymentMethods[method] !== undefined) {
-      acc.paymentMethods[method] += amount
+  const todayStats = (sales || []).reduce(
+    (acc, sale) => {
+      const amount = parseFloat(sale.total_amount) || 0
+      acc.revenue += amount
+      acc.transactions += 1
+
+      // Payment method aggregation
+      const method = sale.payment_method as 'cash' | 'twint' | 'sumup'
+      if (method && acc.paymentMethods[method] !== undefined) {
+        acc.paymentMethods[method] += amount
+      }
+
+      return acc
+    },
+    {
+      revenue: 0,
+      transactions: 0,
+      paymentMethods: { cash: 0, twint: 0, sumup: 0 },
     }
-    
-    return acc
-  }, {
-    revenue: 0,
-    transactions: 0,
-    paymentMethods: { cash: 0, twint: 0, sumup: 0 }
-  })
+  )
 
   return todayStats
 }
@@ -139,7 +147,10 @@ export async function getTodayStats(orgId: string, date?: string): Promise<Today
 /**
  * Get recent transactions (optimized limit & select)
  */
-export async function getRecentTransactions(orgId: string, limit = 10): Promise<DashboardTransaction[]> {
+export async function getRecentTransactions(
+  orgId: string,
+  limit = 10
+): Promise<DashboardTransaction[]> {
   const { data: sales, error } = await supabase
     .from('sales')
     .select('id, total_amount, payment_method, created_at')
@@ -153,14 +164,14 @@ export async function getRecentTransactions(orgId: string, limit = 10): Promise<
     throw new Error('Fehler beim Laden der letzten Transaktionen')
   }
 
-  return (sales || []).map(sale => ({
+  return (sales || []).map((sale) => ({
     id: sale.id,
-    time: new Date(sale.created_at).toLocaleTimeString('de-CH', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    time: new Date(sale.created_at).toLocaleTimeString('de-CH', {
+      hour: '2-digit',
+      minute: '2-digit',
     }),
     amount: parseFloat(sale.total_amount) || 0,
-    method: sale.payment_method as 'cash' | 'twint' | 'sumup'
+    method: sale.payment_method as 'cash' | 'twint' | 'sumup',
   }))
 }
 
@@ -172,14 +183,16 @@ export async function getRecentTransactions(orgId: string, limit = 10): Promise<
  * Get week statistics (optimized date range)
  */
 export async function getWeekStats(orgId: string, weekStart?: string): Promise<WeekStatsData> {
-  const startDate = weekStart ? new Date(weekStart) : (() => {
-    const now = new Date()
-    const dayOfWeek = now.getDay()
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-    const monday = new Date(now)
-    monday.setDate(now.getDate() + mondayOffset)
-    return monday
-  })()
+  const startDate = weekStart
+    ? new Date(weekStart)
+    : (() => {
+        const now = new Date()
+        const dayOfWeek = now.getDay()
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+        const monday = new Date(now)
+        monday.setDate(now.getDate() + mondayOffset)
+        return monday
+      })()
 
   const { data: sales, error } = await supabase
     .from('sales')
@@ -193,11 +206,14 @@ export async function getWeekStats(orgId: string, weekStart?: string): Promise<W
     throw new Error('Fehler beim Laden der Wochenstatistiken')
   }
 
-  return (sales || []).reduce((acc, sale) => {
-    acc.revenue += parseFloat(sale.total_amount) || 0
-    acc.transactionCount += 1
-    return acc
-  }, { revenue: 0, transactionCount: 0 })
+  return (sales || []).reduce(
+    (acc, sale) => {
+      acc.revenue += parseFloat(sale.total_amount) || 0
+      acc.transactionCount += 1
+      return acc
+    },
+    { revenue: 0, transactionCount: 0 }
+  )
 }
 
 /**
@@ -216,13 +232,13 @@ export async function getMonthStats(orgId: string, monthStart?: string): Promise
       .eq('status', 'completed')
       .gte('created_at', formatDateForAPI(startDate))
       .lte('created_at', formatDateForAPI(endDate)),
-    
+
     supabase
       .from('expenses')
       .select('amount')
       .eq('organization_id', orgId)
       .gte('payment_date', formatDateForAPI(startDate))
-      .lte('payment_date', formatDateForAPI(endDate))
+      .lte('payment_date', formatDateForAPI(endDate)),
   ])
 
   if (salesResult.error) {
@@ -235,16 +251,20 @@ export async function getMonthStats(orgId: string, monthStart?: string): Promise
     throw new Error('Fehler beim Laden der Monatsausgaben')
   }
 
-  const revenue = (salesResult.data || []).reduce((sum, sale) => 
-    sum + (parseFloat(sale.total_amount) || 0), 0)
-  
-  const expenses = (expensesResult.data || []).reduce((sum, expense) => 
-    sum + (parseFloat(expense.amount) || 0), 0)
+  const revenue = (salesResult.data || []).reduce(
+    (sum, sale) => sum + (parseFloat(sale.total_amount) || 0),
+    0
+  )
+
+  const expenses = (expensesResult.data || []).reduce(
+    (sum, expense) => sum + (parseFloat(expense.amount) || 0),
+    0
+  )
 
   return {
     revenue,
     expenses,
-    profit: revenue - expenses
+    profit: revenue - expenses,
   }
 }
 
@@ -261,13 +281,13 @@ export async function getRecentActivities(orgId: string, limit = 10): Promise<Ac
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(Math.ceil(limit / 2)), // Split limit between sales and expenses
-    
+
     supabase
       .from('expenses')
       .select('id, created_at, amount, category, description, payment_method')
       .eq('organization_id', orgId)
       .order('created_at', { ascending: false })
-      .limit(Math.ceil(limit / 2))
+      .limit(Math.ceil(limit / 2)),
   ])
 
   if (salesResult.error) {
@@ -282,31 +302,31 @@ export async function getRecentActivities(orgId: string, limit = 10): Promise<Ac
 
   // Merge and sort activities
   const activities: ActivityItem[] = [
-    ...(salesResult.data || []).map(sale => ({
+    ...(salesResult.data || []).map((sale) => ({
       id: sale.id,
       date: sale.created_at.split('T')[0],
-      time: new Date(sale.created_at).toLocaleTimeString('de-CH', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      time: new Date(sale.created_at).toLocaleTimeString('de-CH', {
+        hour: '2-digit',
+        minute: '2-digit',
       }),
       type: 'sale' as const,
       description: `Verkauf #${sale.id.slice(0, 8)}`,
       amount: parseFloat(sale.total_amount) || 0,
-      paymentMethod: sale.payment_method as 'cash' | 'twint' | 'sumup'
+      paymentMethod: sale.payment_method as 'cash' | 'twint' | 'sumup',
     })),
-    ...(expensesResult.data || []).map(expense => ({
+    ...(expensesResult.data || []).map((expense) => ({
       id: expense.id,
       date: expense.created_at.split('T')[0],
-      time: new Date(expense.created_at).toLocaleTimeString('de-CH', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      time: new Date(expense.created_at).toLocaleTimeString('de-CH', {
+        hour: '2-digit',
+        minute: '2-digit',
       }),
       type: 'expense' as const,
       description: expense.description || `${expense.category}`,
       amount: parseFloat(expense.amount) || 0,
       paymentMethod: expense.payment_method as 'cash' | 'twint' | 'sumup' | 'bank',
-      category: expense.category
-    }))
+      category: expense.category,
+    })),
   ]
 
   // Sort by created_at and limit
@@ -341,13 +361,13 @@ export async function getMonthlyTrends(orgId: string, monthsBack = 12): Promise<
       .eq('status', 'completed')
       .gte('created_at', startDate.toISOString())
       .lte('created_at', endDate.toISOString()),
-    
+
     supabase
       .from('expenses')
       .select('amount, payment_date')
       .eq('organization_id', orgId)
       .gte('payment_date', formatDateForAPI(startDate))
-      .lte('payment_date', formatDateForAPI(endDate))
+      .lte('payment_date', formatDateForAPI(endDate)),
   ])
 
   if (salesResult.error) {
@@ -364,7 +384,7 @@ export async function getMonthlyTrends(orgId: string, monthsBack = 12): Promise<
   const monthlyData: { [key: string]: { revenue: number; expenses: number } } = {}
 
   // Aggregate sales by month
-  ;(salesResult.data || []).forEach(sale => {
+  ;(salesResult.data || []).forEach((sale) => {
     const monthKey = sale.created_at.substring(0, 7) // YYYY-MM
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = { revenue: 0, expenses: 0 }
@@ -373,7 +393,7 @@ export async function getMonthlyTrends(orgId: string, monthsBack = 12): Promise<
   })
 
   // Aggregate expenses by month
-  ;(expensesResult.data || []).forEach(expense => {
+  ;(expensesResult.data || []).forEach((expense) => {
     const monthKey = expense.payment_date.substring(0, 7) // YYYY-MM
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = { revenue: 0, expenses: 0 }
@@ -387,15 +407,15 @@ export async function getMonthlyTrends(orgId: string, monthsBack = 12): Promise<
     const date = new Date()
     date.setMonth(date.getMonth() - i)
     const monthKey = date.toISOString().substring(0, 7)
-    
+
     const data = monthlyData[monthKey] || { revenue: 0, expenses: 0 }
-    
+
     result.push({
       month: monthKey,
       monthName: date.toLocaleDateString('de-CH', { month: 'short', year: 'numeric' }),
       revenue: data.revenue,
       expenses: data.expenses,
-      profit: data.revenue - data.expenses
+      profit: data.revenue - data.expenses,
     })
   }
 
@@ -437,13 +457,13 @@ export async function getYearTotal(orgId: string, year?: number): Promise<YearTo
       .eq('status', 'completed')
       .gte('created_at', startDate.toISOString())
       .lte('created_at', endDate.toISOString()),
-    
+
     supabase
       .from('expenses')
       .select('amount')
       .eq('organization_id', orgId)
       .gte('payment_date', formatDateForAPI(startDate))
-      .lte('payment_date', formatDateForAPI(endDate))
+      .lte('payment_date', formatDateForAPI(endDate)),
   ])
 
   if (salesResult.error) {
@@ -456,16 +476,20 @@ export async function getYearTotal(orgId: string, year?: number): Promise<YearTo
     throw new Error('Fehler beim Laden der Jahresausgaben')
   }
 
-  const revenue = (salesResult.data || []).reduce((sum, sale) => 
-    sum + (parseFloat(sale.total_amount) || 0), 0)
-  
-  const expenses = (expensesResult.data || []).reduce((sum, expense) => 
-    sum + (parseFloat(expense.amount) || 0), 0)
+  const revenue = (salesResult.data || []).reduce(
+    (sum, sale) => sum + (parseFloat(sale.total_amount) || 0),
+    0
+  )
+
+  const expenses = (expensesResult.data || []).reduce(
+    (sum, expense) => sum + (parseFloat(expense.amount) || 0),
+    0
+  )
 
   return {
     revenue,
     expenses,
-    profit: revenue - expenses
+    profit: revenue - expenses,
   }
 }
 

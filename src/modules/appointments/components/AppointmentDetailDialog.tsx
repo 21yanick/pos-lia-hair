@@ -5,32 +5,32 @@
  * Modern UI with theme colors and proper status management
  */
 
-import { useState } from 'react'
-import { Button } from '@/shared/components/ui/button'
-import { Badge } from '@/shared/components/ui/badge'
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Phone, 
-  Mail, 
-  Scissors, 
-  MapPin,
-  Edit,
-  Trash2,
+import {
+  Calendar,
   CheckCircle,
+  Clock,
+  Edit,
+  Mail,
+  MapPin,
+  MoreHorizontal,
+  Phone,
+  Scissors,
+  Trash2,
+  User,
   XCircle,
-  MoreHorizontal
 } from 'lucide-react'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import { useState } from 'react'
+import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/shared/components/ui/dialog'
 import {
   DropdownMenu,
@@ -40,8 +40,8 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { useToast } from '@/shared/hooks/core/useToast'
-import { formatDateForDisplay, formatTimeShort } from '@/shared/utils/dateUtils'
 import { cn } from '@/shared/utils'
+import { formatDateForDisplay, formatTimeShort } from '@/shared/utils/dateUtils'
 import type { AppointmentBlock } from '../types/timeline'
 
 interface AppointmentDetailDialogProps {
@@ -52,37 +52,34 @@ interface AppointmentDetailDialogProps {
   onDelete?: (appointmentId: string) => void
 }
 
-export function AppointmentDetailDialog({ 
-  isOpen, 
-  onClose, 
+export function AppointmentDetailDialog({
+  isOpen,
+  onClose,
   appointment,
   onEdit,
-  onDelete
+  onDelete,
 }: AppointmentDetailDialogProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   if (!appointment) return null
 
-
-
-
   const handleDelete = async () => {
     if (!confirm('Möchten Sie diesen Termin wirklich löschen?')) return
-    
+
     setIsLoading(true)
     try {
       await onDelete?.(appointment.id)
       toast({
         title: 'Termin gelöscht',
-        description: 'Der Termin wurde erfolgreich gelöscht.'
+        description: 'Der Termin wurde erfolgreich gelöscht.',
       })
       onClose()
     } catch (error) {
       toast({
         title: 'Fehler',
         description: 'Termin konnte nicht gelöscht werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -99,11 +96,12 @@ export function AppointmentDetailDialog({
               <div>
                 <DialogTitle className="text-xl">Termin-Details</DialogTitle>
                 <DialogDescription>
-                  {formatDateForDisplay(new Date())} • {appointment.startTime} - {appointment.endTime}
+                  {formatDateForDisplay(new Date())} • {appointment.startTime} -{' '}
+                  {appointment.endTime}
                 </DialogDescription>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -117,7 +115,7 @@ export function AppointmentDetailDialog({
                     Bearbeiten
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleDelete}
                     className="text-destructive focus:text-destructive"
                   >
@@ -138,11 +136,17 @@ export function AppointmentDetailDialog({
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12">
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {appointment.customerName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                      {appointment.customerName
+                        ?.split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold text-lg">{appointment.customerName || 'Unbekannter Kunde'}</h3>
+                    <h3 className="font-semibold text-lg">
+                      {appointment.customerName || 'Unbekannter Kunde'}
+                    </h3>
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                       {/* TODO: Add phone/email from customer data */}
                       <div className="flex items-center gap-1">
@@ -169,7 +173,10 @@ export function AppointmentDetailDialog({
               </h4>
               <div className="space-y-3">
                 {appointment.services.map((service, index) => (
-                  <div key={service.id || index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                  <div
+                    key={service.id || index}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                  >
                     <div>
                       <div className="font-medium">{service.name}</div>
                       <div className="text-sm text-muted-foreground">
@@ -182,13 +189,16 @@ export function AppointmentDetailDialog({
                   </div>
                 ))}
               </div>
-              
+
               {appointment.services.length > 1 && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Gesamt</span>
                     <span className="font-semibold text-lg">
-                      CHF {appointment.services.reduce((sum, service) => sum + service.price, 0).toFixed(2)}
+                      CHF{' '}
+                      {appointment.services
+                        .reduce((sum, service) => sum + service.price, 0)
+                        .toFixed(2)}
                     </span>
                   </div>
                 </div>

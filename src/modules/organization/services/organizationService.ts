@@ -1,10 +1,10 @@
 import { supabase } from '@/shared/lib/supabase/client'
-import { 
-  CreateOrganizationData, 
-  UpdateOrganizationData, 
+import type {
+  CreateOrganizationData,
   InviteUserData,
   Organization,
-  OrganizationMembership 
+  OrganizationMembership,
+  UpdateOrganizationData,
 } from '@/shared/types/organizations'
 
 // Service für alle Organization CRUD Operationen
@@ -13,7 +13,7 @@ export const organizationService = {
   // Erstelle neue Organisation
   async createOrganization(data: CreateOrganizationData): Promise<Organization> {
     const { data: userData, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !userData?.user) {
       throw new Error('Authentication required')
     }
@@ -40,14 +40,12 @@ export const organizationService = {
     }
 
     // Automatisch Owner-Rolle zuweisen
-    const { error: memberError } = await supabase
-      .from('organization_users')
-      .insert({
-        organization_id: org.id,
-        user_id: userData.user.id,
-        role: 'owner',
-        active: true,
-      })
+    const { error: memberError } = await supabase.from('organization_users').insert({
+      organization_id: org.id,
+      user_id: userData.user.id,
+      role: 'owner',
+      active: true,
+    })
 
     if (memberError) {
       // Rollback: Organisation löschen wenn Membership fehlschlägt
@@ -76,10 +74,7 @@ export const organizationService = {
 
   // Soft-Delete Organisation (setzt active auf false)
   async deleteOrganization(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('organizations')
-      .update({ active: false })
-      .eq('id', id)
+    const { error } = await supabase.from('organizations').update({ active: false }).eq('id', id)
 
     if (error) {
       throw new Error(`Failed to delete organization: ${error.message}`)
@@ -89,14 +84,10 @@ export const organizationService = {
   // Lade einzelne Organisation
   async getOrganization(idOrSlug: string): Promise<Organization | null> {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug)
-    
-    const query = supabase
-      .from('organizations')
-      .select('*')
-      .eq('active', true)
-      .single()
-    
-    const { data, error } = isUuid 
+
+    const query = supabase.from('organizations').select('*').eq('active', true).single()
+
+    const { data, error } = isUuid
       ? await query.eq('id', idOrSlug)
       : await query.eq('slug', idOrSlug)
 
@@ -110,7 +101,7 @@ export const organizationService = {
   // User zu Organisation einladen
   async inviteUser(data: InviteUserData): Promise<void> {
     const { error } = await supabase.functions.invoke('invite-user', {
-      body: data
+      body: data,
     })
 
     if (error) {
@@ -133,8 +124,8 @@ export const organizationService = {
 
   // User-Rolle in Organisation ändern
   async updateUserRole(
-    organizationId: string, 
-    userId: string, 
+    organizationId: string,
+    userId: string,
     role: OrganizationMembership['role']
   ): Promise<void> {
     const { error } = await supabase
@@ -146,5 +137,5 @@ export const organizationService = {
     if (error) {
       throw new Error(`Failed to update user role: ${error.message}`)
     }
-  }
+  },
 }

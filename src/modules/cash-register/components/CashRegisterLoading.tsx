@@ -1,6 +1,13 @@
-import { Loader2 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
+import { Loader2 } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
 
 export default function CashRegisterLoading() {
   return (
@@ -57,7 +64,6 @@ export default function CashRegisterLoading() {
           </CardContent>
         </Card>
       </div>
-
 
       {/* Search Card Skeleton */}
       <Card className="shadow-md border-0 overflow-hidden mb-6">

@@ -6,12 +6,12 @@
 // =================================
 
 export interface ImportConfig {
-  validateOnly: boolean          // Dry-run Modus
-  batchSize: number             // Records pro Batch  
-  targetUserId: string          // User für Sales/Expenses
-  systemUserId: string          // System User für Summaries
+  validateOnly: boolean // Dry-run Modus
+  batchSize: number // Records pro Batch
+  targetUserId: string // User für Sales/Expenses
+  systemUserId: string // System User für Summaries
   generateMissingReceipts: boolean // Dummy PDFs für Expenses
-  overwriteExisting: boolean    // Duplikat-Behandlung
+  overwriteExisting: boolean // Duplikat-Behandlung
   useSystemUserForSummaries: boolean // System User für Daily Summaries
 }
 
@@ -80,11 +80,11 @@ export interface ExpenseImport {
 
 export enum ImportPhase {
   VALIDATION = 'validation',
-  BUSINESS_DATA_IMPORT = 'business_data_import',     // Items (shared)
-  USER_DATA_IMPORT = 'user_data_import',             // Sales, Expenses
+  BUSINESS_DATA_IMPORT = 'business_data_import', // Items (shared)
+  USER_DATA_IMPORT = 'user_data_import', // Sales, Expenses
   CASH_MOVEMENT_GENERATION = 'cash_movement_generation',
   DOCUMENT_GENERATION = 'document_generation',
-  SUMMARY_RECALCULATION = 'summary_recalculation'
+  SUMMARY_RECALCULATION = 'summary_recalculation',
 }
 
 // =================================
@@ -100,7 +100,7 @@ export const DEFAULT_CONFIG: ImportConfig = {
   systemUserId: SYSTEM_USER_ID,
   generateMissingReceipts: true,
   overwriteExisting: false,
-  useSystemUserForSummaries: true
+  useSystemUserForSummaries: true,
 }
 
 // =================================

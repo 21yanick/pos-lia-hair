@@ -5,19 +5,24 @@
  * Performance-optimized calendar with visual indicators and React Query
  */
 
-import { useMemo } from 'react'
+import { endOfMonth, startOfMonth } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useMemo } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import { cn } from '@/shared/utils'
 import { formatDateForDisplay, formatMonthYear } from '@/shared/utils/dateUtils'
-import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
-import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useAppointmentsByDateRange } from '../../hooks/useAppointments'
-import { startOfMonth, endOfMonth } from 'date-fns'
-import { generateMonthData, applyBusinessLogicToMonth, formatDayNumber, getDayAriaLabel } from '../../utils/calendarUtils'
+import type { CalendarDay, MonthData, MonthGridProps } from '../../types/calendar'
 import { DAY_INDICATOR_CONFIG, SWISS_CALENDAR_CONFIG } from '../../types/calendar'
-import type { MonthGridProps, CalendarDay, MonthData } from '../../types/calendar'
+import {
+  applyBusinessLogicToMonth,
+  formatDayNumber,
+  generateMonthData,
+  getDayAriaLabel,
+} from '../../utils/calendarUtils'
 
 interface MonthGridClientProps {
   currentDate: Date
@@ -30,71 +35,61 @@ interface MonthGridClientProps {
  * MonthGrid - Client Component for appointment calendar
  * Renders month view with business logic applied client-side with React Query
  */
-export function MonthGrid({ 
-  currentDate, 
+export function MonthGrid({
+  currentDate,
   className,
   onDayClick,
-  onMonthChange
+  onMonthChange,
 }: MonthGridClientProps) {
   const { currentOrganization } = useCurrentOrganization()
-  
+
   // Load business settings with React Query
-  const { settings: businessSettings, isLoading: settingsLoading } = useBusinessSettingsQuery()
-  
+  const { settings: businessSettings, loading: settingsLoading } = useBusinessSettingsQuery()
+
   // Load appointments for the entire month to get counts
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
-  const { 
-    data: monthAppointments = [], 
-    isLoading: appointmentsLoading 
-  } = useAppointmentsByDateRange(
-    currentOrganization?.id || '', 
-    monthStart, 
-    monthEnd
-  )
-  
+  const { data: monthAppointments = [], isLoading: appointmentsLoading } =
+    useAppointmentsByDateRange(currentOrganization?.id || '', monthStart, monthEnd)
+
   // Generate appointment counts by date
   const appointmentCounts = useMemo(() => {
     const counts: Record<string, number> = {}
-    
-    monthAppointments.forEach(apt => {
+
+    monthAppointments.forEach((apt) => {
+      // V6.1 null safety: appointment_date can be null
       const dateKey = apt.appointment_date
-      counts[dateKey] = (counts[dateKey] || 0) + 1
+      if (dateKey) {
+        counts[dateKey] = (counts[dateKey] || 0) + 1
+      }
     })
-    
+
     return counts
   }, [monthAppointments])
-  
+
   // Generate calendar data
   const monthWithBusinessLogic = useMemo(() => {
     const monthData = generateMonthData(currentDate)
-    
+
     // Apply business logic to determine day states with real appointment counts
-    return applyBusinessLogicToMonth(
-      monthData, 
-      businessSettings, 
-      appointmentCounts
-    )
+    return applyBusinessLogicToMonth(monthData, businessSettings, appointmentCounts)
   }, [currentDate, businessSettings, appointmentCounts])
-  
+
   // Show loading skeleton while business settings or appointments are loading
   if (settingsLoading || appointmentsLoading) {
     return <MonthGridSkeleton className={className} />
   }
-  
+
   return (
     <Card className={cn('w-full', className)}>
       <CardHeader className="pb-4">
-        <MonthHeader 
-          monthData={monthWithBusinessLogic} 
-          onMonthChange={onMonthChange}
-        />
+        <MonthHeader monthData={monthWithBusinessLogic} onMonthChange={onMonthChange} />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <WeekdayHeader />
-          <DaysGrid 
-            monthData={monthWithBusinessLogic} 
+          <DaysGrid
+            monthData={monthWithBusinessLogic}
             onDayClick={onDayClick}
             onMonthChange={onMonthChange}
           />
@@ -107,39 +102,37 @@ export function MonthGrid({
 /**
  * Month Header with navigation
  */
-function MonthHeader({ 
-  monthData, 
-  onMonthChange 
-}: { 
+function MonthHeader({
+  monthData,
+  onMonthChange,
+}: {
   monthData: MonthData
   onMonthChange?: (date: Date) => void
 }) {
   const prevMonth = new Date(monthData.year, monthData.month - 1)
   const nextMonth = new Date(monthData.year, monthData.month + 1)
-  
+
   const handlePrevMonth = () => {
     onMonthChange?.(prevMonth)
   }
-  
+
   const handleNextMonth = () => {
     onMonthChange?.(nextMonth)
   }
-  
+
   return (
     <div className="flex items-center justify-between">
-      <MonthNavigationButton 
-        direction="prev" 
+      <MonthNavigationButton
+        direction="prev"
         targetDate={prevMonth}
         onClick={handlePrevMonth}
         aria-label={`Vorheriger Monat (${formatMonthYear(prevMonth)})`}
       />
-      
-      <h2 className="text-xl font-semibold text-center min-w-0 flex-1">
-        {monthData.monthName}
-      </h2>
-      
-      <MonthNavigationButton 
-        direction="next" 
+
+      <h2 className="text-xl font-semibold text-center min-w-0 flex-1">{monthData.monthName}</h2>
+
+      <MonthNavigationButton
+        direction="next"
         targetDate={nextMonth}
         onClick={handleNextMonth}
         aria-label={`Nächster Monat (${formatMonthYear(nextMonth)})`}
@@ -151,16 +144,16 @@ function MonthHeader({
 /**
  * Month Navigation Button with real navigation
  */
-function MonthNavigationButton({ 
-  direction, 
-  targetDate, 
+function MonthNavigationButton({
+  direction,
+  targetDate,
   onClick,
-  'aria-label': ariaLabel 
-}: { 
+  'aria-label': ariaLabel,
+}: {
   direction: 'prev' | 'next'
   targetDate: Date
   onClick: () => void
-  'aria-label': string 
+  'aria-label': string
 }) {
   return (
     <Button
@@ -200,11 +193,11 @@ function WeekdayHeader() {
 /**
  * Days Grid - 6 weeks x 7 days
  */
-function DaysGrid({ 
-  monthData, 
+function DaysGrid({
+  monthData,
   onDayClick,
-  onMonthChange 
-}: { 
+  onMonthChange,
+}: {
   monthData: MonthData
   onDayClick?: (date: Date) => void
   onMonthChange?: (date: Date) => void
@@ -214,15 +207,15 @@ function DaysGrid({
   for (let i = 0; i < monthData.days.length; i += 7) {
     weeks.push(monthData.days.slice(i, i + 7))
   }
-  
+
   return (
     <div className="space-y-1">
       {weeks.map((week, weekIndex) => (
         <div key={weekIndex} className="grid grid-cols-7 gap-1">
           {week.map((day) => (
-            <DayCell 
-              key={day.date.getTime()} 
-              day={day} 
+            <DayCell
+              key={day.date.getTime()}
+              day={day}
               onDayClick={onDayClick}
               onMonthChange={onMonthChange}
             />
@@ -236,20 +229,20 @@ function DaysGrid({
 /**
  * Individual Day Cell with Visual Indicators
  */
-function DayCell({ 
-  day, 
+function DayCell({
+  day,
   onDayClick,
-  onMonthChange 
-}: { 
+  onMonthChange,
+}: {
   day: CalendarDay
   onDayClick?: (date: Date) => void
   onMonthChange?: (date: Date) => void
 }) {
   const config = DAY_INDICATOR_CONFIG[day.status]
-  
+
   const handleClick = () => {
     if (!day.isClickable) return
-    
+
     if (day.status === 'other-month') {
       // Navigate to the clicked month
       onMonthChange?.(day.date)
@@ -258,14 +251,14 @@ function DayCell({
       onDayClick?.(day.date)
     }
   }
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (day.isClickable && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
       handleClick()
     }
   }
-  
+
   return (
     <div
       className={cn(
@@ -276,7 +269,8 @@ function DayCell({
         // Interactive styles
         day.isClickable && 'cursor-pointer hover:scale-105 hover:shadow-sm active:scale-95',
         // Additional vacation styling
-        day.status === 'vacation' && 'before:absolute before:inset-0 before:bg-gradient-to-br before:from-transparent before:to-destructive/10 before:rounded-md'
+        day.status === 'vacation' &&
+          'before:absolute before:inset-0 before:bg-gradient-to-br before:from-transparent before:to-destructive/10 before:rounded-md'
       )}
       role={day.isClickable ? 'button' : 'gridcell'}
       tabIndex={day.isClickable ? 0 : -1}
@@ -286,22 +280,18 @@ function DayCell({
       onKeyDown={handleKeyDown}
     >
       {/* Day Number */}
-      <span className="relative z-10">
-        {formatDayNumber(day)}
-      </span>
-      
+      <span className="relative z-10">{formatDayNumber(day)}</span>
+
       {/* Appointment Count Badge */}
       {day.appointmentCount > 0 && day.status !== 'vacation' && (
         <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium z-20">
           {day.appointmentCount > 9 ? '9+' : day.appointmentCount}
         </span>
       )}
-      
+
       {/* Vacation Indicator */}
       {day.status === 'vacation' && (
-        <span className="absolute bottom-0.5 right-0.5 text-destructive text-xs font-bold">
-          ■
-        </span>
+        <span className="absolute bottom-0.5 right-0.5 text-destructive text-xs font-bold">■</span>
       )}
     </div>
   )

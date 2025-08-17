@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Badge } from "@/shared/components/ui/badge"
-import { Wallet, CreditCard, Receipt, TrendingDown, ShoppingCart } from "lucide-react"
-import { EXPENSE_CATEGORIES, type ExpenseCategory } from "@/shared/types/expenses"
+import { CreditCard, Receipt, ShoppingCart, TrendingDown, Wallet } from 'lucide-react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { EXPENSE_CATEGORIES, type ExpenseCategory } from '@/shared/types/expenses'
 
 export type ActivityItem = {
   id: string
@@ -61,18 +61,19 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
   }
 
   // Aktivitäten nach Datum sortieren (neueste zuerst)
-  const sortedActivities = [...activities].sort((a, b) => 
-    new Date(b.date + (b.time || '')).getTime() - new Date(a.date + (a.time || '')).getTime()
+  const sortedActivities = [...activities].sort(
+    (a, b) =>
+      new Date(b.date + (b.time || '')).getTime() - new Date(a.date + (a.time || '')).getTime()
   )
 
   const formatDate = (dateStr: string, timeStr?: string) => {
     const date = new Date(dateStr)
-    const dateDisplay = date.toLocaleDateString('de-CH', { 
-      day: '2-digit', 
+    const dateDisplay = date.toLocaleDateString('de-CH', {
+      day: '2-digit',
       month: '2-digit',
-      weekday: 'short'
+      weekday: 'short',
     })
-    
+
     if (timeStr) {
       return `${dateDisplay} ${timeStr}`
     }
@@ -104,11 +105,16 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
 
   const getPaymentMethodLabel = (paymentMethod: string) => {
     switch (paymentMethod) {
-      case 'cash': return 'Bar'
-      case 'twint': return 'TWINT'
-      case 'sumup': return 'SumUp'
-      case 'bank': return 'Bank'
-      default: return paymentMethod
+      case 'cash':
+        return 'Bar'
+      case 'twint':
+        return 'TWINT'
+      case 'sumup':
+        return 'SumUp'
+      case 'bank':
+        return 'Bank'
+      default:
+        return paymentMethod
     }
   }
 
@@ -117,7 +123,9 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
       return 'Verkauf'
     } else {
       // Map English category to German label
-      return activity.category ? EXPENSE_CATEGORIES[activity.category as ExpenseCategory] || activity.category : 'Ausgabe'
+      return activity.category
+        ? EXPENSE_CATEGORIES[activity.category as ExpenseCategory] || activity.category
+        : 'Ausgabe'
     }
   }
 
@@ -131,29 +139,27 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
       <CardContent>
         <div className="space-y-2">
           {sortedActivities.map((activity) => (
-            <div 
-              key={activity.id} 
+            <div
+              key={activity.id}
               className={`flex justify-between items-center p-3 border rounded-md hover:bg-accent ${
-                activity.type === 'expense' ? 'border-l-4 border-l-destructive/20' : 'border-l-4 border-l-success/20'
+                activity.type === 'expense'
+                  ? 'border-l-4 border-l-destructive/20'
+                  : 'border-l-4 border-l-success/20'
               }`}
             >
               <div className="flex items-center gap-3">
                 {getActivityIcon(activity)}
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {formatDate(activity.date, activity.time)}
-                    </span>
-                    <Badge 
-                      variant={activity.type === 'sale' ? "default" : "outline"} 
+                    <span className="font-medium">{formatDate(activity.date, activity.time)}</span>
+                    <Badge
+                      variant={activity.type === 'sale' ? 'default' : 'outline'}
                       className="text-xs"
                     >
                       {getActivityDescription(activity)}
                     </Badge>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {activity.description}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{activity.description}</div>
                   <div className="text-xs text-muted-foreground flex items-center gap-1">
                     {getPaymentMethodIcon(activity.paymentMethod)}
                     {getPaymentMethodLabel(activity.paymentMethod)}
@@ -161,9 +167,11 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
                 </div>
               </div>
               <div className="text-right">
-                <div className={`font-medium ${
-                  activity.type === 'sale' ? 'text-success' : 'text-destructive'
-                }`}>
+                <div
+                  className={`font-medium ${
+                    activity.type === 'sale' ? 'text-success' : 'text-destructive'
+                  }`}
+                >
                   {activity.type === 'sale' ? '+' : '-'}CHF {Math.abs(activity.amount).toFixed(2)}
                 </div>
               </div>

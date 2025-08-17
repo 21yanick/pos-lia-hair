@@ -1,10 +1,10 @@
 'use client'
 
-import { Star, StarOff, Pencil, Trash2 } from "lucide-react"
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Switch } from "@/shared/components/ui/switch"
-import { type Item } from "@/shared/hooks/business/useItems"
+import { Pencil, Star, StarOff, Trash2 } from 'lucide-react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Switch } from '@/shared/components/ui/switch'
+import type { Item } from '@/shared/hooks/business/useItems'
 
 interface ProductCardProps {
   item: Item
@@ -14,12 +14,12 @@ interface ProductCardProps {
   onDelete: (id: string) => Promise<void>
 }
 
-export function ProductCard({ 
-  item, 
-  onToggleFavorite, 
-  onToggleActive, 
-  onEdit, 
-  onDelete 
+export function ProductCard({
+  item,
+  onToggleFavorite,
+  onToggleActive,
+  onEdit,
+  onDelete,
 }: ProductCardProps) {
   return (
     <div className="bg-background border border-border rounded-lg p-4 space-y-3">
@@ -28,8 +28,8 @@ export function ProductCard({
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-lg truncate">{item.name}</h3>
           <div className="flex items-center gap-2 mt-1">
-            <Badge variant={item.type === "service" ? "default" : "secondary"}>
-              {item.type === "service" ? "Dienstleistung" : "Produkt"}
+            <Badge variant={item.type === 'service' ? 'default' : 'secondary'}>
+              {item.type === 'service' ? 'Dienstleistung' : 'Produkt'}
             </Badge>
             {item.is_favorite && (
               <Badge variant="outline" className="text-warning border-warning">
@@ -38,7 +38,7 @@ export function ProductCard({
             )}
           </div>
           {/* Service details for mobile */}
-          {item.type === "service" && (
+          {item.type === 'service' && (
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant="outline" className="text-xs">
                 {item.duration_minutes}min
@@ -65,24 +65,24 @@ export function ProductCard({
             variant="ghost"
             size="sm"
             onClick={() => onToggleFavorite(item.id, item.is_favorite ?? false)}
-            className={`h-9 w-9 ${item.is_favorite ? "text-warning" : "text-muted-foreground"}`}
-            title={item.is_favorite ? "Favorit entfernen" : "Als Favorit markieren"}
+            className={`h-9 w-9 ${item.is_favorite ? 'text-warning' : 'text-muted-foreground'}`}
+            title={item.is_favorite ? 'Favorit entfernen' : 'Als Favorit markieren'}
           >
             {item.is_favorite ? <Star size={16} /> : <StarOff size={16} />}
           </Button>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Aktiv</span>
-            <Switch 
-              checked={item.active ?? true} 
+            <Switch
+              checked={item.active ?? true}
               onCheckedChange={() => onToggleActive(item.id, item.active ?? true)}
             />
           </div>
         </div>
-        
+
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onEdit(item)}
             className="h-9 w-9"
             title="Bearbeiten"

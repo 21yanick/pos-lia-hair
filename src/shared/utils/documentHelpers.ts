@@ -24,33 +24,37 @@ export function generateDocumentDisplayName(
     case 'receipt':
       return {
         displayName: `Quittung_${formattedDate}_${formattedTime}${amount ? `_${amount.toFixed(2)}_CHF` : ''}${paymentMethod ? `_${paymentMethod.toUpperCase()}` : ''}`,
-        description: `Kundenquittung vom ${formattedDate} um ${formattedTime}${amount ? ` über ${amount.toFixed(2)} CHF` : ''}${paymentMethod ? ` (${getPaymentMethodName(paymentMethod)})` : ''}`
+        description: `Kundenquittung vom ${formattedDate} um ${formattedTime}${amount ? ` über ${amount.toFixed(2)} CHF` : ''}${paymentMethod ? ` (${getPaymentMethodName(paymentMethod)})` : ''}`,
       }
 
-    case 'daily_report':
-      const reportDateFormatted = reportDate ? new Date(reportDate).toLocaleDateString('de-CH') : formattedDate
+    case 'daily_report': {
+      const reportDateFormatted = reportDate
+        ? new Date(reportDate).toLocaleDateString('de-CH')
+        : formattedDate
       return {
         displayName: `Tagesabschluss_${reportDateFormatted}${status ? `_${status.toUpperCase()}` : ''}`,
-        description: `Tagesabschluss vom ${reportDateFormatted}${status ? ` (${getStatusName(status)})` : ''}`
+        description: `Tagesabschluss vom ${reportDateFormatted}${status ? ` (${getStatusName(status)})` : ''}`,
       }
+    }
 
-    case 'monthly_report':
+    case 'monthly_report': {
       const monthYear = date.toLocaleDateString('de-CH', { month: 'long', year: 'numeric' })
       return {
         displayName: `Monatsabschluss_${monthYear.replace(' ', '_')}${status ? `_${status.toUpperCase()}` : ''}`,
-        description: `Monatsabschluss für ${monthYear}${status ? ` (${getStatusName(status)})` : ''}`
+        description: `Monatsabschluss für ${monthYear}${status ? ` (${getStatusName(status)})` : ''}`,
       }
+    }
 
     case 'expense_receipt':
       return {
         displayName: `Ausgabe_${formattedDate}${amount ? `_${amount.toFixed(2)}_CHF` : ''}${referenceId ? `_${referenceId}` : ''}`,
-        description: `Ausgabenbeleg vom ${formattedDate}${amount ? ` über ${amount.toFixed(2)} CHF` : ''}`
+        description: `Ausgabenbeleg vom ${formattedDate}${amount ? ` über ${amount.toFixed(2)} CHF` : ''}`,
       }
 
     default:
       return {
         displayName: `Dokument_${formattedDate}_${formattedTime}`,
-        description: `Dokument vom ${formattedDate} um ${formattedTime}`
+        description: `Dokument vom ${formattedDate} um ${formattedTime}`,
       }
   }
 }
@@ -101,8 +105,8 @@ export function getStatusName(status: string): string {
 
 // Dateigröße formatieren
 export function formatFileSize(bytes?: number): string {
-  if (!bytes) return "Unbekannt"
-  
+  if (!bytes) return 'Unbekannt'
+
   if (bytes < 1024) {
     return `${bytes} B`
   } else if (bytes < 1024 * 1024) {
@@ -124,13 +128,13 @@ export function formatDisplayDate(dateString: string): string {
 // Betrag formatieren
 export function formatAmount(amount?: number, type?: string): string {
   if (!amount) return '-'
-  
+
   const formatted = `${amount.toFixed(2)} CHF`
-  
+
   // Farbe basierend auf Dokumenttyp
   if (type === 'expense_receipt') {
     return `- ${formatted}` // Ausgaben als negativ
   }
-  
+
   return formatted
 }

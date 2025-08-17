@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 // REMOVED: useOrganization import to break circular dependency
 // Organization data should be accessed via useOrganization hook separately
 import {
-  User,
-  AuthContextType,
-  Permission,
+  type AuthContextType,
   Organization,
   OrganizationRole,
+  type Permission,
+  type User,
 } from '@/shared/types/organizations'
 
 export function useAuth(): AuthContextType {
@@ -21,8 +21,11 @@ export function useAuth(): AuthContextType {
   // Load current user
   const loadUser = useCallback(async () => {
     try {
-      const { data: { user: authUser }, error } = await supabase.auth.getUser()
-      
+      const {
+        data: { user: authUser },
+        error,
+      } = await supabase.auth.getUser()
+
       if (error || !authUser) {
         setUser(null)
         return
@@ -62,23 +65,22 @@ export function useAuth(): AuthContextType {
   const signOut = useCallback(async () => {
     try {
       // console.log('🚪 Starting logout process...')
-      
+
       // Clear user state immediately for better UX
       setUser(null)
-      
+
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
-      
+
       if (error) {
         // console.error('❌ Supabase logout error:', error)
         // Still continue with navigation even if logout partially failed
       } else {
         // console.log('✅ Supabase logout successful')
       }
-      
+
       // Force navigation to login page (works better with org routes)
       window.location.href = '/login'
-      
     } catch (error) {
       console.error('❌ Error signing out:', error)
       // Force navigation even on error
@@ -105,7 +107,9 @@ export function useAuth(): AuthContextType {
 
   // Listen for auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await loadUser()
       } else if (event === 'SIGNED_OUT') {
@@ -165,7 +169,7 @@ export function usePermissions() {
   return {
     can,
     isOwner: false,
-    isAdmin: false, 
+    isAdmin: false,
     isStaff: false,
     role: undefined,
     organization: undefined,

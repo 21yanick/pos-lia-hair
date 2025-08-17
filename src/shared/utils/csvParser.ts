@@ -2,28 +2,20 @@
 // Handles CSV file parsing with robust error handling and validation
 
 import Papa from 'papaparse'
-import type { 
-  ParsedCsvData, 
-  CsvRow, 
-  CsvParseOptions 
-} from '@/shared/types/csvImport'
+import type { CsvParseOptions, CsvRow, ParsedCsvData } from '@/shared/types/csvImport'
 
 // =================================
 // CSV Parser Class
 // =================================
 
 export class CsvParser {
-  
   /**
    * Parse a CSV file with Papa Parse
    * @param file CSV file to parse
    * @param options Parse options
    * @returns Promise with parsed CSV data
    */
-  static async parseFile(
-    file: File, 
-    options: CsvParseOptions = {}
-  ): Promise<ParsedCsvData> {
+  static async parseFile(file: File, options: CsvParseOptions = {}): Promise<ParsedCsvData> {
     return new Promise((resolve, reject) => {
       const defaultOptions: Papa.ParseConfig = {
         header: false, // We'll handle headers manually for better control
@@ -32,7 +24,7 @@ export class CsvParser {
         encoding: 'UTF-8',
         complete: (results) => {
           try {
-            const parsedData = this.processParseResults(results, options)
+            const parsedData = CsvParser.processParseResults(results, options)
             resolve(parsedData)
           } catch (error) {
             reject(error)
@@ -40,7 +32,7 @@ export class CsvParser {
         },
         error: (error) => {
           reject(new Error(`CSV Parse Error: ${error.message}`))
-        }
+        },
       }
 
       // Override defaults with user options
@@ -48,7 +40,7 @@ export class CsvParser {
         ...defaultOptions,
         delimiter: options.delimiter || '',
         skipEmptyLines: options.skipEmptyLines ?? true,
-        preview: options.preview || 0 // 0 = parse all rows
+        preview: options.preview || 0, // 0 = parse all rows
       }
 
       Papa.parse(file, finalOptions)
@@ -65,25 +57,22 @@ export class CsvParser {
     results: Papa.ParseResult<string[]>,
     options: CsvParseOptions
   ): ParsedCsvData {
-    
     if (!results.data || results.data.length === 0) {
       throw new Error('CSV file is empty or could not be parsed')
     }
 
     // Extract headers from first row
-    const headers = this.extractHeaders(results.data[0])
+    const headers = CsvParser.extractHeaders(results.data[0])
     if (headers.length === 0) {
       throw new Error('CSV file has no valid headers')
     }
 
     // Convert remaining rows to objects
     const dataRows = results.data.slice(1)
-    const { rows, emptyRows } = this.convertRowsToObjects(dataRows, headers)
+    const { rows, emptyRows } = CsvParser.convertRowsToObjects(dataRows, headers)
 
     // Collect parsing errors
-    const errors = results.errors?.map(error => 
-      `Row ${error.row + 1}: ${error.message}`
-    ) || []
+    const errors = results.errors?.map((error) => `Row ${error.row + 1}: ${error.message}`) || []
 
     // Add validation errors
     if (headers.length !== new Set(headers).size) {
@@ -96,8 +85,8 @@ export class CsvParser {
       meta: {
         totalRows: results.data.length - 1, // Exclude header row
         emptyRows,
-        errors
-      }
+        errors,
+      },
     }
   }
 
@@ -112,8 +101,8 @@ export class CsvParser {
     }
 
     return headerRow
-      .map(header => header?.toString().trim() || '')
-      .filter(header => header.length > 0)
+      .map((header) => header?.toString().trim() || '')
+      .filter((header) => header.length > 0)
   }
 
   /**
@@ -125,21 +114,20 @@ export class CsvParser {
   private static convertRowsToObjects(
     dataRows: string[][],
     headers: string[]
-  ): { rows: CsvRow[], emptyRows: number } {
-    
+  ): { rows: CsvRow[]; emptyRows: number } {
     const rows: CsvRow[] = []
     let emptyRows = 0
 
     for (const row of dataRows) {
       // Skip completely empty rows
-      if (this.isEmptyRow(row)) {
+      if (CsvParser.isEmptyRow(row)) {
         emptyRows++
         continue
       }
 
       // Convert row to object
       const rowObj: CsvRow = {}
-      
+
       for (let i = 0; i < headers.length; i++) {
         const value = row[i]?.toString().trim() || ''
         rowObj[headers[i]] = value === '' ? undefined : value
@@ -157,7 +145,7 @@ export class CsvParser {
    * @returns True if row is empty
    */
   private static isEmptyRow(row: string[]): boolean {
-    return !row || row.every(cell => !cell || cell.toString().trim() === '')
+    return !row || row.every((cell) => !cell || cell.toString().trim() === '')
   }
 
   /**
@@ -176,7 +164,7 @@ export class CsvParser {
         },
         error: () => {
           resolve(',') // Default to comma if detection fails
-        }
+        },
       })
     })
   }
@@ -186,7 +174,7 @@ export class CsvParser {
    * @param file File to validate
    * @returns Validation result
    */
-  static validateFile(file: File): { isValid: boolean, errors: string[] } {
+  static validateFile(file: File): { isValid: boolean; errors: string[] } {
     const errors: string[] = []
 
     // Check file type
@@ -207,7 +195,7 @@ export class CsvParser {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     }
   }
 
@@ -217,15 +205,12 @@ export class CsvParser {
    * @param previewRows Number of rows to preview
    * @returns Promise with preview data
    */
-  static async getPreview(
-    file: File, 
-    previewRows: number = 10
-  ): Promise<ParsedCsvData> {
+  static async getPreview(file: File, previewRows: number = 10): Promise<ParsedCsvData> {
     const options: CsvParseOptions = {
-      preview: previewRows + 1 // +1 for header row
+      preview: previewRows + 1, // +1 for header row
     }
-    
-    return this.parseFile(file, options)
+
+    return CsvParser.parseFile(file, options)
   }
 }
 
@@ -243,50 +228,59 @@ export function suggestImportType(data: ParsedCsvData): {
   confidence: number
   reasoning: string[]
 } {
-  const headers = data.headers.map(h => h.toLowerCase())
+  const headers = data.headers.map((h) => h.toLowerCase())
   const reasoning: string[] = []
-  
+
   // Item patterns
   const itemPatterns = ['name', 'product', 'service', 'price', 'preis']
-  const itemMatches = headers.filter(h => 
-    itemPatterns.some(pattern => h.includes(pattern))
+  const itemMatches = headers.filter((h) =>
+    itemPatterns.some((pattern) => h.includes(pattern))
   ).length
-  
+
   // Sales patterns
   const salesPatterns = ['date', 'datum', 'amount', 'betrag', 'payment', 'zahlung', 'total']
-  const salesMatches = headers.filter(h => 
-    salesPatterns.some(pattern => h.includes(pattern))
+  const salesMatches = headers.filter((h) =>
+    salesPatterns.some((pattern) => h.includes(pattern))
   ).length
-  
+
   // Expense patterns
-  const expensePatterns = ['expense', 'ausgabe', 'cost', 'kosten', 'category', 'kategorie', 'supplier', 'lieferant']
-  const expenseMatches = headers.filter(h => 
-    expensePatterns.some(pattern => h.includes(pattern))
+  const expensePatterns = [
+    'expense',
+    'ausgabe',
+    'cost',
+    'kosten',
+    'category',
+    'kategorie',
+    'supplier',
+    'lieferant',
+  ]
+  const expenseMatches = headers.filter((h) =>
+    expensePatterns.some((pattern) => h.includes(pattern))
   ).length
 
   // Determine best match
   const maxMatches = Math.max(itemMatches, salesMatches, expenseMatches)
-  
+
   if (maxMatches === 0) {
     return {
       type: 'unknown',
       confidence: 0,
-      reasoning: ['No recognizable patterns found in headers']
+      reasoning: ['No recognizable patterns found in headers'],
     }
   }
 
-  const confidence = Math.min(maxMatches / headers.length * 100, 100)
+  const confidence = Math.min((maxMatches / headers.length) * 100, 100)
 
   if (itemMatches === maxMatches) {
     reasoning.push(`Found ${itemMatches} item-related headers`)
     return { type: 'items', confidence, reasoning }
   }
-  
+
   if (salesMatches === maxMatches) {
     reasoning.push(`Found ${salesMatches} sales-related headers`)
     return { type: 'sales', confidence, reasoning }
   }
-  
+
   if (expenseMatches === maxMatches) {
     reasoning.push(`Found ${expenseMatches} expense-related headers`)
     return { type: 'expenses', confidence, reasoning }
@@ -295,7 +289,7 @@ export function suggestImportType(data: ParsedCsvData): {
   return {
     type: 'unknown',
     confidence: 0,
-    reasoning: ['Could not determine import type']
+    reasoning: ['Could not determine import type'],
   }
 }
 
@@ -316,17 +310,18 @@ export function getCsvStats(data: ParsedCsvData): {
   const emptyRows = data.meta.emptyRows
 
   // Count empty columns (columns with all empty values)
-  const emptyColumns = data.headers.filter(header => 
-    data.rows.every(row => !row[header] || row[header].trim() === '')
+  const emptyColumns = data.headers.filter((header) =>
+    data.rows.every((row) => !row[header] || row[header].trim() === '')
   ).length
 
   // Calculate data quality score (0-100)
   const filledCells = data.rows.reduce((count, row) => {
-    return count + Object.values(row).filter(value => 
-      value !== undefined && value.trim() !== ''
-    ).length
+    return (
+      count +
+      Object.values(row).filter((value) => value !== undefined && value.trim() !== '').length
+    )
   }, 0)
-  
+
   const totalCells = totalRows * totalColumns
   const dataQuality = totalCells > 0 ? Math.round((filledCells / totalCells) * 100) : 0
 
@@ -335,7 +330,7 @@ export function getCsvStats(data: ParsedCsvData): {
     totalColumns,
     emptyRows,
     emptyColumns,
-    dataQuality
+    dataQuality,
   }
 }
 

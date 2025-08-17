@@ -1,17 +1,23 @@
-"use client"
+'use client'
 
+import { CheckCircle, Download, Info, Loader2, Smartphone } from 'lucide-react'
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Smartphone, Download, CheckCircle, Info, Loader2 } from "lucide-react"
-import { usePWAInstall } from "@/shared/hooks/core/usePWAInstall"
-import { useToast } from "@/shared/hooks/core/useToast"
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { usePWAInstall } from '@/shared/hooks/core/usePWAInstall'
+import { useToast } from '@/shared/hooks/core/useToast'
 
 export function PWAInstallCard() {
   const [isInstalling, setIsInstalling] = useState(false)
   const { toast } = useToast()
-  
+
   const {
     isInstallable,
     isInstalled,
@@ -20,32 +26,33 @@ export function PWAInstallCard() {
     canInstall,
     hasAlternativeInstall,
     install,
-    getInstallInstructions
+    getInstallInstructions,
   } = usePWAInstall()
 
   const handleInstall = async () => {
     setIsInstalling(true)
-    
+
     try {
       const success = await install()
-      
+
       if (success) {
         toast({
-          title: "App erfolgreich installiert! 🎉",
-          description: "LIA HAIR wurde zu Ihrem Startbildschirm hinzugefügt.",
+          title: 'App erfolgreich installiert! 🎉',
+          description: 'LIA HAIR wurde zu Ihrem Startbildschirm hinzugefügt.',
         })
       } else {
         toast({
-          title: "Installation abgebrochen",
-          description: "Die App-Installation wurde vom Benutzer abgebrochen.",
-          variant: "destructive"
+          title: 'Installation abgebrochen',
+          description: 'Die App-Installation wurde vom Benutzer abgebrochen.',
+          variant: 'destructive',
         })
       }
     } catch (error) {
       toast({
-        title: "Installation fehlgeschlagen",
-        description: "Es gab einen Fehler bei der App-Installation. Versuchen Sie es später erneut.",
-        variant: "destructive"
+        title: 'Installation fehlgeschlagen',
+        description:
+          'Es gab einen Fehler bei der App-Installation. Versuchen Sie es später erneut.',
+        variant: 'destructive',
       })
     } finally {
       setIsInstalling(false)
@@ -60,37 +67,45 @@ export function PWAInstallCard() {
   // Platform-specific styling
   const getPlatformColor = () => {
     switch (platform) {
-      case 'android': return 'text-green-600'
-      case 'ios': return 'text-blue-600'
-      case 'desktop': return 'text-purple-600'
-      default: return 'text-gray-600'
+      case 'android':
+        return 'text-green-600'
+      case 'ios':
+        return 'text-blue-600'
+      case 'desktop':
+        return 'text-purple-600'
+      default:
+        return 'text-gray-600'
     }
   }
 
   const getPlatformName = () => {
     switch (platform) {
-      case 'android': return 'Android'
-      case 'ios': return 'iOS'
-      case 'desktop': return 'Desktop'
-      default: return 'Unbekannt'
+      case 'android':
+        return 'Android'
+      case 'ios':
+        return 'iOS'
+      case 'desktop':
+        return 'Desktop'
+      default:
+        return 'Unbekannt'
     }
   }
 
   const getFeatures = () => {
     if (isInstalled) {
       return [
-        "✅ Schnellerer Zugriff",
-        "✅ Offline-Funktionalität", 
-        "✅ Native App-Erfahrung",
-        "✅ Push-Benachrichtigungen bereit"
+        '✅ Schnellerer Zugriff',
+        '✅ Offline-Funktionalität',
+        '✅ Native App-Erfahrung',
+        '✅ Push-Benachrichtigungen bereit',
       ]
     }
-    
+
     return [
-      "📱 Startbildschirm-Symbol",
-      "⚡ Schnellerer Zugriff",
-      "📶 Offline-Funktionalität",
-      "🔔 Native App-Erfahrung"
+      '📱 Startbildschirm-Symbol',
+      '⚡ Schnellerer Zugriff',
+      '📶 Offline-Funktionalität',
+      '🔔 Native App-Erfahrung',
     ]
   }
 
@@ -105,18 +120,15 @@ export function PWAInstallCard() {
               {isInstalled && <CheckCircle className="h-4 w-4 text-green-600" />}
             </CardTitle>
           </div>
-          <Badge variant={isInstalled ? "default" : "secondary"}>
-            {getPlatformName()}
-          </Badge>
+          <Badge variant={isInstalled ? 'default' : 'secondary'}>{getPlatformName()}</Badge>
         </div>
         <CardDescription>
-          {isInstalled 
-            ? "LIA HAIR ist als App installiert" 
-            : "Installieren Sie LIA HAIR als native App"
-          }
+          {isInstalled
+            ? 'LIA HAIR ist als App installiert'
+            : 'Installieren Sie LIA HAIR als native App'}
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <div className="space-y-4">
           {/* Features List */}
@@ -140,11 +152,7 @@ export function PWAInstallCard() {
             <div className="space-y-3">
               {canInstall ? (
                 // Direct install available
-                <Button 
-                  onClick={handleInstall} 
-                  disabled={isInstalling}
-                  className="w-full"
-                >
+                <Button onClick={handleInstall} disabled={isInstalling} className="w-full">
                   {isInstalling ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -166,18 +174,19 @@ export function PWAInstallCard() {
                       <p className="font-medium mb-2">Installation über Browser-Menü:</p>
                       <p className="mb-2">{getInstallInstructions()}</p>
                       <p className="text-xs opacity-80">
-                        💡 Nach mehreren Besuchen wird oft ein direkter "Installieren"-Button verfügbar
+                        💡 Nach mehreren Besuchen wird oft ein direkter "Installieren"-Button
+                        verfügbar
                       </p>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    className="w-full" 
+                  <Button
+                    variant="outline"
+                    className="w-full"
                     onClick={() => {
                       toast({
-                        title: "Installationsschritte",
+                        title: 'Installationsschritte',
                         description: getInstallInstructions(),
-                        duration: 8000
+                        duration: 8000,
                       })
                     }}
                   >

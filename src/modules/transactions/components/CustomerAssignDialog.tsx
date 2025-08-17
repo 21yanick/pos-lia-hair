@@ -1,24 +1,24 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/shared/components/ui/button"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/shared/components/ui/dialog"
-import { Label } from "@/shared/components/ui/label"
-import { Separator } from "@/shared/components/ui/separator"
-import { Badge } from "@/shared/components/ui/badge"
+import { Loader2, Users, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { CustomerAutocomplete } from '@/shared/components/customer/CustomerAutocomplete'
-import { useTransactionCustomer } from '../hooks/useTransactionCustomer'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
+import { Label } from '@/shared/components/ui/label'
+import { Separator } from '@/shared/components/ui/separator'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import type { Customer } from '@/shared/services/customerService'
+import { useTransactionCustomer } from '../hooks/useTransactionCustomer'
 import type { UnifiedTransaction } from '../types/unifiedTransactions'
-import { Loader2, Users, X } from "lucide-react"
 
 interface CustomerAssignDialogProps {
   transaction: UnifiedTransaction
@@ -26,14 +26,14 @@ interface CustomerAssignDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function CustomerAssignDialog({ 
-  transaction, 
-  open, 
-  onOpenChange 
+export function CustomerAssignDialog({
+  transaction,
+  open,
+  onOpenChange,
 }: CustomerAssignDialogProps) {
   const { currentOrganization } = useCurrentOrganization()
   const { assignCustomer, isAssigning } = useTransactionCustomer(currentOrganization?.id || '')
-  
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   // Initialize with current customer
@@ -48,7 +48,7 @@ export function CustomerAssignDialog({
         created_by: '',
         is_active: true,
         created_at: '',
-        updated_at: ''
+        updated_at: '',
       })
     } else {
       setSelectedCustomer(null)
@@ -61,9 +61,9 @@ export function CustomerAssignDialog({
     try {
       await assignCustomer({
         transactionId: transaction.id,
-        customer: selectedCustomer
+        customer: selectedCustomer,
       })
-      
+
       // Close dialog on success
       onOpenChange(false)
     } catch (error) {
@@ -101,18 +101,14 @@ export function CustomerAssignDialog({
               <Badge variant="outline" className="text-xs">
                 {transaction.type_code}
               </Badge>
-              <span className="text-sm text-muted-foreground">
-                {transaction.receipt_number}
-              </span>
+              <span className="text-sm text-muted-foreground">{transaction.receipt_number}</span>
             </div>
             <p className="text-sm font-medium">{transaction.description}</p>
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-muted-foreground">
                 {transaction.date_only} • {transaction.time_only}
               </span>
-              <span className="font-bold">
-                CHF {transaction.amount.toFixed(2)}
-              </span>
+              <span className="font-bold">CHF {transaction.amount.toFixed(2)}</span>
             </div>
           </div>
 
@@ -121,10 +117,8 @@ export function CustomerAssignDialog({
           {/* Customer Assignment */}
           {canAssignCustomer ? (
             <div className="space-y-4">
-              <Label className="text-base font-semibold">
-                Kunde auswählen
-              </Label>
-              
+              <Label className="text-base font-semibold">Kunde auswählen</Label>
+
               <CustomerAutocomplete
                 value={selectedCustomer}
                 onSelect={setSelectedCustomer}
@@ -168,21 +162,17 @@ export function CustomerAssignDialog({
         </div>
 
         <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto"
             disabled={isAssigning}
           >
             Abbrechen
           </Button>
-          
+
           {canAssignCustomer && (
-            <Button 
-              onClick={handleSave}
-              disabled={isAssigning}
-              className="w-full sm:w-auto"
-            >
+            <Button onClick={handleSave} disabled={isAssigning} className="w-full sm:w-auto">
               {isAssigning ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

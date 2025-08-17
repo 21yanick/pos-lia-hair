@@ -1,6 +1,6 @@
-import React from 'react'
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
-import type { Sale, CartItem } from '@/shared/hooks/business/useSales'
+import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import type React from 'react'
+import type { CartItem, Sale } from '@/shared/hooks/business/useSales'
 import type { BusinessSettings } from '@/shared/types/businessSettings'
 
 interface ReceiptPDFProps {
@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     fontSize: 10,
   },
-  
+
   // Header Section
   headerContainer: {
     flexDirection: 'row',
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'right',
   },
-  
+
   // Receipt Info Section
   receiptInfoContainer: {
     backgroundColor: '#f8f9fa',
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 20,
   },
-  
+
   // Customer Section
   customerSection: {
     backgroundColor: '#e8f4fd',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     width: '60%',
   },
-  
+
   // Items Section
   itemsSection: {
     marginBottom: 30,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#34495e',
   },
-  
+
   // Total Section
   totalSection: {
     backgroundColor: '#f8f9fa',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
   },
-  
+
   // Footer Section
   footer: {
     position: 'absolute',
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-  
+
   // Company details in footer
   companyDetails: {
     fontSize: 8,
@@ -268,10 +268,14 @@ const styles = StyleSheet.create({
 // Zahlungsmethoden-Labels
 const getPaymentMethodLabel = (method: string): string => {
   switch (method) {
-    case 'cash': return 'Barzahlung'
-    case 'twint': return 'TWINT'
-    case 'sumup': return 'Kartenzahlung (SumUp)'
-    default: return method
+    case 'cash':
+      return 'Barzahlung'
+    case 'twint':
+      return 'TWINT'
+    case 'sumup':
+      return 'Kartenzahlung (SumUp)'
+    default:
+      return method
   }
 }
 
@@ -279,7 +283,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
   const currentDate = new Date()
   const formattedDate = currentDate.toLocaleDateString('de-CH')
   const formattedTime = currentDate.toLocaleTimeString('de-CH')
-  
+
   // Helper function to get company address
   const getCompanyAddress = () => {
     if (!businessSettings) return ''
@@ -290,7 +294,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
     }
     return parts.join('\n')
   }
-  
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -302,21 +306,19 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
               <Image src={businessSettings.logo_url} style={styles.logo} />
             )}
           </View>
-          
+
           {/* Title Section */}
           <View style={styles.titleSection}>
             <Text style={styles.title}>QUITTUNG</Text>
           </View>
-          
+
           {/* Company Section */}
           <View style={styles.companySection}>
             <Text style={styles.companyName}>
               {businessSettings?.company_name || 'POS LIA HAIR'}
             </Text>
             {businessSettings?.company_tagline && (
-              <Text style={styles.companyTagline}>
-                {businessSettings.company_tagline}
-              </Text>
+              <Text style={styles.companyTagline}>{businessSettings.company_tagline}</Text>
             )}
           </View>
         </View>
@@ -340,15 +342,13 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
         {/* Customer Section */}
         <View style={styles.customerSection}>
           <Text style={styles.customerLabel}>Kunde:</Text>
-          <Text style={styles.customerName}>
-            {sale.customer_name || 'Laufkundschaft'}
-          </Text>
+          <Text style={styles.customerName}>{sale.customer_name || 'Laufkundschaft'}</Text>
         </View>
 
         {/* Items Section */}
         <View style={styles.itemsSection}>
           <Text style={styles.itemsTitle}>VERKAUFTE ARTIKEL</Text>
-          
+
           {/* Table Header */}
           <View style={styles.itemsTableHeader}>
             <Text style={styles.itemNameHeader}>Artikel</Text>
@@ -381,50 +381,36 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
 
         {/* Professional Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerThankYou}>
-            Vielen Dank für Ihren Besuch!
-          </Text>
-          
+          <Text style={styles.footerThankYou}>Vielen Dank für Ihren Besuch!</Text>
+
           <View style={styles.footerContent}>
             {/* Left: Company Details */}
             <View style={styles.footerLeft}>
               {businessSettings && businessSettings.pdf_show_company_details && (
                 <View>
-                  <Text style={styles.companyDetails}>
-                    {businessSettings.company_name}
-                  </Text>
+                  <Text style={styles.companyDetails}>{businessSettings.company_name}</Text>
                   {getCompanyAddress() && (
-                    <Text style={styles.companyDetails}>
-                      {getCompanyAddress()}
-                    </Text>
+                    <Text style={styles.companyDetails}>{getCompanyAddress()}</Text>
                   )}
                   {businessSettings.company_phone && (
-                    <Text style={styles.companyDetails}>
-                      Tel: {businessSettings.company_phone}
-                    </Text>
+                    <Text style={styles.companyDetails}>Tel: {businessSettings.company_phone}</Text>
                   )}
                   {businessSettings.company_email && (
-                    <Text style={styles.companyDetails}>
-                      {businessSettings.company_email}
-                    </Text>
+                    <Text style={styles.companyDetails}>{businessSettings.company_email}</Text>
                   )}
                   {businessSettings.company_uid && (
-                    <Text style={styles.companyDetails}>
-                      UID: {businessSettings.company_uid}
-                    </Text>
+                    <Text style={styles.companyDetails}>UID: {businessSettings.company_uid}</Text>
                   )}
                 </View>
               )}
             </View>
-            
+
             {/* Right: Receipt Info */}
             <View style={styles.footerRight}>
               <Text style={styles.footerText}>
                 Erstellt: {formattedDate} {formattedTime}
               </Text>
-              <Text style={styles.footerText}>
-                Beleg: {sale.receipt_number || sale.id}
-              </Text>
+              <Text style={styles.footerText}>Beleg: {sale.receipt_number || sale.id}</Text>
             </View>
           </View>
         </View>

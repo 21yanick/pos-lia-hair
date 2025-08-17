@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { AlertCircle, Loader2, Lock, User } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Separator } from '@/shared/components/ui/separator'
-import { Alert, AlertDescription } from '@/shared/components/ui/alert'
-import { Loader2, AlertCircle, User, Lock } from 'lucide-react'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { useProfile } from '@/shared/hooks/auth/useProfile'
 
@@ -19,14 +19,14 @@ export function ProfileForm() {
   // Profile form data
   const [profileData, setProfileData] = useState({
     name: '',
-    email: ''
+    email: '',
   })
 
   // Password form data
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   })
 
   // Load user data
@@ -34,20 +34,20 @@ export function ProfileForm() {
     if (user) {
       setProfileData({
         name: user.name || '',
-        email: user.email || ''
+        email: user.email || '',
       })
     }
   }, [user])
 
   // Handle profile input changes
   const handleProfileChange = (field: string, value: string) => {
-    setProfileData(prev => ({ ...prev, [field]: value }))
+    setProfileData((prev) => ({ ...prev, [field]: value }))
     setError(null)
   }
 
   // Handle password input changes
   const handlePasswordChange = (field: string, value: string) => {
-    setPasswordData(prev => ({ ...prev, [field]: value }))
+    setPasswordData((prev) => ({ ...prev, [field]: value }))
     setPasswordError(null)
   }
 
@@ -80,7 +80,11 @@ export function ProfileForm() {
     setPasswordError(null)
 
     // Basic validation
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
       setPasswordError('Alle Passwort-Felder sind erforderlich')
       return
     }
@@ -91,7 +95,7 @@ export function ProfileForm() {
       setPasswordData({
         currentPassword: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmPassword: '',
       })
     } catch (error) {
       // Error already handled in hook
@@ -115,9 +119,7 @@ export function ProfileForm() {
               <User className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold">Grunddaten</h3>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Ihre persönlichen Informationen
-            </p>
+            <p className="text-sm text-muted-foreground">Ihre persönlichen Informationen</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -149,8 +151,8 @@ export function ProfileForm() {
         </div>
 
         <div className="flex justify-end">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={updating}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
@@ -222,11 +224,7 @@ export function ProfileForm() {
         </div>
 
         <div className="flex justify-end">
-          <Button 
-            type="submit" 
-            disabled={changingPassword}
-            variant="outline"
-          >
+          <Button type="submit" disabled={changingPassword} variant="outline">
             {changingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {changingPassword ? 'Ändere...' : 'Passwort ändern'}
           </Button>

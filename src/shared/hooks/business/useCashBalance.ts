@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/shared/lib/supabase/client'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { supabase } from '@/shared/lib/supabase/client'
 import { getSwissDayRange } from '@/shared/utils/dateUtils'
 
 // Minimal types for cash operations
@@ -24,7 +24,7 @@ export type CashMovement = {
 export function useCashBalance() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   // 🔒 SECURITY: Multi-Tenant Organization Context
   const { currentOrganization } = useCurrentOrganization()
 
@@ -38,7 +38,7 @@ export function useCashBalance() {
 
       // Use organization-aware cash balance function
       const { data, error } = await supabase.rpc('get_current_cash_balance_for_org', {
-        org_id: currentOrganization.id
+        org_id: currentOrganization.id,
       })
 
       if (error) {
@@ -65,8 +65,19 @@ export function useCashBalance() {
       }
 
       // Convert to UTC for database query
-      const startUTC = new Date(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate()).toISOString()
-      const endUTC = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate(), 23, 59, 59).toISOString()
+      const startUTC = new Date(
+        monthStart.getFullYear(),
+        monthStart.getMonth(),
+        monthStart.getDate()
+      ).toISOString()
+      const endUTC = new Date(
+        monthEnd.getFullYear(),
+        monthEnd.getMonth(),
+        monthEnd.getDate(),
+        23,
+        59,
+        59
+      ).toISOString()
 
       // Get cash movements with ORGANIZATION SECURITY
       const { data, error } = await supabase
@@ -93,11 +104,11 @@ export function useCashBalance() {
                 .eq('id', movement.reference_id)
                 .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
                 .single()
-              
+
               if (saleError) {
                 // console.error(`Failed to fetch sale data for ${movement.reference_id}:`, saleError)
               }
-              
+
               return {
                 ...movement,
                 sale_receipt_number: saleData?.receipt_number || null,
@@ -164,6 +175,6 @@ export function useCashBalance() {
     error,
     getCurrentCashBalance,
     getCashMovementsForMonth,
-    getCashMovementsForDate
+    getCashMovementsForDate,
   }
 }

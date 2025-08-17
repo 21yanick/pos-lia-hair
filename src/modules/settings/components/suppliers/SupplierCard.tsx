@@ -1,15 +1,20 @@
 'use client'
 
+import { Edit, ExternalLink, Eye, Mail, MapPin, MoreHorizontal, Phone, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from "@/shared/components/ui/button"
-import { Badge } from "@/shared/components/ui/badge"
-import { Switch } from "@/shared/components/ui/switch"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu"
-import { useToast } from "@/shared/hooks/core/useToast"
-import { MoreHorizontal, Edit, Eye, Trash2, ExternalLink, Mail, Phone, MapPin } from "lucide-react"
-import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
-import { updateSupplier, deleteSupplier } from '@/shared/services/supplierServices'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/dropdown-menu'
+import { Switch } from '@/shared/components/ui/switch'
+import { useToast } from '@/shared/hooks/core/useToast'
+import { deleteSupplier, updateSupplier } from '@/shared/services/supplierServices'
 import type { Supplier } from '@/shared/types/suppliers'
+import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 
 interface SupplierCardProps {
   supplier: Supplier
@@ -18,12 +23,7 @@ interface SupplierCardProps {
   onEdit: (supplier: Supplier) => void
 }
 
-export function SupplierCard({ 
-  supplier, 
-  onSupplierUpdated, 
-  onView, 
-  onEdit 
-}: SupplierCardProps) {
+export function SupplierCard({ supplier, onSupplierUpdated, onView, onEdit }: SupplierCardProps) {
   const { toast } = useToast()
   const [actionLoading, setActionLoading] = useState(false)
 
@@ -31,20 +31,20 @@ export function SupplierCard({
     setActionLoading(true)
     try {
       await updateSupplier(supplier.id, {
-        is_active: !supplier.is_active
+        is_active: !supplier.is_active,
       })
-      
+
       toast({
-        title: "Erfolg",
-        description: `Lieferant wurde ${!supplier.is_active ? 'aktiviert' : 'deaktiviert'}`
+        title: 'Erfolg',
+        description: `Lieferant wurde ${!supplier.is_active ? 'aktiviert' : 'deaktiviert'}`,
       })
-      
+
       onSupplierUpdated()
     } catch (error) {
       toast({
-        title: "Fehler",
-        description: "Status konnte nicht geändert werden",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Status konnte nicht geändert werden',
+        variant: 'destructive',
       })
     } finally {
       setActionLoading(false)
@@ -59,18 +59,18 @@ export function SupplierCard({
     setActionLoading(true)
     try {
       await deleteSupplier(supplier.id)
-      
+
       toast({
-        title: "Erfolg",
-        description: "Lieferant wurde gelöscht"
+        title: 'Erfolg',
+        description: 'Lieferant wurde gelöscht',
       })
-      
+
       onSupplierUpdated()
     } catch (error) {
       toast({
-        title: "Fehler",
-        description: "Lieferant konnte nicht gelöscht werden",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Lieferant konnte nicht gelöscht werden',
+        variant: 'destructive',
       })
     } finally {
       setActionLoading(false)
@@ -85,14 +85,16 @@ export function SupplierCard({
           <h3 className="font-medium text-lg line-clamp-2">{supplier.name}</h3>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className="text-xs">
-              <span className="hidden sm:inline">{SUPPLIER_CATEGORIES[supplier.category] || 'Unbekannt'}</span>
+              <span className="hidden sm:inline">
+                {SUPPLIER_CATEGORIES[supplier.category] || 'Unbekannt'}
+              </span>
               <span className="sm:hidden">Kat.</span>
             </Badge>
-            <Badge variant={supplier.is_active ? "default" : "secondary"} className="text-xs">
+            <Badge variant={supplier.is_active ? 'default' : 'secondary'} className="text-xs">
               {supplier.is_active ? 'Aktiv' : 'Inaktiv'}
             </Badge>
           </div>
-          
+
           {/* Location */}
           {supplier.city && (
             <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
@@ -103,23 +105,17 @@ export function SupplierCard({
               </span>
             </div>
           )}
-          
+
           {/* Notes */}
           {supplier.notes && (
-            <div className="mt-2 text-xs text-muted-foreground line-clamp-2">
-              {supplier.notes}
-            </div>
+            <div className="mt-2 text-xs text-muted-foreground line-clamp-2">{supplier.notes}</div>
           )}
         </div>
-        
+
         <div className="flex-shrink-0 ml-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="h-9 w-9 p-0"
-                disabled={actionLoading}
-              >
+              <Button variant="ghost" className="h-9 w-9 p-0" disabled={actionLoading}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -138,10 +134,7 @@ export function SupplierCard({
                 </div>
                 {supplier.is_active ? 'Deaktivieren' : 'Aktivieren'}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={handleDelete}
-                className="text-destructive"
-              >
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Löschen
               </DropdownMenuItem>
@@ -155,7 +148,7 @@ export function SupplierCard({
         {supplier.contact_email && (
           <div className="flex items-center gap-2 text-sm">
             <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-            <a 
+            <a
               href={`mailto:${supplier.contact_email}`}
               className="text-primary hover:underline truncate"
             >
@@ -166,10 +159,7 @@ export function SupplierCard({
         {supplier.contact_phone && (
           <div className="flex items-center gap-2 text-sm">
             <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-            <a 
-              href={`tel:${supplier.contact_phone}`}
-              className="text-primary hover:underline"
-            >
+            <a href={`tel:${supplier.contact_phone}`} className="text-primary hover:underline">
               {supplier.contact_phone}
             </a>
           </div>
@@ -177,7 +167,7 @@ export function SupplierCard({
         {supplier.website && (
           <div className="flex items-center gap-2 text-sm">
             <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-            <a 
+            <a
               href={supplier.website}
               target="_blank"
               rel="noopener noreferrer"
@@ -188,9 +178,7 @@ export function SupplierCard({
           </div>
         )}
         {!supplier.contact_email && !supplier.contact_phone && !supplier.website && (
-          <div className="text-sm text-muted-foreground">
-            Keine Kontaktdaten
-          </div>
+          <div className="text-sm text-muted-foreground">Keine Kontaktdaten</div>
         )}
       </div>
 
@@ -199,18 +187,18 @@ export function SupplierCard({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Aktiv</span>
-            <Switch 
-              checked={supplier.is_active} 
+            <Switch
+              checked={supplier.is_active}
               onCheckedChange={handleToggleActive}
               disabled={actionLoading}
             />
           </div>
         </div>
-        
+
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onEdit(supplier)}
             className="h-9 w-9"
             title="Bearbeiten"
@@ -218,9 +206,9 @@ export function SupplierCard({
           >
             <Edit size={14} />
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onView(supplier)}
             className="h-9 w-9"
             title="Details anzeigen"

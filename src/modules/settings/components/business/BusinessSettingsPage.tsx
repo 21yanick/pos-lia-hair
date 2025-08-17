@@ -1,14 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { Building2, ImageIcon, Smartphone } from 'lucide-react'
+import { useState } from 'react'
+import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
+import { AppLogoUploadSection } from './AppLogoUploadSection'
 import { CompanyInfoForm } from './CompanyInfoForm'
 import { LogoUploadSection } from './LogoUploadSection'
-import { AppLogoUploadSection } from './AppLogoUploadSection'
-import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 
 export function BusinessSettingsPage() {
   const { settings, loading, isConfigured } = useBusinessSettings()
@@ -32,8 +38,8 @@ export function BusinessSettingsPage() {
         title="Firma"
         description="Firmendaten, Logos und Design-Einstellungen"
         badge={{
-          text: isConfigured ? "Konfiguriert" : "Nicht konfiguriert",
-          variant: isConfigured ? "default" : "secondary"
+          text: isConfigured ? 'Konfiguriert' : 'Nicht konfiguriert',
+          variant: isConfigured ? 'default' : 'secondary',
         }}
       />
 
@@ -59,9 +65,7 @@ export function BusinessSettingsPage() {
           <Card className="border-l-4 border-l-primary">
             <CardHeader>
               <CardTitle>Firmendaten</CardTitle>
-              <CardDescription>
-                Grundlegende Informationen über Ihr Unternehmen
-              </CardDescription>
+              <CardDescription>Grundlegende Informationen über Ihr Unternehmen</CardDescription>
             </CardHeader>
             <CardContent>
               <CompanyInfoForm />

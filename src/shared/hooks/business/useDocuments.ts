@@ -1,15 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/shared/lib/supabase/client'
-import type { Database } from '@/types/supabase'
-import { generateDocumentDisplayName } from '@/shared/utils/documentHelpers'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { supabase } from '@/shared/lib/supabase/client'
+import { generateDocumentDisplayName } from '@/shared/utils/documentHelpers'
+import type { Database } from '@/types/database'
 
 // Typen für Dokumente
 export type Document = Database['public']['Tables']['documents']['Row']
-export type DocumentInsert = Omit<Database['public']['Tables']['documents']['Insert'], 'id' | 'created_at'>
-export type DocumentUpdate = Partial<Omit<Database['public']['Tables']['documents']['Update'], 'id' | 'created_at'>> & { id: string }
+export type DocumentInsert = Omit<
+  Database['public']['Tables']['documents']['Insert'],
+  'id' | 'created_at'
+>
+export type DocumentUpdate = Partial<
+  Omit<Database['public']['Tables']['documents']['Update'], 'id' | 'created_at'>
+> & { id: string }
 
 // Erweiterte Dokumenttypen für die Benutzeroberfläche
 export type DocumentWithDetails = Document & {
@@ -52,8 +57,8 @@ export function useDocuments() {
       receipt: 0,
       daily_report: 0,
       monthly_report: 0,
-      expense_receipt: 0
-    }
+      expense_receipt: 0,
+    },
   })
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
@@ -64,24 +69,22 @@ export function useDocuments() {
     try {
       // filePath ist bereits korrekt (z.B. "receipts/receipt_*.pdf")
       // NICHT nochmal documents/ hinzufügen!
-      
+
       // Signed URL für das PDF abrufen (funktioniert auch bei private buckets)
       const { data: urlData, error: urlError } = await supabase.storage
         .from('documents')
         .createSignedUrl(filePath, 3600) // URL gültig für 1 Stunde
-      
+
       if (urlError) {
         // console.error("Fehler beim Erstellen der Signed URL:", urlError)
         // Fallback auf Public URL versuchen
-        const { data: publicData } = await supabase.storage
-          .from('documents')
-          .getPublicUrl(filePath)
+        const { data: publicData } = await supabase.storage.from('documents').getPublicUrl(filePath)
         return publicData.publicUrl
       }
-      
+
       return urlData.signedUrl
     } catch (err) {
-      console.error("Fehler beim Abrufen der Storage URL:", err)
+      console.error('Fehler beim Abrufen der Storage URL:', err)
       return null
     }
   }
@@ -128,7 +131,7 @@ export function useDocuments() {
       // Dokumente mit Details anreichern
       const enrichedDocs: DocumentWithDetails[] = await Promise.all(
         (documentsData || []).map(async (doc) => {
-          let url = ""
+          let url = ''
           if (doc.file_path) {
             url = await getStorageUrl(doc.file_path)
           }
@@ -146,7 +149,7 @@ export function useDocuments() {
                 .eq('id', doc.reference_id)
                 .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
                 .single()
-              
+
               if (expenseData) {
                 amount = expenseData.amount
               }
@@ -158,7 +161,7 @@ export function useDocuments() {
                 .eq('id', doc.reference_id)
                 .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
                 .single()
-              
+
               if (saleData) {
                 amount = saleData.total_amount
                 status = saleData.status
@@ -171,7 +174,7 @@ export function useDocuments() {
                 .eq('id', doc.reference_id)
                 .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
                 .single()
-              
+
               if (summaryData) {
                 status = summaryData.status
                 amount = summaryData.sales_total
@@ -201,7 +204,7 @@ export function useDocuments() {
             description: displayInfo.description,
             icon: displayInfo.icon,
             badgeColor: displayInfo.badgeColor,
-            fileType: doc.file_path ? doc.file_path.split('.').pop() : 'pdf'
+            fileType: doc.file_path ? doc.file_path.split('.').pop() : 'pdf',
           }
         })
       )
@@ -209,19 +212,23 @@ export function useDocuments() {
       // Filter nach Suchbegriff
       let filteredDocs = enrichedDocs
       if (filter?.searchTerm) {
-        filteredDocs = enrichedDocs.filter(doc => 
-          doc.displayName?.toLowerCase().includes(filter.searchTerm!.toLowerCase()) ||
-          doc.type.toLowerCase().includes(filter.searchTerm!.toLowerCase())
+        filteredDocs = enrichedDocs.filter(
+          (doc) =>
+            doc.displayName?.toLowerCase().includes(filter.searchTerm!.toLowerCase()) ||
+            doc.type.toLowerCase().includes(filter.searchTerm!.toLowerCase())
         )
       }
 
       setDocuments(filteredDocs)
 
       // Zusammenfassung berechnen
-      const receiptCount = documentsData?.filter(doc => doc.type === 'receipt').length || 0
-      const dailyReportCount = documentsData?.filter(doc => doc.type === 'daily_report').length || 0
-      const monthlyReportCount = documentsData?.filter(doc => doc.type === 'monthly_report').length || 0
-      const expenseReceiptCount = documentsData?.filter(doc => doc.type === 'expense_receipt').length || 0
+      const receiptCount = documentsData?.filter((doc) => doc.type === 'receipt').length || 0
+      const dailyReportCount =
+        documentsData?.filter((doc) => doc.type === 'daily_report').length || 0
+      const monthlyReportCount =
+        documentsData?.filter((doc) => doc.type === 'monthly_report').length || 0
+      const expenseReceiptCount =
+        documentsData?.filter((doc) => doc.type === 'expense_receipt').length || 0
 
       setSummary({
         total: documentsData?.length || 0,
@@ -229,8 +236,8 @@ export function useDocuments() {
           receipt: receiptCount,
           daily_report: dailyReportCount,
           monthly_report: monthlyReportCount,
-          expense_receipt: expenseReceiptCount
-        }
+          expense_receipt: expenseReceiptCount,
+        },
       })
 
       return { success: true, documents: filteredDocs }
@@ -245,9 +252,9 @@ export function useDocuments() {
 
   // Dokument hochladen
   const uploadDocument = async (
-    file: File, 
-    type: 'receipt' | 'daily_report' | 'monthly_report' | 'expense_receipt', 
-    referenceId: string, 
+    file: File,
+    type: 'receipt' | 'daily_report' | 'monthly_report' | 'expense_receipt',
+    referenceId: string,
     customName?: string
   ) => {
     try {
@@ -263,9 +270,7 @@ export function useDocuments() {
       const filePath = `${type}/${fileName}`
 
       // Datei zu Supabase Storage hochladen
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file)
+      const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file)
 
       if (uploadError) {
         throw new Error(`Upload-Fehler: ${uploadError.message}`)
@@ -284,12 +289,10 @@ export function useDocuments() {
         document_date: new Date().toISOString().split('T')[0],
         payment_method: null,
         user_id: user.user.id,
-        organization_id: currentOrganization.id // 🔒 SECURITY: Organization-scoped
+        organization_id: currentOrganization.id, // 🔒 SECURITY: Organization-scoped
       }
 
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert(documentData)
+      const { error: dbError } = await supabase.from('documents').insert(documentData)
 
       if (dbError) {
         throw new Error(`Datenbank-Fehler: ${dbError.message}`)
@@ -392,12 +395,10 @@ export function useDocuments() {
         document_date: new Date().toISOString().split('T')[0],
         payment_method: data.payment_method || null,
         user_id: user.user.id,
-        organization_id: currentOrganization.id // 🔒 SECURITY: Organization-scoped
+        organization_id: currentOrganization.id, // 🔒 SECURITY: Organization-scoped
       }
 
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert(documentData)
+      const { error: dbError } = await supabase.from('documents').insert(documentData)
 
       if (dbError) {
         throw new Error(`Datenbank-Fehler: ${dbError.message}`)
@@ -422,6 +423,6 @@ export function useDocuments() {
     uploadDocument,
     deleteDocument,
     generateDocument,
-    getStorageUrl
+    getStorageUrl,
   }
 }

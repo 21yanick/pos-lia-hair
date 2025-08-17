@@ -1,10 +1,10 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { createQueryClient } from './queryClient'
-import { QueryErrorBoundary } from './QueryErrorBoundary'
+import { type ReactNode, useState } from 'react'
 import { PageVisibilityHandler } from './PageVisibilityHandler'
+import { QueryErrorBoundary } from './QueryErrorBoundary'
+import { createQueryClient } from './queryClient'
 
 interface QueryProviderProps {
   children: ReactNode
@@ -12,7 +12,7 @@ interface QueryProviderProps {
 
 /**
  * React Query Provider with Error Boundary
- * 
+ *
  * Features:
  * - QueryClient management
  * - Development tools integration

@@ -1,20 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Separator } from '@/shared/components/ui/separator'
-import { Alert, AlertDescription } from '@/shared/components/ui/alert'
-import { Loader2, AlertCircle } from 'lucide-react'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
-import { DEFAULT_BUSINESS_SETTINGS } from '@/shared/types/businessSettings'
 import type { BusinessSettingsFormData } from '@/shared/types/businessSettings'
+import { DEFAULT_BUSINESS_SETTINGS } from '@/shared/types/businessSettings'
 
 export function CompanyInfoForm() {
   const { settings, updateSettings, saving } = useBusinessSettings()
   const [error, setError] = useState<string | null>(null)
-  
+
   const [formData, setFormData] = useState<BusinessSettingsFormData>({
     company_name: '',
     company_tagline: '',
@@ -52,8 +52,11 @@ export function CompanyInfoForm() {
     }
   }, [settings])
 
-  const handleInputChange = (field: keyof BusinessSettingsFormData, value: string | number | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleInputChange = (
+    field: keyof BusinessSettingsFormData,
+    value: string | number | boolean
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
     setError(null)
   }
 
@@ -87,9 +90,7 @@ export function CompanyInfoForm() {
       <div className="space-y-4">
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Grunddaten</h3>
-          <p className="text-sm text-muted-foreground">
-            Hauptinformationen über Ihr Unternehmen
-          </p>
+          <p className="text-sm text-muted-foreground">Hauptinformationen über Ihr Unternehmen</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -173,9 +174,7 @@ export function CompanyInfoForm() {
       <div className="space-y-4">
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Kontaktdaten</h3>
-          <p className="text-sm text-muted-foreground">
-            Telefon, E-Mail und Website
-          </p>
+          <p className="text-sm text-muted-foreground">Telefon, E-Mail und Website</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -229,8 +228,8 @@ export function CompanyInfoForm() {
 
       {/* Submit Button */}
       <div className="flex justify-end pt-6">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={saving}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
         >

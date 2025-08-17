@@ -1,28 +1,31 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { JsonImport } from "./import/JsonImport"
-import { CsvImport } from "./import/CsvImport"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { useSystemStats } from "@/shared/hooks/business/useSystemStats"
-import { 
-  FileJson,
-  FileSpreadsheet,
-  Database,
-  AlertCircle,
-  Loader2,
-  RefreshCw
-} from "lucide-react"
-import { SettingsHeader } from "@/shared/components/settings/SettingsHeader"
+import { AlertCircle, Database, FileJson, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react'
+import { useState } from 'react'
+import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { useSystemStats } from '@/shared/hooks/business/useSystemStats'
+import { CsvImport } from './import/CsvImport'
+import { JsonImport } from './import/JsonImport'
 
 export function ImportCenter() {
   const [activeTab, setActiveTab] = useState<'csv-import' | 'json-import'>('csv-import')
-  const { stats, loading: statsLoading, error: statsError, refetch: refetchStats } = useSystemStats()
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+    refetch: refetchStats,
+  } = useSystemStats()
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      
       {/* Header with Navigation */}
       <SettingsHeader
         title="Import-Center"
@@ -66,19 +69,25 @@ export function ImportCenter() {
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Produkte</p>
-              <p className={`text-2xl font-bold ${stats.productsCount > 0 ? 'text-success' : 'text-muted-foreground'}`}>
+              <p
+                className={`text-2xl font-bold ${stats.productsCount > 0 ? 'text-success' : 'text-muted-foreground'}`}
+              >
                 {statsLoading ? '...' : stats.productsCount}
               </p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Verkäufe</p>
-              <p className={`text-2xl font-bold ${stats.salesCount > 0 ? 'text-success' : 'text-muted-foreground'}`}>
+              <p
+                className={`text-2xl font-bold ${stats.salesCount > 0 ? 'text-success' : 'text-muted-foreground'}`}
+              >
                 {statsLoading ? '...' : stats.salesCount}
               </p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Ausgaben</p>
-              <p className={`text-2xl font-bold ${stats.expensesCount > 0 ? 'text-success' : 'text-muted-foreground'}`}>
+              <p
+                className={`text-2xl font-bold ${stats.expensesCount > 0 ? 'text-success' : 'text-muted-foreground'}`}
+              >
                 {statsLoading ? '...' : stats.expensesCount}
               </p>
             </div>
@@ -88,7 +97,7 @@ export function ImportCenter() {
 
       {/* Navigation Tabs - Mobile-optimiert */}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
-        <Button 
+        <Button
           variant={activeTab === 'csv-import' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => setActiveTab('csv-import')}
@@ -97,7 +106,7 @@ export function ImportCenter() {
           <FileSpreadsheet className="h-4 w-4" />
           <span className="hidden sm:inline ml-2">CSV Import</span>
         </Button>
-        <Button 
+        <Button
           variant={activeTab === 'json-import' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => setActiveTab('json-import')}
@@ -110,8 +119,6 @@ export function ImportCenter() {
 
       {activeTab === 'csv-import' && <CsvImport />}
       {activeTab === 'json-import' && <JsonImport />}
-
-
     </div>
   )
 }

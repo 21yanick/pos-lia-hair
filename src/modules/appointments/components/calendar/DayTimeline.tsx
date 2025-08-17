@@ -5,34 +5,38 @@
  * Interactive timeline with touch optimization and appointment display
  */
 
-import { useState, useEffect, useRef, useMemo } from 'react'
 import { Clock } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Button } from '@/shared/components/ui/button'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
-import { cn } from '@/shared/utils'
-import { formatWeekdayName, formatFullDate, formatDateForAPI } from '@/shared/utils/dateUtils'
-import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
+import { cn } from '@/shared/utils'
+import {
+  formatDateForAPI,
+  formatFullDate,
+  formatWeekdayName,
+  timeToMinutes,
+} from '@/shared/utils/dateUtils'
 import { useAppointmentsByDate } from '../../hooks/useAppointments'
-import { 
-  generateTimelineData, 
-  calculateAppointmentPosition,
-  isSlotAvailable,
-  getCurrentTime,
-  isTimeInPast,
-  formatTimeForDisplay
-} from '../../utils/timelineUtils'
-import { timeToMinutes } from '@/shared/utils/dateUtils'
-import { SLOT_CONFIG, TIMELINE_CONFIG } from '../../types/timeline'
-import type { 
-  DayTimelineProps, 
-  TimeSlot, 
-  AppointmentBlock, 
+import type {
+  AppointmentBlock,
   AppointmentService,
+  DayTimelineProps,
+  TimelineData,
   TimelineHour,
-  TimelineData
+  TimeSlot,
 } from '../../types/timeline'
+import { SLOT_CONFIG, TIMELINE_CONFIG } from '../../types/timeline'
+import {
+  calculateAppointmentPosition,
+  formatTimeForDisplay,
+  generateTimelineData,
+  getCurrentTime,
+  isSlotAvailable,
+  isTimeInPast,
+} from '../../utils/timelineUtils'
 
 /**
  * Helper function to calculate duration from start and end times
@@ -46,146 +50,152 @@ function calculateDurationFromTimes(startTime: string, endTime: string): number 
 /**
  * Main DayTimeline Component
  */
-export function DayTimeline({ 
-  selectedDate, 
-  onSlotClick, 
+export function DayTimeline({
+  selectedDate,
+  onSlotClick,
   onAppointmentClick,
-  className 
+  className,
 }: DayTimelineProps) {
   const { currentOrganization } = useCurrentOrganization()
   const { settings, loading: settingsLoading } = useBusinessSettingsQuery()
   const timelineRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(getCurrentTime())
-  
+
   // Debug: Log current organization (development only)
   // Removed: Causing excessive logging on every render
-  
+
   // Load real appointments for selected date
-  const { 
-    data: appointmentsData = [], 
-    isLoading: appointmentsLoading, 
-    error: appointmentsError 
-  } = useAppointmentsByDate(
-    currentOrganization?.id || '', 
-    selectedDate
-  )
-  
+  const {
+    data: appointmentsData = [],
+    isLoading: appointmentsLoading,
+    error: appointmentsError,
+  } = useAppointmentsByDate(currentOrganization?.id || '', selectedDate)
+
   // Debug: Log appointment query results (development only)
   // Removed: Causing excessive logging on every data change
-  
+
   // Convert DB appointments to AppointmentBlocks
   const appointments: AppointmentBlock[] = useMemo(() => {
     if (!appointmentsData || appointmentsData.length === 0) {
       return []
     }
-    
-    const converted = appointmentsData.map(apt => {
+
+    const converted = appointmentsData.map((apt) => {
       // Parse services JSON array (from appointments_with_services view)
-      const services = Array.isArray(apt.services) ? apt.services : []
-      
-      // Map to AppointmentService format
-      const mappedServices = services.map(service => ({
-        id: service.id,
-        name: service.name,
-        price: service.price || 0,
-        duration_minutes: service.duration_minutes || 0,
-        notes: service.notes,
-        sort_order: service.sort_order || 1
+      // V6.1: services is Json type, need safe parsing
+      let services: any[] = []
+      try {
+        services =
+          apt.services && typeof apt.services === 'object' && Array.isArray(apt.services)
+            ? apt.services
+            : []
+      } catch (e) {
+        console.warn('Failed to parse appointment services:', e)
+        services = []
+      }
+
+      // Map to AppointmentService format with null safety
+      const mappedServices = services.map((service) => ({
+        id: service?.id || '',
+        name: service?.name || 'Unbekannte Leistung',
+        price: service?.price || 0,
+        duration_minutes: service?.duration_minutes || 0,
+        notes: service?.notes || '',
+        sort_order: service?.sort_order || 1,
       }))
-      
+
       const appointment = {
-        id: apt.id,
-        startTime: apt.start_time,
-        endTime: apt.end_time,
+        id: apt.id || '',
+        startTime: apt.start_time || '00:00',
+        endTime: apt.end_time || '00:00',
         title: apt.customer_name || 'Unbekannter Kunde',
         customerName: apt.customer_name || 'Unbekannter Kunde',
-        date: selectedDate, // Add appointment date
+        date: selectedDate,
         services: mappedServices,
-        estimatedPrice: apt.estimated_price,
-        totalPrice: apt.total_price,
-        totalDuration: apt.total_duration_minutes,
-        notes: apt.notes,
-        duration: calculateDurationFromTimes(apt.start_time, apt.end_time),
+        estimatedPrice: apt.estimated_price || undefined,
+        totalPrice: apt.total_price || undefined,
+        totalDuration: apt.total_duration_minutes || undefined,
+        notes: apt.notes || undefined, // Convert null to undefined for AppointmentBlock
+        duration: calculateDurationFromTimes(apt.start_time || '00:00', apt.end_time || '00:00'),
         // Additional fields for editing
         customerId: apt.customer_id,
         customerPhone: apt.customer_phone,
-        status: apt.status
+        // Note: V6.1 doesn't have status field - removed for KISS compliance
       }
-      
-      
+
       return appointment
     })
-    
+
     // Debug: Conversion logging removed for performance
-    
+
     return converted
   }, [appointmentsData])
-  
+
   // Update current time every minute (MUST be before any conditional logic!)
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(getCurrentTime())
     }, 60000)
-    
+
     return () => clearInterval(interval)
   }, [])
-  
+
   // Generate timeline data
   const timelineData = useMemo(() => {
     const timeline = generateTimelineData(selectedDate, settings, appointments)
-    
+
     // Debug: Timeline generation logging removed for performance
-    
+
     return timeline
   }, [selectedDate, settings, appointments])
-  
+
   // Auto-scroll to current time on mount (MUST be before any conditional logic!)
   useEffect(() => {
     if (!timelineRef.current) return
-    
+
     const isToday = formatDateForAPI(selectedDate) === formatDateForAPI(new Date())
     if (!isToday) return
-    
+
     // Scroll to current time with some offset
     const currentHour = parseInt(currentTime.split(':')[0])
     const targetHour = Math.max(currentHour - 1, timelineData.startHour) // Show hour before current
     const scrollTop = (targetHour - timelineData.startHour) * TIMELINE_CONFIG.hourHeight
-    
+
     timelineRef.current.scrollTop = scrollTop
   }, [selectedDate, currentTime, timelineData.startHour])
-  
+
   // Show loading state (AFTER all hooks)
   if (settingsLoading || appointmentsLoading) {
     return <DayTimelineSkeleton className={className} />
   }
-  
+
   // Show error state (AFTER all hooks)
   if (appointmentsError) {
     // Continue with empty appointments array - don't block the UI
   }
-  
+
   const handleSlotClick = (slot: TimeSlot) => {
     if (!slot.isClickable) return
     onSlotClick?.(slot)
   }
-  
+
   const handleAppointmentClick = (appointment: AppointmentBlock) => {
     onAppointmentClick?.(appointment)
   }
-  
+
   return (
     <Card className={cn('w-full h-full flex flex-col', className)}>
       <CardHeader className="pb-4 shrink-0">
         <DayTimelineHeader selectedDate={selectedDate} timelineData={timelineData} />
       </CardHeader>
-      
+
       <CardContent className="flex-1 overflow-hidden p-0">
-        <div 
+        <div
           ref={timelineRef}
           className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background"
-          style={{ 
+          style={{
             scrollBehavior: 'smooth',
-            paddingBottom: TIMELINE_CONFIG.scrollPadding 
+            paddingBottom: TIMELINE_CONFIG.scrollPadding,
           }}
         >
           <div className="relative">
@@ -200,9 +210,9 @@ export function DayTimeline({
                 onAppointmentClick={handleAppointmentClick}
               />
             ))}
-            
+
             {/* Current Time Indicator */}
-            <CurrentTimeIndicator 
+            <CurrentTimeIndicator
               selectedDate={selectedDate}
               currentTime={currentTime}
               timelineData={timelineData}
@@ -217,38 +227,36 @@ export function DayTimeline({
 /**
  * Timeline Header with date and controls
  */
-function DayTimelineHeader({ 
-  selectedDate, 
-  timelineData 
-}: { 
+function DayTimelineHeader({
+  selectedDate,
+  timelineData,
+}: {
   selectedDate: Date
-  timelineData: TimelineData 
+  timelineData: TimelineData
 }) {
   const dayName = formatWeekdayName(selectedDate)
   const dateStr = formatFullDate(selectedDate)
-  const appointmentCount = timelineData.hours.reduce((sum, hour) => sum + hour.appointments.length, 0)
-  
+  const appointmentCount = timelineData.hours.reduce(
+    (sum, hour) => sum + hour.appointments.length,
+    0
+  )
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         <Clock className="h-5 w-5 text-primary" />
         <div>
-          <CardTitle className="text-lg">
-            {dayName}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {dateStr}
-          </p>
+          <CardTitle className="text-lg">{dayName}</CardTitle>
+          <p className="text-sm text-muted-foreground">{dateStr}</p>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2">
         {appointmentCount > 0 && (
           <Badge variant="secondary">
             {appointmentCount} Termin{appointmentCount !== 1 ? 'e' : ''}
           </Badge>
         )}
-        
       </div>
     </div>
   )
@@ -263,7 +271,7 @@ function TimelineHourComponent({
   currentTime,
   slotInterval,
   onSlotClick,
-  onAppointmentClick
+  onAppointmentClick,
 }: {
   hour: TimelineHour
   selectedDate: Date
@@ -273,25 +281,22 @@ function TimelineHourComponent({
   onAppointmentClick: (appointment: AppointmentBlock) => void
 }) {
   return (
-    <div 
-      className="relative border-b border-border"
-      style={{ height: TIMELINE_CONFIG.hourHeight }}
-    >
+    <div className="relative border-b border-border" style={{ height: TIMELINE_CONFIG.hourHeight }}>
       {/* Hour Label */}
-      <div 
+      <div
         className="absolute left-0 top-0 flex items-start justify-center pt-1 text-sm font-medium text-muted-foreground"
         style={{ width: TIMELINE_CONFIG.hourLabelWidth }}
       >
         {hour.timeLabel}
       </div>
-      
+
       {/* Slots Grid */}
-      <div 
+      <div
         className="absolute top-0 right-0 grid"
-        style={{ 
+        style={{
           left: TIMELINE_CONFIG.hourLabelWidth,
           gridTemplateRows: `repeat(${60 / slotInterval}, 1fr)`,
-          height: '100%'
+          height: '100%',
         }}
       >
         {hour.slots.map((slot) => (
@@ -303,9 +308,9 @@ function TimelineHourComponent({
           />
         ))}
       </div>
-      
+
       {/* Appointments */}
-      <div 
+      <div
         className="absolute top-0 right-0 pointer-events-none"
         style={{ left: TIMELINE_CONFIG.hourLabelWidth }}
       >
@@ -328,7 +333,7 @@ function TimelineHourComponent({
 function TimeSlotComponent({
   slot,
   selectedDate,
-  onSlotClick
+  onSlotClick,
 }: {
   slot: TimeSlot
   selectedDate: Date
@@ -336,7 +341,7 @@ function TimeSlotComponent({
 }) {
   const config = SLOT_CONFIG[slot.status]
   const isPast = isTimeInPast(slot.time, selectedDate)
-  
+
   return (
     <div
       className={cn(
@@ -345,9 +350,9 @@ function TimeSlotComponent({
         isPast && 'opacity-40 cursor-not-allowed',
         slot.isClickable && !isPast && 'hover:bg-muted/80 cursor-pointer'
       )}
-      style={{ 
+      style={{
         minHeight: TIMELINE_CONFIG.slotMinHeight,
-        minWidth: TIMELINE_CONFIG.touchTargetSize 
+        minWidth: TIMELINE_CONFIG.touchTargetSize,
       }}
       onClick={() => slot.isClickable && !isPast && onSlotClick(slot)}
       role={slot.isClickable && !isPast ? 'button' : 'gridcell'}
@@ -368,7 +373,7 @@ function TimeSlotComponent({
 function AppointmentBlockComponent({
   appointment,
   slotInterval,
-  onAppointmentClick
+  onAppointmentClick,
 }: {
   appointment: AppointmentBlock
   slotInterval: number
@@ -379,17 +384,17 @@ function AppointmentBlockComponent({
     slotInterval,
     TIMELINE_CONFIG.hourHeight
   )
-  
+
   // Adaptive layout threshold: 45 minutes
   const COMPACT_THRESHOLD = 45
   const isCompact = appointment.duration <= COMPACT_THRESHOLD
-  
+
   // Ultra-clean: Single appointment style using primary theme colors
   const appointmentStyle = 'bg-primary text-primary-foreground border-primary/20'
-  
+
   const customerName = appointment.customerName || appointment.title || 'Unbekannt'
   const timeRange = `${appointment.startTime} - ${appointment.endTime}`
-  
+
   return (
     <div
       className={cn(
@@ -398,7 +403,7 @@ function AppointmentBlockComponent({
       )}
       style={{
         top: position.top,
-        height: Math.max(position.height, TIMELINE_CONFIG.appointmentMinHeight)
+        height: Math.max(position.height, TIMELINE_CONFIG.appointmentMinHeight),
       }}
       onClick={() => onAppointmentClick(appointment)}
       role="button"
@@ -408,30 +413,22 @@ function AppointmentBlockComponent({
       {isCompact ? (
         /* Compact Layout: Horizontal for short appointments (≤45min) */
         <div className="px-2 py-1.5 h-full overflow-hidden flex items-center justify-between">
-          <div className="font-bold truncate text-white text-sm flex-1 mr-2">
-            {customerName}
-          </div>
-          <div className="text-white/90 text-xs font-medium whitespace-nowrap">
-            {timeRange}
-          </div>
+          <div className="font-bold truncate text-white text-sm flex-1 mr-2">{customerName}</div>
+          <div className="text-white/90 text-xs font-medium whitespace-nowrap">{timeRange}</div>
         </div>
       ) : (
         /* Extended Layout: Vertical for longer appointments (>45min) */
         <div className="p-2 text-sm h-full overflow-hidden flex flex-col justify-center gap-0.5">
           {/* Customer Name - Most Important */}
-          <div className="font-bold truncate text-white leading-none text-sm">
-            {customerName}
-          </div>
-          
+          <div className="font-bold truncate text-white leading-none text-sm">{customerName}</div>
+
           {/* Time - Secondary */}
-          <div className="text-white/80 text-xs font-medium leading-none">
-            {timeRange}
-          </div>
-          
+          <div className="text-white/80 text-xs font-medium leading-none">{timeRange}</div>
+
           {/* Service - Only if space allows */}
           {appointment.services.length > 0 && (
             <div className="text-white/70 text-xs truncate leading-none">
-              {appointment.services.map(service => service.name).join(', ')}
+              {appointment.services.map((service) => service.name).join(', ')}
             </div>
           )}
         </div>
@@ -446,34 +443,35 @@ function AppointmentBlockComponent({
 function CurrentTimeIndicator({
   selectedDate,
   currentTime,
-  timelineData
+  timelineData,
 }: {
   selectedDate: Date
   currentTime: string
   timelineData: TimelineData
 }) {
   const isToday = formatDateForAPI(selectedDate) === formatDateForAPI(new Date())
-  
+
   if (!isToday) return null
-  
+
   const currentHour = parseInt(currentTime.split(':')[0])
   const currentMinutes = parseInt(currentTime.split(':')[1])
-  
+
   // Check if current time is within timeline range
   if (currentHour < timelineData.startHour || currentHour > timelineData.endHour) {
     return null
   }
-  
-  const top = (currentHour - timelineData.startHour) * TIMELINE_CONFIG.hourHeight + 
-              (currentMinutes / 60) * TIMELINE_CONFIG.hourHeight
-  
+
+  const top =
+    (currentHour - timelineData.startHour) * TIMELINE_CONFIG.hourHeight +
+    (currentMinutes / 60) * TIMELINE_CONFIG.hourHeight
+
   return (
-    <div 
+    <div
       className="absolute z-10 pointer-events-none"
-      style={{ 
+      style={{
         top,
         left: TIMELINE_CONFIG.hourLabelWidth,
-        right: 0
+        right: 0,
       }}
     >
       {/* Current Time Line */}
@@ -506,7 +504,7 @@ export function DayTimelineSkeleton({ className }: { className?: string }) {
           <div className="h-8 w-20 bg-muted rounded animate-pulse" />
         </div>
       </CardHeader>
-      
+
       <CardContent className="flex-1 p-0">
         <div className="space-y-1 p-4">
           {Array.from({ length: 10 }).map((_, i) => (

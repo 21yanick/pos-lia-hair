@@ -1,16 +1,15 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { 
-  Upload, 
-  Settings as SettingsIcon, 
-  Users, 
-  UserCheck,
-  Wrench,
-  Calendar
-} from "lucide-react"
+import { Calendar, Settings as SettingsIcon, Upload, UserCheck, Users, Wrench } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
 import { PWAInstallCard } from './PWAInstallCard'
@@ -18,13 +17,14 @@ import { PWAInstallCard } from './PWAInstallCard'
 export function SettingsPage() {
   const { currentOrganization, memberships } = useCurrentOrganization()
   const { can, role, isAdmin, isOwner } = useOrganizationPermissions()
-  
+
   // 🔗 Helper: Organization-aware URL builder
-  const getOrgUrl = (path: string) => currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
-  
+  const getOrgUrl = (path: string) =>
+    currentOrganization ? `/org/${currentOrganization.slug}${path}` : path
+
   // Permission check - only admins and owners can manage team
   const canManageTeam = can('settings.manage_users') || isAdmin || isOwner
-  
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="space-y-2">
@@ -35,10 +35,9 @@ export function SettingsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        
         {/* PWA Installation */}
         <PWAInstallCard />
-        
+
         {/* Import-Funktionen */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
@@ -46,33 +45,21 @@ export function SettingsPage() {
               <Upload className="h-5 w-5 text-primary" />
               <CardTitle>Import</CardTitle>
             </div>
-            <CardDescription>
-              Importieren Sie historische Daten oder Testdaten
-            </CardDescription>
+            <CardDescription>Importieren Sie historische Daten oder Testdaten</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                • Produkte & Services
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Verkaufs-Historie
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Ausgaben-Historie
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Lieferanten & Partner
-              </p>
+              <p className="text-sm text-muted-foreground">• Produkte & Services</p>
+              <p className="text-sm text-muted-foreground">• Verkaufs-Historie</p>
+              <p className="text-sm text-muted-foreground">• Ausgaben-Historie</p>
+              <p className="text-sm text-muted-foreground">• Lieferanten & Partner</p>
               <Button asChild className="w-full mt-4">
-                <Link href={getOrgUrl("/settings/import")}>
-                  Import-Center öffnen
-                </Link>
+                <Link href={getOrgUrl('/settings/import')}>Import-Center öffnen</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Verwaltung */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
@@ -80,28 +67,16 @@ export function SettingsPage() {
               <Wrench className="h-5 w-5 text-amber-600" />
               <CardTitle>Verwaltung</CardTitle>
             </div>
-            <CardDescription>
-              Kategorien, Lieferanten und operative Einstellungen
-            </CardDescription>
+            <CardDescription>Kategorien, Lieferanten und operative Einstellungen</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                • Ausgaben-Kategorien
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Lieferanten verwalten
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Lieferanten-Kategorien
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • CSV Import & Export
-              </p>
+              <p className="text-sm text-muted-foreground">• Ausgaben-Kategorien</p>
+              <p className="text-sm text-muted-foreground">• Lieferanten verwalten</p>
+              <p className="text-sm text-muted-foreground">• Lieferanten-Kategorien</p>
+              <p className="text-sm text-muted-foreground">• CSV Import & Export</p>
               <Button asChild className="w-full mt-4">
-                <Link href={getOrgUrl("/settings/management")}>
-                  Verwaltung öffnen
-                </Link>
+                <Link href={getOrgUrl('/settings/management')}>Verwaltung öffnen</Link>
               </Button>
             </div>
           </CardContent>
@@ -120,19 +95,11 @@ export function SettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                • Name & E-Mail bearbeiten
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Passwort ändern
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Sicherheitseinstellungen
-              </p>
+              <p className="text-sm text-muted-foreground">• Name & E-Mail bearbeiten</p>
+              <p className="text-sm text-muted-foreground">• Passwort ändern</p>
+              <p className="text-sm text-muted-foreground">• Sicherheitseinstellungen</p>
               <Button asChild className="w-full mt-4">
-                <Link href={getOrgUrl("/settings/profile")}>
-                  Profil bearbeiten
-                </Link>
+                <Link href={getOrgUrl('/settings/profile')}>Profil bearbeiten</Link>
               </Button>
             </div>
           </CardContent>
@@ -145,25 +112,15 @@ export function SettingsPage() {
               <SettingsIcon className="h-5 w-5 text-metric-yearly" />
               <CardTitle>Firma</CardTitle>
             </div>
-            <CardDescription>
-              Firmendaten und App-Design
-            </CardDescription>
+            <CardDescription>Firmendaten und App-Design</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                • Firmendaten & Kontakt
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • PDF-Logo & App-Logos
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Währung & Steuersatz
-              </p>
+              <p className="text-sm text-muted-foreground">• Firmendaten & Kontakt</p>
+              <p className="text-sm text-muted-foreground">• PDF-Logo & App-Logos</p>
+              <p className="text-sm text-muted-foreground">• Währung & Steuersatz</p>
               <Button asChild className="w-full mt-4">
-                <Link href={getOrgUrl("/settings/business")}>
-                  Firma konfigurieren
-                </Link>
+                <Link href={getOrgUrl('/settings/business')}>Firma konfigurieren</Link>
               </Button>
             </div>
           </CardContent>
@@ -176,28 +133,16 @@ export function SettingsPage() {
               <Calendar className="h-5 w-5 text-primary" />
               <CardTitle>Termine</CardTitle>
             </div>
-            <CardDescription>
-              Geschäftszeiten, Urlaubszeiten und Buchungsregeln
-            </CardDescription>
+            <CardDescription>Geschäftszeiten, Urlaubszeiten und Buchungsregeln</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                • Arbeitszeiten & Pausen
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Urlaubszeiten verwalten
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Buchungsregeln & Timeline
-              </p>
-              <p className="text-sm text-muted-foreground">
-                • Kalender-Anzeige-Optionen
-              </p>
+              <p className="text-sm text-muted-foreground">• Arbeitszeiten & Pausen</p>
+              <p className="text-sm text-muted-foreground">• Urlaubszeiten verwalten</p>
+              <p className="text-sm text-muted-foreground">• Buchungsregeln & Timeline</p>
+              <p className="text-sm text-muted-foreground">• Kalender-Anzeige-Optionen</p>
               <Button asChild className="w-full mt-4">
-                <Link href={getOrgUrl("/appointments/settings")}>
-                  Termine konfigurieren
-                </Link>
+                <Link href={getOrgUrl('/appointments/settings')}>Termine konfigurieren</Link>
               </Button>
             </div>
           </CardContent>
@@ -217,22 +162,15 @@ export function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  • Neue Mitglieder einladen
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  • Rollen und Berechtigungen
-                </p>
+                <p className="text-sm text-muted-foreground">• Neue Mitglieder einladen</p>
+                <p className="text-sm text-muted-foreground">• Rollen und Berechtigungen</p>
                 <Button asChild className="w-full mt-4">
-                  <Link href={getOrgUrl("/settings/team")}>
-                    Team verwalten
-                  </Link>
+                  <Link href={getOrgUrl('/settings/team')}>Team verwalten</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
-
       </div>
     </div>
   )

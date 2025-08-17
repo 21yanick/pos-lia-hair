@@ -1,28 +1,22 @@
-"use client"
+'use client'
 
+import { AlertCircle, Brain, CheckCircle2, Loader2, Zap } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from "@/shared/components/ui/button"
-import { Alert, AlertDescription } from "@/shared/components/ui/alert"
-import { Badge } from "@/shared/components/ui/badge"
-import { 
-  Zap, 
-  CheckCircle2, 
-  AlertCircle, 
-  Loader2, 
-  Brain 
-} from "lucide-react"
-import { 
-  getProviderMatchSuggestions, 
-  executeAutoProviderMatch 
-} from '../../services/bankingApi'
-import type { ProviderMatchResult, ProviderAutoMatchResult } from '../../services/matchingTypes'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { executeAutoProviderMatch, getProviderMatchSuggestions } from '../../services/bankingApi'
+import type { ProviderAutoMatchResult, ProviderMatchResult } from '../../services/matchingTypes'
 
 interface ProviderAutoMatchButtonProps {
   onMatchComplete: () => void
   className?: string
 }
 
-export function ProviderAutoMatchButton({ onMatchComplete, className }: ProviderAutoMatchButtonProps) {
+export function ProviderAutoMatchButton({
+  onMatchComplete,
+  className,
+}: ProviderAutoMatchButtonProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isMatching, setIsMatching] = useState(false)
   const [suggestions, setSuggestions] = useState<ProviderMatchResult | null>(null)
@@ -32,14 +26,14 @@ export function ProviderAutoMatchButton({ onMatchComplete, className }: Provider
   const analyzeSuggestions = async () => {
     setIsAnalyzing(true)
     setError(null)
-    
+
     try {
       const { data, error: apiError } = await getProviderMatchSuggestions()
-      
+
       if (apiError || !data) {
         throw new Error(apiError?.message || 'Fehler beim Analysieren der Matches')
       }
-      
+
       setSuggestions(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
@@ -56,26 +50,25 @@ export function ProviderAutoMatchButton({ onMatchComplete, className }: Provider
 
     setIsMatching(true)
     setError(null)
-    
+
     try {
       const { data, error: apiError } = await executeAutoProviderMatch(suggestions.autoMatchable)
-      
+
       if (apiError || !data) {
         throw new Error(apiError?.message || 'Fehler beim Auto-Matching')
       }
-      
+
       setLastResult(data)
-      
+
       if (data.success && data.matchedPairs > 0) {
         // Reset suggestions after successful match
         setSuggestions(null)
         onMatchComplete()
       }
-      
+
       if (data.errors.length > 0) {
         setError(`${data.matchedPairs} Matches erfolgreich, ${data.errors.length} Fehler`)
       }
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
     } finally {
@@ -96,7 +89,7 @@ export function ProviderAutoMatchButton({ onMatchComplete, className }: Provider
         <Button
           onClick={suggestions ? executeAutoMatch : analyzeSuggestions}
           disabled={isAnalyzing || isMatching || (suggestions && !hasAutoMatches)}
-          variant={hasAutoMatches ? "default" : "outline"}
+          variant={hasAutoMatches ? 'default' : 'outline'}
           size="lg"
           className="flex-1"
         >
@@ -132,12 +125,7 @@ export function ProviderAutoMatchButton({ onMatchComplete, className }: Provider
 
         {/* Refresh Analysis Button */}
         {suggestions && (
-          <Button
-            onClick={analyzeSuggestions}
-            disabled={isAnalyzing}
-            variant="outline"
-            size="lg"
-          >
+          <Button onClick={analyzeSuggestions} disabled={isAnalyzing} variant="outline" size="lg">
             {isAnalyzing ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
@@ -175,7 +163,8 @@ export function ProviderAutoMatchButton({ onMatchComplete, className }: Provider
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
-            <strong>Erfolgreich!</strong> {lastResult.matchedPairs} Provider-Matches automatisch erstellt.
+            <strong>Erfolgreich!</strong> {lastResult.matchedPairs} Provider-Matches automatisch
+            erstellt.
           </AlertDescription>
         </Alert>
       )}
@@ -184,9 +173,7 @@ export function ProviderAutoMatchButton({ onMatchComplete, className }: Provider
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error}
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
@@ -198,8 +185,12 @@ export function ProviderAutoMatchButton({ onMatchComplete, className }: Provider
             <span className="font-medium text-blue-800">Intelligente Analyse</span>
           </div>
           <div className="space-y-1">
-            <div>📊 <strong>{suggestions.summary.totalCandidates}</strong> Kandidaten gefunden</div>
-            <div>🎯 Höchste Confidence: <strong>{suggestions.summary.highestConfidence}%</strong></div>
+            <div>
+              📊 <strong>{suggestions.summary.totalCandidates}</strong> Kandidaten gefunden
+            </div>
+            <div>
+              🎯 Höchste Confidence: <strong>{suggestions.summary.highestConfidence}%</strong>
+            </div>
             {hasAutoMatches && (
               <div className="text-green-700 font-medium">
                 ⚡ {autoMatchCount} Paare bereit für Auto-Match

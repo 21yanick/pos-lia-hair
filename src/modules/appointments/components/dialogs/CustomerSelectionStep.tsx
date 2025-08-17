@@ -5,16 +5,14 @@
  * Step 2 of QuickBookingDialog
  */
 
+import { Check, Mail, Phone, Search, User } from 'lucide-react'
 import { useState } from 'react'
-import { User, Phone, Mail, Search, Check } from 'lucide-react'
-import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { Textarea } from '@/shared/components/ui/textarea'
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { Badge } from '@/shared/components/ui/badge'
+import { useCustomersQuery } from '@/modules/customers/hooks/useCustomersQuery'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
-import { 
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -22,22 +20,20 @@ import {
   CommandItem,
   CommandList,
 } from '@/shared/components/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/components/ui/popover'
-import { useCustomersQuery } from '@/modules/customers/hooks/useCustomersQuery'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
+import { Textarea } from '@/shared/components/ui/textarea'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { formatDateForDisplay, formatTimeShort } from '@/shared/utils/dateUtils'
 import { cn } from '@/shared/utils'
+import { formatDateForDisplay, formatTimeShort } from '@/shared/utils/dateUtils'
 import type { CustomerStepProps } from '../../types/quickBooking'
 
 interface Customer {
   id: string
   name: string
-  phone?: string
-  email?: string
+  phone?: string | null // V6.1 compatibility: allow both undefined and null
+  email?: string | null // V6.1 compatibility: allow both undefined and null
 }
 
 export function CustomerSelectionStep({
@@ -51,7 +47,7 @@ export function CustomerSelectionStep({
   onNotesChange,
   selectedServices,
   timeSlot,
-  totalDuration
+  totalDuration,
 }: CustomerStepProps) {
   const { currentOrganization } = useCurrentOrganization()
   const { data: customers = [] } = useCustomersQuery(currentOrganization?.id || '')
@@ -59,21 +55,20 @@ export function CustomerSelectionStep({
   const [walkInForm, setWalkInForm] = useState({
     name: customerName,
     phone: customerPhone || '',
-    email: ''
+    email: '',
   })
 
-  const selectedCustomer = customers.find(c => c.id === customerId)
+  const selectedCustomer = customers.find((c) => c.id === customerId)
   const selectedServiceNames = selectedServices
-    .filter(s => s.selected)
-    .map(s => s.service.name)
+    .filter((s) => s.selected)
+    .map((s) => s.service.name)
     .join(' + ')
-
 
   // Handle existing customer selection
   const handleCustomerSelect = (customer: Customer) => {
     onCustomerChange(customer.id, customer.name, customer.phone || null)
     setCustomerSearchOpen(false)
-    
+
     // Switch to existing customer mode
     if (isWalkIn) {
       onWalkInToggle(false)
@@ -84,7 +79,7 @@ export function CustomerSelectionStep({
   const handleWalkInFormChange = (field: string, value: string) => {
     const updatedForm = { ...walkInForm, [field]: value }
     setWalkInForm(updatedForm)
-    
+
     // Update parent state
     onCustomerChange(null, updatedForm.name, updatedForm.phone || null)
   }
@@ -92,11 +87,11 @@ export function CustomerSelectionStep({
   // Handle customer type toggle
   const handleCustomerTypeToggle = (walkIn: boolean) => {
     onWalkInToggle(walkIn)
-    
+
     if (walkIn) {
       // Switch to walk-in: set "Laufkundschaft" as default name
       const defaultName = walkInForm.name || 'Laufkundschaft'
-      setWalkInForm(prev => ({ ...prev, name: defaultName }))
+      setWalkInForm((prev) => ({ ...prev, name: defaultName }))
       onCustomerChange(null, defaultName, walkInForm.phone || null)
     } else {
       // Switch to existing: clear form data
@@ -117,7 +112,7 @@ export function CustomerSelectionStep({
       {/* Customer Type Toggle - Mobile Optimized */}
       <div className="flex flex-col sm:flex-row gap-2">
         <Button
-          variant={!isWalkIn ? "default" : "outline"}
+          variant={!isWalkIn ? 'default' : 'outline'}
           onClick={() => handleCustomerTypeToggle(false)}
           className="flex-1"
         >
@@ -126,7 +121,7 @@ export function CustomerSelectionStep({
           <span className="sm:hidden">Bestehend</span>
         </Button>
         <Button
-          variant={isWalkIn ? "default" : "outline"}
+          variant={isWalkIn ? 'default' : 'outline'}
           onClick={() => handleCustomerTypeToggle(true)}
           className="flex-1"
         >
@@ -151,7 +146,11 @@ export function CustomerSelectionStep({
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-xs">
-                        {selectedCustomer.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        {selectedCustomer.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <span>{selectedCustomer.name}</span>
@@ -177,7 +176,11 @@ export function CustomerSelectionStep({
                         <div className="flex items-center gap-2 w-full">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback className="text-xs">
-                              {customer.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              {customer.name
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')
+                                .toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
@@ -191,8 +194,8 @@ export function CustomerSelectionStep({
                           </div>
                           <Check
                             className={cn(
-                              "ml-auto h-4 w-4",
-                              selectedCustomer?.id === customer.id ? "opacity-100" : "opacity-0"
+                              'ml-auto h-4 w-4',
+                              selectedCustomer?.id === customer.id ? 'opacity-100' : 'opacity-0'
                             )}
                           />
                         </div>
@@ -276,7 +279,9 @@ export function CustomerSelectionStep({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="text-muted-foreground mb-1">Datum:</div>
-                  <div className="font-medium text-xs sm:text-sm">{formatDateForDisplay(timeSlot.date)}</div>
+                  <div className="font-medium text-xs sm:text-sm">
+                    {formatDateForDisplay(timeSlot.date)}
+                  </div>
                 </div>
                 <div>
                   <div className="text-muted-foreground mb-1">Zeit:</div>

@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useEffect } from "react"
-import { usePathname } from "next/navigation"
-import { useSidebar } from "@/shared/components/ui/sidebar"
+import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
+import { useSidebar } from '@/shared/components/ui/sidebar'
 
 export function SidebarAutoClose() {
   const pathname = usePathname()

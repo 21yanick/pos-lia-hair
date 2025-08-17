@@ -1,8 +1,8 @@
 'use client'
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
-import { Button } from "@/shared/components/ui/button"
-import { X, Download, ExternalLink } from "lucide-react"
+import { Download, ExternalLink, X } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
 
 interface PDFModalProps {
   isOpen: boolean
@@ -13,10 +13,10 @@ interface PDFModalProps {
 
 /**
  * Simple PDF Modal Component
- * 
+ *
  * BEFORE: EnterprisePDFProvider (355 lines, complex API proxy, mobile workarounds)
  * AFTER:  Simple iframe-based PDF viewer (~50 lines)
- * 
+ *
  * Features:
  * - Simple iframe-based viewing
  * - Download & external link options
@@ -67,8 +67,8 @@ export function PDFModal({ isOpen, url, title, onClose }: PDFModalProps) {
           </div>
         </DialogHeader>
         <div className="px-6 pb-6">
-          <iframe 
-            src={url} 
+          <iframe
+            src={url}
             className="w-full h-[75vh] border rounded-md"
             title={title || 'PDF Dokument'}
           />

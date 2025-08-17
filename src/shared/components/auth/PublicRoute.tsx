@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import type React from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 
 interface PublicRouteProps {
@@ -11,22 +12,19 @@ interface PublicRouteProps {
 
 /**
  * 🔓 PUBLIC ROUTE GUARD
- * 
+ *
  * Für nicht-authentifizierte Seiten wie Login, Register.
- * 
+ *
  * Verhalten:
  * - Wenn USER AUTHENTICATED → Redirect zu /organizations (oder redirectTo)
  * - Wenn USER NOT AUTHENTICATED → Zeige Content
- * 
+ *
  * Use Cases:
  * - Login Page
- * - Register Page  
+ * - Register Page
  * - Landing Page
  */
-export function PublicRoute({ 
-  children, 
-  redirectTo = '/organizations' 
-}: PublicRouteProps) {
+export function PublicRoute({ children, redirectTo = '/organizations' }: PublicRouteProps) {
   const { isAuthenticated, loading } = useAuth()
   const router = useRouter()
 

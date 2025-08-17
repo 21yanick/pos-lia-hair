@@ -5,26 +5,26 @@
  * Allows editing: Time, Duration, Customer Name, Notes
  */
 
-import { useState, useEffect } from 'react'
+import { Clock, Edit, Loader2, User } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/shared/components/ui/dialog'
-import { Clock, User, Edit, Loader2 } from 'lucide-react'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useUpdateAppointment } from '../hooks/useAppointments'
-import { formatDateForDisplay, formatDateForAPI } from '@/shared/utils/dateUtils'
-import type { AppointmentBlock } from '../types/timeline'
+import { useToast } from '@/shared/hooks/core/useToast'
 import type { AppointmentUpdate } from '@/shared/services/appointmentService'
+import { formatDateForAPI, formatDateForDisplay } from '@/shared/utils/dateUtils'
+import { useUpdateAppointment } from '../hooks/useAppointments'
+import type { AppointmentBlock } from '../types/timeline'
 
 interface EditAppointmentDialogProps {
   isOpen: boolean
@@ -41,11 +41,11 @@ interface EditFormData {
   notes: string
 }
 
-export function EditAppointmentDialog({ 
-  isOpen, 
-  onClose, 
+export function EditAppointmentDialog({
+  isOpen,
+  onClose,
   onSuccess,
-  appointment
+  appointment,
 }: EditAppointmentDialogProps) {
   const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
@@ -56,7 +56,7 @@ export function EditAppointmentDialog({
     endTime: '',
     duration: 60,
     customerName: '',
-    notes: ''
+    notes: '',
   })
 
   // Initialize form when appointment changes
@@ -67,7 +67,7 @@ export function EditAppointmentDialog({
         endTime: normalizeTime(appointment.endTime),
         duration: appointment.duration || 60,
         customerName: appointment.customerName || '',
-        notes: appointment.notes || ''
+        notes: appointment.notes || '',
       })
     }
   }, [appointment])
@@ -93,20 +93,20 @@ export function EditAppointmentDialog({
   const handleStartTimeChange = (newStartTime: string) => {
     const normalizedStartTime = normalizeTime(newStartTime)
     const newEndTime = calculateEndTime(normalizedStartTime, formData.duration)
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       startTime: normalizedStartTime,
-      endTime: newEndTime
+      endTime: newEndTime,
     }))
   }
 
   // Update end time when duration changes
   const handleDurationChange = (newDuration: number) => {
     const newEndTime = calculateEndTime(formData.startTime, newDuration)
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       duration: newDuration,
-      endTime: newEndTime
+      endTime: newEndTime,
     }))
   }
 
@@ -117,7 +117,7 @@ export function EditAppointmentDialog({
       // Ensure times are properly formatted
       const normalizedStartTime = normalizeTime(formData.startTime)
       const normalizedEndTime = normalizeTime(formData.endTime)
-      
+
       const updateData: AppointmentUpdate = {
         id: appointment.id,
         appointment_date: formatDateForAPI(appointment.date),
@@ -127,7 +127,7 @@ export function EditAppointmentDialog({
         notes: formData.notes || null,
         // Keep existing customer_id and phone
         customer_id: appointment.customerId,
-        customer_phone: appointment.customerPhone
+        customer_phone: appointment.customerPhone,
         // No services update - services stay unchanged
       }
 
@@ -145,7 +145,7 @@ export function EditAppointmentDialog({
       toast({
         title: 'Fehler',
         description: error?.message || 'Termin konnte nicht aktualisiert werden.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }
@@ -160,9 +160,7 @@ export function EditAppointmentDialog({
             <Edit className="h-5 w-5" />
             Termin bearbeiten
           </DialogTitle>
-          <DialogDescription>
-            {formatDateForDisplay(appointment.date)}
-          </DialogDescription>
+          <DialogDescription>{formatDateForDisplay(appointment.date)}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -172,7 +170,7 @@ export function EditAppointmentDialog({
               <Clock className="h-4 w-4" />
               Zeitplan
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="startTime">Startzeit</Label>
@@ -202,7 +200,7 @@ export function EditAppointmentDialog({
                   <Button
                     key={mins}
                     type="button"
-                    variant={formData.duration === mins ? "default" : "outline"}
+                    variant={formData.duration === mins ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleDurationChange(mins)}
                   >
@@ -219,14 +217,14 @@ export function EditAppointmentDialog({
               <User className="h-4 w-4" />
               Kunde
             </div>
-            
+
             <div>
               <Label htmlFor="customerName">Name</Label>
               <Input
                 id="customerName"
                 type="text"
                 value={formData.customerName}
-                onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, customerName: e.target.value }))}
                 placeholder="Kundenname"
               />
             </div>
@@ -238,7 +236,7 @@ export function EditAppointmentDialog({
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Zusätzliche Notizen..."
               className="min-h-[80px]"
             />
@@ -249,8 +247,8 @@ export function EditAppointmentDialog({
           <Button variant="outline" onClick={onClose}>
             Abbrechen
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={updateAppointment.isPending || !formData.customerName.trim()}
           >
             {updateAppointment.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

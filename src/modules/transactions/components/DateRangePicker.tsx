@@ -1,19 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import { de } from 'date-fns/locale'
 import { CalendarIcon, X } from 'lucide-react'
-import { DateRange } from 'react-day-picker'
-
-import { cn } from '@/shared/utils'
-import { formatDateForDisplay } from '@/shared/utils/dateUtils'
+import type React from 'react'
+import { useState } from 'react'
+import type { DateRange } from 'react-day-picker'
 import { Button } from '@/shared/components/ui/button'
 import { Calendar } from '@/shared/components/ui/calendar'
-import { de } from 'date-fns/locale'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
+import { cn } from '@/shared/utils'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 
 interface DateRangePickerProps {
   dateRange?: DateRange
@@ -27,8 +23,8 @@ export function DateRangePicker({
   dateRange,
   onDateRangeChange,
   className,
-  placeholder = "Zeitraum wählen...",
-  disabled = false
+  placeholder = 'Zeitraum wählen...',
+  disabled = false,
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false)
 
@@ -53,7 +49,7 @@ export function DateRangePicker({
   }
 
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn('grid gap-2', className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -62,15 +58,15 @@ export function DateRangePicker({
             size="sm"
             disabled={disabled}
             className={cn(
-              "justify-start text-left font-normal text-xs w-full max-w-full overflow-hidden",
-              !dateRange && "text-muted-foreground"
+              'justify-start text-left font-normal text-xs w-full max-w-full overflow-hidden',
+              !dateRange && 'text-muted-foreground'
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
             <span className="truncate flex-1 min-w-0">{formatDisplayText()}</span>
             {dateRange?.from && (
-              <X 
-                className="ml-2 h-4 w-4 hover:text-destructive flex-shrink-0" 
+              <X
+                className="ml-2 h-4 w-4 hover:text-destructive flex-shrink-0"
                 onClick={clearDateRange}
               />
             )}
@@ -105,11 +101,7 @@ export function DateRangePicker({
             >
               Zurücksetzen
             </Button>
-            <Button
-              size="sm"
-              onClick={() => setOpen(false)}
-              disabled={!dateRange?.from}
-            >
+            <Button size="sm" onClick={() => setOpen(false)} disabled={!dateRange?.from}>
               Anwenden
             </Button>
           </div>
@@ -129,39 +121,45 @@ export function DateRangePresets({ onSelectPreset, className }: DateRangePresets
   const getPresetRange = (preset: string): DateRange => {
     const today = new Date()
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    
+
     switch (preset) {
       case 'today':
         return { from: startOfToday, to: startOfToday }
-      
-      case 'yesterday':
+
+      case 'yesterday': {
         const yesterday = new Date(startOfToday)
         yesterday.setDate(yesterday.getDate() - 1)
         return { from: yesterday, to: yesterday }
-      
-      case 'last_7_days':
+      }
+
+      case 'last_7_days': {
         const last7Days = new Date(startOfToday)
         last7Days.setDate(last7Days.getDate() - 6)
         return { from: last7Days, to: startOfToday }
-      
-      case 'last_30_days':
+      }
+
+      case 'last_30_days': {
         const last30Days = new Date(startOfToday)
         last30Days.setDate(last30Days.getDate() - 29)
         return { from: last30Days, to: startOfToday }
-      
-      case 'this_month':
+      }
+
+      case 'this_month': {
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
         return { from: startOfMonth, to: startOfToday }
-      
-      case 'last_month':
+      }
+
+      case 'last_month': {
         const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
         const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
         return { from: startOfLastMonth, to: endOfLastMonth }
-      
-      case 'this_year':
+      }
+
+      case 'this_year': {
         const startOfYear = new Date(today.getFullYear(), 0, 1)
         return { from: startOfYear, to: startOfToday }
-      
+      }
+
       default:
         return { from: startOfToday, to: startOfToday }
     }
@@ -178,7 +176,7 @@ export function DateRangePresets({ onSelectPreset, className }: DateRangePresets
   ]
 
   return (
-    <div className={cn("flex flex-wrap gap-2", className)}>
+    <div className={cn('flex flex-wrap gap-2', className)}>
       {presets.map(({ key, label }) => (
         <Button
           key={key}

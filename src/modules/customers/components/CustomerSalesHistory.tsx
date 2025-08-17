@@ -1,13 +1,17 @@
 'use client'
 
+import { Calendar, ChevronDown, ChevronRight, Loader2, ShoppingBag } from 'lucide-react'
 import { useState } from 'react'
-import { ShoppingBag, Calendar, Loader2, ChevronDown, ChevronRight } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/components/ui/collapsible'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/shared/components/ui/collapsible'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useCustomerSales, type SaleWithItems } from '../hooks/useCustomerSales'
+import { type SaleWithItems, useCustomerSales } from '../hooks/useCustomerSales'
 import { formatRelativeDate } from '../utils/customerUtils'
 
 interface CustomerSalesHistoryProps {
@@ -17,15 +21,15 @@ interface CustomerSalesHistoryProps {
 export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) {
   const { currentOrganization } = useCurrentOrganization()
   const [expandedSales, setExpandedSales] = useState<Set<string>>(new Set())
-  
-  const { 
-    data: sales = [], 
-    isLoading, 
-    error 
+
+  const {
+    data: sales = [],
+    isLoading,
+    error,
   } = useCustomerSales(customerId, currentOrganization?.id || '')
 
   const toggleSaleExpanded = (saleId: string) => {
-    setExpandedSales(prev => {
+    setExpandedSales((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(saleId)) {
         newSet.delete(saleId)
@@ -38,19 +42,27 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
 
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
-      case 'cash': return 'Bargeld'
-      case 'twint': return 'TWINT'
-      case 'sumup': return 'Karte'
-      default: return method
+      case 'cash':
+        return 'Bargeld'
+      case 'twint':
+        return 'TWINT'
+      case 'sumup':
+        return 'Karte'
+      default:
+        return method
     }
   }
 
   const getPaymentMethodColor = (method: string) => {
     switch (method) {
-      case 'cash': return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-      case 'twint': return 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
-      case 'sumup': return 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+      case 'cash':
+        return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+      case 'twint':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
+      case 'sumup':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
     }
   }
 
@@ -113,9 +125,7 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
               <div className="text-sm text-muted-foreground">
                 {sales.length} Verkauf{sales.length !== 1 ? 'e' : ''}
               </div>
-              <div className="font-semibold">
-                CHF {totalSales.toFixed(2)}
-              </div>
+              <div className="font-semibold">CHF {totalSales.toFixed(2)}</div>
             </div>
 
             {/* Sales List */}
@@ -123,9 +133,13 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
               {sales.map((sale) => {
                 const isExpanded = expandedSales.has(sale.id)
                 const hasItems = sale.sale_items && sale.sale_items.length > 0
-                
+
                 return (
-                  <Collapsible key={sale.id} open={isExpanded} onOpenChange={() => toggleSaleExpanded(sale.id)}>
+                  <Collapsible
+                    key={sale.id}
+                    open={isExpanded}
+                    onOpenChange={() => toggleSaleExpanded(sale.id)}
+                  >
                     <div className="border border-border rounded-lg overflow-hidden">
                       {/* Sale Header */}
                       <CollapsibleTrigger asChild>
@@ -145,10 +159,10 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                                 </Badge>
                               )}
                             </div>
-                            
+
                             <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
-                              <Badge 
-                                variant="secondary" 
+                              <Badge
+                                variant="secondary"
                                 className={`text-xs ${getPaymentMethodColor(sale.payment_method)}`}
                               >
                                 {getPaymentMethodLabel(sale.payment_method)}
@@ -156,11 +170,12 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                               <div className="font-semibold">
                                 CHF {parseFloat(sale.total_amount).toFixed(2)}
                               </div>
-                              {hasItems && (
-                                isExpanded ? 
-                                  <ChevronDown className="h-4 w-4 shrink-0" /> : 
+                              {hasItems &&
+                                (isExpanded ? (
+                                  <ChevronDown className="h-4 w-4 shrink-0" />
+                                ) : (
                                   <ChevronRight className="h-4 w-4 shrink-0" />
-                              )}
+                                ))}
                             </div>
                           </div>
                         </Button>
@@ -174,7 +189,7 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                               Gekaufte Artikel:
                             </div>
                             {sale.sale_items.map((saleItem) => (
-                              <div 
+                              <div
                                 key={saleItem.id}
                                 className="flex items-start justify-between text-sm py-1 gap-2 min-w-0"
                               >
@@ -183,11 +198,9 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                                     {saleItem.item?.name || 'Unbekannter Artikel'}
                                   </span>
                                   <div className="text-xs text-muted-foreground">
-                                    {saleItem.item?.type && (
-                                      <span>({saleItem.item.type})</span>
-                                    )}
+                                    {saleItem.item?.type && <span>({saleItem.item.type})</span>}
                                     {saleItem.quantity && saleItem.quantity > 1 && (
-                                      <span className={saleItem.item?.type ? " • " : ""}>
+                                      <span className={saleItem.item?.type ? ' • ' : ''}>
                                         {saleItem.quantity}x
                                       </span>
                                     )}
@@ -200,7 +213,10 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                                         {saleItem.quantity}x {parseFloat(saleItem.price).toFixed(2)}
                                       </div>
                                       <div>
-                                        CHF {(parseFloat(saleItem.price) * (saleItem.quantity || 1)).toFixed(2)}
+                                        CHF{' '}
+                                        {(
+                                          parseFloat(saleItem.price) * (saleItem.quantity || 1)
+                                        ).toFixed(2)}
                                       </div>
                                     </div>
                                   ) : (
@@ -231,7 +247,9 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
           <div className="text-center py-8 text-muted-foreground">
             <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">Noch keine Verkäufe</p>
-            <p className="text-xs mt-1">Verkäufe werden hier angezeigt, sobald der Kunde etwas kauft.</p>
+            <p className="text-xs mt-1">
+              Verkäufe werden hier angezeigt, sobald der Kunde etwas kauft.
+            </p>
           </div>
         )}
       </CardContent>

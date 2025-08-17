@@ -4,26 +4,25 @@
 // Main exports for Banking Module
 
 export { BankingPage } from './BankingPage'
-export { useBankingData } from './hooks/useBankingData'
-
 // Import components
 export { BankImportDialog } from './components/BankImportDialog'
-export { ProviderImportDialog } from './components/ProviderImportDialog'
 export { CashTransferDialog } from './components/CashTransferDialog'
+export { ProviderImportDialog } from './components/ProviderImportDialog'
+export { useBankingData } from './hooks/useBankingData'
 
 // Re-export key types
-export type { 
-  UnmatchedSaleForProvider,
-  UnmatchedProviderReport, 
-  UnmatchedBankTransaction,
+export type {
   AvailableForBankMatching,
   BankingStats,
-  ProviderImportSession
+  ProviderImportSession,
+  UnmatchedBankTransaction,
+  UnmatchedProviderReport,
+  UnmatchedSaleForProvider,
 } from './services/bankingApi'
 
 // Re-export provider types
 export type {
-  ProviderRecord,
   ProviderImportPreview,
-  ProviderImportResult
+  ProviderImportResult,
+  ProviderRecord,
 } from './types/provider'

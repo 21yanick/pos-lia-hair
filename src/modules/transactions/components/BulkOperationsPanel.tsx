@@ -1,22 +1,28 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Button } from '@/shared/components/ui/button'
-import { Badge } from '@/shared/components/ui/badge'
-import { Separator } from '@/shared/components/ui/separator'
-import { 
-  Download, 
-  FileText, 
-  Package, 
-  RefreshCw, 
-  X,
-  Loader2,
+import {
+  AlertCircle,
   CheckCircle2,
-  AlertCircle
+  Download,
+  FileText,
+  Loader2,
+  Package,
+  RefreshCw,
+  X,
 } from 'lucide-react'
-import type { UnifiedTransaction } from '../types/unifiedTransactions'
+import React, { useState } from 'react'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { Separator } from '@/shared/components/ui/separator'
 import { usePdfActions } from '../hooks/usePdfActions'
+import type { UnifiedTransaction } from '../types/unifiedTransactions'
 
 interface BulkOperationsPanelProps {
   selectedTransactions: UnifiedTransaction[]
@@ -29,7 +35,7 @@ export function BulkOperationsPanel({
   selectedTransactions,
   onClearSelection,
   onBulkComplete,
-  className = ''
+  className = '',
 }: BulkOperationsPanelProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [operationStatus, setOperationStatus] = useState<string | null>(null)
@@ -40,11 +46,11 @@ export function BulkOperationsPanel({
   // Statistics über ausgewählte Transaktionen
   const selectedStats = {
     total: selectedTransactions.length,
-    withPdf: selectedTransactions.filter(tx => tx.pdf_status === 'available').length,
-    missingPdf: selectedTransactions.filter(tx => tx.pdf_status === 'missing').length,
-    sales: selectedTransactions.filter(tx => tx.transaction_type === 'sale').length,
-    expenses: selectedTransactions.filter(tx => tx.transaction_type === 'expense').length,
-    totalAmount: selectedTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+    withPdf: selectedTransactions.filter((tx) => tx.pdf_status === 'available').length,
+    missingPdf: selectedTransactions.filter((tx) => tx.pdf_status === 'missing').length,
+    sales: selectedTransactions.filter((tx) => tx.transaction_type === 'sale').length,
+    expenses: selectedTransactions.filter((tx) => tx.transaction_type === 'expense').length,
+    totalAmount: selectedTransactions.reduce((sum, tx) => sum + tx.amount, 0),
   }
 
   // ZIP Download für alle verfügbaren PDFs
@@ -60,7 +66,7 @@ export function BulkOperationsPanel({
 
     try {
       const result = await downloadMultiplePdfs(selectedTransactions)
-      
+
       if (result.success) {
         setOperationStatus(`${selectedStats.withPdf} PDFs erfolgreich heruntergeladen`)
         setTimeout(() => {
@@ -86,10 +92,10 @@ export function BulkOperationsPanel({
     try {
       // Dynamisch TransactionExporter importieren (wird in Step 3 erstellt)
       const { exportTransactionsToCSV } = await import('../services/transactionExporter')
-      
+
       const filename = `transaktionen_${new Date().toISOString().split('T')[0]}.csv`
       exportTransactionsToCSV(selectedTransactions, filename)
-      
+
       setOperationStatus(`${selectedStats.total} Transaktionen als CSV exportiert`)
       setTimeout(() => {
         setOperationStatus(null)
@@ -116,8 +122,8 @@ export function BulkOperationsPanel({
     try {
       // TODO: Implement bulk PDF regeneration
       // Für jetzt: Placeholder Implementation
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
       setOperationStatus(`${selectedStats.missingPdf} PDFs erfolgreich erstellt`)
       setTimeout(() => {
         setOperationStatus(null)
@@ -143,16 +149,9 @@ export function BulkOperationsPanel({
               <Package className="w-5 h-5" />
               Bulk Operationen
             </CardTitle>
-            <CardDescription>
-              {selectedStats.total} Transaktionen ausgewählt
-            </CardDescription>
+            <CardDescription>{selectedStats.total} Transaktionen ausgewählt</CardDescription>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onClearSelection}
-            className="h-8 w-8 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={onClearSelection} className="h-8 w-8 p-0">
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -161,18 +160,12 @@ export function BulkOperationsPanel({
       <CardContent className="space-y-4">
         {/* Selection Statistics */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">
-            {selectedStats.total} Total
-          </Badge>
+          <Badge variant="outline">{selectedStats.total} Total</Badge>
           {selectedStats.sales > 0 && (
-            <Badge variant="default">
-              {selectedStats.sales} Verkäufe
-            </Badge>
+            <Badge variant="default">{selectedStats.sales} Verkäufe</Badge>
           )}
           {selectedStats.expenses > 0 && (
-            <Badge variant="destructive">
-              {selectedStats.expenses} Ausgaben
-            </Badge>
+            <Badge variant="destructive">{selectedStats.expenses} Ausgaben</Badge>
           )}
           {selectedStats.withPdf > 0 && (
             <Badge variant="outline" className="text-green-600">
@@ -206,8 +199,8 @@ export function BulkOperationsPanel({
         {/* Bulk Operations Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* ZIP Download */}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleZipDownload}
             disabled={isLoading || selectedStats.withPdf === 0}
             className="flex items-center gap-2"
@@ -226,8 +219,8 @@ export function BulkOperationsPanel({
           </Button>
 
           {/* CSV Export */}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleCsvExport}
             disabled={isLoading}
             className="flex items-center gap-2"
@@ -244,8 +237,8 @@ export function BulkOperationsPanel({
           </Button>
 
           {/* PDF Regeneration */}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handlePdfRegeneration}
             disabled={isLoading || selectedStats.missingPdf === 0}
             className="flex items-center gap-2"
@@ -266,7 +259,8 @@ export function BulkOperationsPanel({
 
         {/* Help Text */}
         <div className="text-xs text-muted-foreground">
-          💡 Tipp: ZIP Download enthält nur verfügbare PDFs. CSV Export enthält alle ausgewählten Transaktionen.
+          💡 Tipp: ZIP Download enthält nur verfügbare PDFs. CSV Export enthält alle ausgewählten
+          Transaktionen.
         </div>
       </CardContent>
     </Card>

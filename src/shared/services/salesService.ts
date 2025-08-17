@@ -1,9 +1,9 @@
 /**
  * Sales Service Functions
- * 
+ *
  * Pure business logic functions for sales operations
  * Extracted from useSales hook for React Query migration
- * 
+ *
  * Features:
  * - Multi-tenant security (organization-scoped)
  * - Comprehensive error handling
@@ -15,7 +15,7 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { Database } from '@/types/supabase'
+import type { Database } from '@/types/database'
 
 // ========================================
 // Types
@@ -23,17 +23,19 @@ import type { Database } from '@/types/supabase'
 
 export type Sale = Database['public']['Tables']['sales']['Row']
 export type SaleInsert = Omit<Database['public']['Tables']['sales']['Insert'], 'id' | 'created_at'>
-export type SaleUpdate = Partial<Omit<Database['public']['Tables']['sales']['Update'], 'id' | 'created_at'>> & { id: string }
+export type SaleUpdate = Partial<
+  Omit<Database['public']['Tables']['sales']['Update'], 'id' | 'created_at'>
+> & { id: string }
 
 export type SaleItem = Database['public']['Tables']['sale_items']['Row']
 export type SaleItemInsert = Omit<Database['public']['Tables']['sale_items']['Insert'], 'id'>
 
 export type CartItem = {
-  id: string        // Item ID aus der Datenbank
-  name: string      // Name des Items
-  price: number     // Preis pro Stück (kann vom Standard-Preis abweichen)
-  quantity: number  // Menge
-  total: number     // Gesamtpreis (Preis × Menge)
+  id: string // Item ID aus der Datenbank
+  name: string // Name des Items
+  price: number // Preis pro Stück (kann vom Standard-Preis abweichen)
+  quantity: number // Menge
+  total: number // Gesamtpreis (Preis × Menge)
 }
 
 export type CreateSaleData = {
@@ -41,20 +43,22 @@ export type CreateSaleData = {
   payment_method: 'cash' | 'twint' | 'sumup'
   notes?: string | null
   items: CartItem[]
-  received_amount?: number  // Nur für Bargeld-Zahlungen: Erhaltener Betrag
-  customer_id?: string | null  // 🆕 Customer Integration
-  customer_name?: string | null  // 🆕 Fallback für neue Kunden
+  received_amount?: number // Nur für Bargeld-Zahlungen: Erhaltener Betrag
+  customer_id?: string | null // 🆕 Customer Integration
+  customer_name?: string | null // 🆕 Fallback für neue Kunden
 }
 
-export type CreateSaleResult = {
-  success: true
-  sale: Sale
-  receiptUrl?: string
-  change: number
-} | {
-  success: false
-  error: string
-}
+export type CreateSaleResult =
+  | {
+      success: true
+      sale: Sale
+      receiptUrl?: string
+      change: number
+    }
+  | {
+      success: false
+      error: string
+    }
 
 // ========================================
 // Security & Validation
@@ -89,19 +93,19 @@ export function validateOrganizationId(organizationId: string | undefined): stri
  * Create a complete sale with items, PDF receipt, and cash movement
  */
 export async function createSale(
-  data: CreateSaleData, 
+  data: CreateSaleData,
   organizationId: string,
   cashMovementService?: {
     createSaleCashMovement: (saleId: string, amount: number) => Promise<any>
   }
 ): Promise<CreateSaleResult> {
   // console.log('🔥 salesService: createSale called with data:', data)
-  
+
   try {
     // Security validation
     const validOrgId = validateOrganizationId(organizationId)
     const userId = await getCurrentUserId()
-    
+
     // console.log('🔍 SECURITY CHECK: organizationId:', validOrgId, 'userId:', userId)
 
     // Create sale record
@@ -112,12 +116,12 @@ export async function createSale(
       notes: data.notes || null,
       user_id: userId,
       organization_id: validOrgId,
-      customer_id: data.customer_id || null,  // 🆕 Customer Integration
-      customer_name: data.customer_name || null,  // 🆕 Customer Name for Receipt
+      customer_id: data.customer_id || null, // 🆕 Customer Integration
+      customer_name: data.customer_name || null, // 🆕 Customer Name for Receipt
     }
-    
+
     // console.log('🚨 CRITICAL DEBUG: About to insert sale with data:', saleData)
-    
+
     const { data: sale, error: saleError } = await supabase
       .from('sales')
       .insert(saleData)
@@ -130,25 +134,23 @@ export async function createSale(
     }
 
     // Create sale items
-    const saleItems: SaleItemInsert[] = data.items.map(item => ({
+    const saleItems: SaleItemInsert[] = data.items.map((item) => ({
       sale_id: sale.id,
       item_id: item.id,
-      price: item.price,  // Unit price per item
+      price: item.price, // Unit price per item
       quantity: item.quantity,
       notes: null,
       user_id: userId,
-      organization_id: validOrgId
+      organization_id: validOrgId,
     }))
 
-    const { error: itemsError } = await supabase
-      .from('sale_items')
-      .insert(saleItems)
+    const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
 
     if (itemsError) {
       // console.error('❌ Fehler beim Erstellen der Verkaufsposten:', itemsError)
       throw itemsError
     }
-    
+
     // console.log('✅ Verkaufsposten erfolgreich erstellt:', saleItems.length)
 
     // Create cash movement for cash payments
@@ -170,15 +172,15 @@ export async function createSale(
       // Don't throw here, sale was successful
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       sale,
       receiptUrl: receiptResult?.publicUrl,
-      change: data.payment_method === 'cash' && data.received_amount 
-        ? data.received_amount - data.total_amount 
-        : 0
+      change:
+        data.payment_method === 'cash' && data.received_amount
+          ? data.received_amount - data.total_amount
+          : 0,
     }
-
   } catch (err: any) {
     console.error('❌ Fehler beim Verkauf:', err)
     return { success: false, error: err.message || 'Ein unerwarteter Fehler ist aufgetreten' }
@@ -189,7 +191,7 @@ export async function createSale(
  * Cancel a sale and reverse cash movements
  */
 export async function cancelSale(
-  saleId: string, 
+  saleId: string,
   organizationId: string,
   cashMovementService?: {
     reverseCashMovement: (referenceId: string, referenceType: 'sale' | 'expense') => Promise<any>
@@ -202,8 +204,8 @@ export async function cancelSale(
     // Update sale status to cancelled
     const { data, error } = await supabase
       .from('sales')
-      .update({ 
-        status: 'cancelled'
+      .update({
+        status: 'cancelled',
       })
       .eq('id', saleId)
       .eq('organization_id', validOrgId) // Multi-tenant security
@@ -241,7 +243,7 @@ export async function cancelSale(
 export async function getTodaySales(organizationId: string): Promise<Sale[]> {
   const validOrgId = validateOrganizationId(organizationId)
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-  
+
   const { data, error } = await supabase
     .from('sales')
     .select(`
@@ -268,8 +270,8 @@ export async function getTodaySales(organizationId: string): Promise<Sale[]> {
  * Get sales for date range
  */
 export async function getSalesForDateRange(
-  organizationId: string, 
-  startDate: string, 
+  organizationId: string,
+  startDate: string,
   endDate: string
 ): Promise<Sale[]> {
   const validOrgId = validateOrganizationId(organizationId)
@@ -298,45 +300,51 @@ export async function getSalesForDateRange(
  * Create PDF receipt for a sale
  */
 export async function createReceiptPDF(
-  sale: Sale, 
-  items: CartItem[], 
+  sale: Sale,
+  items: CartItem[],
   organizationId: string
 ): Promise<{ success: true; publicUrl: string } | { success: false; error: string }> {
   try {
     const React = await import('react')
     const { ReceiptPDF } = await import('@/shared/components/pdf/ReceiptPDF')
     const { pdf } = await import('@react-pdf/renderer')
-    
+
     // Load business settings with logo resolution
-    const { getBusinessSettings, resolveLogoUrl } = await import('@/shared/services/businessSettingsService')
+    const { getBusinessSettings, resolveLogoUrl } = await import(
+      '@/shared/services/businessSettingsService'
+    )
     const businessSettings = await getBusinessSettings()
-    
+
     // Resolve logo URL for PDF context
-    const resolvedBusinessSettings = businessSettings ? {
-      ...businessSettings,
-      logo_url: resolveLogoUrl(businessSettings.logo_url)
-    } : null
-    
+    const resolvedBusinessSettings = businessSettings
+      ? {
+          ...businessSettings,
+          logo_url: resolveLogoUrl(businessSettings.logo_url),
+        }
+      : null
+
     // Generate PDF
-    const pdfComponent = React.createElement(ReceiptPDF, { sale, items, businessSettings: resolvedBusinessSettings }) as any
+    const pdfComponent = React.createElement(ReceiptPDF, {
+      sale,
+      items,
+      businessSettings: resolvedBusinessSettings,
+    }) as any
     const blob = await pdf(pdfComponent).toBlob()
     const fileName = `quittung-${sale.id}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
-    
+
     // Upload to storage with organization-based path
     const filePath = `${organizationId}/receipts/${fileName}`
-    const { error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true
-      })
-    
+    const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true,
+    })
+
     if (uploadError) {
       // console.error('❌ Fehler beim Hochladen der Quittung:', uploadError)
       throw uploadError
     }
-    
+
     // Create document record
     const userId = await getCurrentUserId()
     const documentData = {
@@ -346,24 +354,19 @@ export async function createReceiptPDF(
       payment_method: sale.payment_method,
       document_date: new Date().toISOString().split('T')[0],
       user_id: userId,
-      organization_id: organizationId
+      organization_id: organizationId,
     }
-    
-    const { error: documentError } = await supabase
-      .from('documents')
-      .upsert(documentData)
-    
+
+    const { error: documentError } = await supabase.from('documents').upsert(documentData)
+
     if (documentError) {
       // console.error('❌ Fehler beim Erstellen des Quittung Document-Eintrags:', documentError)
     }
-    
+
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('documents')
-      .getPublicUrl(filePath)
-    
+    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath)
+
     return { success: true, publicUrl: urlData.publicUrl }
-    
   } catch (error: any) {
     console.error('❌ Fehler bei PDF-Erstellung:', error)
     return { success: false, error: error.message }

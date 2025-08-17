@@ -1,16 +1,17 @@
-import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata } from 'next'
+import type React from 'react'
 // ✅ GDPR-COMPLIANT: Local Inter Variable Font hosting
-import { ThemeProvider } from "@/shared/components/theme-provider"
-import { QueryProvider } from "@/shared/lib/react-query"
-import { Toaster } from "@/shared/components/ui/sonner"
+import { ThemeProvider } from '@/shared/components/theme-provider'
+import { Toaster } from '@/shared/components/ui/sonner'
+import { QueryProvider } from '@/shared/lib/react-query'
 // EnterprisePDFProvider removed - replaced by simple PDF modal hook
-import { inter } from "@/shared/styles/fonts"
-import "./globals.css"
+import { inter } from '@/shared/styles/fonts'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "LIA HAIR - POS System",
-  description: "Professional Hair Salon Point of Sale System - Appointments, Sales, Customer Management",
+  title: 'LIA HAIR - POS System',
+  description:
+    'Professional Hair Salon Point of Sale System - Appointments, Sales, Customer Management',
   generator: 'Next.js',
   manifest: '/manifest.json',
   keywords: ['hair salon', 'pos system', 'appointments', 'beauty', 'switzerland', 'pwa'],
@@ -26,9 +27,7 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'LIA HAIR',
-    startupImage: [
-      '/icons/apple-touch-icon.png',
-    ],
+    startupImage: ['/icons/apple-touch-icon.png'],
   },
   other: {
     'mobile-web-app-capable': 'yes',
@@ -44,11 +43,7 @@ export const metadata: Metadata = {
 // 🏗️ SIMPLIFIED ARCHITECTURE
 // No global OrganizationProvider - using URL-based organization selection
 // Auth & Organization context handled at page/component level
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de" suppressHydrationWarning className="h-full">
       <head>

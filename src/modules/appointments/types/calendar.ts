@@ -3,13 +3,13 @@
  * Clean, type-safe definitions for calendar components
  */
 
-export type DayStatus = 
-  | 'today'           // Today (primary highlight)
-  | 'available'       // Free day with working hours
-  | 'booked'          // Has appointments
-  | 'vacation'        // In vacation period
-  | 'closed'          // Business closed (no working hours)
-  | 'other-month'     // Days from previous/next month
+export type DayStatus =
+  | 'today' // Today (primary highlight)
+  | 'available' // Free day with working hours
+  | 'booked' // Has appointments
+  | 'vacation' // In vacation period
+  | 'closed' // Business closed (no working hours)
+  | 'other-month' // Days from previous/next month
 
 export interface CalendarDay {
   date: Date
@@ -41,29 +41,35 @@ export interface MonthGridProps {
  */
 export const DAY_INDICATOR_CONFIG = {
   today: {
-    className: 'bg-primary text-primary-foreground ring-2 ring-primary/50 font-semibold border border-primary/20',
-    description: 'Heute'
+    className:
+      'bg-primary text-primary-foreground ring-2 ring-primary/50 font-semibold border border-primary/20',
+    description: 'Heute',
   },
   available: {
-    className: 'bg-muted/60 text-foreground hover:bg-muted/80 transition-colors cursor-pointer border-2 border-border/80 hover:border-border',
-    description: 'Verfügbar'
+    className:
+      'bg-muted/60 text-foreground hover:bg-muted/80 transition-colors cursor-pointer border-2 border-border/80 hover:border-border',
+    description: 'Verfügbar',
   },
   booked: {
-    className: 'bg-secondary text-secondary-foreground font-medium cursor-pointer hover:bg-secondary/80 border-2 border-border/60 hover:border-border/80',
-    description: 'Termine vorhanden'
+    className:
+      'bg-secondary text-secondary-foreground font-medium cursor-pointer hover:bg-secondary/80 border-2 border-border/60 hover:border-border/80',
+    description: 'Termine vorhanden',
   },
   vacation: {
-    className: 'bg-destructive/20 text-destructive border border-destructive/30 relative overflow-hidden',
-    description: 'Urlaubszeit'
+    className:
+      'bg-destructive/20 text-destructive border border-destructive/30 relative overflow-hidden',
+    description: 'Urlaubszeit',
   },
   closed: {
-    className: 'bg-transparent text-muted-foreground/40 opacity-50 cursor-pointer hover:opacity-70 hover:bg-muted/20 transition-all duration-200',
-    description: 'Geschlossen (Ausnahmetermin möglich)'
+    className:
+      'bg-transparent text-muted-foreground/40 opacity-50 cursor-pointer hover:opacity-70 hover:bg-muted/20 transition-all duration-200',
+    description: 'Geschlossen (Ausnahmetermin möglich)',
   },
   'other-month': {
-    className: 'text-muted-foreground/25 cursor-pointer opacity-50 hover:opacity-75 transition-opacity',
-    description: 'Anderer Monat'
-  }
+    className:
+      'text-muted-foreground/25 cursor-pointer opacity-50 hover:opacity-75 transition-opacity',
+    description: 'Anderer Monat',
+  },
 } as const
 
 /**
@@ -73,9 +79,27 @@ export const SWISS_CALENDAR_CONFIG = {
   locale: 'de-CH',
   weekStartsOn: 1, // Monday
   monthNames: [
-    'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+    'Januar',
+    'Februar',
+    'März',
+    'April',
+    'Mai',
+    'Juni',
+    'Juli',
+    'August',
+    'September',
+    'Oktober',
+    'November',
+    'Dezember',
   ],
   weekDayNames: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-  weekDayNamesLong: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+  weekDayNamesLong: [
+    'Montag',
+    'Dienstag',
+    'Mittwoch',
+    'Donnerstag',
+    'Freitag',
+    'Samstag',
+    'Sonntag',
+  ],
 } as const

@@ -73,7 +73,7 @@ export async function getUnmatchedSalesForProvider(organizationId: string) {
   return { data: data || [], error: null }
 }
 
-// Right Side: Unmatched Provider Reports  
+// Right Side: Unmatched Provider Reports
 export interface UnmatchedProviderReport {
   id: string
   provider: string
@@ -171,22 +171,28 @@ export interface BankingStats {
   matchingProgress: number
 }
 
-export async function getBankingStats(organizationId: string): Promise<{ data: BankingStats | null, error: any }> {
+export async function getBankingStats(
+  organizationId: string
+): Promise<{ data: BankingStats | null; error: any }> {
   try {
     // Get counts from each view with ORGANIZATION SECURITY
     const [salesResult, providerResult, bankResult, expensesResult] = await Promise.all([
-      supabase.from('unmatched_sales_for_provider' as any)
+      supabase
+        .from('unmatched_sales_for_provider' as any)
         .select('id', { count: 'exact', head: true })
         .eq('organization_id', organizationId), // 🔒 SECURITY: Organization-scoped
-      supabase.from('unmatched_provider_reports' as any)
+      supabase
+        .from('unmatched_provider_reports' as any)
         .select('id', { count: 'exact', head: true })
         .eq('organization_id', organizationId), // 🔒 SECURITY: Organization-scoped
-      supabase.from('unmatched_bank_transactions' as any)
+      supabase
+        .from('unmatched_bank_transactions' as any)
         .select('id', { count: 'exact', head: true })
         .eq('organization_id', organizationId), // 🔒 SECURITY: Organization-scoped
-      supabase.from('available_for_bank_matching' as any)
+      supabase
+        .from('available_for_bank_matching' as any)
         .select('id', { count: 'exact', head: true })
-        .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
+        .eq('organization_id', organizationId), // 🔒 SECURITY: Organization-scoped
     ])
 
     // Get total unmatched amount from bank transactions with ORGANIZATION SECURITY
@@ -195,7 +201,8 @@ export async function getBankingStats(organizationId: string): Promise<{ data: B
       .select('amount_abs')
       .eq('organization_id', organizationId) // 🔒 SECURITY: Organization-scoped
 
-    const totalUnmatchedAmount = (bankAmounts as any)?.reduce((sum: number, item: any) => sum + (item.amount_abs || 0), 0) || 0
+    const totalUnmatchedAmount =
+      (bankAmounts as any)?.reduce((sum: number, item: any) => sum + (item.amount_abs || 0), 0) || 0
 
     const unmatchedSales = salesResult.count || 0
     const unmatchedProviderReports = providerResult.count || 0
@@ -203,8 +210,9 @@ export async function getBankingStats(organizationId: string): Promise<{ data: B
     const unmatchedExpenses = expensesResult.count || 0
 
     // Calculate rough matching progress (inverse of unmatched items)
-    const totalItems = unmatchedSales + unmatchedProviderReports + unmatchedBankTransactions + unmatchedExpenses
-    const matchingProgress = totalItems > 0 ? Math.max(0, 100 - (totalItems * 5)) : 100
+    const totalItems =
+      unmatchedSales + unmatchedProviderReports + unmatchedBankTransactions + unmatchedExpenses
+    const matchingProgress = totalItems > 0 ? Math.max(0, 100 - totalItems * 5) : 100
 
     const stats: BankingStats = {
       unmatchedSales,
@@ -212,11 +220,10 @@ export async function getBankingStats(organizationId: string): Promise<{ data: B
       unmatchedExpenses,
       unmatchedBankTransactions,
       totalUnmatchedAmount,
-      matchingProgress
+      matchingProgress,
     }
 
     return { data: stats, error: null }
-
   } catch (error) {
     console.error('Error fetching banking stats:', error)
     return { data: null, error }
@@ -233,9 +240,9 @@ export async function createProviderMatch(saleId: string, providerReportId: stri
     // Update sale with provider_report_id
     const { error: saleError } = await supabase
       .from('sales')
-      .update({ 
+      .update({
         provider_report_id: providerReportId,
-        banking_status: 'provider_matched'
+        banking_status: 'provider_matched',
       })
       .eq('id', saleId)
 
@@ -244,16 +251,15 @@ export async function createProviderMatch(saleId: string, providerReportId: stri
     // Update provider report with sale_id
     const { error: providerError } = await supabase
       .from('provider_reports')
-      .update({ 
+      .update({
         sale_id: saleId,
-        status: 'matched'
+        status: 'matched',
       })
       .eq('id', providerReportId)
 
     if (providerError) throw providerError
 
     return { success: true, error: null }
-
   } catch (error) {
     console.error('Error creating provider match:', error)
     return { success: false, error }
@@ -262,23 +268,25 @@ export async function createProviderMatch(saleId: string, providerReportId: stri
 
 // Create Bank Match (Tab 2: Bank Transaction ↔ Items)
 export async function createBankMatch(
-  bankTransactionId: string, 
-  matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction', id: string, amount: number }>
+  bankTransactionId: string,
+  matchedItems: Array<{
+    type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction'
+    id: string
+    amount: number
+  }>
 ) {
   try {
     // Create transaction matches
-    const matchInserts = matchedItems.map(item => ({
+    const matchInserts = matchedItems.map((item) => ({
       bank_transaction_id: bankTransactionId,
       matched_type: item.type,
       matched_id: item.id,
       matched_amount: item.amount,
       match_type: 'manual' as const,
-      match_confidence: 100.0
+      match_confidence: 100.0,
     }))
 
-    const { error: matchError } = await supabase
-      .from('transaction_matches')
-      .insert(matchInserts)
+    const { error: matchError } = await supabase.from('transaction_matches').insert(matchInserts)
 
     if (matchError) throw matchError
 
@@ -294,7 +302,7 @@ export async function createBankMatch(
     for (const item of matchedItems) {
       let table: string
       let updateData: any
-      
+
       if (item.type === 'sale') {
         table = 'sales'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' }
@@ -320,7 +328,6 @@ export async function createBankMatch(
     }
 
     return { success: true, error: null }
-
   } catch (error) {
     console.error('Error creating bank match:', error)
     return { success: false, error }
@@ -352,22 +359,22 @@ export async function createBankAccount(account: {
 // =====================================================
 // New endpoints for smart matching algorithms
 
-import { providerMatchingService } from './providerMatching'
-import { bankMatchingService } from './bankMatching'
-import type {
-  ProviderMatchResult,
-  ProviderAutoMatchResult,
-  BankMatchSuggestion,
-  ProviderSummaryDashboard,
-  ProviderMatchCandidate
-} from './matchingTypes'
 // Import types from banking.ts to avoid conflicts
 import type {
-  UnmatchedSaleForProvider as BankingUnmatchedSaleForProvider,
-  UnmatchedProviderReport as BankingUnmatchedProviderReport,
+  AvailableForBankMatching as BankingAvailableForBankMatching,
   UnmatchedBankTransaction as BankingUnmatchedBankTransaction,
-  AvailableForBankMatching as BankingAvailableForBankMatching
+  UnmatchedProviderReport as BankingUnmatchedProviderReport,
+  UnmatchedSaleForProvider as BankingUnmatchedSaleForProvider,
 } from '../types/banking'
+import { bankMatchingService } from './bankMatching'
+import type {
+  BankMatchSuggestion,
+  ProviderAutoMatchResult,
+  ProviderMatchCandidate,
+  ProviderMatchResult,
+  ProviderSummaryDashboard,
+} from './matchingTypes'
+import { providerMatchingService } from './providerMatching'
 
 // =====================================================
 // PROVIDER MATCHING (Tab 1)
@@ -381,11 +388,13 @@ export async function getProviderMatchSuggestions(): Promise<{
     // Get current unmatched data
     const [salesResult, reportsResult] = await Promise.all([
       getUnmatchedSalesForProvider(),
-      getUnmatchedProviderReports()
+      getUnmatchedProviderReports(),
     ])
 
     if (salesResult.error || reportsResult.error) {
-      throw new Error(`Data fetch failed: ${salesResult.error?.message || reportsResult.error?.message}`)
+      throw new Error(
+        `Data fetch failed: ${salesResult.error?.message || reportsResult.error?.message}`
+      )
     }
 
     const sales = (salesResult.data as unknown as BankingUnmatchedSaleForProvider[]) || []
@@ -399,16 +408,13 @@ export async function getProviderMatchSuggestions(): Promise<{
     }
 
     return { data: result.data!, error: null }
-
   } catch (error) {
     console.error('Error getting provider match suggestions:', error)
     return { data: null, error }
   }
 }
 
-export async function executeAutoProviderMatch(
-  candidates?: ProviderMatchCandidate[]
-): Promise<{
+export async function executeAutoProviderMatch(candidates?: ProviderMatchCandidate[]): Promise<{
   data: ProviderAutoMatchResult | null
   error: any
 }> {
@@ -441,10 +447,14 @@ export async function executeAutoProviderMatch(
           matchedPairs++
           processedCandidates.push(candidate)
         } else {
-          errors.push(`Failed to match Sale ${candidate.sale.id} with Report ${candidate.providerReport.id}`)
+          errors.push(
+            `Failed to match Sale ${candidate.sale.id} with Report ${candidate.providerReport.id}`
+          )
         }
       } catch (error) {
-        errors.push(`Error matching Sale ${candidate.sale.id}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        errors.push(
+          `Error matching Sale ${candidate.sale.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
       }
     }
 
@@ -452,11 +462,10 @@ export async function executeAutoProviderMatch(
       success: errors.length === 0,
       matchedPairs,
       errors,
-      processedCandidates
+      processedCandidates,
     }
 
     return { data: result, error: null }
-
   } catch (error) {
     console.error('Error executing auto provider match:', error)
     return { data: null, error }
@@ -467,9 +476,7 @@ export async function executeAutoProviderMatch(
 // BANK MATCHING (Tab 2)
 // =====================================================
 
-export async function getBankMatchSuggestions(
-  bankTransactionId: string
-): Promise<{
+export async function getBankMatchSuggestions(bankTransactionId: string): Promise<{
   data: BankMatchSuggestion | null
   error: any
 }> {
@@ -491,7 +498,8 @@ export async function getBankMatchSuggestions(
       throw new Error(`Failed to get available items: ${availableResult.error.message}`)
     }
 
-    const availableItems = (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
+    const availableItems =
+      (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
 
     // Run intelligent matching
     const result = await bankMatchingService.findBankMatches(
@@ -504,7 +512,6 @@ export async function getBankMatchSuggestions(
     }
 
     return { data: result.data!, error: null }
-
   } catch (error) {
     console.error('Error getting bank match suggestions:', error)
     return { data: null, error }
@@ -522,7 +529,8 @@ export async function getProviderSummaries(): Promise<{
       throw new Error(`Failed to get available items: ${availableResult.error.message}`)
     }
 
-    const availableItems = (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
+    const availableItems =
+      (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
 
     // Generate provider summary
     const result = await bankMatchingService.generateProviderSummary(availableItems)
@@ -532,7 +540,6 @@ export async function getProviderSummaries(): Promise<{
     }
 
     return { data: result.data!, error: null }
-
   } catch (error) {
     console.error('Error getting provider summaries:', error)
     return { data: null, error }
@@ -556,33 +563,32 @@ export async function createIntelligentBankMatch(
       throw new Error(`Failed to get available items: ${availableResult.error.message}`)
     }
 
-    const availableItems = (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
-    const selectedItems = availableItems.filter(item => selectedItemIds.includes(item.id))
+    const availableItems =
+      (availableResult.data as unknown as BankingAvailableForBankMatching[]) || []
+    const selectedItems = availableItems.filter((item) => selectedItemIds.includes(item.id))
 
     if (selectedItems.length === 0) {
       throw new Error('No valid items selected for matching')
     }
 
     // Convert to the format expected by createBankMatch
-    const matchedItems = selectedItems.map(item => ({
+    const matchedItems = selectedItems.map((item) => ({
       type: item.item_type as 'sale' | 'expense' | 'cash_movement' | 'owner_transaction',
       id: item.id,
-      amount: item.amount
+      amount: item.amount,
     }))
 
     // Create the matches in transaction_matches table with enhanced metadata
-    const matchInserts = matchedItems.map(item => ({
+    const matchInserts = matchedItems.map((item) => ({
       bank_transaction_id: bankTransactionId,
       matched_type: item.type,
       matched_id: item.id,
       matched_amount: item.amount,
       match_type: matchType,
-      match_confidence: confidence || 100.0
+      match_confidence: confidence || 100.0,
     }))
 
-    const { error: matchError } = await supabase
-      .from('transaction_matches')
-      .insert(matchInserts)
+    const { error: matchError } = await supabase.from('transaction_matches').insert(matchInserts)
 
     if (matchError) throw matchError
 
@@ -594,11 +600,11 @@ export async function createIntelligentBankMatch(
 
     if (bankError) throw bankError
 
-    // Update matched items status  
+    // Update matched items status
     for (const item of matchedItems) {
       let table: string
       let updateData: any
-      
+
       if (item.type === 'sale') {
         table = 'sales'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' }
@@ -624,7 +630,6 @@ export async function createIntelligentBankMatch(
     }
 
     return { success: true, error: null }
-
   } catch (error) {
     console.error('Error creating intelligent bank match:', error)
     return { success: false, error }

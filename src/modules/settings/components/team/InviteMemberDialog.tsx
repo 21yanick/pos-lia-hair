@@ -1,38 +1,29 @@
 'use client'
 
+import { AlertCircle, CheckCircle, Copy, Crown, Mail, Send, Shield, User } from 'lucide-react'
 import { useState } from 'react'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/shared/components/ui/dialog'
-import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/shared/components/ui/select'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
-import { 
-  Mail, 
-  Crown, 
-  Shield, 
-  User, 
-  Send, 
-  Copy,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react'
-import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 
 interface InviteMemberDialogProps {
   open: boolean
@@ -46,20 +37,20 @@ const ROLE_CONFIG = {
     label: 'Mitarbeiter',
     description: 'Kann Verkäufe durchführen und grundlegende Funktionen nutzen',
     icon: User,
-    color: 'default'
+    color: 'default',
   },
   admin: {
-    label: 'Administrator', 
+    label: 'Administrator',
     description: 'Vollzugriff auf Business-Funktionen, keine User-Verwaltung',
     icon: Shield,
-    color: 'secondary'
+    color: 'secondary',
   },
   owner: {
     label: 'Inhaber',
-    description: 'Vollzugriff inklusive Team-Verwaltung und Organisation-Einstellungen', 
+    description: 'Vollzugriff inklusive Team-Verwaltung und Organisation-Einstellungen',
     icon: Crown,
-    color: 'destructive'
-  }
+    color: 'destructive',
+  },
 } as const
 
 export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogProps) {
@@ -111,15 +102,15 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
 
       if (response.ok && data.success) {
         setSuccess(`Einladung erfolgreich an ${email} gesendet!`)
-        
+
         // Generate invite link for copying
         // Note: In real implementation, the backend should return the token
         setInviteLink(`${window.location.origin}/register?invite=<token-will-be-generated>`)
-        
+
         // Reset form
         setEmail('')
         setRole('staff')
-        
+
         // Auto-close after success
         setTimeout(() => {
           onOpenChange(false)
@@ -207,7 +198,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
                 })}
               </SelectContent>
             </Select>
-            
+
             {/* Role Description */}
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex items-center gap-2 mb-1">
@@ -216,9 +207,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
                   {selectedRoleConfig.label}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {selectedRoleConfig.description}
-              </p>
+              <p className="text-sm text-muted-foreground">{selectedRoleConfig.description}</p>
             </div>
           </div>
 
@@ -237,11 +226,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
               <AlertDescription className="flex items-center justify-between">
                 <span>{success}</span>
                 {inviteLink && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={copyInviteLink}
-                  >
+                  <Button variant="outline" size="sm" onClick={copyInviteLink}>
                     <Copy className="h-4 w-4 mr-1" />
                     Link kopieren
                   </Button>
@@ -255,10 +240,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
           <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             Abbrechen
           </Button>
-          <Button 
-            onClick={handleSendInvitation}
-            disabled={isLoading || !email.trim()}
-          >
+          <Button onClick={handleSendInvitation} disabled={isLoading || !email.trim()}>
             {isLoading ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent mr-2" />
