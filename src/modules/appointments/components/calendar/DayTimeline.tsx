@@ -8,7 +8,6 @@
 import { Clock } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
@@ -22,7 +21,6 @@ import {
 import { useAppointmentsByDate } from '../../hooks/useAppointments'
 import type {
   AppointmentBlock,
-  AppointmentService,
   DayTimelineProps,
   TimelineData,
   TimelineHour,
@@ -34,7 +32,6 @@ import {
   formatTimeForDisplay,
   generateTimelineData,
   getCurrentTime,
-  isSlotAvailable,
   isTimeInPast,
 } from '../../utils/timelineUtils'
 
@@ -129,7 +126,7 @@ export function DayTimeline({
     // Debug: Conversion logging removed for performance
 
     return converted
-  }, [appointmentsData])
+  }, [appointmentsData, selectedDate])
 
   // Update current time every minute (MUST be before any conditional logic!)
   useEffect(() => {
@@ -157,7 +154,7 @@ export function DayTimeline({
     if (!isToday) return
 
     // Scroll to current time with some offset
-    const currentHour = parseInt(currentTime.split(':')[0])
+    const currentHour = parseInt(currentTime.split(':')[0], 10)
     const targetHour = Math.max(currentHour - 1, timelineData.startHour) // Show hour before current
     const scrollTop = (targetHour - timelineData.startHour) * TIMELINE_CONFIG.hourHeight
 
@@ -453,8 +450,8 @@ function CurrentTimeIndicator({
 
   if (!isToday) return null
 
-  const currentHour = parseInt(currentTime.split(':')[0])
-  const currentMinutes = parseInt(currentTime.split(':')[1])
+  const currentHour = parseInt(currentTime.split(':')[0], 10)
+  const currentMinutes = parseInt(currentTime.split(':')[1], 10)
 
   // Check if current time is within timeline range
   if (currentHour < timelineData.startHour || currentHour > timelineData.endHour) {

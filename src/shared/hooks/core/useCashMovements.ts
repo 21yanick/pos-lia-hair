@@ -257,7 +257,7 @@ export function useCashMovements(): UseCashMovementsQueryReturn {
       // Return context with the snapshotted values
       return { previousBalance, previousMovements }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context && organizationId) {
         if (context.previousBalance !== undefined) {
@@ -276,7 +276,7 @@ export function useCashMovements(): UseCashMovementsQueryReturn {
 
       toast.error(error.message || 'Fehler beim Erstellen der Kassenbewegung')
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       const actionType = variables.type === 'cash_in' ? 'Einzahlung' : 'Auszahlung'
       toast.success(`${actionType} erfolgreich erstellt`)
 

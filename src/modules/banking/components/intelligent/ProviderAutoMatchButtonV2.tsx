@@ -5,11 +5,7 @@ import { useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import {
-  createProviderMatch,
-  executeAutoProviderMatch,
-  getProviderMatchSuggestions,
-} from '../../services/bankingApi'
+import { createProviderMatch, getProviderMatchSuggestions } from '../../services/bankingApi'
 import type {
   ProviderAutoMatchResult,
   ProviderMatchCandidate,

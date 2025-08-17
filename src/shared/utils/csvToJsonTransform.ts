@@ -489,7 +489,7 @@ export class CsvToJsonTransformer {
     // Clean numeric string (remove currency symbols, thousands separators)
     const cleanValue = stringValue
       .replace(/[CHF\s₣]/g, '') // Remove currency symbols
-      .replace(/[,.]/g, (match, offset, string) => {
+      .replace(/[,.]/g, (_match, offset, string) => {
         // Keep only the last . or , as decimal separator
         const lastDecimalPos = Math.max(string.lastIndexOf('.'), string.lastIndexOf(','))
         return offset === lastDecimalPos ? '.' : ''
@@ -497,7 +497,7 @@ export class CsvToJsonTransformer {
 
     const number = parseFloat(cleanValue)
 
-    if (isNaN(number) || number < 0) {
+    if (Number.isNaN(number) || number < 0) {
       throw new Error(`Field '${fieldName}' must be a positive number, got: ${stringValue}`)
     }
 
@@ -524,7 +524,7 @@ export class CsvToJsonTransformer {
     const stringValue = CsvToJsonTransformer.getRequiredString(row, fieldName, mappingConfig)
 
     // Try to parse various date formats
-    const dateFormats = [
+    const _dateFormats = [
       /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD (ISO format)
       /^\d{2}\.\d{2}\.\d{4}$/, // DD.MM.YYYY (German format)
       /^\d{2}\/\d{2}\/\d{4}$/, // DD/MM/YYYY or MM/DD/YYYY
@@ -544,7 +544,7 @@ export class CsvToJsonTransformer {
 
     // Validate the date
     const date = new Date(normalizedDate)
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       throw new Error(
         `Field '${fieldName}' must be a valid date (YYYY-MM-DD or DD.MM.YYYY), got: ${stringValue}`
       )
@@ -650,7 +650,7 @@ export class CsvToJsonTransformer {
       // Parse price with same logic as getRequiredNumber
       const cleanPriceValue = priceString
         .replace(/[CHF\s₣]/g, '') // Remove currency symbols
-        .replace(/[,.]/g, (match, offset, string) => {
+        .replace(/[,.]/g, (_match, offset, string) => {
           // Keep only the last . or , as decimal separator
           const lastDecimalPos = Math.max(string.lastIndexOf('.'), string.lastIndexOf(','))
           return offset === lastDecimalPos ? '.' : ''
@@ -658,7 +658,7 @@ export class CsvToJsonTransformer {
 
       const price = parseFloat(cleanPriceValue)
 
-      if (isNaN(price) || price < 0) {
+      if (Number.isNaN(price) || price < 0) {
         throw new Error(
           `Invalid price '${priceString}' for item '${itemName}'. Price must be a positive number.`
         )

@@ -62,7 +62,7 @@ export function ColumnMappingDialog({
   // Initialize mappings on mount or when import type changes
   useEffect(() => {
     initializeMappings()
-  }, [csvData, importType])
+  }, [initializeMappings])
 
   const initializeMappings = () => {
     const initialMappings: Record<string, ColumnMapping> = {}
@@ -139,7 +139,7 @@ export function ColumnMappingDialog({
     for (const row of csvData.rows.slice(0, 3)) {
       // Check first 3 rows
       const value = row[csvHeader]
-      if (value && value.trim()) {
+      if (value?.trim()) {
         return value.trim()
       }
     }
@@ -182,7 +182,7 @@ export function ColumnMappingDialog({
     // Check for duplicate mappings
     const usedHeaders = new Set<string>()
     Object.values(mappingsToValidate).forEach((mapping) => {
-      if (mapping.csvHeader && mapping.csvHeader.trim()) {
+      if (mapping.csvHeader?.trim()) {
         if (usedHeaders.has(mapping.csvHeader)) {
           errors.push(`Spalte '${mapping.csvHeader}' ist mehrfach zugeordnet`)
         }
@@ -210,7 +210,7 @@ export function ColumnMappingDialog({
     switch (field.type) {
       case 'number': {
         const cleanValue = sampleValue.replace(/[CHF\s₣,]/g, '').replace(',', '.')
-        if (isNaN(parseFloat(cleanValue))) {
+        if (Number.isNaN(parseFloat(cleanValue))) {
           return `Beispielwert '${sampleValue}' ist keine gültige Zahl`
         }
         break
@@ -266,7 +266,7 @@ export function ColumnMappingDialog({
       Object.entries(mappings)
         .filter(([key]) => key !== currentFieldKey)
         .map(([, mapping]) => mapping.csvHeader)
-        .filter((header) => header && header.trim())
+        .filter((header) => header?.trim())
     )
 
     return csvData.headers.filter((header) => !usedHeaders.has(header))
@@ -277,7 +277,7 @@ export function ColumnMappingDialog({
     const mappedRequired = requiredFields.filter(
       (f) => mappings[f.key]?.csvHeader && mappings[f.key].csvHeader.trim()
     )
-    const totalMapped = Object.values(mappings).filter((m) => m.csvHeader && m.csvHeader.trim())
+    const totalMapped = Object.values(mappings).filter((m) => m.csvHeader?.trim())
 
     return {
       mapped: mappedRequired.length,

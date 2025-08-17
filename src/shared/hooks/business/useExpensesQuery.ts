@@ -114,8 +114,8 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
   // ========================================
 
   const queryKey = organizationId ? queryKeys.business.expenses.list(organizationId) : null
-  const statsQueryKey = organizationId ? queryKeys.business.expenses.stats(organizationId) : null
-  const groupedQueryKey = organizationId
+  const _statsQueryKey = organizationId ? queryKeys.business.expenses.stats(organizationId) : null
+  const _groupedQueryKey = organizationId
     ? queryKeys.business.expenses.grouped(organizationId)
     : null
 
@@ -157,7 +157,7 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
     enabled: !!organizationId,
     staleTime: cacheConfig.expenses.staleTime, // 5 minutes
     gcTime: cacheConfig.expenses.gcTime, // 10 minutes
-    retry: (failureCount, error) => {
+    retry: (failureCount, _error) => {
       // console.log('Query retry:', failureCount, error.message)
       return failureCount < 3
     },

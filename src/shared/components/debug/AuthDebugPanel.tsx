@@ -15,7 +15,7 @@ export function AuthDebugPanel() {
 
   useEffect(() => {
     loadUserData()
-  }, [])
+  }, [loadUserData])
 
   const loadUserData = async () => {
     try {

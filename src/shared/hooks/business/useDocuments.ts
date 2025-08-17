@@ -180,7 +180,7 @@ export function useDocuments() {
                 amount = summaryData.sales_total
               }
             }
-          } catch (err) {
+          } catch (_err) {
             // console.log('Konnte verknüpfte Daten nicht laden:', err)
           }
 
@@ -214,8 +214,8 @@ export function useDocuments() {
       if (filter?.searchTerm) {
         filteredDocs = enrichedDocs.filter(
           (doc) =>
-            doc.displayName?.toLowerCase().includes(filter.searchTerm!.toLowerCase()) ||
-            doc.type.toLowerCase().includes(filter.searchTerm!.toLowerCase())
+            doc.displayName?.toLowerCase().includes(filter.searchTerm?.toLowerCase()) ||
+            doc.type.toLowerCase().includes(filter.searchTerm?.toLowerCase())
         )
       }
 

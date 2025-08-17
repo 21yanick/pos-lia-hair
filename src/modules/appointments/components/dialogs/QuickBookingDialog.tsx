@@ -190,7 +190,7 @@ export function QuickBookingDialog({
 
       onSuccess?.()
       onClose()
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Termin konnte nicht erstellt werden.',

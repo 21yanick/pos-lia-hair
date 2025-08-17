@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, Download, Filter, Plus, Search, Upload } from 'lucide-react'
+import { Plus, Search, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { SupplierAutocomplete } from '@/shared/components/supplier/SupplierAutocomplete'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useExpenseCategories } from '@/shared/hooks/business/useExpenseCategories'
 import { type ExpenseCategory, useExpenses } from '@/shared/hooks/business/useExpenses'
@@ -33,11 +32,7 @@ import { useToast } from '@/shared/hooks/core/useToast'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Supplier } from '@/shared/types/suppliers'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
-import {
-  formatDateForAPI,
-  formatDateForDisplay,
-  getTodaySwissString,
-} from '@/shared/utils/dateUtils'
+import { formatDateForAPI, formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { ExpenseActions } from './ExpenseActions'
 import { ExpensePDFActions } from './ExpensePDFActions'
 
@@ -91,7 +86,7 @@ export function ExpensesPage() {
   // Lade Ausgaben beim Start
   useEffect(() => {
     loadExpenses() // Lädt alle Ausgaben statt nur aktueller Monat
-  }, [])
+  }, [loadExpenses])
 
   // Load current user ID for supplier creation
   useEffect(() => {

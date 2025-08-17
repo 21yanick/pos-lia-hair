@@ -56,7 +56,7 @@ export function useAuth(): AuthReturn {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (mounted) {
         setUser(session?.user ?? null)
         if (!loading) setLoading(false) // Only set loading false if not already false
@@ -67,7 +67,7 @@ export function useAuth(): AuthReturn {
       mounted = false
       subscription.unsubscribe()
     }
-  }, []) // No dependencies - stable effect
+  }, [loading]) // No dependencies - stable effect
 
   // Simple sign out
   const signOut = async (): Promise<void> => {

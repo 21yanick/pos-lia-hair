@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, CheckCircle2, Clock, Eye, Target, Zap } from 'lucide-react'
+import { CheckCircle2, Clock, Eye, Target, Zap } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
 
 export type MatchStatus =
@@ -67,8 +67,6 @@ export function MatchableRowIndicator({
           variant: 'outline' as const,
           className: 'bg-blue-50 text-blue-700 border-blue-200',
         }
-
-      case 'none':
       default:
         return null
     }

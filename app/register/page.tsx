@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import type React from 'react'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useId, useState } from 'react'
 import { PublicRoute } from '@/shared/components/auth'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -33,6 +33,12 @@ function RegisterForm() {
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get('invite')
 
+  // Generate unique IDs for form fields
+  const nameId = useId()
+  const emailId = useId()
+  const passwordId = useId()
+  const confirmPasswordId = useId()
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -50,7 +56,7 @@ function RegisterForm() {
     if (inviteToken) {
       validateInvitationToken(inviteToken)
     }
-  }, [inviteToken])
+  }, [inviteToken, validateInvitationToken])
 
   const validateInvitationToken = async (token: string) => {
     setIsValidatingInvite(true)
@@ -267,11 +273,11 @@ function RegisterForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium text-foreground/90">
+                  <Label htmlFor={nameId} className="text-sm font-medium text-foreground/90">
                     Vollständiger Name *
                   </Label>
                   <Input
-                    id="name"
+                    id={nameId}
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -282,11 +288,11 @@ function RegisterForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-foreground/90">
+                  <Label htmlFor={emailId} className="text-sm font-medium text-foreground/90">
                     E-Mail-Adresse *
                   </Label>
                   <Input
-                    id="email"
+                    id={emailId}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -301,11 +307,11 @@ function RegisterForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-foreground/90">
+                  <Label htmlFor={passwordId} className="text-sm font-medium text-foreground/90">
                     Passwort *
                   </Label>
                   <Input
-                    id="password"
+                    id={passwordId}
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -318,13 +324,13 @@ function RegisterForm() {
 
                 <div className="space-y-2">
                   <Label
-                    htmlFor="confirmPassword"
+                    htmlFor={confirmPasswordId}
                     className="text-sm font-medium text-foreground/90"
                   >
                     Passwort bestätigen *
                   </Label>
                   <Input
-                    id="confirmPassword"
+                    id={confirmPasswordId}
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}

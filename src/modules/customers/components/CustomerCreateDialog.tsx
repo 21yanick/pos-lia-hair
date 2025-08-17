@@ -71,7 +71,7 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
 
       onSuccess?.(result)
       handleClose()
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Kunde konnte nicht erstellt werden.',

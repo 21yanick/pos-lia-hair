@@ -1,7 +1,7 @@
 'use client'
 
 import { Download, RotateCw, X, ZoomIn, ZoomOut } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { remoteDebugger } from '@/shared/utils/remoteDebug'
 
 interface InlinePDFViewerProps {
@@ -23,7 +23,7 @@ export function InlinePDFViewer({
 
   useEffect(() => {
     if (isOpen && pdfUrl) {
-      remoteDebugger.log('InlinePDFViewer', 'OPEN', { pdfUrl: pdfUrl.substring(0, 100) + '...' })
+      remoteDebugger.log('InlinePDFViewer', 'OPEN', { pdfUrl: `${pdfUrl.substring(0, 100)}...` })
       setIsLoading(true)
       setError(null)
     }

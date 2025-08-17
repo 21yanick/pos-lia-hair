@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Brain, CheckCircle2, Eye, Target, Zap } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -9,14 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table'
 import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { useBankingData } from '../../hooks/useBankingData'
 import { executeAutoProviderMatch } from '../../services/bankingApi'
@@ -131,7 +123,7 @@ export function EnhancedProviderTables({
   }
 
   // Check if a row is matchable
-  const isRowMatchable = (saleId: string, providerId: string): boolean => {
+  const _isRowMatchable = (saleId: string, providerId: string): boolean => {
     if (!showMatches) return false
     return matchCandidates.some((c) => c.sale.id === saleId && c.providerReport.id === providerId)
   }

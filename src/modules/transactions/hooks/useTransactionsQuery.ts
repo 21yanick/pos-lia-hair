@@ -176,7 +176,7 @@ export function useUpdateTransaction() {
  * Hook for generating a PDF (updates transaction after success)
  */
 export function useGeneratePdf() {
-  const queryClient = useQueryClient()
+  const _queryClient = useQueryClient()
   const updateTransaction = useUpdateTransaction()
 
   return useMutation({

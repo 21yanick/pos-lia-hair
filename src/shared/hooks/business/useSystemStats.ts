@@ -40,7 +40,7 @@ export function useSystemStats() {
       const { data: authData, error: authError } = await supabase.auth.getUser()
       if (authError) {
         // console.error('Auth error:', authError)
-        throw new Error('Authentifizierungsfehler: ' + authError.message)
+        throw new Error(`Authentifizierungsfehler: ${authError.message}`)
       }
       if (!authData?.user) {
         throw new Error('Nicht angemeldet')
@@ -120,7 +120,7 @@ export function useSystemStats() {
     if (currentOrganization) {
       loadStats()
     }
-  }, [currentOrganization]) // 🔒 SECURITY: Refetch when organization changes
+  }, [currentOrganization, loadStats]) // 🔒 SECURITY: Refetch when organization changes
 
   return {
     stats,

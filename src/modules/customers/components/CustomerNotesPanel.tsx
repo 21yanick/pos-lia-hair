@@ -71,7 +71,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
         title: 'Notiz erstellt',
         description: 'Die Notiz wurde erfolgreich hinzugefügt.',
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Notiz konnte nicht erstellt werden.',
@@ -121,7 +121,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
         title: 'Notiz aktualisiert',
         description: 'Die Änderungen wurden gespeichert.',
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Notiz konnte nicht aktualisiert werden.',
@@ -147,7 +147,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
         title: 'Notiz gelöscht',
         description: 'Die Notiz wurde entfernt.',
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Notiz konnte nicht gelöscht werden.',

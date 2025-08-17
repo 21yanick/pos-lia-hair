@@ -1,14 +1,4 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Hr,
-  Html,
-  Img,
-  Section,
-  Text,
-} from '@react-email/components'
+import { Body, Button, Container, Head, Hr, Html, Section, Text } from '@react-email/components'
 
 interface InviteUserEmailProps {
   inviterName: string

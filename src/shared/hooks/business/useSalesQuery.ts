@@ -155,7 +155,7 @@ export function useSalesQuery(): UseSalesQueryReturn {
       // Return context with the snapshotted value
       return { previousSales, optimisticSale }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousSales && organizationId) {
         queryClient.setQueryData(
@@ -246,7 +246,7 @@ export function useSalesQuery(): UseSalesQueryReturn {
       // Return context with the snapshotted value
       return { previousSales }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousSales && organizationId) {
         queryClient.setQueryData(

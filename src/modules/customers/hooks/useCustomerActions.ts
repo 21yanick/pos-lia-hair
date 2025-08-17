@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/shared/lib/react-query/queryKeys'
-import type { Customer, CustomerFormData, CustomerNote } from '@/shared/services/customerService'
+import type { Customer, CustomerFormData } from '@/shared/services/customerService'
 import {
   createCustomer,
   createCustomerNote,
@@ -58,7 +58,7 @@ export const useCustomerActions = (organizationId: string) => {
 
       return { previousCustomer }
     },
-    onError: (err, { customerId }, context) => {
+    onError: (_err, { customerId }, context) => {
       // Rollback on error
       if (context?.previousCustomer) {
         queryClient.setQueryData(
@@ -67,7 +67,7 @@ export const useCustomerActions = (organizationId: string) => {
         )
       }
     },
-    onSettled: (data, error, { customerId }) => {
+    onSettled: (_data, _error, { customerId }) => {
       // Always refetch after error or success
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.customers.detail(organizationId, customerId),
@@ -99,7 +99,7 @@ export const useCustomerActions = (organizationId: string) => {
       blockName: string
       content: string
     }) => createCustomerNote(customerId, blockName, content, organizationId),
-    onSuccess: (newNote, { customerId }) => {
+    onSuccess: (_newNote, { customerId }) => {
       // Invalidate customer details to refetch with new note
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.customers.withNotes(organizationId, customerId),
@@ -118,7 +118,7 @@ export const useCustomerActions = (organizationId: string) => {
       data: { block_name?: string; content?: string }
       customerId: string
     }) => updateCustomerNote(noteId, data, organizationId),
-    onSuccess: (updatedNote, { customerId }) => {
+    onSuccess: (_updatedNote, { customerId }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.customers.withNotes(organizationId, customerId),
       })

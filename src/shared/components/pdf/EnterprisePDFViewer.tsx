@@ -1,7 +1,7 @@
 'use client'
 
-import { Download, ExternalLink, RotateCcw, X, ZoomIn, ZoomOut } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { Download, ExternalLink, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 
 // Dynamic imports to avoid build issues with canvas node bindings
@@ -27,7 +27,7 @@ export function EnterprisePDFViewer({
 }: EnterprisePDFViewerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [zoom, setZoom] = useState(100)
+  const [_zoom, _setZoom] = useState(100)
   const [isPackageReady, setIsPackageReady] = useState(false)
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
 
@@ -108,7 +108,7 @@ export function EnterprisePDFViewer({
         URL.revokeObjectURL(pdfBlobUrl)
       }
     }
-  }, [isOpen, pdfUrl])
+  }, [isOpen, pdfUrl, pdfBlobUrl])
 
   const handleDownload = async () => {
     // Use originalUrl for download if available, fallback to pdfUrl
@@ -156,7 +156,7 @@ export function EnterprisePDFViewer({
       document.removeEventListener('keydown', handleEscapeKey)
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen])
+  }, [isOpen, handleEscapeKey])
 
   if (!isOpen) return null
 

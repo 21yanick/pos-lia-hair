@@ -6,14 +6,13 @@
  */
 
 import { ChevronLeft, ChevronRight, Clock, Minus, Plus } from 'lucide-react'
-import { useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { cn } from '@/shared/utils'
 import { formatTimeShort } from '@/shared/utils/dateUtils'
-import type { ServiceSelection, ServiceStepProps } from '../../types/quickBooking'
+import type { ServiceStepProps } from '../../types/quickBooking'
 
 export function ServiceSelectionStep({
   availableServices,

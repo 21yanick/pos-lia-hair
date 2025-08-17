@@ -1,16 +1,7 @@
 'use client'
 
-import {
-  AlertCircle,
-  CheckCircle2,
-  Download,
-  FileText,
-  Loader2,
-  Package,
-  RefreshCw,
-  X,
-} from 'lucide-react'
-import React, { useState } from 'react'
+import { AlertCircle, CheckCircle2, Download, Loader2, Package, RefreshCw, X } from 'lucide-react'
+import { useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {

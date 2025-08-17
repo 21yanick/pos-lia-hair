@@ -54,7 +54,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
       })
 
       onSupplierUpdated()
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Status konnte nicht geändert werden',
@@ -80,7 +80,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
       })
 
       onSupplierUpdated()
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Lieferant konnte nicht gelöscht werden',
@@ -108,7 +108,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
     setEditDialogOpen(true)
   }
 
-  const handleEditSuccess = (updatedSupplier: Supplier) => {
+  const handleEditSuccess = (_updatedSupplier: Supplier) => {
     toast({
       title: 'Erfolg',
       description: 'Lieferant wurde erfolgreich aktualisiert',

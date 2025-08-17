@@ -1,12 +1,10 @@
 'use client'
 
 import { Moon, Sun } from 'lucide-react'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { ProfileMenu } from '@/shared/components/profile'
-import { Button } from '@/shared/components/ui/button'
 import { Separator } from '@/shared/components/ui/separator'
 import { SidebarTrigger } from '@/shared/components/ui/sidebar'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'

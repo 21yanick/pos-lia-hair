@@ -1,8 +1,7 @@
 'use client'
 
-import { Calendar, Clock, Info, RotateCcw, Save, Settings, Shield } from 'lucide-react'
+import { Calendar, Info, RotateCcw, Save, Settings, Shield } from 'lucide-react'
 import { useState } from 'react'
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   Card,
@@ -20,11 +19,9 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select'
 import { Separator } from '@/shared/components/ui/separator'
-import { Switch } from '@/shared/components/ui/switch'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import type { BookingRules, DisplayPreferences } from '@/shared/types/businessSettings'
 import { DEFAULT_BOOKING_RULES, DEFAULT_DISPLAY_PREFERENCES } from '@/shared/types/businessSettings'
-import { cn } from '@/shared/utils'
 
 interface BookingRulesConfigProps {
   className?: string
@@ -116,7 +113,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
         updateDisplayPreferences(displayPreferences),
       ])
       setHasChanges(false)
-    } catch (error) {
+    } catch (_error) {
       // Error handling delegated to UI layer
     }
   }
@@ -210,7 +207,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               <Select
                 value={bookingRules.slotInterval.toString()}
                 onValueChange={(value) =>
-                  updateBookingRule('slotInterval', parseInt(value) as 15 | 30)
+                  updateBookingRule('slotInterval', parseInt(value, 10) as 15 | 30)
                 }
               >
                 <SelectTrigger>
@@ -240,7 +237,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               <Select
                 value={bookingRules.defaultDuration.toString()}
                 onValueChange={(value) =>
-                  updateBookingRule('defaultDuration', parseInt(value) as 30 | 45 | 60)
+                  updateBookingRule('defaultDuration', parseInt(value, 10) as 30 | 45 | 60)
                 }
               >
                 <SelectTrigger>
@@ -270,7 +267,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               <Select
                 value={bookingRules.maxAdvanceDays.toString()}
                 onValueChange={(value) =>
-                  updateBookingRule('maxAdvanceDays', parseInt(value) as 30 | 60 | 90)
+                  updateBookingRule('maxAdvanceDays', parseInt(value, 10) as 30 | 60 | 90)
                 }
               >
                 <SelectTrigger>
@@ -300,7 +297,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               <Select
                 value={bookingRules.minAdvanceHours.toString()}
                 onValueChange={(value) =>
-                  updateBookingRule('minAdvanceHours', parseInt(value) as 1 | 2 | 4 | 24)
+                  updateBookingRule('minAdvanceHours', parseInt(value, 10) as 1 | 2 | 4 | 24)
                 }
               >
                 <SelectTrigger>
@@ -332,7 +329,7 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
               <Select
                 value={bookingRules.bufferMinutes.toString()}
                 onValueChange={(value) =>
-                  updateBookingRule('bufferMinutes', parseInt(value) as 0 | 5 | 10)
+                  updateBookingRule('bufferMinutes', parseInt(value, 10) as 0 | 5 | 10)
                 }
               >
                 <SelectTrigger>

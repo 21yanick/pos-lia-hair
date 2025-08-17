@@ -7,12 +7,9 @@ import { SidebarInset, SidebarProvider } from '@/shared/components/ui/sidebar'
 
 interface OrganizationLayoutProps {
   children: React.ReactNode
-  params: Promise<{ slug: string }>
 }
 
-export default async function OrganizationLayout({ children, params }: OrganizationLayoutProps) {
-  const { slug } = await params
-
+export default async function OrganizationLayout({ children }: OrganizationLayoutProps) {
   return (
     <OrganizationRoute>
       <SidebarProvider>

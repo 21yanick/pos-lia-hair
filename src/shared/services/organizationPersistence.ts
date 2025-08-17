@@ -41,7 +41,7 @@ class OrganizationPersistence {
           // Also save to sessionStorage as backup
           try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-          } catch (e) {}
+          } catch (_e) {}
           break
 
         case 'sessionStorage':

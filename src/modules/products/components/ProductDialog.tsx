@@ -100,7 +100,7 @@ export function ProductDialog({
         booking_buffer_minutes: '0',
       }))
     }
-  }, [formData.type])
+  }, [formData.type, formData.duration_minutes])
 
   const handleSave = async () => {
     const success = await onSave(formData, currentItem)

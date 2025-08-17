@@ -102,7 +102,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
         active: activeCount,
         categories: categoryStats,
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Lieferanten konnten nicht geladen werden',
@@ -116,10 +116,10 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
   // Load suppliers on mount and filter changes
   useEffect(() => {
     loadSuppliers()
-  }, [searchQuery, categoryFilter, activeFilter])
+  }, [loadSuppliers])
 
   // Handle supplier created
-  const handleSupplierCreated = (supplier: Supplier) => {
+  const handleSupplierCreated = (_supplier: Supplier) => {
     loadSuppliers() // Refresh list
     toast({
       title: 'Erfolg',

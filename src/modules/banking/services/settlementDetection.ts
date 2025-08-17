@@ -192,7 +192,7 @@ export class SettlementDetectionService {
 
   // Find the primary settlement (best match)
   private findPrimarySettlement(
-    bankTransaction: UnmatchedBankTransaction,
+    _bankTransaction: UnmatchedBankTransaction,
     groups: SettlementGroup[]
   ): SettlementGroup | undefined {
     // Sort by confidence and return the best

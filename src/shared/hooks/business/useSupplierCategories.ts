@@ -3,7 +3,6 @@
 import { useCallback, useMemo } from 'react'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { upsertBusinessSettings } from '@/shared/services/businessSettingsService'
-import type { SupplierCategory } from '@/shared/types/suppliers'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
 import { useBusinessSettings } from './useBusinessSettings'
 
@@ -24,7 +23,7 @@ export function useSupplierCategories() {
       ...DEFAULT_SUPPLIER_CATEGORIES,
       ...customCategories,
     }
-  }, [businessSettings?.custom_supplier_categories, currentOrganization])
+  }, [businessSettings?.custom_supplier_categories])
 
   // Kategorien als Array für UI
   const categoriesArray = useMemo(() => {
@@ -71,7 +70,7 @@ export function useSupplierCategories() {
           return { success: true }
         } catch (err: any) {
           console.error('Error creating business settings:', err)
-          return { success: false, error: 'Could not create business settings: ' + err.message }
+          return { success: false, error: `Could not create business settings: ${err.message}` }
         }
       }
 
@@ -194,7 +193,7 @@ export function useSupplierCategories() {
 
       return { isValid: true }
     },
-    [businessSettings?.custom_supplier_categories, currentOrganization]
+    [businessSettings?.custom_supplier_categories]
   )
 
   return {

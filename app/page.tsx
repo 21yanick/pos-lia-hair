@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react'
 import { Suspense } from 'react'
 import { SmartRedirectPage } from '@/shared/components/SmartRedirectPage'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Card, CardHeader, CardTitle } from '@/shared/components/ui/card'
 
 /**
  * 🏠 ROOT LANDING PAGE - SMART PWA REDIRECT

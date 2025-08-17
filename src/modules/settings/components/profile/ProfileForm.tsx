@@ -69,7 +69,7 @@ export function ProfileForm() {
 
     try {
       await updateProfile(profileData)
-    } catch (error) {
+    } catch (_error) {
       setError('Fehler beim Speichern des Profils')
     }
   }
@@ -97,7 +97,7 @@ export function ProfileForm() {
         newPassword: '',
         confirmPassword: '',
       })
-    } catch (error) {
+    } catch (_error) {
       // Error already handled in hook
     }
   }

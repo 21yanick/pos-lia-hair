@@ -29,7 +29,7 @@ function updateGlobalCache(expenseId: string, pdfs: ExpensePDF[]) {
 export function useExpensePDFs() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [localCacheVersion, setLocalCacheVersion] = useState(0)
+  const [_localCacheVersion, setLocalCacheVersion] = useState(0)
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
   const { currentOrganization } = useCurrentOrganization()
@@ -127,33 +127,27 @@ export function useExpensePDFs() {
         setLoading(false)
       }
     },
-    [currentOrganization, localCacheVersion]
+    [getStorageUrl, securityGuard]
   )
 
-  const getExpensePDFsFromCache = useCallback(
-    (expenseId: string): ExpensePDF[] => {
-      // 🛡️ VALIDATION: Temporary IDs return empty array
-      if (expenseId.startsWith('temp-')) {
-        return []
-      }
+  const getExpensePDFsFromCache = useCallback((expenseId: string): ExpensePDF[] => {
+    // 🛡️ VALIDATION: Temporary IDs return empty array
+    if (expenseId.startsWith('temp-')) {
+      return []
+    }
 
-      return globalPdfsCache.get(expenseId) || []
-    },
-    [localCacheVersion]
-  )
+    return globalPdfsCache.get(expenseId) || []
+  }, [])
 
-  const hasExpensePDFs = useCallback(
-    (expenseId: string): boolean => {
-      // 🛡️ VALIDATION: Temporary IDs never have PDFs
-      if (expenseId.startsWith('temp-')) {
-        return false
-      }
+  const hasExpensePDFs = useCallback((expenseId: string): boolean => {
+    // 🛡️ VALIDATION: Temporary IDs never have PDFs
+    if (expenseId.startsWith('temp-')) {
+      return false
+    }
 
-      const cached = globalPdfsCache.get(expenseId)
-      return cached ? cached.length > 0 : false
-    },
-    [localCacheVersion]
-  )
+    const cached = globalPdfsCache.get(expenseId)
+    return cached ? cached.length > 0 : false
+  }, [])
 
   const invalidateCache = useCallback((expenseId?: string) => {
     if (expenseId) {
@@ -215,7 +209,7 @@ export function useExpensePDFs() {
         setLoading(false)
       }
     },
-    [invalidateCache, currentOrganization]
+    [invalidateCache, securityGuard]
   )
 
   return {

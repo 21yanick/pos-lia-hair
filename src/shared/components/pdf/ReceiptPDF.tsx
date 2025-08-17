@@ -386,7 +386,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
           <View style={styles.footerContent}>
             {/* Left: Company Details */}
             <View style={styles.footerLeft}>
-              {businessSettings && businessSettings.pdf_show_company_details && (
+              {businessSettings?.pdf_show_company_details && (
                 <View>
                   <Text style={styles.companyDetails}>{businessSettings.company_name}</Text>
                   {getCompanyAddress() && (

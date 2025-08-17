@@ -64,7 +64,7 @@ export function usePdfActions() {
         // Open with resource manager
         pdfManager.open(transaction.id, pdfUrl)
         return true
-      } catch (err) {
+      } catch (_err) {
         toast.error('Fehler beim Öffnen des PDFs')
         return false
       } finally {
@@ -207,7 +207,7 @@ export function usePdfActions() {
 
         toast.success('PDF heruntergeladen')
         return true
-      } catch (err) {
+      } catch (_err) {
         toast.error('Fehler beim Herunterladen')
         return false
       }
@@ -273,7 +273,7 @@ export function usePdfActions() {
 
         toast.success('ZIP-Archiv heruntergeladen', { id: toastId })
         return true
-      } catch (err) {
+      } catch (_err) {
         toast.error('Fehler beim Erstellen des Archivs', { id: toastId })
         return false
       }

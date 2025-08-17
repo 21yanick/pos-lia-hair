@@ -98,7 +98,7 @@ export function CustomerAutocomplete({
     setSearchValue('')
   }
 
-  const displayValue = value ? value.name : ''
+  const _displayValue = value ? value.name : ''
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

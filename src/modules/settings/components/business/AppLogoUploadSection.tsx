@@ -76,7 +76,7 @@ export function AppLogoUploadSection() {
           ...prev,
           [theme]: null,
         })) // Clear preview after successful upload
-      } catch (error) {
+      } catch (_error) {
         setError(`Fehler beim Hochladen des ${theme} Logos`)
         setPreviewUrls((prev) => ({
           ...prev,
@@ -84,7 +84,7 @@ export function AppLogoUploadSection() {
         }))
       }
     },
-    [uploadAppLogo]
+    [uploadAppLogo, validateFile]
   )
 
   // Handle drag events
@@ -105,7 +105,7 @@ export function AppLogoUploadSection() {
       e.stopPropagation()
       setDragActive(null)
 
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      if (e.dataTransfer.files?.[0]) {
         handleFileUpload(e.dataTransfer.files[0], theme)
       }
     },
@@ -118,7 +118,7 @@ export function AppLogoUploadSection() {
       setError(null)
       try {
         await deleteAppLogo(theme)
-      } catch (error) {
+      } catch (_error) {
         setError(`Fehler beim Löschen des ${theme} Logos`)
       }
     },
@@ -254,7 +254,7 @@ export function AppLogoUploadSection() {
             type="file"
             accept="image/jpeg,image/png,image/svg+xml"
             onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
+              if (e.target.files?.[0]) {
                 handleFileUpload(e.target.files[0], theme)
               }
             }}

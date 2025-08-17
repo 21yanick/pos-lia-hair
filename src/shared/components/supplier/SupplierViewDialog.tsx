@@ -16,13 +16,7 @@ import { useEffect, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -59,7 +53,7 @@ export function SupplierViewDialog({
     if (open && supplierId && currentOrganization) {
       loadSupplierData()
     }
-  }, [open, supplierId, currentOrganization])
+  }, [open, supplierId, currentOrganization, loadSupplierData])
 
   const loadSupplierData = async () => {
     if (!supplierId || !currentOrganization) return
@@ -237,7 +231,7 @@ export function SupplierViewDialog({
                     {supplier.address_line1 && <p>{supplier.address_line1}</p>}
                     {supplier.address_line2 && <p>{supplier.address_line2}</p>}
                     <p>
-                      {supplier.postal_code && supplier.postal_code + ' '}
+                      {supplier.postal_code && `${supplier.postal_code} `}
                       {supplier.city}
                       {supplier.country && supplier.country !== 'CH' && `, ${supplier.country}`}
                     </p>

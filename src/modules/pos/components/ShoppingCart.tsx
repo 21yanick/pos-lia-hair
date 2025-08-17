@@ -50,66 +50,65 @@ export function ShoppingCart({
           </div>
         ) : (
           <div className="space-y-2">
-            {cart &&
-              cart.map((item, index) => (
-                <div key={item.id} className="border rounded-lg p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm mb-1">{item.name}</div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          CHF {item.price.toFixed(2)}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5"
-                          onClick={() => onEditPrice(item)}
-                          disabled={loading}
-                        >
-                          <Pencil size={10} />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold">CHF {item.total.toFixed(2)}</div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                        disabled={loading}
-                      >
-                        <Minus size={12} />
-                      </Button>
-                      <span className="mx-3 text-sm font-medium min-w-[20px] text-center">
-                        {item.quantity}
+            {cart?.map((item, _index) => (
+              <div key={item.id} className="border rounded-lg p-3">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="font-medium text-sm mb-1">{item.name}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        CHF {item.price.toFixed(2)}
                       </span>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
-                        onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                        className="h-5 w-5"
+                        onClick={() => onEditPrice(item)}
                         disabled={loading}
                       >
-                        <Plus size={12} />
+                        <Pencil size={10} />
                       </Button>
                     </div>
+                  </div>
+                  <div className="text-sm font-semibold">CHF {item.total.toFixed(2)}</div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="h-6 w-6 text-destructive"
-                      onClick={() => onDeleteItem(item.id)}
+                      className="h-6 w-6"
+                      onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
                       disabled={loading}
                     >
-                      <Trash2 size={12} />
+                      <Minus size={12} />
+                    </Button>
+                    <span className="mx-3 text-sm font-medium min-w-[20px] text-center">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                      disabled={loading}
+                    >
+                      <Plus size={12} />
                     </Button>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive"
+                    onClick={() => onDeleteItem(item.id)}
+                    disabled={loading}
+                  >
+                    <Trash2 size={12} />
+                  </Button>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
         )}
       </div>

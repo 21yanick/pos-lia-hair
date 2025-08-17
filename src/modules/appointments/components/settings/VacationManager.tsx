@@ -41,7 +41,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { Textarea } from '@/shared/components/ui/textarea'
@@ -127,12 +126,12 @@ export function VacationManager({ className }: VacationManagerProps) {
       await addVacationPeriod({
         start: newVacation.start!,
         end: newVacation.end!,
-        reason: newVacation.reason!.trim(),
+        reason: newVacation.reason?.trim(),
       })
 
       setNewVacation({ start: '', end: '', reason: '' })
       setIsAddDialogOpen(false)
-    } catch (error) {
+    } catch (_error) {
       // Error handling delegated to UI layer
     }
   }
@@ -140,7 +139,7 @@ export function VacationManager({ className }: VacationManagerProps) {
   const handleRemoveVacation = async (index: number) => {
     try {
       await removeVacationPeriod(index)
-    } catch (error) {
+    } catch (_error) {
       // Error handling delegated to UI layer
     }
   }

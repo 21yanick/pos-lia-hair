@@ -7,7 +7,6 @@
 import type {
   ProviderDetectionResult,
   ProviderImportError,
-  ProviderParserConfig,
   ProviderRecord,
   ProviderValidationError,
   SumUpCsvRow,
@@ -185,18 +184,18 @@ export function parseTWINTCsv(csvContent: string): {
   return { records, errors }
 }
 
-function parseTWINTRow(row: TWINTCsvRow, rowIndex: number): ProviderRecord {
+function parseTWINTRow(row: TWINTCsvRow, _rowIndex: number): ProviderRecord {
   // Parse dates (German format: "31.10.2024")
-  const transactionDate = parseGermanDate(row['Transaktionsdatum'])
+  const transactionDate = parseGermanDate(row.Transaktionsdatum)
   const settlementDate = parseGermanDate(row['Überweisung am']) // First column = settlement date
 
   // Parse amounts (German number format but likely with dots)
   const grossAmount = parseFloat(row['Betrag Transaktion'].replace(',', '.'))
-  const fees = parseFloat(row['Transaktionsgebühr'].replace(',', '.'))
+  const fees = parseFloat(row.Transaktionsgebühr.replace(',', '.'))
   const netAmount = parseFloat(row['Gutgeschriebener Betrag'].replace(',', '.'))
 
   // Validate amounts
-  if (isNaN(grossAmount) || isNaN(fees) || isNaN(netAmount)) {
+  if (Number.isNaN(grossAmount) || Number.isNaN(fees) || Number.isNaN(netAmount)) {
     throw new Error('Invalid amount values in TWINT row')
   }
 
@@ -285,7 +284,7 @@ export function parseSumUpCsv(csvContent: string): {
         })
 
         // Filter: Only process "Umsatz" transactions that are "Erfolgreich"
-        if (row['Zahlungsart'] !== 'Umsatz' || row['Status'] !== 'Erfolgreich') {
+        if (row.Zahlungsart !== 'Umsatz' || row.Status !== 'Erfolgreich') {
           return // Skip this row silently
         }
 
@@ -315,23 +314,23 @@ export function parseSumUpCsv(csvContent: string): {
   return { records, errors }
 }
 
-function parseSumUpRow(row: SumUpCsvRow, rowIndex: number): ProviderRecord {
+function parseSumUpRow(row: SumUpCsvRow, _rowIndex: number): ProviderRecord {
   // Parse dates (ISO format: "2024-11-27 12:43:22")
-  const transactionDate = new Date(row['Datum'])
+  const transactionDate = new Date(row.Datum)
   const settlementDate = transactionDate // SumUp settles same day
 
   // Parse amounts (dot decimal format)
   const grossAmount = parseFloat(row['Betrag inkl. MwSt.'])
-  const fees = parseFloat(row['Gebühr'])
-  const netAmount = parseFloat(row['Auszahlung'])
+  const fees = parseFloat(row.Gebühr)
+  const netAmount = parseFloat(row.Auszahlung)
 
   // Validate amounts
-  if (isNaN(grossAmount) || isNaN(fees) || isNaN(netAmount)) {
+  if (Number.isNaN(grossAmount) || Number.isNaN(fees) || Number.isNaN(netAmount)) {
     throw new Error('Invalid amount values in SumUp row')
   }
 
   // Validate dates
-  if (isNaN(transactionDate.getTime())) {
+  if (Number.isNaN(transactionDate.getTime())) {
     throw new Error('Invalid date format in SumUp row')
   }
 
@@ -350,7 +349,7 @@ function parseSumUpRow(row: SumUpCsvRow, rowIndex: number): ProviderRecord {
     net_amount: netAmount,
     provider_transaction_id: row['Transaktions-ID'],
     provider_reference: row['E-Mail'],
-    description: row['Beschreibung'] || `SumUp Transaction ${row['Transaktions-ID']}`,
+    description: row.Beschreibung || `SumUp Transaction ${row['Transaktions-ID']}`,
     currency: 'CHF',
     raw_data: row,
   }
@@ -404,13 +403,13 @@ function parseGermanDate(dateString: string): Date {
     throw new Error(`Invalid German date format: ${dateString}`)
   }
 
-  const day = parseInt(parts[0])
-  const month = parseInt(parts[1]) - 1 // Month is 0-indexed in JS
-  const year = parseInt(parts[2])
+  const day = parseInt(parts[0], 10)
+  const month = parseInt(parts[1], 10) - 1 // Month is 0-indexed in JS
+  const year = parseInt(parts[2], 10)
 
   const date = new Date(year, month, day)
 
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     throw new Error(`Invalid date values: ${dateString}`)
   }
 
@@ -458,7 +457,7 @@ export function validateProviderRecord(record: ProviderRecord): ProviderValidati
   }
 
   // Validate dates
-  if (isNaN(record.transaction_date.getTime())) {
+  if (Number.isNaN(record.transaction_date.getTime())) {
     errors.push({
       type: 'INVALID_DATE',
       field: 'transaction_date',
@@ -466,7 +465,7 @@ export function validateProviderRecord(record: ProviderRecord): ProviderValidati
     })
   }
 
-  if (isNaN(record.settlement_date.getTime())) {
+  if (Number.isNaN(record.settlement_date.getTime())) {
     errors.push({
       type: 'INVALID_DATE',
       field: 'settlement_date',

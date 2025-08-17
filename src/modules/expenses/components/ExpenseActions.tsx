@@ -115,7 +115,7 @@ export function ExpenseActions({
   }
 
   // PDF Handler Functions
-  const handleViewPDF = (url: string, fileName: string) => {
+  const handleViewPDF = (url: string, _fileName: string) => {
     if (url) {
       window.open(url, '_blank')
     } else {
@@ -146,7 +146,7 @@ export function ExpenseActions({
         title: 'Download erfolgreich',
         description: `${fileName} wurde heruntergeladen.`,
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Download fehlgeschlagen',
         description: 'Die Datei konnte nicht heruntergeladen werden.',
@@ -188,49 +188,44 @@ export function ExpenseActions({
               <DropdownMenuSeparator />
 
               {/* View/Download options - only when PDFs exist */}
-              {hasPDFs && pdfs.length > 0 && (
-                <>
-                  {pdfs.length === 1 ? (
-                    // Single PDF actions
-                    <>
+              {hasPDFs &&
+                pdfs.length > 0 &&
+                (pdfs.length === 1 ? (
+                  // Single PDF actions
+                  <>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        handleViewPDF(pdfs[0]?.url || '', pdfs[0]?.displayName || 'beleg.pdf')
+                      }
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      PDF in neuem Tab öffnen
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        handleDownloadPDF(pdfs[0]?.url || '', pdfs[0]?.displayName || 'beleg.pdf')
+                      }
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      PDF herunterladen
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  // Multiple PDFs - show submenu items
+                  pdfs
+                    .slice(0, 3)
+                    .map((pdf, index) => (
                       <DropdownMenuItem
+                        key={pdf.id}
                         onClick={() =>
-                          handleViewPDF(pdfs[0]?.url || '', pdfs[0]?.displayName || 'beleg.pdf')
+                          handleViewPDF(pdf.url || '', pdf.displayName || `beleg-${index + 1}.pdf`)
                         }
                       >
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        PDF in neuem Tab öffnen
+                        <FileText className="mr-2 h-4 w-4" />
+                        {pdf.displayName || `Beleg ${index + 1}`}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          handleDownloadPDF(pdfs[0]?.url || '', pdfs[0]?.displayName || 'beleg.pdf')
-                        }
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        PDF herunterladen
-                      </DropdownMenuItem>
-                    </>
-                  ) : (
-                    // Multiple PDFs - show submenu items
-                    pdfs
-                      .slice(0, 3)
-                      .map((pdf, index) => (
-                        <DropdownMenuItem
-                          key={pdf.id}
-                          onClick={() =>
-                            handleViewPDF(
-                              pdf.url || '',
-                              pdf.displayName || `beleg-${index + 1}.pdf`
-                            )
-                          }
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          {pdf.displayName || `Beleg ${index + 1}`}
-                        </DropdownMenuItem>
-                      ))
-                  )}
-                </>
-              )}
+                    ))
+                ))}
 
               {/* PDF Replace/Add - always available for saved expenses */}
               <DropdownMenuItem onClick={() => setReplaceDialogOpen(true)}>

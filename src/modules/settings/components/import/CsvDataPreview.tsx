@@ -30,12 +30,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table'
 import type { ExpenseImport, ItemImport, SaleImport } from '@/shared/hooks/business/useImport'
-import type {
-  CsvImportType,
-  CsvMappingConfig,
-  CsvValidationResult,
-  ParsedCsvData,
-} from '@/shared/types/csvImport'
+import type { CsvMappingConfig, ParsedCsvData } from '@/shared/types/csvImport'
 
 import { getCsvStats } from '@/shared/utils/csvParser'
 import { validateTransformedData } from '@/shared/utils/csvToJsonTransform'
@@ -72,7 +67,7 @@ export function CsvDataPreview({
 
   // Get mapped headers only
   const mappedHeaders = Object.values(mappingConfig.mappings)
-    .filter((mapping) => mapping.csvHeader && mapping.csvHeader.trim())
+    .filter((mapping) => mapping.csvHeader?.trim())
     .map((mapping) => mapping.csvHeader)
 
   const getTransformedDataStats = () => {

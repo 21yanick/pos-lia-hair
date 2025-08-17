@@ -89,7 +89,7 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
     try {
       await updateWorkingHours(workingHours)
       setHasChanges(false)
-    } catch (error) {
+    } catch (_error) {
       // Error handling delegated to UI layer
     }
   }

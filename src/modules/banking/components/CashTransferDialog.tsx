@@ -52,7 +52,7 @@ export function CashTransferDialog({
     if (isOpen && isToBank) {
       fetchCashBalance()
     }
-  }, [isOpen, isToBank])
+  }, [isOpen, isToBank, fetchCashBalance])
 
   const fetchCashBalance = async () => {
     setLoadingBalance(true)

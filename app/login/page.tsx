@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import type React from 'react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { PublicRoute } from '@/shared/components/auth'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -21,6 +21,9 @@ import { supabase } from '@/shared/lib/supabase/client'
 
 export default function LoginPage() {
   const router = useRouter()
+  const emailId = useId()
+  const passwordId = useId()
+  const rememberId = useId()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -109,11 +112,11 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground/90">
+                <Label htmlFor={emailId} className="text-sm font-medium text-foreground/90">
                   E-Mail
                 </Label>
                 <Input
-                  id="email"
+                  id={emailId}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -125,11 +128,11 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-foreground/90">
+                <Label htmlFor={passwordId} className="text-sm font-medium text-foreground/90">
                   Passwort
                 </Label>
                 <Input
-                  id="password"
+                  id={passwordId}
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -142,13 +145,13 @@ export default function LoginPage() {
 
               <div className="flex items-center space-x-2 pt-2">
                 <Checkbox
-                  id="remember"
+                  id={rememberId}
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                   className="border-border/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label
-                  htmlFor="remember"
+                  htmlFor={rememberId}
                   className="text-sm text-muted-foreground cursor-pointer select-none"
                 >
                   Angemeldet bleiben

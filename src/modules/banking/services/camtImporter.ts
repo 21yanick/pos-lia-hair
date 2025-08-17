@@ -244,7 +244,7 @@ export async function executeCAMTImport(
       }
 
       await supabase.from('bank_import_sessions' as any).insert(failedSession)
-    } catch (sessionError) {
+    } catch (_sessionError) {
       // console.warn('Failed to create failed import session:', sessionError)
     }
 

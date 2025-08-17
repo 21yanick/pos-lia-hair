@@ -5,7 +5,6 @@ import { de } from 'date-fns/locale'
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -36,7 +35,7 @@ import {
 } from '@/shared/components/ui/table'
 import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
 import { useToast } from '@/shared/hooks/core/useToast'
-import { formatDateForAPI, getTodaySwiss } from '@/shared/utils/dateUtils'
+import { getTodaySwiss } from '@/shared/utils/dateUtils'
 
 export default function CashRegisterPage() {
   // Hooks
@@ -147,7 +146,7 @@ export default function CashRegisterPage() {
       }
     }
     fetchData()
-  }, [monthStart, monthEnd])
+  }, [monthStart, monthEnd, getCashMovementsForMonth, getCurrentCashBalance])
 
   // CSV Export-Funktion
   const handleExport = () => {
@@ -204,7 +203,7 @@ export default function CashRegisterPage() {
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'dd.MM.yyyy', { locale: de })
-    } catch (e) {
+    } catch (_e) {
       return dateString
     }
   }
@@ -213,7 +212,7 @@ export default function CashRegisterPage() {
     if (!dateTimeString) return '--:--'
     try {
       return format(new Date(dateTimeString), 'HH:mm', { locale: de })
-    } catch (e) {
+    } catch (_e) {
       return '--:--'
     }
   }
@@ -274,16 +273,19 @@ export default function CashRegisterPage() {
       filtered = filtered.filter(
         (entry) =>
           // Search in VK number
-          (entry.sale_receipt_number &&
-            entry.sale_receipt_number.toLowerCase().includes(searchLower)) ||
+          entry.sale_receipt_number?.toLowerCase().includes(searchLower) ||
           // Search in CM number
-          (entry.movement_number && entry.movement_number.toLowerCase().includes(searchLower)) ||
+          entry.movement_number
+            ?.toLowerCase()
+            .includes(searchLower) ||
           // Search in description
           entry.description
             .toLowerCase()
             .includes(searchLower) ||
           // Search in customer name
-          (entry.sale_customer_name && entry.sale_customer_name.toLowerCase().includes(searchLower))
+          entry.sale_customer_name
+            ?.toLowerCase()
+            .includes(searchLower)
       )
     }
 
@@ -541,7 +543,7 @@ export default function CashRegisterPage() {
                           new Date(a.created_at || a.date).getTime()
                       )
 
-                      return displayEntries.map((entry: any, displayIndex: number) => {
+                      return displayEntries.map((entry: any, _displayIndex: number) => {
                         // Finde Index in chronologischer Liste für Saldo-Berechnung
                         const chronoIndex = chronologicalEntries.findIndex((e) => e.id === entry.id)
 
@@ -681,7 +683,7 @@ export default function CashRegisterPage() {
                       new Date(a.created_at || a.date).getTime()
                   )
 
-                  return displayEntries.map((entry: any, displayIndex: number) => {
+                  return displayEntries.map((entry: any, _displayIndex: number) => {
                     // Finde Index in chronologischer Liste für Saldo-Berechnung
                     const chronoIndex = chronologicalEntries.findIndex((e) => e.id === entry.id)
 

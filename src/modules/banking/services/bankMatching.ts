@@ -9,7 +9,6 @@ import { intelligentMatchingService } from './intelligentMatching'
 import type {
   BankMatchCandidate,
   BankMatchSuggestion,
-  BankMatchType,
   BulkDetectionResult,
   MatchingConfig,
   MatchingServiceResult,
@@ -399,9 +398,9 @@ export class BankMatchingService {
   }
 
   private calculateBulkConfidence(
-    bankTransaction: UnmatchedBankTransaction,
+    _bankTransaction: UnmatchedBankTransaction,
     combination: any,
-    provider: string
+    _provider: string
   ): number {
     let confidence = 60 // Base score for provider detection
 
@@ -573,7 +572,7 @@ export class BankMatchingService {
   }
 
   private generateBankMatchReasons(
-    scores: any,
+    _scores: any,
     amountAnalysis: any,
     dateAnalysis: any,
     descriptionAnalysis: any

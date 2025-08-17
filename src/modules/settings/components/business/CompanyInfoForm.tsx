@@ -72,7 +72,7 @@ export function CompanyInfoForm() {
 
     try {
       await updateSettings(formData)
-    } catch (error) {
+    } catch (_error) {
       setError('Fehler beim Speichern der Einstellungen')
     }
   }

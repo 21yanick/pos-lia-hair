@@ -5,11 +5,10 @@
  * Step 2 of QuickBookingDialog
  */
 
-import { Check, Mail, Phone, Search, User } from 'lucide-react'
+import { Check, Phone, Search, User } from 'lucide-react'
 import { useState } from 'react'
 import { useCustomersQuery } from '@/modules/customers/hooks/useCustomersQuery'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import {

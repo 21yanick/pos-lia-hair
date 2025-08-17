@@ -124,7 +124,7 @@ export const deviceDetection = {
       window.localStorage.setItem(test, test)
       window.localStorage.removeItem(test)
       return 'localStorage'
-    } catch (e) {
+    } catch (_e) {
       // localStorage not available (private browsing, etc)
     }
 
@@ -134,7 +134,7 @@ export const deviceDetection = {
       window.sessionStorage.setItem(test, test)
       window.sessionStorage.removeItem(test)
       return 'sessionStorage'
-    } catch (e) {
+    } catch (_e) {
       // sessionStorage not available
     }
 

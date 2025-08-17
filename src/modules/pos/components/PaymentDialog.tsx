@@ -3,7 +3,6 @@
 import { CheckCircle, CreditCard, Loader2, Smartphone, Wallet, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { CustomerAutocomplete } from '@/shared/components/customer'
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,

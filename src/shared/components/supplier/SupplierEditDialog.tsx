@@ -44,7 +44,7 @@ export function SupplierEditDialog({
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [supplier, setSupplier] = useState<Supplier | null>(null)
+  const [_supplier, setSupplier] = useState<Supplier | null>(null)
 
   const [formData, setFormData] = useState<SupplierFormData>({
     name: '',
@@ -68,7 +68,7 @@ export function SupplierEditDialog({
     if (open && supplierId && currentOrganization) {
       loadSupplierData()
     }
-  }, [open, supplierId, currentOrganization])
+  }, [open, supplierId, currentOrganization, loadSupplierData])
 
   const loadSupplierData = async () => {
     if (!supplierId || !currentOrganization) return

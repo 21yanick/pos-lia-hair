@@ -3,7 +3,7 @@
  * Business logic for day timeline generation and calculations
  */
 
-import { addMinutes, isSameDay, setHours, setMinutes, startOfDay } from 'date-fns'
+import { isSameDay, setHours, setMinutes, startOfDay } from 'date-fns'
 import type { BusinessSettings, DayWorkingHours } from '@/shared/types/businessSettings'
 import { formatTimeShort24h, timeToMinutes } from '@/shared/utils/dateUtils'
 import type {
@@ -12,7 +12,6 @@ import type {
   TimelineData,
   TimelineHour,
   TimeSlot,
-  WorkingPeriod,
 } from '../types/timeline'
 
 /**
@@ -263,7 +262,7 @@ function getBreakReason(time: string, dayHours: DayWorkingHours | null): string 
  */
 export function calculateAppointmentPosition(
   appointment: AppointmentBlock,
-  slotInterval: number,
+  _slotInterval: number,
   hourHeight: number
 ): { top: number; height: number } {
   const startMinutes = parseTimeToMinutes(appointment.startTime)

@@ -5,23 +5,9 @@
  * Modern UI with theme colors and proper status management
  */
 
-import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  Edit,
-  Mail,
-  MapPin,
-  MoreHorizontal,
-  Phone,
-  Scissors,
-  Trash2,
-  User,
-  XCircle,
-} from 'lucide-react'
+import { Calendar, Clock, Edit, Mail, MoreHorizontal, Phone, Scissors, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import {
@@ -40,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { useToast } from '@/shared/hooks/core/useToast'
-import { cn } from '@/shared/utils'
 import { formatDateForDisplay, formatTimeShort } from '@/shared/utils/dateUtils'
 import type { AppointmentBlock } from '../types/timeline'
 
@@ -75,7 +60,7 @@ export function AppointmentDetailDialog({
         description: 'Der Termin wurde erfolgreich gelöscht.',
       })
       onClose()
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Termin konnte nicht gelöscht werden.',

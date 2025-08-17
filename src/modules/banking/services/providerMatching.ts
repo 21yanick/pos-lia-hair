@@ -301,7 +301,7 @@ export class ProviderMatchingService {
   }
 
   private generateProviderMatchReasons(
-    scores: { providerMatch: number; amountMatch: number; dateMatch: number },
+    _scores: { providerMatch: number; amountMatch: number; dateMatch: number },
     details: { amountDifference: number; daysDifference: number; providerMatches: boolean },
     amountAnalysis: any,
     dateAnalysis: any

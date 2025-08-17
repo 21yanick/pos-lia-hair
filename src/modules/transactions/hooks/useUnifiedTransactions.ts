@@ -11,7 +11,6 @@ import type {
   TransactionSort,
   TransactionStats,
   UnifiedTransaction,
-  UnifiedTransactionsResponse,
 } from '../types/unifiedTransactions'
 
 export function useUnifiedTransactions() {
@@ -218,7 +217,7 @@ export function useUnifiedTransactions() {
         setLoading(false)
       }
     },
-    [currentOrganization]
+    [currentOrganization, calculatePdfStatus, calculateStats]
   )
 
   // Business Logic: PDF Status berechnen

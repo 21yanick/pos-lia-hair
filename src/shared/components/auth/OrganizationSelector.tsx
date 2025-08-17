@@ -11,7 +11,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
 import { Badge } from '@/shared/components/ui/badge'

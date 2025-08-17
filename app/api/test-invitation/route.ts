@@ -17,7 +17,7 @@ export async function POST() {
     // 1. Create JWT token
     console.log('Creating invitation token...')
     const token = InvitationService.createInvitationToken(testPayload)
-    console.log('Token created:', token.substring(0, 50) + '...')
+    console.log('Token created:', `${token.substring(0, 50)}...`)
 
     // 2. Verify JWT token
     console.log('Verifying invitation token...')
@@ -43,7 +43,7 @@ export async function POST() {
         validation: validation.valid ? '✅ Validation erfolgreich' : '❌ Validation fehlgeschlagen',
       },
       data: {
-        token: token.substring(0, 50) + '...',
+        token: `${token.substring(0, 50)}...`,
         decoded: {
           organizationName: decoded.organizationName,
           email: decoded.email,

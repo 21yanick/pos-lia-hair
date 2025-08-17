@@ -70,7 +70,7 @@ export function EditAppointmentDialog({
         notes: appointment.notes || '',
       })
     }
-  }, [appointment])
+  }, [appointment, normalizeTime])
 
   // Normalize time to HH:mm format
   const normalizeTime = (time: string): string => {

@@ -120,7 +120,7 @@ export function validateAppointmentData(
 
     // Check if date is valid
     const date = new Date(appointmentData.appointment_date)
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       throw new Error('Ungültiges Datum.')
     }
   }

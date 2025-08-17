@@ -9,14 +9,10 @@ import { ensureUserExists, syncAuthUser } from '@/shared/services/authService'
 import {
   createItem,
   deleteItem,
-  getActiveItems,
-  getFavoriteItems,
-  getItems,
   getItemsOptimized,
   type Item,
   type ItemInsert,
   type ItemUpdate,
-  searchItems,
   toggleItemActive,
   toggleItemFavorite,
   updateItem,
@@ -99,7 +95,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
         if (!syncResult.success) {
           // console.warn('User sync failed but continuing with items load:', syncResult.error)
         }
-      } catch (syncError) {
+      } catch (_syncError) {
         // console.warn('User sync error but continuing:', syncError)
       }
 

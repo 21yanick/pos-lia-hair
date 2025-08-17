@@ -289,7 +289,7 @@ export class IntelligentMatchingService {
     return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
   }
 
-  formatMatchReasons(scores: { [key: string]: number }, details: any = {}): string[] {
+  formatMatchReasons(scores: { [key: string]: number }, _details: any = {}): string[] {
     const reasons: string[] = []
 
     Object.entries(scores).forEach(([key, score]) => {
@@ -354,12 +354,12 @@ export class IntelligentMatchingService {
   // =====================================================
 
   validateAmount(amount: number): boolean {
-    return typeof amount === 'number' && !isNaN(amount) && isFinite(amount)
+    return typeof amount === 'number' && !Number.isNaN(amount) && Number.isFinite(amount)
   }
 
   validateDate(date: Date | string): boolean {
     const d = new Date(date)
-    return d instanceof Date && !isNaN(d.getTime())
+    return d instanceof Date && !Number.isNaN(d.getTime())
   }
 
   validateItems(items: AvailableForBankMatching[]): boolean {

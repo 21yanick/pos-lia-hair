@@ -4,28 +4,19 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Calendar,
   CheckCircle,
   CreditCard,
   Database,
-  DollarSign,
   FileSpreadsheet,
   FileX,
   Loader2,
-  RefreshCw,
   Upload,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -33,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog'
-import { Progress } from '@/shared/components/ui/progress'
 import { Separator } from '@/shared/components/ui/separator'
 import {
   Table,

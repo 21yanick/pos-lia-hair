@@ -1,7 +1,7 @@
 'use client'
 
 import { Building2, CheckCircle2, Layers, TrendingUp } from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
@@ -132,8 +132,8 @@ export function EnhancedBankTables({
     const bankTransaction = unmatchedBankTransactions.find((t) => t.id === bankTransactionId)
     if (!bankTransaction) return { itemIds: [], scores: new Map() }
 
-    const bankAmount = bankTransaction.amount
-    const bankDate = new Date(bankTransaction.transaction_date)
+    const _bankAmount = bankTransaction.amount
+    const _bankDate = new Date(bankTransaction.transaction_date)
 
     // console.log('🔍 Intelligent Banking Match Analysis:', {
     //   id: bankTransactionId,
@@ -298,10 +298,10 @@ export function EnhancedBankTables({
       setHighlightedItems([])
       setHighlightedScores(new Map())
     }
-  }, [selectedBankTransaction, availableForMatching])
+  }, [selectedBankTransaction, findPotentialMatches])
 
   // Handle settlement group pre-selection
-  const handlePreSelectGroup = (group: SettlementGroup) => {
+  const _handlePreSelectGroup = (group: SettlementGroup) => {
     const itemIds = group.items.map((item) => item.id)
     onItemsSelect(itemIds)
   }
@@ -472,7 +472,7 @@ export function EnhancedBankTables({
             ) : (
               <div className="space-y-4">
                 {/* Settlement Groups - ALWAYS displayed */}
-                {baseSettlements.map((group, index) => (
+                {baseSettlements.map((group, _index) => (
                   <div
                     key={group.provider}
                     data-settlement-group={group.items.map((item) => item.id).join(',')}

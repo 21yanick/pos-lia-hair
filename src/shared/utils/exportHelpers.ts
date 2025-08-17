@@ -1,6 +1,6 @@
 import React from 'react'
 import type { ReconciliationData } from '@/shared/services/reconciliationService'
-import type { ExportData, ExportType, MonthlyStatsData } from '@/shared/types/monthly'
+import type { ExportData, MonthlyStatsData } from '@/shared/types/monthly'
 import type { TransactionItem } from '@/shared/types/transactions'
 import { formatDateForDisplay, getTodaySwissString } from './dateUtils'
 import { formatMonthYear } from './reportHelpers'
@@ -58,11 +58,11 @@ export async function exportMonthlyPDF(
 
     // Parallel loading von Business Settings und Reconciliation Data
     const [businessSettings, reconciliationData] = await Promise.all([
-      getBusinessSettings().catch((err) => {
+      getBusinessSettings().catch((_err) => {
         // console.warn('Failed to load business settings for PDF:', err)
         return null
       }),
-      getReconciliationData(selectedMonth).catch((err) => {
+      getReconciliationData(selectedMonth).catch((_err) => {
         // console.warn('Failed to load reconciliation data for PDF:', err)
         return null
       }),
@@ -178,7 +178,7 @@ export async function openMonthlyPDF(selectedMonth: string): Promise<void> {
 
     // Prüfen ob PDF bereits existiert
     const fileName = `monatsabschluss-${selectedMonth}.pdf`
-    const filePath = `documents/monthly_reports/${fileName}`
+    const _filePath = `documents/monthly_reports/${fileName}`
 
     // Erst in der documents table suchen
     const monthDate = `${selectedMonth}-01`
@@ -227,7 +227,7 @@ export async function handleExport(data: ExportData): Promise<void> {
 // Fallback-Funktion für direkten Download (vereinfacht)
 async function createFallbackPDF(
   stats: MonthlyStatsData,
-  transactions: TransactionItem[],
+  _transactions: TransactionItem[],
   selectedMonth: string
 ): Promise<Blob> {
   // Dynamischer Import für React-PDF
@@ -255,7 +255,7 @@ export async function exportMonthlyPDFWithReconciliation(
     const { getBusinessSettings } = await import('@/shared/services/businessSettingsService')
 
     // Nur Business Settings laden (reconciliationData bereits vorhanden)
-    const businessSettings = await getBusinessSettings().catch((err) => {
+    const businessSettings = await getBusinessSettings().catch((_err) => {
       // console.warn('Failed to load business settings for PDF:', err)
       return null
     })

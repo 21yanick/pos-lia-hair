@@ -181,7 +181,7 @@ export function validateOwnerTransactions(ownerTransactions: any[]): ValidationR
       errors.push(`Owner Transaction ${index + 1}: Transaktionsdatum ist erforderlich`)
     } else {
       const date = new Date(transaction.transaction_date)
-      if (isNaN(date.getTime())) {
+      if (Number.isNaN(date.getTime())) {
         errors.push(`Owner Transaction ${index + 1}: Ungültiges Datum`)
       }
     }

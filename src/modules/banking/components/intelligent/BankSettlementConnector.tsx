@@ -152,7 +152,7 @@ export function BankSettlementConnector({
     confidence: number,
     isSelected: boolean,
     isHighlighted: boolean,
-    matchType: string
+    _matchType: string
   ) => {
     // Show selected lines with full opacity, highlighted with lower opacity
     if (!isSelected && !isHighlighted) {
@@ -196,7 +196,7 @@ export function BankSettlementConnector({
     confidence: number,
     isSelected: boolean,
     isHighlighted: boolean,
-    matchType: string
+    _matchType: string
   ) => {
     if (!isSelected && !isHighlighted) return 0
 

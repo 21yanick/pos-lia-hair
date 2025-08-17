@@ -1,4 +1,4 @@
-import { Bar, BarChart, ComposedChart, Line, XAxis, YAxis } from 'recharts'
+import { Bar, ComposedChart, Line, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/shared/components/ui/chart'
 import type { MonthlyData } from './MonthlyTrendChart'
 

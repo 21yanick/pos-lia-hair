@@ -47,7 +47,7 @@ export function PWAInstallCard() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Installation fehlgeschlagen',
         description:

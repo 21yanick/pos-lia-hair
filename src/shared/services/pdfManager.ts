@@ -14,7 +14,7 @@ class SimplePdfManager {
    * BEFORE: Complex modal system with setModalHandler, proxy URLs, mobile workarounds
    * AFTER:  Direct window.open (much simpler, works reliably)
    */
-  open(id: string, url: string, title?: string): void {
+  open(_id: string, url: string, _title?: string): void {
     // Validate inputs
     if (!url || url.trim() === '') {
       console.error('[PdfManager] Invalid PDF URL provided')
@@ -28,7 +28,7 @@ class SimplePdfManager {
   /**
    * Close PDF - No-op in simple approach (new tab handles itself)
    */
-  close(id: string): void {
+  close(_id: string): void {
     // No-op: New tab manages itself
   }
 
@@ -42,7 +42,7 @@ class SimplePdfManager {
   /**
    * Check if PDF is open - Always false in simple approach
    */
-  isOpen(id: string): boolean {
+  isOpen(_id: string): boolean {
     return false // New tabs are independent
   }
 

@@ -42,7 +42,7 @@ export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps)
 
       // Reset after 3 seconds
       setTimeout(() => setCopied(false), 3000)
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler beim Kopieren',
         description: 'Der Link konnte nicht kopiert werden.',

@@ -11,7 +11,6 @@ import { useEffect, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent } from '@/shared/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -209,7 +208,7 @@ export function OwnerTransactionDialog({
     }
 
     const numericAmount = parseFloat(amount)
-    if (isNaN(numericAmount) || numericAmount <= 0) {
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
       setError('Please enter a valid amount greater than 0')
       return
     }

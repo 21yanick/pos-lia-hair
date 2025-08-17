@@ -64,7 +64,7 @@ export function JsonImport() {
       try {
         const data = JSON.parse(e.target?.result as string)
         setJsonData(data)
-      } catch (error) {
+      } catch (_error) {
         alert('Ungültige JSON-Datei')
         setSelectedFile(null)
       }

@@ -55,7 +55,7 @@
       .insert({
         id: user.id,
         name: user.user_metadata?.name || 'Admin Benutzer',
-        username: user.email.split('@')[0] + '_' + Math.random().toString(36).substring(2, 8),
+        username: `${user.email.split('@')[0]}_${Math.random().toString(36).substring(2, 8)}`,
         email: user.email,
         role: 'admin',
         active: true,

@@ -1,13 +1,5 @@
 import { Loader2 } from 'lucide-react'
-import { Button } from '@/shared/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/shared/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader } from '@/shared/components/ui/card'
 
 export default function CashRegisterLoading() {
   return (

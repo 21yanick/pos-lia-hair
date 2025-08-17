@@ -5,18 +5,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 // REMOVED: useOrganization import to break circular dependency
 // Organization data should be accessed via useOrganization hook separately
-import {
-  type AuthContextType,
-  Organization,
-  OrganizationRole,
-  type Permission,
-  type User,
-} from '@/shared/types/organizations'
+import type { AuthContextType, Permission, User } from '@/shared/types/organizations'
 
 export function useAuth(): AuthContextType {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const _router = useRouter()
 
   // Load current user
   const loadUser = useCallback(async () => {
@@ -90,7 +84,7 @@ export function useAuth(): AuthContextType {
 
   // Check if user has specific permission
   // NOTE: This is now a stub - permission checking should be done via useOrganizationPermissions
-  const hasPermission = useCallback((permission: Permission): boolean => {
+  const hasPermission = useCallback((_permission: Permission): boolean => {
     return false
   }, [])
 
@@ -162,7 +156,7 @@ export function useAuthGuard() {
 // Hook for permission-based rendering
 // NOTE: This hook is deprecated - use useOrganizationPermissions instead
 export function usePermissions() {
-  const can = useCallback((permission: Permission): boolean => {
+  const can = useCallback((_permission: Permission): boolean => {
     return false // Stub
   }, [])
 

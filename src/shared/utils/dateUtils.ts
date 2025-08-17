@@ -81,9 +81,9 @@ export function parseDateFromDisplay(germanDateString: string): Date {
 
   // Validierung
   if (
-    isNaN(day) ||
-    isNaN(month) ||
-    isNaN(year) ||
+    Number.isNaN(day) ||
+    Number.isNaN(month) ||
+    Number.isNaN(year) ||
     day < 1 ||
     day > 31 ||
     month < 0 ||
@@ -237,7 +237,7 @@ function getSwissTimezoneOffset(date: Date): number {
     const match = offsetString.match(/GMT([+-])(\d+)/)
     if (match) {
       const sign = match[1] === '+' ? 1 : -1
-      const hours = parseInt(match[2])
+      const hours = parseInt(match[2], 10)
       return sign * hours
     }
   }

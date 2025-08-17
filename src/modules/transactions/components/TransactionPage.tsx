@@ -1,21 +1,8 @@
 'use client'
 
-import {
-  AlertCircle,
-  Banknote,
-  CheckCircle2,
-  Clock,
-  Download,
-  FileText,
-  Filter,
-  Info,
-  Search,
-  Users,
-  XCircle,
-} from 'lucide-react'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Banknote, CheckCircle2, Download, FileText, Search, Users, XCircle } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
-import { toast } from 'sonner'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -27,7 +14,6 @@ import {
 } from '@/shared/components/ui/card'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
 import { formatCurrency } from '@/shared/utils'
 import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'

@@ -1,6 +1,6 @@
 'use client'
 
-import { Building2, Tag, Users, Wrench } from 'lucide-react'
+import { Building2, Tag, Users } from 'lucide-react'
 import { useState } from 'react'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 import { Button } from '@/shared/components/ui/button'

@@ -8,11 +8,10 @@
 import { Calendar as CalendarIcon, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense, useMemo, useState } from 'react'
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { cn } from '@/shared/utils'
-import { formatDateForAPI, formatDateForDisplay } from '@/shared/utils/dateUtils'
+import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { useAppointmentsByDate, useDeleteAppointment } from '../hooks/useAppointments'
 import type { AppointmentBlock } from '../types/timeline'
 import { AppointmentDetailDialog } from './AppointmentDetailDialog'
@@ -212,15 +211,9 @@ export function AppointmentsPage() {
           closeDialogs() // Close detail dialog
         }}
         onDelete={async (appointmentId) => {
-          try {
-            await deleteAppointment.mutateAsync(appointmentId)
-            // Close the appointment detail dialog after successful delete
-            closeDialogs()
-            // React Query will automatically refetch and update the UI
-          } catch (error) {
-            // Error is already handled in the dialog component
-            throw error
-          }
+          await deleteAppointment.mutateAsync(appointmentId)
+          // Close the appointment detail dialog after successful delete
+          closeDialogs()
         }}
       />
 

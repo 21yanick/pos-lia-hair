@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, Building2, RefreshCw, TrendingUp, User, Wallet } from 'lucide-react'
+import { AlertCircle, Building2, RefreshCw, TrendingUp, Wallet } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -43,7 +43,7 @@ export function ProviderSummaryDashboard({
 
   useEffect(() => {
     loadSummaries()
-  }, [])
+  }, [loadSummaries])
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('de-CH', {
@@ -52,7 +52,7 @@ export function ProviderSummaryDashboard({
     }).format(amount)
   }
 
-  const getProviderIcon = (provider: string) => {
+  const _getProviderIcon = (provider: string) => {
     switch (provider) {
       case 'twint':
         return '🟦'

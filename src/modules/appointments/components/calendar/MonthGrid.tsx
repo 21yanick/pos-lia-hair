@@ -13,9 +13,9 @@ import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import { cn } from '@/shared/utils'
-import { formatDateForDisplay, formatMonthYear } from '@/shared/utils/dateUtils'
+import { formatMonthYear } from '@/shared/utils/dateUtils'
 import { useAppointmentsByDateRange } from '../../hooks/useAppointments'
-import type { CalendarDay, MonthData, MonthGridProps } from '../../types/calendar'
+import type { CalendarDay, MonthData } from '../../types/calendar'
 import { DAY_INDICATOR_CONFIG, SWISS_CALENDAR_CONFIG } from '../../types/calendar'
 import {
   applyBusinessLogicToMonth,

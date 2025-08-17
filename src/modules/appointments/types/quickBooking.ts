@@ -4,7 +4,6 @@
  */
 
 import type { Item } from '@/shared/hooks/business/useItems'
-import type { Appointment } from '@/shared/services/appointmentService'
 
 export type BookingStep = 'services' | 'customer'
 

@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { useSidebar } from '@/shared/components/ui/sidebar'
 
 export function SidebarAutoClose() {
-  const pathname = usePathname()
+  const _pathname = usePathname()
   const { isMobile, setOpenMobile } = useSidebar()
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export function SidebarAutoClose() {
     if (isMobile) {
       setOpenMobile(false)
     }
-  }, [pathname, isMobile, setOpenMobile])
+  }, [isMobile, setOpenMobile])
 
   return null
 }

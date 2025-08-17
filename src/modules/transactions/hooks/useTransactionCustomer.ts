@@ -99,7 +99,7 @@ export const useTransactionCustomer = (organizationId: string) => {
       return { previousTransactions }
     },
 
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback optimistic update
       if (context?.previousTransactions) {
         queryClient.setQueryData(transactionKeys.lists(), context.previousTransactions)

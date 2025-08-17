@@ -144,7 +144,7 @@ export function useCashBalance() {
       }
 
       // Parse Swiss date and get UTC range for database query
-      const swissDate = new Date(date + 'T12:00:00')
+      const swissDate = new Date(`${date}T12:00:00`)
       const { start, end } = getSwissDayRange(swissDate)
 
       const { data, error } = await supabase

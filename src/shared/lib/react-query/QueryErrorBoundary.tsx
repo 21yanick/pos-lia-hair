@@ -130,7 +130,7 @@ export class QueryErrorBoundary extends Component<
     // e.g., Sentry, LogRocket, Bugsnag, etc.
 
     try {
-      const errorReport = {
+      const _errorReport = {
         message: error.message,
         stack: error.stack,
         componentStack: errorInfo.componentStack,

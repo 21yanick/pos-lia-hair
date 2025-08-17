@@ -44,20 +44,34 @@ export async function GET() {
 
   // 🗄️ DATABASE CHECK (non-blocking)
   try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value
-          },
-          set() {},
-          remove() {},
-        },
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    // Environment variable validation
+    if (!supabaseUrl || !supabaseAnonKey) {
+      healthCheck.checks.database = 'error'
+      healthCheck.checks.environment = 'error'
+      const missingVars = []
+      if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL')
+      if (!supabaseAnonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+      healthCheck.details = {
+        ...healthCheck.details,
+        database: 'Missing environment variables',
+        environment: missingVars,
       }
-    )
+      return NextResponse.json(healthCheck, { status: 200 })
+    }
+
+    const cookieStore = await cookies()
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        },
+        set() {},
+        remove() {},
+      },
+    })
 
     // Simple connection test
     const { error } = await supabase.from('organizations').select('id').limit(1)
@@ -65,7 +79,7 @@ export async function GET() {
       healthCheck.checks.database = 'degraded'
       healthCheck.details = { ...healthCheck.details, database: 'Connection issues' }
     }
-  } catch (error) {
+  } catch (_error) {
     healthCheck.checks.database = 'error'
     healthCheck.details = { ...healthCheck.details, database: 'Database unavailable' }
   }

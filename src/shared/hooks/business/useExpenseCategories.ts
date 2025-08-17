@@ -20,7 +20,7 @@ export function useExpenseCategories() {
       ...DEFAULT_EXPENSE_CATEGORIES,
       ...customCategories,
     }
-  }, [businessSettings?.custom_expense_categories, currentOrganization])
+  }, [businessSettings?.custom_expense_categories])
 
   // Kategorien als Array für UI
   const categoriesArray = useMemo(() => {
@@ -66,7 +66,7 @@ export function useExpenseCategories() {
           return { success: true }
         } catch (err: any) {
           console.error('Error creating business settings:', err)
-          return { success: false, error: 'Could not create business settings: ' + err.message }
+          return { success: false, error: `Could not create business settings: ${err.message}` }
         }
       }
 
@@ -189,7 +189,7 @@ export function useExpenseCategories() {
 
       return { isValid: true }
     },
-    [businessSettings?.custom_expense_categories, currentOrganization]
+    [businessSettings?.custom_expense_categories]
   )
 
   return {

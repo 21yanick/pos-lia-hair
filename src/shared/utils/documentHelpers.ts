@@ -120,7 +120,7 @@ export function formatFileSize(bytes?: number): string {
 export function formatDisplayDate(dateString: string): string {
   try {
     return new Date(dateString).toLocaleDateString('de-CH')
-  } catch (e) {
+  } catch (_e) {
     return dateString
   }
 }

@@ -2,13 +2,6 @@
 
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/components/ui/card'
 import { useReports } from '@/shared/hooks/business/useReports'
 import { useToast } from '@/shared/hooks/core/useToast'
 import { DashboardStats } from './DashboardStats'
@@ -33,7 +26,7 @@ export default function DashboardPage() {
         title: 'Aktualisiert',
         description: 'Dashboard-Statistiken wurden erfolgreich aktualisiert.',
       })
-    } catch (err: any) {
+    } catch (_err: any) {
       toast({
         title: 'Fehler',
         description: 'Statistiken konnten nicht aktualisiert werden.',

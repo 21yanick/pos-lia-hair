@@ -40,7 +40,7 @@ export function SupplierCard({ supplier, onSupplierUpdated, onView, onEdit }: Su
       })
 
       onSupplierUpdated()
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Status konnte nicht geändert werden',
@@ -66,7 +66,7 @@ export function SupplierCard({ supplier, onSupplierUpdated, onView, onEdit }: Su
       })
 
       onSupplierUpdated()
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Lieferant konnte nicht gelöscht werden',

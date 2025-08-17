@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/shared/lib/supabase/client'
 import { InvitationService } from '@/shared/services/invitationService'
 
 export async function POST(request: NextRequest) {
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send invitation
-    const result = await InvitationService.sendInvitation({
+    const _result = await InvitationService.sendInvitation({
       organizationId,
       email,
       role,

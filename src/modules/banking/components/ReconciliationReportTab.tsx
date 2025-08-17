@@ -36,10 +36,7 @@ import type { ReconciliationData } from '@/shared/services/reconciliationService
 import { getReconciliationData } from '@/shared/services/reconciliationService'
 import {
   createSwissDateForDay,
-  formatDateForAPI,
   formatDateForDisplay,
-  getFirstDayOfMonth,
-  getLastDayOfMonth,
   getTodaySwissString,
 } from '@/shared/utils/dateUtils'
 import { exportMonthlyPDFWithReconciliation } from '@/shared/utils/exportHelpers'
@@ -59,8 +56,8 @@ export function ReconciliationReportTab() {
   const getAvailableMonths = () => {
     const months = []
     const today = getTodaySwissString() // Swiss date as YYYY-MM-DD
-    const currentYear = parseInt(today.slice(0, 4))
-    const currentMonth = parseInt(today.slice(5, 7))
+    const currentYear = parseInt(today.slice(0, 4), 10)
+    const currentMonth = parseInt(today.slice(5, 7), 10)
 
     for (let i = 0; i < 12; i++) {
       const targetMonth = currentMonth - i
@@ -84,7 +81,7 @@ export function ReconciliationReportTab() {
     if (showArchive) {
       loadGeneratedReports()
     }
-  }, [selectedMonth, showArchive])
+  }, [showArchive, loadGeneratedReports, loadReconciliationData])
 
   const loadReconciliationData = async () => {
     try {
@@ -173,15 +170,15 @@ export function ReconciliationReportTab() {
       // Berechne Start- und Enddatum für den Monat
       const [year, month] = selectedMonth.split('-')
       const startDate = `${selectedMonth}-01`
-      const endDate = `${selectedMonth}-${new Date(parseInt(year), parseInt(month), 0).getDate().toString().padStart(2, '0')}`
+      const endDate = `${selectedMonth}-${new Date(parseInt(year, 10), parseInt(month, 10), 0).getDate().toString().padStart(2, '0')}`
 
       // Lade vollständige Sales-Daten für den Monat
       const { data: sales } = await supabase
         .from('sales')
         .select('id, total_amount, payment_method, created_at, receipt_number')
         .eq('status', 'completed')
-        .gte('created_at', startDate + 'T00:00:00')
-        .lte('created_at', endDate + 'T23:59:59')
+        .gte('created_at', `${startDate}T00:00:00`)
+        .lte('created_at', `${endDate}T23:59:59`)
 
       // Lade vollständige Ausgaben für den Monat
       const { data: expenses } = await supabase
@@ -224,7 +221,7 @@ export function ReconciliationReportTab() {
         expensesTotal,
         expensesCash,
         expensesBank,
-        daysInMonth: new Date(parseInt(year), parseInt(month), 0).getDate(),
+        daysInMonth: new Date(parseInt(year, 10), parseInt(month, 10), 0).getDate(),
         transactionDays: new Set(sales?.map((s) => s.created_at?.split('T')[0])).size || 0,
         avgDailyRevenue: salesTotal > 0 ? Math.round(salesTotal / 30) : 0,
       }
@@ -280,7 +277,7 @@ export function ReconciliationReportTab() {
 
   const formatMonthYear = (month: string) => {
     const [year, monthNum] = month.split('-')
-    const monthDate = createSwissDateForDay(parseInt(year), parseInt(monthNum), 1)
+    const monthDate = createSwissDateForDay(parseInt(year, 10), parseInt(monthNum, 10), 1)
     return monthDate.toLocaleDateString('de-CH', {
       month: 'long',
       year: 'numeric',

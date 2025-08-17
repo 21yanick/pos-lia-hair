@@ -55,7 +55,7 @@ export class CsvParser {
    */
   private static processParseResults(
     results: Papa.ParseResult<string[]>,
-    options: CsvParseOptions
+    _options: CsvParseOptions
   ): ParsedCsvData {
     if (!results.data || results.data.length === 0) {
       throw new Error('CSV file is empty or could not be parsed')

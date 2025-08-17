@@ -1,6 +1,6 @@
 'use client'
 
-import { Crown, Mail, Shield, User, UserPlus, Users } from 'lucide-react'
+import { Crown, Shield, User, UserPlus, Users } from 'lucide-react'
 import { useState } from 'react'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 import { Badge } from '@/shared/components/ui/badge'

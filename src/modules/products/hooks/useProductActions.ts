@@ -50,12 +50,12 @@ export function useProductActions(): UseProductActionsReturn {
           // Service-specific fields
           duration_minutes:
             formData.type === 'service' && formData.duration_minutes
-              ? parseInt(formData.duration_minutes)
+              ? parseInt(formData.duration_minutes, 10)
               : null,
           requires_booking: formData.type === 'service' ? formData.requires_booking : false,
           booking_buffer_minutes:
             formData.type === 'service' && formData.booking_buffer_minutes
-              ? parseInt(formData.booking_buffer_minutes)
+              ? parseInt(formData.booking_buffer_minutes, 10)
               : 0,
         }
 

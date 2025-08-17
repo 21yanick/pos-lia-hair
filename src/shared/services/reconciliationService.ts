@@ -117,7 +117,7 @@ export async function getReconciliationData(
   const startDate = `${yearMonth}-01`
 
   // Calculate end date using Swiss timezone utilities
-  const monthDate = createSwissDateForDay(parseInt(year), parseInt(month), 1)
+  const monthDate = createSwissDateForDay(parseInt(year, 10), parseInt(month, 10), 1)
   const lastDayOfMonth = getLastDayOfMonth(monthDate)
   const endDate = `${yearMonth}-${lastDayOfMonth.getDate().toString().padStart(2, '0')}`
 

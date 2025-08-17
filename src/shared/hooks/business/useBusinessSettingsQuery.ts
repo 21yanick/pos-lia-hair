@@ -19,8 +19,6 @@ import {
   uploadLogo,
   upsertBusinessSettings,
   validateBusinessSettings,
-  validateVacationPeriod,
-  validateWorkingHours,
 } from '@/shared/services/businessSettingsService'
 import type {
   BookingRules,
@@ -172,7 +170,7 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
       // Return context with the snapshotted value
       return { previousSettings }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousSettings && organizationId) {
         queryClient.setQueryData(
@@ -420,7 +418,7 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
       )
       return { previousSettings }
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousSettings && organizationId) {
         queryClient.setQueryData(
           queryKeys.business.settings.detail(organizationId),
@@ -458,7 +456,7 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
       )
       return { previousSettings }
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousSettings && organizationId) {
         queryClient.setQueryData(
           queryKeys.business.settings.detail(organizationId),
@@ -497,7 +495,7 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
       )
       return { previousSettings }
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousSettings && organizationId) {
         queryClient.setQueryData(
           queryKeys.business.settings.detail(organizationId),
@@ -536,7 +534,7 @@ export function useBusinessSettingsQuery(): UseBusinessSettingsQueryReturn {
       )
       return { previousSettings }
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousSettings && organizationId) {
         queryClient.setQueryData(
           queryKeys.business.settings.detail(organizationId),

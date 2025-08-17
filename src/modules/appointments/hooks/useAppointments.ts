@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/shared/lib/react-query/queryKeys'
 import {
-  type Appointment,
   type AppointmentInsert,
   type AppointmentUpdate,
   cancelAppointment,
@@ -151,7 +150,7 @@ export const useCreateAppointment = (organizationId: string) => {
         })
       }
     },
-    onError: (error) => {
+    onError: (_error) => {
       // Error handling delegated to UI layer
     },
   })
@@ -194,7 +193,7 @@ export const useUpdateAppointment = (organizationId: string) => {
         })
       }
     },
-    onError: (error) => {
+    onError: (_error) => {
       // Error handling delegated to UI layer
     },
   })
@@ -237,7 +236,7 @@ export const useCancelAppointment = (organizationId: string) => {
         })
       }
     },
-    onError: (error) => {
+    onError: (_error) => {
       // Error handling delegated to UI layer
     },
   })
@@ -257,7 +256,7 @@ export const useDeleteAppointment = (organizationId: string) => {
       }
       return appointmentId
     },
-    onSuccess: (deletedAppointmentId, variables, context: any) => {
+    onSuccess: (deletedAppointmentId, _variables, _context: any) => {
       // Note: We need the appointment date for targeted invalidation
       // For now, invalidate all to ensure consistency
       queryClient.invalidateQueries({
@@ -269,7 +268,7 @@ export const useDeleteAppointment = (organizationId: string) => {
         queryKey: queryKeys.business.appointments.detail(organizationId, deletedAppointmentId),
       })
     },
-    onError: (error) => {
+    onError: (_error) => {
       // Error handling delegated to UI layer
     },
   })

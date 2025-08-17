@@ -107,7 +107,7 @@ export function usePOS() {
   const cart = useCart()
 
   // Memoized cart total to prevent recalculation on every render
-  const cartTotal = useMemo(() => cart.getCartTotal(), [cart.cart])
+  const cartTotal = useMemo(() => cart.getCartTotal(), [cart.getCartTotal])
 
   // Kombinierte Funktionen für POS-spezifische Workflows (memoized)
   const handleAddToCart = useCallback(

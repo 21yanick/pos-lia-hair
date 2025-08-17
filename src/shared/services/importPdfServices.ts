@@ -258,9 +258,9 @@ startxref
 
 // LEGACY: Daily Reports disabled - Banking Module will replace Daily Reports
 export async function generateDailyReportPDFs(
-  sales: SaleImport[],
-  expenses: ExpenseImport[],
-  targetUserId: string,
+  _sales: SaleImport[],
+  _expenses: ExpenseImport[],
+  _targetUserId: string,
   updateProgress: ProgressCallback
 ): Promise<{ id: string; filePath: string }[]> {
   // Function disabled - Banking Module will replace Daily Reports

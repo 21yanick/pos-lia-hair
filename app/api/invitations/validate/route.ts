@@ -26,12 +26,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       valid: true,
       invitation: {
-        organizationName: validation.invitation!.organizationName,
-        organizationSlug: validation.invitation!.organizationSlug,
-        role: validation.invitation!.role,
-        invitedByName: validation.invitation!.invitedByName,
-        email: validation.invitation!.email,
-        expiresAt: new Date(validation.invitation!.exp * 1000).toISOString(),
+        organizationName: validation.invitation?.organizationName,
+        organizationSlug: validation.invitation?.organizationSlug,
+        role: validation.invitation?.role,
+        invitedByName: validation.invitation?.invitedByName,
+        email: validation.invitation?.email,
+        expiresAt: validation.invitation?.exp
+          ? new Date(validation.invitation.exp * 1000).toISOString()
+          : undefined,
       },
       organization: validation.organization,
     })

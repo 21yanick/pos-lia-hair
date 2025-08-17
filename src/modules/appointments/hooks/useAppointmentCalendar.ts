@@ -8,7 +8,6 @@
 import { addMonths, startOfMonth, subMonths } from 'date-fns'
 import { useCallback, useState } from 'react'
 import { formatDateForAPI, formatYearMonth } from '@/shared/utils/dateUtils'
-import type { DayStatus } from '../types/calendar'
 import type { AppointmentBlock, TimeSlot } from '../types/timeline'
 
 interface UseAppointmentCalendarReturn {
@@ -81,13 +80,16 @@ export function useAppointmentCalendar(
   }, [])
 
   // Day Selection
-  const selectDate = useCallback((date: Date) => {
-    setSelectedDate(date)
-    // Update month if date is in different month
-    if (!isSameMonth(date)) {
-      setCurrentMonth(startOfMonth(date))
-    }
-  }, [])
+  const selectDate = useCallback(
+    (date: Date) => {
+      setSelectedDate(date)
+      // Update month if date is in different month
+      if (!isSameMonth(date)) {
+        setCurrentMonth(startOfMonth(date))
+      }
+    },
+    [isSameMonth]
+  )
 
   // Timeline Interactions
   const handleSlotClick = useCallback((slot: TimeSlot) => {

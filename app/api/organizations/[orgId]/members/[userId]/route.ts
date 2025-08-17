@@ -6,7 +6,7 @@ import * as TeamService from '@/shared/services/teamService'
  * Remove a member from the organization
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ orgId: string; userId: string }> }
 ) {
   try {

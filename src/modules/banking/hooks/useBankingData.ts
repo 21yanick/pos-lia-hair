@@ -213,8 +213,8 @@ export function useBankingData(): UseBankingDataReturn {
 
         // Refresh Tab 2 data - matched sale should now appear in available_for_bank_matching
         const [matchingResult, statsResult] = await Promise.all([
-          getAvailableForBankMatching(currentOrganization!.id), // 🔒 SECURITY: Organization-scoped
-          getBankingStats(currentOrganization!.id), // 🔒 SECURITY: Organization-scoped
+          getAvailableForBankMatching(currentOrganization?.id), // 🔒 SECURITY: Organization-scoped
+          getBankingStats(currentOrganization?.id), // 🔒 SECURITY: Organization-scoped
         ])
 
         if (matchingResult.data && !matchingResult.error) {
@@ -255,7 +255,7 @@ export function useBankingData(): UseBankingDataReturn {
         setAvailableForMatching((prev) => prev.filter((item) => !matchedIds.includes(item.id)))
 
         // Refresh stats
-        const statsResult = await getBankingStats(currentOrganization!.id) // 🔒 SECURITY: Organization-scoped
+        const statsResult = await getBankingStats(currentOrganization?.id) // 🔒 SECURITY: Organization-scoped
         if (statsResult.data && !statsResult.error) {
           setStats(statsResult.data)
         }
@@ -281,7 +281,7 @@ export function useBankingData(): UseBankingDataReturn {
     if (currentOrganization) {
       fetchAllData()
     }
-  }, [currentOrganization]) // 🔒 SECURITY: Refetch when organization changes
+  }, [currentOrganization, fetchAllData]) // 🔒 SECURITY: Refetch when organization changes
 
   // =====================================================
   // RETURN HOOK INTERFACE

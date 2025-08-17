@@ -9,14 +9,10 @@ import { ensureUserExists, syncAuthUser } from '@/shared/services/authService'
 import {
   createItem,
   deleteItem,
-  getActiveItems,
-  getFavoriteItems,
-  getItems,
   getItemsOptimized,
   type Item,
   type ItemInsert,
   type ItemUpdate,
-  searchItems,
   toggleItemActive,
   toggleItemFavorite,
   updateItem,
@@ -93,7 +89,7 @@ export function useItems(): UseItemsReturn {
         if (!syncResult.success && mounted) {
           // console.warn('User sync failed:', syncResult.error)
         }
-      } catch (syncError) {
+      } catch (_syncError) {
         if (mounted) {
           // console.warn('User sync error:', syncError)
         }

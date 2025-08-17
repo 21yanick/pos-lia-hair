@@ -11,7 +11,7 @@ import {
   CollapsibleTrigger,
 } from '@/shared/components/ui/collapsible'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { type SaleWithItems, useCustomerSales } from '../hooks/useCustomerSales'
+import { useCustomerSales } from '../hooks/useCustomerSales'
 import { formatRelativeDate } from '../utils/customerUtils'
 
 interface CustomerSalesHistoryProps {

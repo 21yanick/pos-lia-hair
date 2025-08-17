@@ -72,7 +72,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
       .eq('organization_id', organizationId) // 🔒 Multi-Tenant Security
       .maybeSingle()
 
-    const requestTime = Date.now() - requestStart
+    const _requestTime = Date.now() - requestStart
 
     if (process.env.NODE_ENV === 'development') {
       // console.log('🔍 DEBUG business_settings response:', {

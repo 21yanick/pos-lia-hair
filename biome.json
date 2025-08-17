@@ -21,7 +21,21 @@
       "recommended": true,
       "style": {
         "useImportType": "error"
+      },
+      "suspicious": {
+        "noUnknownAtRules": "off"
       }
+    }
+  },
+  "css": {
+    "linter": {
+      "enabled": true
+    },
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 100
     }
   },
   "javascript": {

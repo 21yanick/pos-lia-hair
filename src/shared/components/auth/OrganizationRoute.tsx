@@ -70,7 +70,7 @@ export function OrganizationRoute({ children, fallback }: OrganizationRouteProps
 
   // Show loading while checking auth + org access
   if (loading) {
-    const loadingInfo = {
+    const _loadingInfo = {
       authLoading,
       orgLoading,
       userOrganizations: !!userOrganizations,

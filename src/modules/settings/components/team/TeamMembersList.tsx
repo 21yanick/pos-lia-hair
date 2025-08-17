@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
-import { Crown, Mail, MoreVertical, Settings, Shield, User, UserMinus, Users } from 'lucide-react'
+import { Crown, Mail, MoreVertical, Shield, User, UserMinus, Users } from 'lucide-react'
 import { useState } from 'react'
 import { type TeamMember, useTeamMembersQuery } from '@/modules/settings/hooks/useTeamMembersQuery'
 import {

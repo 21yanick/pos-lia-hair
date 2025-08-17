@@ -49,12 +49,12 @@ export function LogoUploadSection() {
       try {
         await uploadCompanyLogo(file)
         setPreviewUrl(null) // Clear preview after successful upload
-      } catch (error) {
+      } catch (_error) {
         setError('Fehler beim Hochladen des Logos')
         setPreviewUrl(null)
       }
     },
-    [uploadCompanyLogo]
+    [uploadCompanyLogo, validateFile]
   )
 
   // Handle drag events
@@ -75,7 +75,7 @@ export function LogoUploadSection() {
       e.stopPropagation()
       setDragActive(false)
 
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      if (e.dataTransfer.files?.[0]) {
         handleFileUpload(e.dataTransfer.files[0])
       }
     },
@@ -85,7 +85,7 @@ export function LogoUploadSection() {
   // Handle file input change
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
+      if (e.target.files?.[0]) {
         handleFileUpload(e.target.files[0])
       }
     },
@@ -97,7 +97,7 @@ export function LogoUploadSection() {
     setError(null)
     try {
       await deleteCompanyLogo()
-    } catch (error) {
+    } catch (_error) {
       setError('Fehler beim Löschen des Logos')
     }
   }, [deleteCompanyLogo])

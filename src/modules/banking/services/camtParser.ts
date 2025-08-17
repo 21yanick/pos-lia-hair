@@ -18,7 +18,7 @@ import type {
 // XML NAMESPACE CONSTANTS
 // =====================================================
 
-const CAMT_NAMESPACE = 'urn:iso:std:iso:20022:tech:xsd:camt.053.001.08'
+const _CAMT_NAMESPACE = 'urn:iso:std:iso:20022:tech:xsd:camt.053.001.08'
 
 // =====================================================
 // MAIN PARSER FUNCTION
@@ -111,7 +111,7 @@ async function parseDocument(documentElement: Element): Promise<CAMTDocument> {
 async function parseStatement(stmtElement: Element): Promise<CAMTStatement> {
   // Statement metadata
   const statementId = getTextContent(stmtElement, 'Id')
-  const electronicSequenceNumber = parseInt(getTextContent(stmtElement, 'ElctrncSeqNb') || '0')
+  const electronicSequenceNumber = parseInt(getTextContent(stmtElement, 'ElctrncSeqNb') || '0', 10)
   const creationDateTime = parseDateTime(getTextContent(stmtElement, 'CreDtTm'))
 
   // Time period
@@ -152,7 +152,7 @@ async function parseStatement(stmtElement: Element): Promise<CAMTStatement> {
     try {
       const entry = parseEntry(entryElement)
       entries.push(entry)
-    } catch (error) {
+    } catch (_error) {
       // console.warn(`Failed to parse entry: ${error}`)
       // Continue with other entries
     }

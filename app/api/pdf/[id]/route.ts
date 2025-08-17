@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -26,25 +25,30 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const token = authHeader.replace('Bearer ', '')
 
+    // Environment variable validation
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing required environment variables for PDF proxy')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
     // Initialize Supabase with service role for token validation
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get() {
-            return undefined
-          },
-          set() {},
-          remove() {},
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get() {
+          return undefined
         },
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        set() {},
+        remove() {},
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      }
-    )
+      },
+    })
 
     // Validate user with provided token
     const {

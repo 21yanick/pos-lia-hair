@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Mail, Pencil, Phone, User, X } from 'lucide-react'
+import { Mail, Pencil, Phone, User, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
@@ -107,7 +107,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
         title: 'Aktualisiert',
         description: `${field === 'name' ? 'Name' : field === 'phone' ? 'Telefon' : 'E-Mail'} wurde aktualisiert.`,
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Änderung konnte nicht gespeichert werden.',
@@ -129,7 +129,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
         title: 'Status aktualisiert',
         description: `Kunde ist jetzt ${newStatus ? 'aktiv' : 'inaktiv'}.`,
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Fehler',
         description: 'Status konnte nicht geändert werden.',

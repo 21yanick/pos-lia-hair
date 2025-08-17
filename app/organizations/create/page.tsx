@@ -3,7 +3,7 @@
 import { ArrowLeft, Building2 } from 'lucide-react'
 import Link from 'next/link'
 import type React from 'react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { ProtectedRoute } from '@/shared/components/auth'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -21,6 +21,16 @@ import { EmailService } from '@/shared/services/emailService'
 
 function CreateOrganizationForm() {
   const { user } = useAuth()
+
+  // Generate unique IDs for form fields
+  const orgNameId = useId()
+  const orgSlugId = useId()
+  const orgDisplayNameId = useId()
+  const orgEmailId = useId()
+  const orgPhoneId = useId()
+  const orgAddressId = useId()
+  const orgCityId = useId()
+  const orgPostalCodeId = useId()
 
   // Form state
   const [isLoading, setIsLoading] = useState(false)
@@ -201,11 +211,11 @@ function CreateOrganizationForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="orgName" className="text-sm font-medium">
+                    <Label htmlFor={orgNameId} className="text-sm font-medium">
                       Organisationsname *
                     </Label>
                     <Input
-                      id="orgName"
+                      id={orgNameId}
                       type="text"
                       value={orgName}
                       onChange={(e) => handleOrgNameChange(e.target.value)}
@@ -216,11 +226,11 @@ function CreateOrganizationForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="orgSlug" className="text-sm font-medium">
+                    <Label htmlFor={orgSlugId} className="text-sm font-medium">
                       URL-Name *
                     </Label>
                     <Input
-                      id="orgSlug"
+                      id={orgSlugId}
                       type="text"
                       value={orgSlug}
                       onChange={(e) => setOrgSlug(e.target.value)}
@@ -236,11 +246,11 @@ function CreateOrganizationForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="orgDisplayName" className="text-sm font-medium">
+                    <Label htmlFor={orgDisplayNameId} className="text-sm font-medium">
                       Anzeigename
                     </Label>
                     <Input
-                      id="orgDisplayName"
+                      id={orgDisplayNameId}
                       type="text"
                       value={orgDisplayName}
                       onChange={(e) => setOrgDisplayName(e.target.value)}
@@ -250,11 +260,11 @@ function CreateOrganizationForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="orgEmail" className="text-sm font-medium">
+                    <Label htmlFor={orgEmailId} className="text-sm font-medium">
                       Geschäfts-E-Mail
                     </Label>
                     <Input
-                      id="orgEmail"
+                      id={orgEmailId}
                       type="email"
                       value={orgEmail}
                       onChange={(e) => setOrgEmail(e.target.value)}
@@ -271,11 +281,11 @@ function CreateOrganizationForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="orgPhone" className="text-sm font-medium">
+                    <Label htmlFor={orgPhoneId} className="text-sm font-medium">
                       Telefon
                     </Label>
                     <Input
-                      id="orgPhone"
+                      id={orgPhoneId}
                       type="tel"
                       value={orgPhone}
                       onChange={(e) => setOrgPhone(e.target.value)}
@@ -285,11 +295,11 @@ function CreateOrganizationForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="orgAddress" className="text-sm font-medium">
+                    <Label htmlFor={orgAddressId} className="text-sm font-medium">
                       Adresse
                     </Label>
                     <Input
-                      id="orgAddress"
+                      id={orgAddressId}
                       type="text"
                       value={orgAddress}
                       onChange={(e) => setOrgAddress(e.target.value)}
@@ -301,11 +311,11 @@ function CreateOrganizationForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="orgCity" className="text-sm font-medium">
+                    <Label htmlFor={orgCityId} className="text-sm font-medium">
                       Ort
                     </Label>
                     <Input
-                      id="orgCity"
+                      id={orgCityId}
                       type="text"
                       value={orgCity}
                       onChange={(e) => setOrgCity(e.target.value)}
@@ -315,11 +325,11 @@ function CreateOrganizationForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="orgPostalCode" className="text-sm font-medium">
+                    <Label htmlFor={orgPostalCodeId} className="text-sm font-medium">
                       PLZ
                     </Label>
                     <Input
-                      id="orgPostalCode"
+                      id={orgPostalCodeId}
                       type="text"
                       value={orgPostalCode}
                       onChange={(e) => setOrgPostalCode(e.target.value)}

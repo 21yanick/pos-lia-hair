@@ -47,7 +47,7 @@ export function useImport() {
 
   // Note: addError is available but not currently used in the orchestrator
   // Individual services handle their own error throwing
-  const addError = useCallback((error: string) => {
+  const _addError = useCallback((error: string) => {
     setState((prev) => ({
       ...prev,
       errors: [...prev.errors, error],
