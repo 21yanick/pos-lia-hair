@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, CheckCircle, Copy, Crown, Mail, Send, Shield, User } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -63,6 +63,9 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
 
   const { currentOrganization } = useCurrentOrganization()
   const { user } = useAuth()
+
+  // 🆔 Generate unique ID for accessibility compliance
+  const emailId = useId()
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -166,9 +169,9 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
         <div className="space-y-4">
           {/* Email Input */}
           <div className="space-y-2">
-            <Label htmlFor="email">E-Mail-Adresse</Label>
+            <Label htmlFor={emailId}>E-Mail-Adresse</Label>
             <Input
-              id="email"
+              id={emailId}
               type="email"
               placeholder="max@beispiel.ch"
               value={email}
@@ -203,7 +206,10 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex items-center gap-2 mb-1">
                 <RoleIcon className="h-4 w-4" />
-                <Badge variant={selectedRoleConfig.color as any} className="text-xs">
+                <Badge
+                  variant={selectedRoleConfig.color as 'default' | 'secondary' | 'destructive'}
+                  className="text-xs"
+                >
                   {selectedRoleConfig.label}
                 </Badge>
               </div>

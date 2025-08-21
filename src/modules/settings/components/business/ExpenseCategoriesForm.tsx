@@ -1,7 +1,7 @@
 'use client'
 
 import { Edit2, Plus, Tag, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -33,7 +33,6 @@ export function ExpenseCategoriesForm() {
     updateCategory,
     removeCategory,
     validateCategoryKey,
-    isDefaultCategory,
   } = useExpenseCategories()
 
   const { toast } = useToast()
@@ -48,6 +47,11 @@ export function ExpenseCategoriesForm() {
     null
   )
   const [editLabel, setEditLabel] = useState('')
+
+  // 🆔 Generate unique IDs for accessibility compliance
+  const categoryKeyId = useId()
+  const categoryLabelId = useId()
+  const editLabelId = useId()
 
   const handleAddCategory = async () => {
     if (!newCategoryKey.trim() || !newCategoryLabel.trim()) {
@@ -245,9 +249,9 @@ export function ExpenseCategoriesForm() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="category-key">Key (z.B. marketing)</Label>
+                <Label htmlFor={categoryKeyId}>Key (z.B. marketing)</Label>
                 <Input
-                  id="category-key"
+                  id={categoryKeyId}
                   value={newCategoryKey}
                   onChange={(e) =>
                     setNewCategoryKey(e.target.value.toLowerCase().replace(/[^a-z_]/g, ''))
@@ -257,9 +261,9 @@ export function ExpenseCategoriesForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category-label">Anzeigename</Label>
+                <Label htmlFor={categoryLabelId}>Anzeigename</Label>
                 <Input
-                  id="category-label"
+                  id={categoryLabelId}
                   value={newCategoryLabel}
                   onChange={(e) => setNewCategoryLabel(e.target.value)}
                   placeholder="z.B. Marketing & Werbung"
@@ -301,9 +305,9 @@ export function ExpenseCategoriesForm() {
             </DialogHeader>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-label">Anzeigename</Label>
+              <Label htmlFor={editLabelId}>Anzeigename</Label>
               <Input
-                id="edit-label"
+                id={editLabelId}
                 value={editLabel}
                 onChange={(e) => setEditLabel(e.target.value)}
                 placeholder="z.B. Marketing & Werbung"

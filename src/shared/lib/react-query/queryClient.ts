@@ -21,10 +21,13 @@ const queryClientConfig = {
       gcTime: 1000 * 60 * 10, // 10 minutes (renamed from cacheTime in v5)
 
       // Retry configuration
-      retry: (failureCount: number, error: any) => {
+      retry: (failureCount: number, error: unknown) => {
         // Don't retry on 4xx errors (client errors)
-        if (error?.status >= 400 && error?.status < 500) {
-          return false
+        if (error && typeof error === 'object' && 'status' in error) {
+          const status = (error as { status: number }).status
+          if (status >= 400 && status < 500) {
+            return false
+          }
         }
         // Retry up to 3 times for network/server errors
         return failureCount < 3

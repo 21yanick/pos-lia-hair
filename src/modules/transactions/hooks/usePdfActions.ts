@@ -119,14 +119,20 @@ export function usePdfActions() {
 
           // Prepare cart items
           const cartItems =
-            sale.sale_items?.map((item: any) => ({
-              id: item.item_id,
-              name: item.items?.name || 'Unbekanntes Produkt',
-              category: item.items?.type === 'service' ? 'Dienstleistung' : 'Produkt',
-              price: item.price,
-              quantity: 1,
-              total: item.price,
-            })) || []
+            sale.sale_items?.map(
+              (item: {
+                item_id: string
+                price: number
+                items?: { name?: string; type?: string }
+              }) => ({
+                id: item.item_id,
+                name: item.items?.name || 'Unbekanntes Produkt',
+                category: item.items?.type === 'service' ? 'Dienstleistung' : 'Produkt',
+                price: item.price,
+                quantity: 1,
+                total: item.price,
+              })
+            ) || []
 
           // Generate PDF
           await createReceiptPDF(sale, cartItems)
@@ -142,8 +148,8 @@ export function usePdfActions() {
 
         toast.success('PDF erfolgreich generiert', { id: toastId })
         return true
-      } catch (err: any) {
-        toast.error(err.message || 'Fehler beim Generieren', { id: toastId })
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Fehler beim Generieren', { id: toastId })
         return false
       } finally {
         // Release lock after short delay
@@ -242,10 +248,12 @@ export function usePdfActions() {
 
         // Add PDFs to ZIP
         for (const tx of pdfsToDownload) {
+          if (!tx.document_id) continue // Skip if no document_id (defensive programming)
+
           const { data: doc } = await supabase
             .from('documents')
             .select('file_path, file_name')
-            .eq('id', tx.document_id!)
+            .eq('id', tx.document_id)
             .eq('organization_id', currentOrganization.id)
             .single()
 

@@ -50,208 +50,209 @@ export interface AcceptInvitationResult {
   role: 'staff' | 'admin' | 'owner'
 }
 
-export class InvitationService {
-  /**
-   * Creates a secure JWT invitation token
-   */
-  static createInvitationToken(payload: InvitationPayload): string {
-    try {
-      const token = jwt.sign(payload, JWT_SECRET, {
-        expiresIn: TOKEN_EXPIRY,
-        issuer: 'lia-hair-pos',
-        audience: 'lia-hair-users',
-      })
+/**
+ * Creates a secure JWT invitation token
+ */
+export function createInvitationToken(payload: InvitationPayload): string {
+  try {
+    const token = jwt.sign(payload, JWT_SECRET, {
+      expiresIn: TOKEN_EXPIRY,
+      issuer: 'lia-hair-pos',
+      audience: 'lia-hair-users',
+    })
 
-      return token
-    } catch (error) {
-      console.error('Failed to create invitation token:', error)
-      throw new Error('Token creation failed')
+    return token
+  } catch (error) {
+    console.error('Failed to create invitation token:', error)
+    throw new Error('Token creation failed')
+  }
+}
+
+/**
+ * Verifies and decodes an invitation token
+ */
+export function verifyInvitationToken(token: string): DecodedInvitation {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      issuer: 'lia-hair-pos',
+      audience: 'lia-hair-users',
+    }) as DecodedInvitation
+
+    return decoded
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new Error('Einladung ist abgelaufen')
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error('Ungültige Einladung')
+    } else {
+      console.error('Token verification error:', error)
+      throw new Error('Token-Verifikation fehlgeschlagen')
     }
   }
+}
 
-  /**
-   * Verifies and decodes an invitation token
-   */
-  static verifyInvitationToken(token: string): DecodedInvitation {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET, {
-        issuer: 'lia-hair-pos',
-        audience: 'lia-hair-users',
-      }) as DecodedInvitation
+/**
+ * Sends an invitation email with JWT token
+ */
+export async function sendInvitation({
+  organizationId,
+  email,
+  role,
+  invitedBy,
+}: {
+  organizationId: string
+  email: string
+  role: 'staff' | 'admin' | 'owner'
+  invitedBy: string
+}) {
+  try {
+    // 1. Get organization details
+    const { data: organization, error: orgError } = await supabase
+      .from('organizations')
+      .select('name, slug')
+      .eq('id', organizationId)
+      .single()
 
-      return decoded
-    } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        throw new Error('Einladung ist abgelaufen')
-      } else if (error instanceof jwt.JsonWebTokenError) {
-        throw new Error('Ungültige Einladung')
-      } else {
-        console.error('Token verification error:', error)
-        throw new Error('Token-Verifikation fehlgeschlagen')
-      }
+    if (orgError || !organization) {
+      throw new Error('Organisation nicht gefunden')
     }
-  }
 
-  /**
-   * Sends an invitation email with JWT token
-   */
-  static async sendInvitation({
-    organizationId,
-    email,
-    role,
-    invitedBy,
-  }: {
-    organizationId: string
-    email: string
-    role: 'staff' | 'admin' | 'owner'
-    invitedBy: string
-  }) {
-    try {
-      // 1. Get organization details
-      const { data: organization, error: orgError } = await supabase
-        .from('organizations')
-        .select('name, slug')
-        .eq('id', organizationId)
-        .single()
+    // 2. Get inviter details
+    const { data: inviter, error: inviterError } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', invitedBy)
+      .single()
 
-      if (orgError || !organization) {
-        throw new Error('Organisation nicht gefunden')
-      }
-
-      // 2. Get inviter details
-      const { data: inviter, error: inviterError } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', invitedBy)
-        .single()
-
-      if (inviterError || !inviter) {
-        throw new Error('Einladender Benutzer nicht gefunden')
-      }
-
-      // 3. Create JWT token
-      const token = InvitationService.createInvitationToken({
-        organizationId,
-        organizationName: organization.name,
-        organizationSlug: organization.slug,
-        email,
-        role,
-        invitedBy,
-        invitedByName: inviter.name,
-      })
-
-      // 4. Send email via EmailService
-      const { EmailService } = await import('./emailService')
-
-      const result = await EmailService.sendInvitationEmail({
-        to: email,
-        inviterName: inviter.name,
-        organizationName: organization.name,
-        inviteToken: token,
-        role,
-      })
-
-      return {
-        success: true,
-        token, // For debugging/testing
-        result,
-      }
-    } catch (error) {
-      console.error('Failed to send invitation:', error)
-      throw error
+    if (inviterError || !inviter) {
+      throw new Error('Einladender Benutzer nicht gefunden')
     }
+
+    // 3. Create JWT token
+    const token = createInvitationToken({
+      organizationId,
+      organizationName: organization.name,
+      organizationSlug: organization.slug,
+      email,
+      role,
+      invitedBy,
+      invitedByName: inviter.name,
+    })
+
+    // 4. Send email via emailService
+    const { sendInvitationEmail } = await import('./emailService')
+
+    const result = await sendInvitationEmail({
+      to: email,
+      inviterName: inviter.name,
+      organizationName: organization.name,
+      inviteToken: token,
+      role,
+    })
+
+    return {
+      success: true,
+      token, // For debugging/testing
+      result,
+    }
+  } catch (error) {
+    console.error('Failed to send invitation:', error)
+    throw error
   }
+}
 
-  /**
-   * Accepts an invitation and creates organization membership
-   */
-  static async acceptInvitation(token: string, userId: string): Promise<AcceptInvitationResult> {
-    try {
-      // 1. Verify and decode token
-      const invitation = InvitationService.verifyInvitationToken(token)
+/**
+ * Accepts an invitation and creates organization membership
+ */
+export async function acceptInvitation(
+  token: string,
+  userId: string
+): Promise<AcceptInvitationResult> {
+  try {
+    // 1. Verify and decode token
+    const invitation = verifyInvitationToken(token)
 
-      // 2. Check if organization still exists and is active
-      const { data: organization, error: orgError } = await supabase
-        .from('organizations')
-        .select('id, name, slug, active')
-        .eq('id', invitation.organizationId)
-        .eq('active', true)
-        .single()
+    // 2. Check if organization still exists and is active
+    const { data: organization, error: orgError } = await supabase
+      .from('organizations')
+      .select('id, name, slug, active')
+      .eq('id', invitation.organizationId)
+      .eq('active', true)
+      .single()
 
-      if (orgError || !organization) {
-        throw new Error('Organisation nicht gefunden oder inaktiv')
-      }
+    if (orgError || !organization) {
+      throw new Error('Organisation nicht gefunden oder inaktiv')
+    }
 
-      // 3. Check if user is already a member
-      const { data: existingMembership } = await supabase
-        .from('organization_users')
-        .select('id')
-        .eq('organization_id', invitation.organizationId)
-        .eq('user_id', userId)
-        .single()
+    // 3. Check if user is already a member
+    const { data: existingMembership } = await supabase
+      .from('organization_users')
+      .select('id')
+      .eq('organization_id', invitation.organizationId)
+      .eq('user_id', userId)
+      .single()
 
-      if (existingMembership) {
-        throw new Error('Sie sind bereits Mitglied dieser Organisation')
-      }
+    if (existingMembership) {
+      throw new Error('Sie sind bereits Mitglied dieser Organisation')
+    }
 
-      // 4. Create organization membership
-      const { data: membership, error: membershipError } = await supabase
-        .from('organization_users')
-        .insert({
-          organization_id: invitation.organizationId,
-          user_id: userId,
-          role: invitation.role,
-          invited_by: invitation.invitedBy,
-        })
-        .select()
-        .single()
-
-      if (membershipError) {
-        console.error('Failed to create membership:', membershipError)
-        throw new Error('Mitgliedschaft konnte nicht erstellt werden')
-      }
-
-      return {
-        success: true,
-        organization,
-        membership,
+    // 4. Create organization membership
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_users')
+      .insert({
+        organization_id: invitation.organizationId,
+        user_id: userId,
         role: invitation.role,
-      }
-    } catch (error) {
-      console.error('Failed to accept invitation:', error)
-      throw error
+        invited_by: invitation.invitedBy,
+      })
+      .select()
+      .single()
+
+    if (membershipError) {
+      console.error('Failed to create membership:', membershipError)
+      throw new Error('Mitgliedschaft konnte nicht erstellt werden')
     }
+
+    return {
+      success: true,
+      organization,
+      membership,
+      role: invitation.role,
+    }
+  } catch (error) {
+    console.error('Failed to accept invitation:', error)
+    throw error
   }
+}
 
-  /**
-   * Validates invitation token without accepting it (for preview)
-   */
-  static async validateInvitation(token: string) {
-    try {
-      const invitation = InvitationService.verifyInvitationToken(token)
+/**
+ * Validates invitation token without accepting it (for preview)
+ */
+export async function validateInvitation(token: string) {
+  try {
+    const invitation = verifyInvitationToken(token)
 
-      // Check if organization still exists
-      const { data: organization, error: orgError } = await supabase
-        .from('organizations')
-        .select('id, name, slug, active')
-        .eq('id', invitation.organizationId)
-        .eq('active', true)
-        .single()
+    // Check if organization still exists
+    const { data: organization, error: orgError } = await supabase
+      .from('organizations')
+      .select('id, name, slug, active')
+      .eq('id', invitation.organizationId)
+      .eq('active', true)
+      .single()
 
-      if (orgError || !organization) {
-        throw new Error('Organisation nicht gefunden oder inaktiv')
-      }
+    if (orgError || !organization) {
+      throw new Error('Organisation nicht gefunden oder inaktiv')
+    }
 
-      return {
-        valid: true,
-        invitation,
-        organization,
-      }
-    } catch (error) {
-      return {
-        valid: false,
-        error: error instanceof Error ? error.message : 'Ungültige Einladung',
-      }
+    return {
+      valid: true,
+      invitation,
+      organization,
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : 'Ungültige Einladung',
     }
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -25,11 +25,22 @@ export function CompanyInfoForm() {
     company_email: '',
     company_website: '',
     company_uid: '',
-    default_currency: DEFAULT_BUSINESS_SETTINGS.default_currency!,
-    tax_rate: DEFAULT_BUSINESS_SETTINGS.tax_rate!,
-    pdf_show_logo: DEFAULT_BUSINESS_SETTINGS.pdf_show_logo!,
-    pdf_show_company_details: DEFAULT_BUSINESS_SETTINGS.pdf_show_company_details!,
+    default_currency: DEFAULT_BUSINESS_SETTINGS.default_currency ?? 'CHF',
+    tax_rate: DEFAULT_BUSINESS_SETTINGS.tax_rate ?? 7.7,
+    pdf_show_logo: DEFAULT_BUSINESS_SETTINGS.pdf_show_logo ?? true,
+    pdf_show_company_details: DEFAULT_BUSINESS_SETTINGS.pdf_show_company_details ?? true,
   })
+
+  // 🆔 Generate unique IDs for accessibility compliance
+  const companyNameId = useId()
+  const companyTaglineId = useId()
+  const companyAddressId = useId()
+  const companyPostalCodeId = useId()
+  const companyCityId = useId()
+  const companyPhoneId = useId()
+  const companyEmailId = useId()
+  const companyWebsiteId = useId()
+  const companyUidId = useId()
 
   // Update form when settings load
   useEffect(() => {
@@ -95,9 +106,9 @@ export function CompanyInfoForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="company_name">Firmenname *</Label>
+            <Label htmlFor={companyNameId}>Firmenname *</Label>
             <Input
-              id="company_name"
+              id={companyNameId}
               value={formData.company_name}
               onChange={(e) => handleInputChange('company_name', e.target.value)}
               placeholder="Mein Unternehmen"
@@ -107,9 +118,9 @@ export function CompanyInfoForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company_tagline">Slogan</Label>
+            <Label htmlFor={companyTaglineId}>Slogan</Label>
             <Input
-              id="company_tagline"
+              id={companyTaglineId}
               value={formData.company_tagline}
               onChange={(e) => handleInputChange('company_tagline', e.target.value)}
               placeholder="Ihr Friseursalon"
@@ -132,9 +143,9 @@ export function CompanyInfoForm() {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="company_address">Straße & Hausnummer</Label>
+            <Label htmlFor={companyAddressId}>Straße & Hausnummer</Label>
             <Input
-              id="company_address"
+              id={companyAddressId}
               value={formData.company_address}
               onChange={(e) => handleInputChange('company_address', e.target.value)}
               placeholder="Römerstrasse 6"
@@ -144,9 +155,9 @@ export function CompanyInfoForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="company_postal_code">PLZ</Label>
+              <Label htmlFor={companyPostalCodeId}>PLZ</Label>
               <Input
-                id="company_postal_code"
+                id={companyPostalCodeId}
                 value={formData.company_postal_code}
                 onChange={(e) => handleInputChange('company_postal_code', e.target.value)}
                 placeholder="4512"
@@ -155,9 +166,9 @@ export function CompanyInfoForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="company_city">Ort</Label>
+              <Label htmlFor={companyCityId}>Ort</Label>
               <Input
-                id="company_city"
+                id={companyCityId}
                 value={formData.company_city}
                 onChange={(e) => handleInputChange('company_city', e.target.value)}
                 placeholder="Bellach"
@@ -179,9 +190,9 @@ export function CompanyInfoForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="company_phone">Telefon</Label>
+            <Label htmlFor={companyPhoneId}>Telefon</Label>
             <Input
-              id="company_phone"
+              id={companyPhoneId}
               value={formData.company_phone}
               onChange={(e) => handleInputChange('company_phone', e.target.value)}
               placeholder="+41 32 123 45 67"
@@ -190,9 +201,9 @@ export function CompanyInfoForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company_email">E-Mail</Label>
+            <Label htmlFor={companyEmailId}>E-Mail</Label>
             <Input
-              id="company_email"
+              id={companyEmailId}
               type="email"
               value={formData.company_email}
               onChange={(e) => handleInputChange('company_email', e.target.value)}
@@ -202,9 +213,9 @@ export function CompanyInfoForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company_website">Website</Label>
+            <Label htmlFor={companyWebsiteId}>Website</Label>
             <Input
-              id="company_website"
+              id={companyWebsiteId}
               type="url"
               value={formData.company_website}
               onChange={(e) => handleInputChange('company_website', e.target.value)}
@@ -214,9 +225,9 @@ export function CompanyInfoForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company_uid">UID-Nummer</Label>
+            <Label htmlFor={companyUidId}>UID-Nummer</Label>
             <Input
-              id="company_uid"
+              id={companyUidId}
               value={formData.company_uid}
               onChange={(e) => handleInputChange('company_uid', e.target.value)}
               placeholder="CHE-123.456.789"

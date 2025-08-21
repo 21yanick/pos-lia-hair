@@ -189,11 +189,11 @@ export async function removeMember(
       success: true,
       message: 'Mitglied wurde erfolgreich aus dem Team entfernt.',
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('❌ Fehler beim Entfernen des Mitglieds:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Entfernen des Mitglieds',
+      error: err instanceof Error ? err.message : 'Fehler beim Entfernen des Mitglieds',
     }
   }
 }
@@ -293,11 +293,11 @@ export async function changeRole(
       member: updatedMember,
       message: `Rolle wurde erfolgreich zu ${roleLabels[newRole]} geändert.`,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('❌ Fehler beim Ändern der Rolle:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Ändern der Rolle',
+      error: err instanceof Error ? err.message : 'Fehler beim Ändern der Rolle',
     }
   }
 }
@@ -354,11 +354,11 @@ export async function resendInvitation(
       message: 'Einladung wurde erfolgreich erneut gesendet.',
       token: result.token, // For debugging
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('❌ Fehler beim erneuten Senden der Einladung:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Senden der Einladung',
+      error: err instanceof Error ? err.message : 'Fehler beim Senden der Einladung',
     }
   }
 }

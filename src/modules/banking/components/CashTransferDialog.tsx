@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, ArrowDownToLine, ArrowUpToLine, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -39,6 +39,10 @@ export function CashTransferDialog({
   const [cashBalance, setCashBalance] = useState<number | null>(null)
   const [loadingBalance, setLoadingBalance] = useState(false)
 
+  // Generate unique IDs for form elements
+  const amountId = useId()
+  const descriptionId = useId()
+
   // Use the same cash balance logic as Cash Register
   const { getCurrentCashBalance } = useCashBalance()
 
@@ -47,14 +51,7 @@ export function CashTransferDialog({
 
   const isToBank = direction === 'to_bank'
 
-  // Fetch cash balance when dialog opens and is "to_bank"
-  useEffect(() => {
-    if (isOpen && isToBank) {
-      fetchCashBalance()
-    }
-  }, [isOpen, isToBank, fetchCashBalance])
-
-  const fetchCashBalance = async () => {
+  const fetchCashBalance = useCallback(async () => {
     setLoadingBalance(true)
     try {
       // Use the same method as Cash Register for consistent balance
@@ -72,7 +69,14 @@ export function CashTransferDialog({
     } finally {
       setLoadingBalance(false)
     }
-  }
+  }, [getCurrentCashBalance])
+
+  // Fetch cash balance when dialog opens and is "to_bank"
+  useEffect(() => {
+    if (isOpen && isToBank) {
+      fetchCashBalance()
+    }
+  }, [isOpen, isToBank, fetchCashBalance])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,7 +114,7 @@ export function CashTransferDialog({
       if (!user) throw new Error('Nicht angemeldet')
 
       // ✅ FIXED: Call the database function with organization_id for Multi-Tenant security
-      const { data, error: dbError } = await supabase.rpc('create_bank_transfer_cash_movement', {
+      const { error: dbError } = await supabase.rpc('create_bank_transfer_cash_movement', {
         p_user_id: user.id,
         p_amount: numAmount,
         p_description: description.trim(),
@@ -200,9 +204,9 @@ export function CashTransferDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Betrag (CHF)</Label>
+            <Label htmlFor={amountId}>Betrag (CHF)</Label>
             <Input
-              id="amount"
+              id={amountId}
               type="number"
               step="0.01"
               min="0.01"
@@ -215,9 +219,9 @@ export function CashTransferDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Beschreibung</Label>
+            <Label htmlFor={descriptionId}>Beschreibung</Label>
             <Textarea
-              id="description"
+              id={descriptionId}
               placeholder={isToBank ? 'z.B. Tageseinnahmen einzahlen' : 'z.B. Wechselgeld abheben'}
               value={description}
               onChange={(e) => setDescription(e.target.value)}

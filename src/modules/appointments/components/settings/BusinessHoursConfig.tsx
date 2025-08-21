@@ -114,8 +114,8 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
+            {Array.from({ length: 3 }, (_, i) => i + 1).map((row) => (
+              <div key={`skeleton-business-hours-${row}`} className="animate-pulse">
                 <div className="h-4 bg-muted rounded w-20 mb-2"></div>
                 <div className="h-10 bg-muted rounded"></div>
               </div>
@@ -235,7 +235,10 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
                     ) : (
                       <div className="space-y-2">
                         {dayHours.breaks.map((breakTime, index) => (
-                          <div key={index} className="flex items-center gap-2">
+                          <div
+                            key={`break-${breakTime.start}-${breakTime.end}`}
+                            className="flex items-center gap-2"
+                          >
                             <div className="grid grid-cols-2 gap-2 flex-1">
                               <Input
                                 type="time"

@@ -25,8 +25,6 @@ export function AppointmentsPage() {
     selectedDate,
     currentMonth,
     selectDate,
-    goToNextMonth,
-    goToPrevMonth,
     goToMonth,
     goToToday,
     handleSlotClick,
@@ -36,7 +34,6 @@ export function AppointmentsPage() {
     selectedAppointment,
     closeDialogs,
     isToday,
-    formatDateKey,
     isExceptionAppointment,
   } = useAppointmentCalendar()
 

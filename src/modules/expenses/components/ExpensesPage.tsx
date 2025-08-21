@@ -1,7 +1,7 @@
 'use client'
 
 import { Plus, Search, Upload } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { SupplierAutocomplete } from '@/shared/components/supplier/SupplierAutocomplete'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
 import { Badge } from '@/shared/components/ui/badge'
@@ -43,12 +43,9 @@ export function ExpensesPage() {
     error,
     createExpense,
     loadExpenses,
-    loadCurrentMonthExpenses,
     updateExpense,
     deleteExpense,
     calculateExpenseStats,
-    getExpensesByCategory,
-    uploadExpenseReceipt,
     replaceExpenseReceipt,
     generatePlaceholderReceipt,
   } = useExpenses()
@@ -77,6 +74,17 @@ export function ExpensesPage() {
     invoice_number: '',
     notes: '',
   })
+
+  // 🆔 Generate unique IDs for accessibility compliance
+  const amountId = useId()
+  const paymentDateId = useId()
+  const descriptionId = useId()
+  const invoiceNumberId = useId()
+  const notesId = useId()
+  const receiptUploadId = useId()
+  const receiptPhysicalId = useId()
+  const fileUploadId = useId()
+  const archiveLocationId = useId()
 
   // Filter State
   const [filterCategory, setFilterCategory] = useState<string>('all')
@@ -171,7 +179,7 @@ export function ExpensesPage() {
       user_id: userData.user.id,
     }
 
-    let result
+    let result: Awaited<ReturnType<typeof createExpense>>
     if (receiptType === 'upload' && selectedFile) {
       // Traditional upload flow
       result = await createExpense(expenseData, selectedFile)
@@ -281,9 +289,9 @@ export function ExpensesPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Betrag (CHF) *</Label>
+                  <Label htmlFor={amountId}>Betrag (CHF) *</Label>
                   <Input
-                    id="amount"
+                    id={amountId}
                     type="number"
                     step="0.01"
                     value={formData.amount}
@@ -294,9 +302,9 @@ export function ExpensesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="payment_date">Zahlungsdatum *</Label>
+                  <Label htmlFor={paymentDateId}>Zahlungsdatum *</Label>
                   <Input
-                    id="payment_date"
+                    id={paymentDateId}
                     type="date"
                     value={formData.payment_date}
                     onChange={(e) =>
@@ -308,9 +316,9 @@ export function ExpensesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Beschreibung *</Label>
+                <Label htmlFor={descriptionId}>Beschreibung *</Label>
                 <Input
-                  id="description"
+                  id={descriptionId}
                   value={formData.description}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, description: e.target.value }))
@@ -373,9 +381,9 @@ export function ExpensesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="invoice_number">Rechnungsnummer</Label>
+                  <Label htmlFor={invoiceNumberId}>Rechnungsnummer</Label>
                   <Input
-                    id="invoice_number"
+                    id={invoiceNumberId}
                     value={formData.invoice_number}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, invoice_number: e.target.value }))
@@ -386,9 +394,9 @@ export function ExpensesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notizen</Label>
+                <Label htmlFor={notesId}>Notizen</Label>
                 <Textarea
-                  id="notes"
+                  id={notesId}
                   value={formData.notes}
                   onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                   placeholder="Zusätzliche Informationen..."
@@ -405,14 +413,14 @@ export function ExpensesPage() {
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
-                      id="receipt-upload"
+                      id={receiptUploadId}
                       name="receiptType"
                       value="upload"
                       checked={receiptType === 'upload'}
                       onChange={(e) => setReceiptType(e.target.value as 'upload' | 'physical')}
                       className="w-4 h-4 text-primary"
                     />
-                    <Label htmlFor="receipt-upload" className="cursor-pointer">
+                    <Label htmlFor={receiptUploadId} className="cursor-pointer">
                       Digitalen Beleg hochladen
                     </Label>
                   </div>
@@ -420,14 +428,14 @@ export function ExpensesPage() {
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
-                      id="receipt-physical"
+                      id={receiptPhysicalId}
                       name="receiptType"
                       value="physical"
                       checked={receiptType === 'physical'}
                       onChange={(e) => setReceiptType(e.target.value as 'upload' | 'physical')}
                       className="w-4 h-4 text-primary"
                     />
-                    <Label htmlFor="receipt-physical" className="cursor-pointer">
+                    <Label htmlFor={receiptPhysicalId} className="cursor-pointer">
                       Physischer Beleg vorhanden
                     </Label>
                   </div>
@@ -437,14 +445,14 @@ export function ExpensesPage() {
                 {receiptType === 'upload' && (
                   <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                     <input
-                      id="file-upload"
+                      id={fileUploadId}
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                       className="hidden"
                     />
                     <label
-                      htmlFor="file-upload"
+                      htmlFor={fileUploadId}
                       className="cursor-pointer flex flex-col items-center space-y-2"
                     >
                       <Upload className="h-8 w-8 text-muted-foreground" />
@@ -466,9 +474,9 @@ export function ExpensesPage() {
                 {/* Archive Location - nur wenn Physical gewählt */}
                 {receiptType === 'physical' && (
                   <div className="space-y-2">
-                    <Label htmlFor="archive-location">Archiv-Standort *</Label>
+                    <Label htmlFor={archiveLocationId}>Archiv-Standort *</Label>
                     <Input
-                      id="archive-location"
+                      id={archiveLocationId}
                       value={archiveLocation}
                       onChange={(e) => setArchiveLocation(e.target.value)}
                       placeholder="z.B. Ordner 2025-A, Aktenschrank 3, etc."

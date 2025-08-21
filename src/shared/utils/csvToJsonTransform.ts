@@ -8,13 +8,29 @@ import type {
   CsvValidationResult,
   ParsedCsvData,
 } from '@/shared/types/csvImport'
-
-import type { ExpenseImport, ItemImport, SaleImport } from '@/shared/types/import'
+import type {
+  BankAccountImport,
+  ExpenseImport,
+  ItemImport,
+  OwnerTransactionImport,
+  SaleImport,
+  SupplierImport,
+  UserImport,
+} from '@/shared/types/import'
 
 // =================================
 // Main Transformer Class
 // =================================
 
+/**
+ * CSV to JSON transformer utilities
+ *
+ * Note: Using static-only class pattern for related transformation functions.
+ * This provides namespace organization for the extensive transformation logic
+ * while maintaining clean import/export API. This is a deliberate architectural
+ * choice for complex transformer utilities with many helper methods.
+ */
+// biome-ignore lint/complexity/noStaticOnlyClass: Deliberate namespace pattern for complex transformation utilities
 export class CsvToJsonTransformer {
   /**
    * Transform CSV data to JSON format based on mapping configuration
@@ -29,10 +45,10 @@ export class CsvToJsonTransformer {
     items?: ItemImport[]
     sales?: SaleImport[]
     expenses?: ExpenseImport[]
-    users?: any[]
-    owner_transactions?: any[]
-    bank_accounts?: any[]
-    suppliers?: any[]
+    users?: UserImport[]
+    owner_transactions?: OwnerTransactionImport[]
+    bank_accounts?: BankAccountImport[]
+    suppliers?: SupplierImport[]
   } {
     if (!mappingConfig.isValid) {
       throw new Error('Invalid mapping configuration. Cannot transform data.')
@@ -229,8 +245,11 @@ export class CsvToJsonTransformer {
    * @param mappingConfig Mapping configuration
    * @returns Array of User objects
    */
-  private static transformUsers(csvData: ParsedCsvData, mappingConfig: CsvMappingConfig): any[] {
-    const users: any[] = []
+  private static transformUsers(
+    csvData: ParsedCsvData,
+    mappingConfig: CsvMappingConfig
+  ): UserImport[] {
+    const users: UserImport[] = []
 
     for (const row of csvData.rows) {
       try {
@@ -271,8 +290,8 @@ export class CsvToJsonTransformer {
   private static transformOwnerTransactions(
     csvData: ParsedCsvData,
     mappingConfig: CsvMappingConfig
-  ): any[] {
-    const ownerTransactions: any[] = []
+  ): OwnerTransactionImport[] {
+    const ownerTransactions: OwnerTransactionImport[] = []
 
     for (const row of csvData.rows) {
       try {
@@ -320,8 +339,8 @@ export class CsvToJsonTransformer {
   private static transformBankAccounts(
     csvData: ParsedCsvData,
     mappingConfig: CsvMappingConfig
-  ): any[] {
-    const bankAccounts: any[] = []
+  ): BankAccountImport[] {
+    const bankAccounts: BankAccountImport[] = []
 
     for (const row of csvData.rows) {
       try {
@@ -369,8 +388,8 @@ export class CsvToJsonTransformer {
   private static transformSuppliers(
     csvData: ParsedCsvData,
     mappingConfig: CsvMappingConfig
-  ): any[] {
-    const suppliers: any[] = []
+  ): SupplierImport[] {
+    const suppliers: SupplierImport[] = []
 
     for (const row of csvData.rows) {
       try {
@@ -767,10 +786,10 @@ export function validateTransformedData(
     items?: ItemImport[]
     sales?: SaleImport[]
     expenses?: ExpenseImport[]
-    users?: any[]
-    owner_transactions?: any[]
-    bank_accounts?: any[]
-    suppliers?: any[]
+    users?: UserImport[]
+    owner_transactions?: OwnerTransactionImport[]
+    bank_accounts?: BankAccountImport[]
+    suppliers?: SupplierImport[]
   },
   importType: CsvImportType
 ): CsvValidationResult {
@@ -933,7 +952,7 @@ function validateExpenses(expenses: ExpenseImport[]) {
   return { errors, warnings, errorCount }
 }
 
-function validateUsers(users: any[]) {
+function validateUsers(users: UserImport[]) {
   const errors: string[] = []
   const warnings: string[] = []
   let errorCount = 0
@@ -975,7 +994,7 @@ function validateUsers(users: any[]) {
   return { errors, warnings, errorCount, duplicateEmails: [...new Set(duplicateEmails)] }
 }
 
-function validateOwnerTransactions(ownerTransactions: any[]) {
+function validateOwnerTransactions(ownerTransactions: OwnerTransactionImport[]) {
   const errors: string[] = []
   const warnings: string[] = []
   let errorCount = 0
@@ -1007,7 +1026,7 @@ function validateOwnerTransactions(ownerTransactions: any[]) {
   return { errors, warnings, errorCount }
 }
 
-function validateBankAccounts(bankAccounts: any[]) {
+function validateBankAccounts(bankAccounts: BankAccountImport[]) {
   const errors: string[] = []
   const warnings: string[] = []
   let errorCount = 0
@@ -1054,7 +1073,7 @@ function validateBankAccounts(bankAccounts: any[]) {
   return { errors, warnings, errorCount }
 }
 
-function validateSuppliers(suppliers: any[]) {
+function validateSuppliers(suppliers: SupplierImport[]) {
   const errors: string[] = []
   const warnings: string[] = []
   let errorCount = 0

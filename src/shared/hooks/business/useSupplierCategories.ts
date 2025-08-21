@@ -68,9 +68,12 @@ export function useSupplierCategories() {
 
           await refetch()
           return { success: true }
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error('Error creating business settings:', err)
-          return { success: false, error: `Could not create business settings: ${err.message}` }
+          return {
+            success: false,
+            error: `Could not create business settings: ${err instanceof Error ? err.message : String(err)}`,
+          }
         }
       }
 
@@ -96,7 +99,7 @@ export function useSupplierCategories() {
 
         await refetch()
         return { success: true }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error in addCategory:', err)
         return { success: false, error: err.message }
       }
@@ -132,7 +135,7 @@ export function useSupplierCategories() {
 
         await refetch()
         return { success: true }
-      } catch (err: any) {
+      } catch (err: unknown) {
         return { success: false, error: err.message }
       }
     },
@@ -165,7 +168,7 @@ export function useSupplierCategories() {
 
         await refetch()
         return { success: true }
-      } catch (err: any) {
+      } catch (err: unknown) {
         return { success: false, error: err.message }
       }
     },

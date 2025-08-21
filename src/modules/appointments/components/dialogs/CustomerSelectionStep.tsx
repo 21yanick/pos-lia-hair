@@ -6,7 +6,7 @@
  */
 
 import { Check, Phone, Search, User } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useCustomersQuery } from '@/modules/customers/hooks/useCustomersQuery'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
@@ -56,6 +56,12 @@ export function CustomerSelectionStep({
     phone: customerPhone || '',
     email: '',
   })
+
+  // Generate unique IDs for form elements
+  const walkInNameId = useId()
+  const walkInPhoneId = useId()
+  const walkInEmailId = useId()
+  const notesId = useId()
 
   const selectedCustomer = customers.find((c) => c.id === customerId)
   const selectedServiceNames = selectedServices
@@ -210,9 +216,9 @@ export function CustomerSelectionStep({
         /* Walk-in Customer Form */
         <div className="space-y-4">
           <div>
-            <Label htmlFor="walkInName">Name *</Label>
+            <Label htmlFor={walkInNameId}>Name *</Label>
             <Input
-              id="walkInName"
+              id={walkInNameId}
               value={walkInForm.name}
               onChange={(e) => handleWalkInFormChange('name', e.target.value)}
               placeholder="Name der Laufkundschaft"
@@ -220,9 +226,9 @@ export function CustomerSelectionStep({
             />
           </div>
           <div>
-            <Label htmlFor="walkInPhone">Telefon</Label>
+            <Label htmlFor={walkInPhoneId}>Telefon</Label>
             <Input
-              id="walkInPhone"
+              id={walkInPhoneId}
               value={walkInForm.phone}
               onChange={(e) => handleWalkInFormChange('phone', e.target.value)}
               placeholder="Telefonnummer (optional)"
@@ -230,9 +236,9 @@ export function CustomerSelectionStep({
             />
           </div>
           <div>
-            <Label htmlFor="walkInEmail">E-Mail</Label>
+            <Label htmlFor={walkInEmailId}>E-Mail</Label>
             <Input
-              id="walkInEmail"
+              id={walkInEmailId}
               type="email"
               value={walkInForm.email}
               onChange={(e) => handleWalkInFormChange('email', e.target.value)}
@@ -245,9 +251,9 @@ export function CustomerSelectionStep({
 
       {/* Notes */}
       <div>
-        <Label htmlFor="notes">Notizen</Label>
+        <Label htmlFor={notesId}>Notizen</Label>
         <Textarea
-          id="notes"
+          id={notesId}
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
           placeholder="Notizen zum Termin..."

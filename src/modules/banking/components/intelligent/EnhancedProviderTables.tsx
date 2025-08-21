@@ -50,8 +50,8 @@ export function EnhancedProviderTables({
     try {
       // Use already loaded data instead of making new API calls
       const result = await providerMatchingService.findProviderMatches(
-        unmatchedSales as any,
-        unmatchedProviderReports as any
+        unmatchedSales,
+        unmatchedProviderReports
       )
 
       if (!result.success) {
@@ -261,8 +261,8 @@ export function EnhancedProviderTables({
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="border rounded-lg p-4">
+                {Array.from({ length: 3 }, (_, i) => i + 1).map((row) => (
+                  <div key={`skeleton-sales-${row}`} className="border rounded-lg p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {showMatches && <Skeleton className="h-4 w-4" />}
@@ -295,10 +295,11 @@ export function EnhancedProviderTables({
                     : null
 
                   return (
-                    <div
+                    <button
                       key={sale.id}
+                      type="button"
                       data-sale-id={sale.id}
-                      className={`border rounded-lg p-4 w-full max-w-full overflow-hidden cursor-pointer transition-colors ${
+                      className={`border rounded-lg p-4 w-full max-w-full overflow-hidden cursor-pointer transition-colors text-left ${
                         selectedSale === sale.id
                           ? 'bg-accent border-l-4 border-primary'
                           : hasMatch
@@ -349,7 +350,7 @@ export function EnhancedProviderTables({
                           )}
                         </div>
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>
@@ -365,8 +366,8 @@ export function EnhancedProviderTables({
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="border rounded-lg p-4">
+                {Array.from({ length: 3 }, (_, i) => i + 1).map((row) => (
+                  <div key={`skeleton-providers-${row}`} className="border rounded-lg p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {showMatches && <Skeleton className="h-4 w-4" />}
@@ -401,10 +402,11 @@ export function EnhancedProviderTables({
                     : null
 
                   return (
-                    <div
+                    <button
                       key={report.id}
+                      type="button"
                       data-provider-id={report.id}
-                      className={`border rounded-lg p-4 w-full max-w-full overflow-hidden cursor-pointer transition-colors ${
+                      className={`border rounded-lg p-4 w-full max-w-full overflow-hidden cursor-pointer transition-colors text-left ${
                         selectedProvider === report.id
                           ? 'bg-accent border-l-4 border-primary'
                           : hasMatch
@@ -460,7 +462,7 @@ export function EnhancedProviderTables({
                           )}
                         </div>
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>

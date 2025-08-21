@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Customer } from '@/shared/services/customerService'
+import type { TransactionItem } from '@/shared/types/transactions'
 import type { CartItem } from './useSales'
 
 // Typen für Zahlungsmethoden
@@ -13,7 +14,7 @@ export type ProductTab = 'services' | 'products' | 'favorites'
 // Typ für Transaktionsergebnis
 export type TransactionResult = {
   success: boolean
-  transaction?: any
+  transaction?: TransactionItem
   change?: number
   receiptUrl?: string
   error?: string

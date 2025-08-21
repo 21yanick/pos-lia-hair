@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -63,14 +63,23 @@ export function SupplierEditDialog({
     is_active: true,
   })
 
-  // Load supplier data when dialog opens
-  useEffect(() => {
-    if (open && supplierId && currentOrganization) {
-      loadSupplierData()
-    }
-  }, [open, supplierId, currentOrganization, loadSupplierData])
+  // 🆔 Generate unique IDs for accessibility compliance
+  const nameId = useId()
+  const categoryId = useId()
+  const contactEmailId = useId()
+  const contactPhoneId = useId()
+  const websiteId = useId()
+  const addressLine1Id = useId()
+  const addressLine2Id = useId()
+  const cityId = useId()
+  const postalCodeId = useId()
+  const countryId = useId()
+  const ibanId = useId()
+  const vatNumberId = useId()
+  const isActiveId = useId()
+  const notesId = useId()
 
-  const loadSupplierData = async () => {
+  const loadSupplierData = useCallback(async () => {
     if (!supplierId || !currentOrganization) return
 
     setDataLoading(true)
@@ -105,7 +114,14 @@ export function SupplierEditDialog({
     } finally {
       setDataLoading(false)
     }
-  }
+  }, [supplierId, currentOrganization])
+
+  // Load supplier data when dialog opens
+  useEffect(() => {
+    if (open && supplierId && currentOrganization) {
+      loadSupplierData()
+    }
+  }, [open, supplierId, currentOrganization, loadSupplierData])
 
   // Reset form when dialog closes
   const handleOpenChange = (newOpen: boolean) => {
@@ -187,9 +203,9 @@ export function SupplierEditDialog({
               {/* Required Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
+                  <Label htmlFor={nameId}>Name *</Label>
                   <Input
-                    id="name"
+                    id={nameId}
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="z.B. Migros AG"
@@ -199,7 +215,7 @@ export function SupplierEditDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Kategorie *</Label>
+                  <Label htmlFor={categoryId}>Kategorie *</Label>
                   <Select
                     value={formData.category}
                     onValueChange={(value: SupplierCategory) =>
@@ -207,7 +223,7 @@ export function SupplierEditDialog({
                     }
                     disabled={isFormDisabled}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id={categoryId}>
                       <SelectValue placeholder="Kategorie wählen" />
                     </SelectTrigger>
                     <SelectContent>
@@ -224,9 +240,9 @@ export function SupplierEditDialog({
               {/* Contact Information */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="contact_email">E-Mail</Label>
+                  <Label htmlFor={contactEmailId}>E-Mail</Label>
                   <Input
-                    id="contact_email"
+                    id={contactEmailId}
                     type="email"
                     value={formData.contact_email}
                     onChange={(e) =>
@@ -238,9 +254,9 @@ export function SupplierEditDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contact_phone">Telefon</Label>
+                  <Label htmlFor={contactPhoneId}>Telefon</Label>
                   <Input
-                    id="contact_phone"
+                    id={contactPhoneId}
                     type="tel"
                     value={formData.contact_phone}
                     onChange={(e) =>
@@ -253,9 +269,9 @@ export function SupplierEditDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
+                <Label htmlFor={websiteId}>Website</Label>
                 <Input
-                  id="website"
+                  id={websiteId}
                   type="url"
                   value={formData.website}
                   onChange={(e) => setFormData((prev) => ({ ...prev, website: e.target.value }))}
@@ -267,9 +283,9 @@ export function SupplierEditDialog({
               {/* Address */}
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="address_line1">Adresse</Label>
+                  <Label htmlFor={addressLine1Id}>Adresse</Label>
                   <Input
-                    id="address_line1"
+                    id={addressLine1Id}
                     value={formData.address_line1}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, address_line1: e.target.value }))
@@ -280,9 +296,9 @@ export function SupplierEditDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address_line2">Adresszusatz</Label>
+                  <Label htmlFor={addressLine2Id}>Adresszusatz</Label>
                   <Input
-                    id="address_line2"
+                    id={addressLine2Id}
                     value={formData.address_line2}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, address_line2: e.target.value }))
@@ -294,9 +310,9 @@ export function SupplierEditDialog({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="postal_code">PLZ</Label>
+                    <Label htmlFor={postalCodeId}>PLZ</Label>
                     <Input
-                      id="postal_code"
+                      id={postalCodeId}
                       value={formData.postal_code}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, postal_code: e.target.value }))
@@ -307,9 +323,9 @@ export function SupplierEditDialog({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="city">Ort</Label>
+                    <Label htmlFor={cityId}>Ort</Label>
                     <Input
-                      id="city"
+                      id={cityId}
                       value={formData.city}
                       onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
                       placeholder="Zürich"
@@ -318,9 +334,9 @@ export function SupplierEditDialog({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="country">Land</Label>
+                    <Label htmlFor={countryId}>Land</Label>
                     <Input
-                      id="country"
+                      id={countryId}
                       value={formData.country}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, country: e.target.value }))
@@ -335,9 +351,9 @@ export function SupplierEditDialog({
               {/* Business Information */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="iban">IBAN</Label>
+                  <Label htmlFor={ibanId}>IBAN</Label>
                   <Input
-                    id="iban"
+                    id={ibanId}
                     value={formData.iban}
                     onChange={(e) => setFormData((prev) => ({ ...prev, iban: e.target.value }))}
                     placeholder="CH93 0076 2011 6238 5295 7"
@@ -346,9 +362,9 @@ export function SupplierEditDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="vat_number">UID-Nummer</Label>
+                  <Label htmlFor={vatNumberId}>UID-Nummer</Label>
                   <Input
-                    id="vat_number"
+                    id={vatNumberId}
                     value={formData.vat_number}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, vat_number: e.target.value }))
@@ -361,7 +377,7 @@ export function SupplierEditDialog({
 
               {/* Status */}
               <div className="space-y-2">
-                <Label htmlFor="is_active">Status</Label>
+                <Label htmlFor={isActiveId}>Status</Label>
                 <Select
                   value={formData.is_active ? 'active' : 'inactive'}
                   onValueChange={(value) =>
@@ -369,7 +385,7 @@ export function SupplierEditDialog({
                   }
                   disabled={isFormDisabled}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id={isActiveId}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -381,9 +397,9 @@ export function SupplierEditDialog({
 
               {/* Notes */}
               <div className="space-y-2">
-                <Label htmlFor="notes">Notizen</Label>
+                <Label htmlFor={notesId}>Notizen</Label>
                 <Textarea
-                  id="notes"
+                  id={notesId}
                   value={formData.notes}
                   onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                   placeholder="Zusätzliche Informationen..."

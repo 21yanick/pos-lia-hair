@@ -15,8 +15,8 @@ import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationP
 import { PWAInstallCard } from './PWAInstallCard'
 
 export function SettingsPage() {
-  const { currentOrganization, memberships } = useCurrentOrganization()
-  const { can, role, isAdmin, isOwner } = useOrganizationPermissions()
+  const { currentOrganization } = useCurrentOrganization()
+  const { can, isAdmin, isOwner } = useOrganizationPermissions()
 
   // 🔗 Helper: Organization-aware URL builder
   const getOrgUrl = (path: string) =>

@@ -5,213 +5,211 @@ import Papa from 'papaparse'
 import type { CsvParseOptions, CsvRow, ParsedCsvData } from '@/shared/types/csvImport'
 
 // =================================
-// CSV Parser Class
+// CSV Parser Functions
 // =================================
 
-export class CsvParser {
-  /**
-   * Parse a CSV file with Papa Parse
-   * @param file CSV file to parse
-   * @param options Parse options
-   * @returns Promise with parsed CSV data
-   */
-  static async parseFile(file: File, options: CsvParseOptions = {}): Promise<ParsedCsvData> {
-    return new Promise((resolve, reject) => {
-      const defaultOptions: Papa.ParseConfig = {
-        header: false, // We'll handle headers manually for better control
-        skipEmptyLines: true,
-        delimiter: '', // Auto-detect
-        encoding: 'UTF-8',
-        complete: (results) => {
-          try {
-            const parsedData = CsvParser.processParseResults(results, options)
-            resolve(parsedData)
-          } catch (error) {
-            reject(error)
-          }
-        },
-        error: (error) => {
-          reject(new Error(`CSV Parse Error: ${error.message}`))
-        },
-      }
-
-      // Override defaults with user options
-      const finalOptions: Papa.ParseConfig = {
-        ...defaultOptions,
-        delimiter: options.delimiter || '',
-        skipEmptyLines: options.skipEmptyLines ?? true,
-        preview: options.preview || 0, // 0 = parse all rows
-      }
-
-      Papa.parse(file, finalOptions)
-    })
-  }
-
-  /**
-   * Process Papa Parse results into our data structure
-   * @param results Papa Parse results
-   * @param options Original parse options
-   * @returns Processed CSV data
-   */
-  private static processParseResults(
-    results: Papa.ParseResult<string[]>,
-    _options: CsvParseOptions
-  ): ParsedCsvData {
-    if (!results.data || results.data.length === 0) {
-      throw new Error('CSV file is empty or could not be parsed')
-    }
-
-    // Extract headers from first row
-    const headers = CsvParser.extractHeaders(results.data[0])
-    if (headers.length === 0) {
-      throw new Error('CSV file has no valid headers')
-    }
-
-    // Convert remaining rows to objects
-    const dataRows = results.data.slice(1)
-    const { rows, emptyRows } = CsvParser.convertRowsToObjects(dataRows, headers)
-
-    // Collect parsing errors
-    const errors = results.errors?.map((error) => `Row ${error.row + 1}: ${error.message}`) || []
-
-    // Add validation errors
-    if (headers.length !== new Set(headers).size) {
-      errors.push('Duplicate column headers detected')
-    }
-
-    return {
-      headers,
-      rows,
-      meta: {
-        totalRows: results.data.length - 1, // Exclude header row
-        emptyRows,
-        errors,
+/**
+ * Parse a CSV file with Papa Parse
+ * @param file CSV file to parse
+ * @param options Parse options
+ * @returns Promise with parsed CSV data
+ */
+export async function parseFile(file: File, options: CsvParseOptions = {}): Promise<ParsedCsvData> {
+  return new Promise((resolve, reject) => {
+    const defaultOptions: Papa.ParseConfig = {
+      header: false, // We'll handle headers manually for better control
+      skipEmptyLines: true,
+      delimiter: '', // Auto-detect
+      encoding: 'UTF-8',
+      complete: (results) => {
+        try {
+          const parsedData = processParseResults(results, options)
+          resolve(parsedData)
+        } catch (error) {
+          reject(error)
+        }
+      },
+      error: (error) => {
+        reject(new Error(`CSV Parse Error: ${error.message}`))
       },
     }
-  }
 
-  /**
-   * Extract and validate headers from first row
-   * @param headerRow First row of CSV
-   * @returns Cleaned headers array
-   */
-  private static extractHeaders(headerRow: string[]): string[] {
-    if (!headerRow || headerRow.length === 0) {
-      return []
+    // Override defaults with user options
+    const finalOptions: Papa.ParseConfig = {
+      ...defaultOptions,
+      delimiter: options.delimiter || '',
+      skipEmptyLines: options.skipEmptyLines ?? true,
+      preview: options.preview || 0, // 0 = parse all rows
     }
 
-    return headerRow
-      .map((header) => header?.toString().trim() || '')
-      .filter((header) => header.length > 0)
+    Papa.parse(file, finalOptions)
+  })
+}
+
+/**
+ * Process Papa Parse results into our data structure
+ * @param results Papa Parse results
+ * @param options Original parse options
+ * @returns Processed CSV data
+ */
+function processParseResults(
+  results: Papa.ParseResult<string[]>,
+  _options: CsvParseOptions
+): ParsedCsvData {
+  if (!results.data || results.data.length === 0) {
+    throw new Error('CSV file is empty or could not be parsed')
   }
 
-  /**
-   * Convert CSV rows to objects with header keys
-   * @param dataRows CSV data rows
-   * @param headers Column headers
-   * @returns Object rows and empty row count
-   */
-  private static convertRowsToObjects(
-    dataRows: string[][],
-    headers: string[]
-  ): { rows: CsvRow[]; emptyRows: number } {
-    const rows: CsvRow[] = []
-    let emptyRows = 0
-
-    for (const row of dataRows) {
-      // Skip completely empty rows
-      if (CsvParser.isEmptyRow(row)) {
-        emptyRows++
-        continue
-      }
-
-      // Convert row to object
-      const rowObj: CsvRow = {}
-
-      for (let i = 0; i < headers.length; i++) {
-        const value = row[i]?.toString().trim() || ''
-        rowObj[headers[i]] = value === '' ? undefined : value
-      }
-
-      rows.push(rowObj)
-    }
-
-    return { rows, emptyRows }
+  // Extract headers from first row
+  const headers = extractHeaders(results.data[0])
+  if (headers.length === 0) {
+    throw new Error('CSV file has no valid headers')
   }
 
-  /**
-   * Check if a CSV row is completely empty
-   * @param row CSV row
-   * @returns True if row is empty
-   */
-  private static isEmptyRow(row: string[]): boolean {
-    return !row || row.every((cell) => !cell || cell.toString().trim() === '')
+  // Convert remaining rows to objects
+  const dataRows = results.data.slice(1)
+  const { rows, emptyRows } = convertRowsToObjects(dataRows, headers)
+
+  // Collect parsing errors
+  const errors = results.errors?.map((error) => `Row ${error.row + 1}: ${error.message}`) || []
+
+  // Add validation errors
+  if (headers.length !== new Set(headers).size) {
+    errors.push('Duplicate column headers detected')
   }
 
-  /**
-   * Auto-detect CSV delimiter
-   * @param file CSV file
-   * @returns Promise with detected delimiter
-   */
-  static async detectDelimiter(file: File): Promise<string> {
-    return new Promise((resolve) => {
-      Papa.parse(file, {
-        preview: 5, // Only parse first 5 rows for detection
-        complete: (results) => {
-          // Papa Parse automatically detects delimiter
-          const delimiter = results.meta.delimiter || ','
-          resolve(delimiter)
-        },
-        error: () => {
-          resolve(',') // Default to comma if detection fails
-        },
-      })
-    })
-  }
-
-  /**
-   * Validate CSV file before parsing
-   * @param file File to validate
-   * @returns Validation result
-   */
-  static validateFile(file: File): { isValid: boolean; errors: string[] } {
-    const errors: string[] = []
-
-    // Check file type
-    if (!file.type.includes('csv') && !file.name.endsWith('.csv')) {
-      errors.push('File must be a CSV file (.csv)')
-    }
-
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      errors.push(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`)
-    }
-
-    // Check file is not empty
-    if (file.size === 0) {
-      errors.push('File is empty')
-    }
-
-    return {
-      isValid: errors.length === 0,
+  return {
+    headers,
+    rows,
+    meta: {
+      totalRows: results.data.length - 1, // Exclude header row
+      emptyRows,
       errors,
-    }
+    },
+  }
+}
+
+/**
+ * Extract and validate headers from first row
+ * @param headerRow First row of CSV
+ * @returns Cleaned headers array
+ */
+function extractHeaders(headerRow: string[]): string[] {
+  if (!headerRow || headerRow.length === 0) {
+    return []
   }
 
-  /**
-   * Get preview of CSV data without full parsing
-   * @param file CSV file
-   * @param previewRows Number of rows to preview
-   * @returns Promise with preview data
-   */
-  static async getPreview(file: File, previewRows: number = 10): Promise<ParsedCsvData> {
-    const options: CsvParseOptions = {
-      preview: previewRows + 1, // +1 for header row
+  return headerRow
+    .map((header) => header?.toString().trim() || '')
+    .filter((header) => header.length > 0)
+}
+
+/**
+ * Convert CSV rows to objects with header keys
+ * @param dataRows CSV data rows
+ * @param headers Column headers
+ * @returns Object rows and empty row count
+ */
+function convertRowsToObjects(
+  dataRows: string[][],
+  headers: string[]
+): { rows: CsvRow[]; emptyRows: number } {
+  const rows: CsvRow[] = []
+  let emptyRows = 0
+
+  for (const row of dataRows) {
+    // Skip completely empty rows
+    if (isEmptyRow(row)) {
+      emptyRows++
+      continue
     }
 
-    return CsvParser.parseFile(file, options)
+    // Convert row to object
+    const rowObj: CsvRow = {}
+
+    for (let i = 0; i < headers.length; i++) {
+      const value = row[i]?.toString().trim() || ''
+      rowObj[headers[i]] = value === '' ? undefined : value
+    }
+
+    rows.push(rowObj)
   }
+
+  return { rows, emptyRows }
+}
+
+/**
+ * Check if a CSV row is completely empty
+ * @param row CSV row
+ * @returns True if row is empty
+ */
+function isEmptyRow(row: string[]): boolean {
+  return !row || row.every((cell) => !cell || cell.toString().trim() === '')
+}
+
+/**
+ * Auto-detect CSV delimiter
+ * @param file CSV file
+ * @returns Promise with detected delimiter
+ */
+export async function detectDelimiter(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    Papa.parse(file, {
+      preview: 5, // Only parse first 5 rows for detection
+      complete: (results) => {
+        // Papa Parse automatically detects delimiter
+        const delimiter = results.meta.delimiter || ','
+        resolve(delimiter)
+      },
+      error: () => {
+        resolve(',') // Default to comma if detection fails
+      },
+    })
+  })
+}
+
+/**
+ * Validate CSV file before parsing
+ * @param file File to validate
+ * @returns Validation result
+ */
+export function validateFile(file: File): { isValid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  // Check file type
+  if (!file.type.includes('csv') && !file.name.endsWith('.csv')) {
+    errors.push('File must be a CSV file (.csv)')
+  }
+
+  // Check file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  if (file.size > maxSize) {
+    errors.push(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`)
+  }
+
+  // Check file is not empty
+  if (file.size === 0) {
+    errors.push('File is empty')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  }
+}
+
+/**
+ * Get preview of CSV data without full parsing
+ * @param file CSV file
+ * @param previewRows Number of rows to preview
+ * @returns Promise with preview data
+ */
+export async function getPreview(file: File, previewRows: number = 10): Promise<ParsedCsvData> {
+  const options: CsvParseOptions = {
+    preview: previewRows + 1, // +1 for header row
+  }
+
+  return parseFile(file, options)
 }
 
 // =================================

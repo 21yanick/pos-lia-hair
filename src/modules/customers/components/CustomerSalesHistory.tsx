@@ -237,7 +237,7 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
             {/* "Alle anzeigen" button for many sales */}
             {sales.length >= 5 && (
               <div className="text-center pt-2">
-                <button className="text-sm text-primary hover:underline">
+                <button type="button" className="text-sm text-primary hover:underline">
                   Alle Verkäufe anzeigen ({sales.length})
                 </button>
               </div>

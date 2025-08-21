@@ -228,8 +228,9 @@ export function ProviderImportDialog({
   const renderUploadStep = () => (
     <div className="space-y-6">
       {/* File Drop Zone */}
-      <div
-        className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors cursor-pointer"
+      <button
+        type="button"
+        className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors cursor-pointer w-full"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={() => fileInputRef.current?.click()}
@@ -259,7 +260,7 @@ export function ProviderImportDialog({
             CSV Datei auswählen
           </Button>
         </div>
-      </div>
+      </button>
 
       {/* Selected File Info */}
       {state.file && (
@@ -351,8 +352,8 @@ export function ProviderImportDialog({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <ul className="list-disc list-inside space-y-1">
-                {state.preview.warnings.map((warning, index) => (
-                  <li key={index}>{warning}</li>
+                {state.preview.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
                 ))}
               </ul>
             </AlertDescription>
@@ -377,8 +378,8 @@ export function ProviderImportDialog({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {state.preview.newRecords.slice(0, 5).map((record, index) => (
-                    <TableRow key={index}>
+                  {state.preview.newRecords.slice(0, 5).map((record) => (
+                    <TableRow key={record.provider_transaction_id}>
                       <TableCell>{formatDateForDisplay(record.transaction_date)}</TableCell>
                       <TableCell className="font-mono text-xs">
                         {record.provider_transaction_id.substring(0, 12)}...
@@ -495,8 +496,11 @@ export function ProviderImportDialog({
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-40 overflow-y-auto">
-                {state.result.errors.slice(0, 10).map((error, index) => (
-                  <div key={index} className="text-sm p-2 bg-red-50 dark:bg-red-950 rounded">
+                {state.result.errors.slice(0, 10).map((error) => (
+                  <div
+                    key={error.rowIndex}
+                    className="text-sm p-2 bg-red-50 dark:bg-red-950 rounded"
+                  >
                     <span className="font-medium">Row {error.rowIndex}:</span> {error.error}
                   </div>
                 ))}

@@ -3,7 +3,7 @@
 import { de } from 'date-fns/locale'
 import { CalendarIcon, X } from 'lucide-react'
 import type React from 'react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { Button } from '@/shared/components/ui/button'
 import { Calendar } from '@/shared/components/ui/calendar'
@@ -27,6 +27,7 @@ export function DateRangePicker({
   disabled = false,
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false)
+  const datePickerId = useId()
 
   // Use consistent Swiss date formatting from utilities
 
@@ -53,7 +54,7 @@ export function DateRangePicker({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
-            id="date-range-picker"
+            id={datePickerId}
             variant="outline"
             size="sm"
             disabled={disabled}

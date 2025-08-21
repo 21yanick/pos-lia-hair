@@ -64,9 +64,12 @@ export function useExpenseCategories() {
 
           await refetch()
           return { success: true }
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error('Error creating business settings:', err)
-          return { success: false, error: `Could not create business settings: ${err.message}` }
+          return {
+            success: false,
+            error: `Could not create business settings: ${err instanceof Error ? err.message : String(err)}`,
+          }
         }
       }
 
@@ -92,9 +95,9 @@ export function useExpenseCategories() {
 
         await refetch()
         return { success: true }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error in addCategory:', err)
-        return { success: false, error: err.message }
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
       }
     },
     [businessSettings, refetch, currentOrganization]
@@ -128,8 +131,8 @@ export function useExpenseCategories() {
 
         await refetch()
         return { success: true }
-      } catch (err: any) {
-        return { success: false, error: err.message }
+      } catch (err: unknown) {
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
       }
     },
     [businessSettings, refetch, currentOrganization]
@@ -161,8 +164,8 @@ export function useExpenseCategories() {
 
         await refetch()
         return { success: true }
-      } catch (err: any) {
-        return { success: false, error: err.message }
+      } catch (err: unknown) {
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
       }
     },
     [businessSettings, refetch, currentOrganization]

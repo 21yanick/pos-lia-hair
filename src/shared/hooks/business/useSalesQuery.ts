@@ -41,16 +41,16 @@ interface UseSalesQueryReturn {
   currentSale: Sale | null
 
   // Core Operations (Legacy Compatible)
-  createSale: (data: CreateSaleData) => Promise<any>
-  createReceiptPDF: (sale: Sale, items: CartItem[]) => Promise<any>
+  createSale: (data: CreateSaleData) => Promise<Sale>
+  createReceiptPDF: (sale: Sale, items: CartItem[]) => Promise<unknown>
 
   // Query Operations (Legacy Compatible)
-  loadTodaySales: () => Promise<any>
-  getSalesForDateRange: (startDate: string, endDate: string) => Promise<any>
-  loadSalesForDateRange: (startDate: string, endDate: string) => Promise<any>
+  loadTodaySales: () => Promise<Sale[]>
+  getSalesForDateRange: (startDate: string, endDate: string) => Promise<Sale[]>
+  loadSalesForDateRange: (startDate: string, endDate: string) => Promise<Sale[]>
 
   // Modification Operations (Legacy Compatible)
-  cancelSale: (saleId: string) => Promise<any>
+  cancelSale: (saleId: string) => Promise<void>
 }
 
 export function useSalesQuery(): UseSalesQueryReturn {
@@ -167,8 +167,8 @@ export function useSalesQuery(): UseSalesQueryReturn {
         )
       }
 
-      setError(error.message || 'Fehler beim Erstellen des Verkaufs')
-      toast.error(error.message || 'Fehler beim Erstellen des Verkaufs')
+      setError(error instanceof Error ? error.message : 'Fehler beim Erstellen des Verkaufs')
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Erstellen des Verkaufs')
     },
     onSuccess: (data) => {
       setCurrentSale(data.sale)
@@ -258,8 +258,8 @@ export function useSalesQuery(): UseSalesQueryReturn {
         )
       }
 
-      setError(error.message || 'Fehler beim Stornieren des Verkaufs')
-      toast.error(error.message || 'Fehler beim Stornieren des Verkaufs')
+      setError(error instanceof Error ? error.message : 'Fehler beim Stornieren des Verkaufs')
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Stornieren des Verkaufs')
     },
     onSuccess: () => {
       setError(null)
@@ -287,8 +287,8 @@ export function useSalesQuery(): UseSalesQueryReturn {
     try {
       const result = await createSaleMutation.mutateAsync(data)
       return result
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   }
 
@@ -300,8 +300,8 @@ export function useSalesQuery(): UseSalesQueryReturn {
 
     try {
       return await createReceiptPDFService(sale, items, organizationId)
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
 
@@ -311,9 +311,9 @@ export function useSalesQuery(): UseSalesQueryReturn {
       setError(null)
       const data = await refetchTodaySales()
       return { success: true, data: data.data }
-    } catch (err: any) {
-      setError(err.message || 'Fehler beim Laden der Daten')
-      return { success: false, error: err.message }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Fehler beim Laden der Daten')
+      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   }
 
@@ -328,9 +328,13 @@ export function useSalesQuery(): UseSalesQueryReturn {
 
       const salesData = await getSalesForDateRangeService(organizationId, startDate, endDate)
       return { success: true, sales: salesData }
-    } catch (err: any) {
-      setError(err.message || 'Fehler beim Laden der Verkäufe')
-      return { success: false, error: err.message, sales: [] }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Fehler beim Laden der Verkäufe')
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+        sales: [],
+      }
     }
   }
 
@@ -358,8 +362,8 @@ export function useSalesQuery(): UseSalesQueryReturn {
     try {
       const result = await cancelSaleMutation.mutateAsync(saleId)
       return result
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   }
 

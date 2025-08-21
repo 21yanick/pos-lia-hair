@@ -25,7 +25,7 @@ export type DocumentWithDetails = Document & {
   url?: string
   amount?: number
   status?: string
-  icon?: any
+  icon?: unknown
   badgeColor?: string
 }
 
@@ -241,8 +241,9 @@ export function useDocuments() {
       })
 
       return { success: true, documents: filteredDocs }
-    } catch (err: any) {
-      const errorMsg = err?.message || 'Unbekannter Fehler beim Laden der Dokumente'
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Unbekannter Fehler beim Laden der Dokumente'
       setError(errorMsg)
       return { success: false, error: errorMsg }
     } finally {
@@ -299,8 +300,8 @@ export function useDocuments() {
       }
 
       return { success: true, filePath, fileName }
-    } catch (err: any) {
-      const errorMsg = err?.message || 'Fehler beim Hochladen des Dokuments'
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Fehler beim Hochladen des Dokuments'
       setError(errorMsg)
       return { success: false, error: errorMsg }
     } finally {
@@ -354,8 +355,8 @@ export function useDocuments() {
       }
 
       return { success: true }
-    } catch (err: any) {
-      const errorMsg = err?.message || 'Fehler beim Löschen des Dokuments'
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Fehler beim Löschen des Dokuments'
       setError(errorMsg)
       return { success: false, error: errorMsg }
     } finally {
@@ -367,7 +368,7 @@ export function useDocuments() {
   const generateDocument = async (
     type: 'receipt' | 'daily_report' | 'monthly_report' | 'expense_receipt',
     referenceId: string,
-    data: any
+    data: unknown
   ) => {
     try {
       setLoading(true)
@@ -393,7 +394,10 @@ export function useDocuments() {
         reference_id: referenceId,
         file_path: filePath,
         document_date: new Date().toISOString().split('T')[0],
-        payment_method: data.payment_method || null,
+        payment_method:
+          data && typeof data === 'object' && 'payment_method' in data
+            ? (data as { payment_method?: string }).payment_method || null
+            : null,
         user_id: user.user.id,
         organization_id: currentOrganization.id, // 🔒 SECURITY: Organization-scoped
       }
@@ -405,8 +409,8 @@ export function useDocuments() {
       }
 
       return { success: true, filePath, fileName }
-    } catch (err: any) {
-      const errorMsg = err?.message || 'Fehler beim Generieren des Dokuments'
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Fehler beim Generieren des Dokuments'
       setError(errorMsg)
       return { success: false, error: errorMsg }
     } finally {

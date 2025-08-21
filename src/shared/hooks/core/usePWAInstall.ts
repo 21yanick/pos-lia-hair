@@ -36,7 +36,8 @@ export function usePWAInstall(): PWAInstallState & PWAInstallActions {
     const detectPlatform = () => {
       const userAgent = navigator.userAgent.toLowerCase()
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-      const isInWebAppiOS = (window.navigator as any).standalone === true
+      const isInWebAppiOS =
+        (window.navigator as Navigator & { standalone?: boolean }).standalone === true
       const isInWebAppChrome = window.matchMedia('(display-mode: standalone)').matches
 
       setIsInstalled(isStandalone || isInWebAppiOS || isInWebAppChrome)

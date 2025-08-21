@@ -9,6 +9,7 @@ import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
 import {
   type CartItem,
   type CreateSaleData,
+  type CreateSaleResult,
   cancelSale as cancelSaleService,
   createReceiptPDF as createReceiptPDFService,
   createSale as createSaleService,
@@ -48,16 +49,21 @@ interface UseSalesReturn {
   currentSale: Sale | null
 
   // Core Operations (Legacy Compatible)
-  createSale: (data: CreateSaleData) => Promise<any>
-  createReceiptPDF: (sale: Sale, items: CartItem[]) => Promise<any>
+  createSale: (data: CreateSaleData) => Promise<CreateSaleResult>
+  createReceiptPDF: (
+    sale: Sale,
+    items: CartItem[]
+  ) => Promise<{ success: true; publicUrl: string } | { success: false; error: string }>
 
   // Query Operations (Legacy Compatible)
-  loadTodaySales: () => Promise<any>
-  getSalesForDateRange: (startDate: string, endDate: string) => Promise<any>
-  loadSalesForDateRange: (startDate: string, endDate: string) => Promise<any>
+  loadTodaySales: () => Promise<Sale[]>
+  getSalesForDateRange: (startDate: string, endDate: string) => Promise<Sale[]>
+  loadSalesForDateRange: (startDate: string, endDate: string) => Promise<Sale[]>
 
   // Modification Operations (Legacy Compatible)
-  cancelSale: (saleId: string) => Promise<any>
+  cancelSale: (
+    saleId: string
+  ) => Promise<{ success: true; sale: Sale } | { success: false; error: string }>
 }
 
 export function useSales(): UseSalesReturn {
@@ -294,8 +300,8 @@ export function useSales(): UseSalesReturn {
     try {
       const result = await createSaleMutation.mutateAsync(data)
       return result
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   }
 
@@ -307,8 +313,8 @@ export function useSales(): UseSalesReturn {
 
     try {
       return await createReceiptPDFService(sale, items, organizationId)
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
     }
   }
 
@@ -318,9 +324,10 @@ export function useSales(): UseSalesReturn {
       setError(null)
       const data = await refetchTodaySales()
       return { success: true, data: data.data }
-    } catch (err: any) {
-      setError(err.message || 'Fehler beim Laden der Daten')
-      return { success: false, error: err.message }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Fehler beim Laden der Daten'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -335,9 +342,10 @@ export function useSales(): UseSalesReturn {
 
       const salesData = await getSalesForDateRangeService(organizationId, startDate, endDate)
       return { success: true, sales: salesData }
-    } catch (err: any) {
-      setError(err.message || 'Fehler beim Laden der Verkäufe')
-      return { success: false, error: err.message, sales: [] }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Fehler beim Laden der Verkäufe'
+      setError(errorMessage)
+      return { success: false, error: errorMessage, sales: [] }
     }
   }
 
@@ -365,8 +373,8 @@ export function useSales(): UseSalesReturn {
     try {
       const result = await cancelSaleMutation.mutateAsync(saleId)
       return result
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   }
 

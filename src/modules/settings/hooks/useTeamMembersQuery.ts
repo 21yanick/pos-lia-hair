@@ -61,7 +61,7 @@ export function useTeamMembersQuery() {
 
   return useQuery({
     queryKey: getTeamMembersQueryKey(organizationId || ''),
-    queryFn: () => fetchTeamMembers(organizationId!),
+    queryFn: () => fetchTeamMembers(organizationId || ''),
     enabled: !!organizationId,
     staleTime: 2 * 60 * 1000, // 2 minutes - team data changes less frequently
     gcTime: 5 * 60 * 1000, // 5 minutes cache

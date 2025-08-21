@@ -35,8 +35,8 @@ export function DashboardStats({ data, loading = false }: DashboardStatsProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
+        {['cash', 'month', 'trend', 'year'].map((statType) => (
+          <Card key={`skeleton-dashboard-stat-${statType}`}>
             <CardHeader className="pb-2">
               <div className="h-4 bg-gray-200 animate-pulse rounded" />
             </CardHeader>

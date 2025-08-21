@@ -1,13 +1,13 @@
 'use client'
 
 import { AlertCircle, Building2, RefreshCw, TrendingUp, Wallet } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { getProviderSummaries } from '../../services/bankingApi'
-import type { ProviderSummary, ProviderSummaryDashboard } from '../../services/matchingTypes'
+import type { ProviderDashboardData, ProviderSummary } from '../../services/matchingTypes'
 
 interface ProviderSummaryDashboardProps {
   onProviderSelect?: (providerSummary: ProviderSummary) => void
@@ -18,11 +18,11 @@ export function ProviderSummaryDashboard({
   onProviderSelect,
   className,
 }: ProviderSummaryDashboardProps) {
-  const [dashboard, setDashboard] = useState<ProviderSummaryDashboard | null>(null)
+  const [dashboard, setDashboard] = useState<ProviderDashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadSummaries = async () => {
+  const loadSummaries = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -39,7 +39,7 @@ export function ProviderSummaryDashboard({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadSummaries()
@@ -177,12 +177,23 @@ export function ProviderSummaryDashboard({
 
         {/* Provider Summaries */}
         {dashboard.summaries.map((summary) => (
-          <div
+          <button
             key={summary.provider}
-            className={`border rounded-lg p-4 transition-all duration-200 ${
-              onProviderSelect ? 'cursor-pointer hover:bg-gray-50 hover:border-gray-300' : ''
+            type="button"
+            disabled={!onProviderSelect}
+            className={`border rounded-lg p-4 transition-all duration-200 bg-transparent text-left w-full ${
+              onProviderSelect
+                ? 'cursor-pointer hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+                : ''
             }`}
             onClick={() => onProviderSelect?.(summary)}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && onProviderSelect) {
+                e.preventDefault()
+                onProviderSelect(summary)
+              }
+            }}
+            aria-label={`Provider auswählen: ${summary.displayName} - ${summary.itemCount} Items`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -217,7 +228,7 @@ export function ProviderSummaryDashboard({
                 Klicken zum Filtern nach {summary.displayName}
               </div>
             )}
-          </div>
+          </button>
         ))}
 
         {/* Last Updated */}

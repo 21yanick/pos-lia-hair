@@ -324,6 +324,16 @@ export async function getOrCreateSupplier(
 }
 
 // =================================
+// Types for Supplier Analytics
+// =================================
+
+interface ExpenseStatsData {
+  amount: number
+  payment_date: string
+  category: string
+}
+
+// =================================
 // Supplier Analytics
 // =================================
 
@@ -355,17 +365,21 @@ export async function getSupplierWithStats(
   }
 
   const expenses = data.expenses || []
-  const total_expenses = expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0)
+  const total_expenses = expenses.reduce(
+    (sum: number, exp: ExpenseStatsData) => sum + exp.amount,
+    0
+  )
   const expense_count = expenses.length
   const last_expense_date =
     expenses.length > 0
       ? expenses.reduce(
-          (latest: string, exp: any) => (exp.payment_date > latest ? exp.payment_date : latest),
+          (latest: string, exp: ExpenseStatsData) =>
+            exp.payment_date > latest ? exp.payment_date : latest,
           expenses[0].payment_date
         )
       : null
   const average_expense = expense_count > 0 ? total_expenses / expense_count : 0
-  const categories_used = [...new Set(expenses.map((exp: any) => exp.category))]
+  const categories_used = [...new Set(expenses.map((exp: ExpenseStatsData) => exp.category))]
 
   return {
     ...data,

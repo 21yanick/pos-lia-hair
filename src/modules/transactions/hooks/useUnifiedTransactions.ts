@@ -90,6 +90,91 @@ export function useUnifiedTransactions() {
     []
   )
 
+  // Business Logic: PDF Status berechnen
+  const calculatePdfStatus = useCallback(
+    (tx: UnifiedTransaction): { status: PdfStatus; requirement: PdfRequirement } => {
+      // Cash Movements und Bank Transactions brauchen keine PDFs
+      if (tx.transaction_type === 'cash_movement' || tx.transaction_type === 'bank_transaction') {
+        return {
+          status: 'not_needed',
+          requirement: 'not_applicable',
+        }
+      }
+
+      // Sales und Expenses brauchen PDFs
+      if (tx.transaction_type === 'sale' || tx.transaction_type === 'expense') {
+        if (tx.has_pdf || tx.document_id) {
+          return {
+            status: 'available',
+            requirement: 'required',
+          }
+        } else {
+          return {
+            status: 'missing',
+            requirement: 'required',
+          }
+        }
+      }
+
+      // Fallback
+      return {
+        status: 'not_needed',
+        requirement: 'optional',
+      }
+    },
+    []
+  )
+
+  // Statistiken berechnen mit business-aware PDF Logic
+  const calculateStats = useCallback((transactionData: UnifiedTransaction[]): TransactionStats => {
+    const stats: TransactionStats = {
+      total: transactionData.length,
+      byType: { sale: 0, expense: 0, cash_movement: 0, bank_transaction: 0 },
+      byStatus: { completed: 0, cancelled: 0, unmatched: 0, matched: 0 },
+      pdfStats: {
+        available: 0,
+        missing: 0,
+        notNeeded: 0,
+        generating: 0,
+        totalRequired: 0,
+      },
+      withPdf: 0,
+      withoutPdf: 0,
+      totalAmount: 0,
+      amountByType: { sale: 0, expense: 0, cash_movement: 0, bank_transaction: 0 },
+    }
+
+    transactionData.forEach((tx) => {
+      // Type Count
+      stats.byType[tx.transaction_type]++
+
+      // Status Count (vereinfacht)
+      if (tx.status === 'completed') stats.byStatus.completed++
+      else if (tx.status === 'cancelled') stats.byStatus.cancelled++
+      else if (tx.banking_status === 'unmatched') stats.byStatus.unmatched++
+      else if (tx.banking_status === 'matched' || tx.banking_status === 'fully_matched')
+        stats.byStatus.matched++
+
+      // Business-aware PDF Statistics
+      if (tx.pdf_status === 'available') stats.pdfStats.available++
+      else if (tx.pdf_status === 'missing') stats.pdfStats.missing++
+      else if (tx.pdf_status === 'not_needed') stats.pdfStats.notNeeded++
+      else if (tx.pdf_status === 'generating') stats.pdfStats.generating++
+
+      if (tx.pdf_requirement === 'required') stats.pdfStats.totalRequired++
+
+      // Legacy PDF Count (für Kompatibilität)
+      if (tx.has_pdf) stats.withPdf++
+      else stats.withoutPdf++
+
+      // Amount Totals
+      stats.totalAmount += tx.amount
+      stats.amountByType[tx.transaction_type] += tx.amount
+    })
+
+    return stats
+  }, [])
+
   // Hauptfunktion: Transactions laden mit Search/Filter
   const loadTransactions = useCallback(
     async (
@@ -208,8 +293,9 @@ export function useUnifiedTransactions() {
         setStats(calculatedStats)
 
         return { success: true }
-      } catch (err: any) {
-        const errorMessage = err.message || 'Fehler beim Laden der Transaktionen'
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Fehler beim Laden der Transaktionen'
         // console.error('❌ useUnifiedTransactions Error:', err)
         setError(errorMessage)
         return { success: false, error: errorMessage }
@@ -219,91 +305,6 @@ export function useUnifiedTransactions() {
     },
     [currentOrganization, calculatePdfStatus, calculateStats]
   )
-
-  // Business Logic: PDF Status berechnen
-  const calculatePdfStatus = useCallback(
-    (tx: any): { status: PdfStatus; requirement: PdfRequirement } => {
-      // Cash Movements und Bank Transactions brauchen keine PDFs
-      if (tx.transaction_type === 'cash_movement' || tx.transaction_type === 'bank_transaction') {
-        return {
-          status: 'not_needed',
-          requirement: 'not_applicable',
-        }
-      }
-
-      // Sales und Expenses brauchen PDFs
-      if (tx.transaction_type === 'sale' || tx.transaction_type === 'expense') {
-        if (tx.has_pdf || tx.document_id) {
-          return {
-            status: 'available',
-            requirement: 'required',
-          }
-        } else {
-          return {
-            status: 'missing',
-            requirement: 'required',
-          }
-        }
-      }
-
-      // Fallback
-      return {
-        status: 'not_needed',
-        requirement: 'optional',
-      }
-    },
-    []
-  )
-
-  // Statistiken berechnen mit business-aware PDF Logic
-  const calculateStats = useCallback((transactionData: UnifiedTransaction[]): TransactionStats => {
-    const stats: TransactionStats = {
-      total: transactionData.length,
-      byType: { sale: 0, expense: 0, cash_movement: 0, bank_transaction: 0 },
-      byStatus: { completed: 0, cancelled: 0, unmatched: 0, matched: 0 },
-      pdfStats: {
-        available: 0,
-        missing: 0,
-        notNeeded: 0,
-        generating: 0,
-        totalRequired: 0,
-      },
-      withPdf: 0,
-      withoutPdf: 0,
-      totalAmount: 0,
-      amountByType: { sale: 0, expense: 0, cash_movement: 0, bank_transaction: 0 },
-    }
-
-    transactionData.forEach((tx) => {
-      // Type Count
-      stats.byType[tx.transaction_type]++
-
-      // Status Count (vereinfacht)
-      if (tx.status === 'completed') stats.byStatus.completed++
-      else if (tx.status === 'cancelled') stats.byStatus.cancelled++
-      else if (tx.banking_status === 'unmatched') stats.byStatus.unmatched++
-      else if (tx.banking_status === 'matched' || tx.banking_status === 'fully_matched')
-        stats.byStatus.matched++
-
-      // Business-aware PDF Statistics
-      if (tx.pdf_status === 'available') stats.pdfStats.available++
-      else if (tx.pdf_status === 'missing') stats.pdfStats.missing++
-      else if (tx.pdf_status === 'not_needed') stats.pdfStats.notNeeded++
-      else if (tx.pdf_status === 'generating') stats.pdfStats.generating++
-
-      if (tx.pdf_requirement === 'required') stats.pdfStats.totalRequired++
-
-      // Legacy PDF Count (für Kompatibilität)
-      if (tx.has_pdf) stats.withPdf++
-      else stats.withoutPdf++
-
-      // Amount Totals
-      stats.totalAmount += tx.amount
-      stats.amountByType[tx.transaction_type] += tx.amount
-    })
-
-    return stats
-  }, [])
 
   // Quick Filter anwenden (gibt Query zurück für Kombination)
   const applyQuickFilter = useCallback(
@@ -391,9 +392,9 @@ export function useUnifiedTransactions() {
         if (error) throw error
 
         return { success: true, data }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('❌ Fehler beim Laden der Transaction Details:', err)
-        return { success: false, error: err.message }
+        return { success: false, error: err instanceof Error ? err.message : 'Unbekannter Fehler' }
       } finally {
         setLoading(false)
       }

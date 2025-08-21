@@ -214,7 +214,7 @@ export function BankImportDialog({
         setState((prev) => ({
           ...prev,
           loading: false,
-          result: result.importResult!,
+          result: result.importResult,
           step: 'confirm',
         }))
 
@@ -265,11 +265,19 @@ export function BankImportDialog({
       </div>
 
       {/* File Upload Area */}
-      <div
-        className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+      <button
+        type="button"
+        className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer bg-transparent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            fileInputRef.current?.click()
+          }
+        }}
+        aria-label="XML-Datei auswählen oder hierher ziehen"
       >
         <input
           ref={fileInputRef}
@@ -291,7 +299,7 @@ export function BankImportDialog({
             </p>
           </div>
         </div>
-      </div>
+      </button>
 
       {/* Selected File */}
       {state.file && (

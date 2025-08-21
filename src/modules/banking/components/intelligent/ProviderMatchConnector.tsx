@@ -138,7 +138,9 @@ export function ProviderMatchConnector({
         height: '100%',
         overflow: 'visible',
       }}
+      aria-label="Provider match connections"
     >
+      <title>Visuelle Verbindungslinien zwischen Banking-Transaktionen und Provider-Matches</title>
       {/* Connection lines */}
       {lines.map((line, index) => (
         <g key={`${line.matchId}-${index}`}>

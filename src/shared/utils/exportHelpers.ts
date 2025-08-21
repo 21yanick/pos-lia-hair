@@ -7,7 +7,7 @@ import { formatMonthYear } from './reportHelpers'
 
 // CSV Export functionality
 export function exportToCSV(data: ExportData): void {
-  const { type, label, transactions, selectedMonth } = data
+  const { label, transactions, selectedMonth } = data
 
   let csvContent = `${label} - ${formatMonthYear(selectedMonth)}\n`
   csvContent += `Exportiert am: ${formatDateForDisplay(getTodaySwissString())}\n\n`
@@ -85,7 +85,7 @@ export async function exportMonthlyPDF(
 
     // PDF direkt mit react-pdf erstellen
     const { pdf } = await import('@react-pdf/renderer')
-    const blob = await pdf(pdfComponent as any).toBlob() // Type assertion to fix TS error
+    const blob = await pdf(pdfComponent as React.ReactElement).toBlob() // Proper React element typing
     const fileName = `monatsabschluss-${selectedMonth}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
 
@@ -93,12 +93,10 @@ export async function exportMonthlyPDF(
     const { supabase } = await import('@/shared/lib/supabase/client')
     const filePath = `documents/monthly_reports/${fileName}` // Removed duplicate 'documents'
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true,
-      })
+    const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true,
+    })
 
     if (uploadError) {
       // console.error('❌ Fehler beim Hochladen der Monthly PDF:', uploadError)
@@ -152,7 +150,7 @@ export async function exportMonthlyPDF(
 
       window.open(urlData.publicUrl, '_blank')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Fehler beim Erstellen der Monthly PDF:', error)
 
     // Fallback: Manueller Download - aber PDF erstellen funktioniert
@@ -204,7 +202,7 @@ export async function openMonthlyPDF(selectedMonth: string): Promise<void> {
 
     // PDF existiert nicht, weiterleiten zur Documents-Seite
     window.open(`/documents?month=${selectedMonth}`, '_blank')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Fehler beim Öffnen des PDFs:', error)
     // Fallback: Documents-Seite öffnen
     window.open(`/documents?month=${selectedMonth}`, '_blank')
@@ -239,7 +237,7 @@ async function createFallbackPDF(
     selectedMonth,
   })
 
-  return await pdf(pdfComponent as any).toBlob() // Type assertion to fix TS error
+  return await pdf(pdfComponent as React.ReactElement).toBlob() // Proper React element typing
 }
 
 // PDF Export mit bereits geladenen reconciliationData (für ReconciliationReportTab)
@@ -269,7 +267,7 @@ export async function exportMonthlyPDFWithReconciliation(
 
     // PDF direkt mit react-pdf erstellen
     const { pdf } = await import('@react-pdf/renderer')
-    const blob = await pdf(pdfComponent as any).toBlob()
+    const blob = await pdf(pdfComponent as React.ReactElement).toBlob()
     const fileName = `monatsabschluss-${selectedMonth}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
 
@@ -277,12 +275,10 @@ export async function exportMonthlyPDFWithReconciliation(
     const { supabase } = await import('@/shared/lib/supabase/client')
     const filePath = `documents/monthly_reports/${fileName}`
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true,
-      })
+    const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true,
+    })
 
     if (uploadError) {
       // console.error('❌ Fehler beim Hochladen der Reconciliation PDF:', uploadError)
@@ -335,7 +331,7 @@ export async function exportMonthlyPDFWithReconciliation(
 
       window.open(urlData.publicUrl, '_blank')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Fehler beim Erstellen der Reconciliation PDF:', error)
     alert('PDF-Generierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
   }

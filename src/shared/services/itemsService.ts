@@ -260,11 +260,11 @@ export async function createItem(
     }
 
     return { success: true, data }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in createItem:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Erstellen des Artikels',
+      error: err instanceof Error ? err.message : 'Fehler beim Erstellen des Artikels',
     }
   }
 }
@@ -299,11 +299,11 @@ export async function updateItem(
     }
 
     return { success: true, data }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in updateItem:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Aktualisieren des Artikels',
+      error: err instanceof Error ? err.message : 'Fehler beim Aktualisieren des Artikels',
     }
   }
 }
@@ -335,7 +335,7 @@ export async function deleteItem(
     }
 
     return { success: true }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in deleteItem:', err)
     return {
       success: false,
@@ -367,7 +367,7 @@ export async function restoreItem(
     }
 
     return { success: true }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in restoreItem:', err)
     return {
       success: false,
@@ -405,7 +405,7 @@ export async function toggleItemFavorite(
     }
 
     return { success: true, data }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in toggleItemFavorite:', err)
     return {
       success: false,
@@ -439,7 +439,7 @@ export async function toggleItemActive(
     }
 
     return { success: true, data }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in toggleItemActive:', err)
     return {
       success: false,
@@ -472,7 +472,7 @@ export async function bulkUpdateItems(
         results.failed++
         results.errors.push(`${update.id}: ${result.error}`)
       }
-    } catch (err: any) {
+    } catch (err) {
       results.failed++
       results.errors.push(`${update.id}: ${err.message}`)
     }

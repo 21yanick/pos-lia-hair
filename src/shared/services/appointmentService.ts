@@ -366,11 +366,11 @@ export async function createAppointment(
     }
 
     return { success: true, data: completeAppointment }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in createAppointment:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Erstellen des Termins',
+      error: err instanceof Error ? err.message : 'Fehler beim Erstellen des Termins',
     }
   }
 }
@@ -478,11 +478,11 @@ export async function updateAppointment(
     const data = completeAppointment
 
     return { success: true, data }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in updateAppointment:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Aktualisieren des Termins',
+      error: err instanceof Error ? err.message : 'Fehler beim Aktualisieren des Termins',
     }
   }
 }
@@ -519,11 +519,11 @@ export async function deleteAppointment(
     }
 
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in deleteAppointment:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Löschen des Termins',
+      error: err instanceof Error ? err.message : 'Fehler beim Löschen des Termins',
     }
   }
 }

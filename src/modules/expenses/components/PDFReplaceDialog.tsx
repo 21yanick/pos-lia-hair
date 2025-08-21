@@ -1,7 +1,7 @@
 'use client'
 
 import { Upload, X } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -31,6 +31,7 @@ export function PDFReplaceDialog({
   onReplaceSuccess,
   onReplace,
 }: PDFReplaceDialogProps) {
+  const fileInputId = useId()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const { toast } = useToast()
@@ -128,14 +129,14 @@ export function PDFReplaceDialog({
             {!selectedFile ? (
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 <input
-                  id="file-upload"
+                  id={fileInputId}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
                 <label
-                  htmlFor="file-upload"
+                  htmlFor={fileInputId}
                   className="cursor-pointer flex flex-col items-center space-y-2"
                 >
                   <Upload className="h-8 w-8 text-muted-foreground" />

@@ -26,7 +26,7 @@ export default function DashboardPage() {
         title: 'Aktualisiert',
         description: 'Dashboard-Statistiken wurden erfolgreich aktualisiert.',
       })
-    } catch (_err: any) {
+    } catch (_err: unknown) {
       toast({
         title: 'Fehler',
         description: 'Statistiken konnten nicht aktualisiert werden.',

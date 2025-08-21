@@ -38,6 +38,26 @@ export interface UnmatchedSale {
   reason: string
 }
 
+export interface ProviderReport {
+  id: string
+  provider: string
+  net_amount: number
+  settlement_date: string
+  fees: number
+  status: string
+}
+
+export interface TransactionMatch {
+  bank_transaction_id: string
+  matched_type: string
+  matched_id: string
+  matched_amount: number
+  match_confidence: number
+  matched_at: string
+  match_type: string
+  notes: string | null
+}
+
 export interface BankMatch {
   bankTransaction: {
     amount: number
@@ -173,7 +193,7 @@ async function getProviderReconciliationData(startDate: string, endDate: string)
       .filter((sale) => sale.provider_report_id)
       .map((sale) => sale.provider_report_id)
 
-    let providerReports: any[] = []
+    let providerReports: ProviderReport[] = []
     if (providerReportIds.length > 0) {
       const { data: reports, error: reportsError } = await supabase
         .from('provider_reports')
@@ -298,7 +318,7 @@ async function getBankReconciliationData(startDate: string, endDate: string) {
 
     // Get transaction matches for all bank transactions in this period
     const bankTransactionIds = (allBankTransactions || []).map((tx) => tx.id)
-    let bankMatches: any[] = []
+    let bankMatches: TransactionMatch[] = []
 
     if (bankTransactionIds.length > 0) {
       // Get all transaction matches first
@@ -486,8 +506,8 @@ async function getBusinessSettings(): Promise<BusinessSettings | null> {
 function getMatchedItemDescription(
   type: string,
   amount: number,
-  detailedData: any,
-  matchData: any
+  detailedData: unknown,
+  matchData: unknown
 ): string {
   switch (type) {
     case 'sale':
@@ -558,7 +578,7 @@ function getCategoryDisplayName(category: string): string {
   return categoryMap[category] || category
 }
 
-function generateSuggestions(transaction: any): string[] {
+function generateSuggestions(transaction: { amount: number; description?: string }): string[] {
   const suggestions: string[] = []
   const amount = Math.abs(transaction.amount)
   const description = transaction.description?.toLowerCase() || ''

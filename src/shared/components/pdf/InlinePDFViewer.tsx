@@ -71,6 +71,7 @@ export function InlinePDFViewer({
           <div className="flex items-center gap-2">
             {/* Zoom Controls */}
             <button
+              type="button"
               onClick={() => setZoom(Math.max(50, zoom - 25))}
               className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
               title="Verkleinern"
@@ -79,6 +80,7 @@ export function InlinePDFViewer({
             </button>
             <span className="text-sm font-medium px-2">{zoom}%</span>
             <button
+              type="button"
               onClick={() => setZoom(Math.min(200, zoom + 25))}
               className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
               title="Vergrößern"
@@ -88,6 +90,7 @@ export function InlinePDFViewer({
 
             {/* Action Buttons */}
             <button
+              type="button"
               onClick={handleDownload}
               className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
               title="Herunterladen"
@@ -96,6 +99,7 @@ export function InlinePDFViewer({
             </button>
 
             <button
+              type="button"
               onClick={handleExternalOpen}
               className="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
               title="Extern öffnen"
@@ -104,6 +108,7 @@ export function InlinePDFViewer({
             </button>
 
             <button
+              type="button"
               onClick={onClose}
               className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
               title="Schließen"
@@ -130,12 +135,14 @@ export function InlinePDFViewer({
                 <div className="text-red-600 text-lg font-semibold mb-2">{error}</div>
                 <div className="space-y-3">
                   <button
+                    type="button"
                     onClick={handleDownload}
                     className="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     PDF herunterladen
                   </button>
                   <button
+                    type="button"
                     onClick={handleExternalOpen}
                     className="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   >

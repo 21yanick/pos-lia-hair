@@ -38,7 +38,7 @@ interface UseBusinessSettingsQueryReturn {
   isSuccess: boolean
 
   // Actions
-  loadSettings: () => Promise<any>
+  loadSettings: () => Promise<unknown>
   updateSettings: (data: BusinessSettingsFormData) => Promise<void>
   uploadCompanyLogo: (file: File) => Promise<void>
   deleteCompanyLogo: () => Promise<void>
@@ -50,7 +50,7 @@ interface UseBusinessSettingsQueryReturn {
   isConfigured: boolean
 
   // Query Management
-  refetch: () => Promise<any>
+  refetch: () => Promise<unknown>
   invalidate: () => Promise<void>
 }
 
@@ -82,9 +82,12 @@ export function useBusinessSettings(): UseBusinessSettingsQueryReturn {
     enabled: !!organizationId, // Only run when we have an organization
     staleTime: cacheConfig.businessSettings.staleTime,
     gcTime: cacheConfig.businessSettings.gcTime,
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: unknown) => {
       // Don't retry on permission errors
-      if (error?.message?.includes('organization') || error?.message?.includes('401')) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('organization') || error.message.includes('401'))
+      ) {
         return false
       }
       return failureCount < 2

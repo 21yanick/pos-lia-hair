@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 interface BankSettlementConnectorProps {
   selectedItems: string[]
@@ -31,6 +31,14 @@ export function BankSettlementConnector({
 }: BankSettlementConnectorProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [lines, setLines] = useState<ConnectionLine[]>([])
+  const uniqueId = useId()
+
+  // Generate unique IDs for SVG elements
+  const settlementGradientId = `settlementGradient-${uniqueId}`
+  const settlementArrowId = `settlementArrow-${uniqueId}`
+  const combinationArrowId = `combinationArrow-${uniqueId}`
+  const singleArrowId = `singleArrow-${uniqueId}`
+  const selectedArrowId = `selectedArrow-${uniqueId}`
 
   useEffect(() => {
     const calculateLines = () => {
@@ -249,17 +257,21 @@ export function BankSettlementConnector({
         height: '100%',
         overflow: 'visible',
       }}
+      aria-label="Banking settlement connections"
     >
+      <title>
+        Visuelle Verbindungslinien zwischen ausgewählten Banking-Transaktionen und Settlements
+      </title>
       <defs>
         {/* Gradient for settlement group lines */}
-        <linearGradient id="settlementGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <linearGradient id={settlementGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="hsl(var(--payment-twint))" stopOpacity="0.8" />
           <stop offset="100%" stopColor="hsl(var(--payment-twint))" stopOpacity="1" />
         </linearGradient>
 
         {/* Arrow marker for settlement groups */}
         <marker
-          id="settlementArrow"
+          id={settlementArrowId}
           markerWidth="10"
           markerHeight="10"
           refX="8"
@@ -272,7 +284,7 @@ export function BankSettlementConnector({
 
         {/* Arrow marker for combinations */}
         <marker
-          id="combinationArrow"
+          id={combinationArrowId}
           markerWidth="10"
           markerHeight="10"
           refX="8"
@@ -285,7 +297,7 @@ export function BankSettlementConnector({
 
         {/* Arrow marker for singles */}
         <marker
-          id="singleArrow"
+          id={singleArrowId}
           markerWidth="10"
           markerHeight="10"
           refX="8"
@@ -298,7 +310,7 @@ export function BankSettlementConnector({
 
         {/* Arrow marker for selected items */}
         <marker
-          id="selectedArrow"
+          id={selectedArrowId}
           markerWidth="10"
           markerHeight="10"
           refX="8"
@@ -343,7 +355,7 @@ export function BankSettlementConnector({
               y2={line.y2}
               stroke={
                 line.matchType === 'settlement_group'
-                  ? 'url(#settlementGradient)'
+                  ? `url(#${settlementGradientId})`
                   : getLineColor(
                       line.confidence,
                       line.isSelected,

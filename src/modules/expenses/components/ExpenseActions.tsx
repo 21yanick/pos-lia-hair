@@ -31,13 +31,14 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import { useToast } from '@/shared/hooks/core/useToast'
 import type { Expense } from '@/shared/types/expenses'
+import type { ExpenseUpdate } from '@/types/database'
 import { useExpensePDFs } from '../hooks/useExpensePDFs'
 import { ExpenseEditDialog } from './ExpenseEditDialog'
 import { PDFReplaceDialog } from './PDFReplaceDialog'
 
 interface ExpenseActionsProps {
   expense: Expense
-  onUpdate: (id: string, updates: any) => Promise<{ success: boolean; error?: string }>
+  onUpdate: (id: string, updates: ExpenseUpdate) => Promise<{ success: boolean; error?: string }>
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>
   onDuplicate?: (expense: Expense) => void
   onReplaceReceipt: (expenseId: string, file: File) => Promise<{ success: boolean; error?: string }>

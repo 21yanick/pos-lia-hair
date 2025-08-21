@@ -28,6 +28,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { organizationPersistence } from '@/shared/services/organizationPersistence'
 import type { OrganizationRole } from '@/shared/types/organizations'
+import type { OrganizationRow } from '@/types/database'
 
 interface OrganizationSelectorProps {
   title?: string
@@ -188,7 +189,7 @@ export function OrganizationSelector({
  * Organization Card Component
  */
 interface OrganizationCardProps {
-  organization: any // From DB join, structure might be nested
+  organization: OrganizationRow
   role: OrganizationRole
   isLoading?: boolean
   onSelect: () => void
@@ -314,8 +315,8 @@ function OrganizationSelectorSkeleton() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
+        {Array.from({ length: 3 }, (_, i) => `skeleton-${i}`).map((skeletonId) => (
+          <Card key={skeletonId}>
             <CardHeader className="pb-4">
               <div className="flex items-start space-x-3">
                 <Skeleton className="h-12 w-12 rounded-full" />

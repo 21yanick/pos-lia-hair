@@ -1,7 +1,7 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -51,6 +51,16 @@ export function ProductDialog({
     requires_booking: true,
     booking_buffer_minutes: '0',
   })
+
+  // 🆔 Generate unique IDs for accessibility compliance
+  const nameId = useId()
+  const typeId = useId()
+  const defaultPriceId = useId()
+  const durationMinutesId = useId()
+  const requiresBookingId = useId()
+  const bookingBufferMinutesId = useId()
+  const isFavoriteId = useId()
+  const activeId = useId()
 
   // Initialize form data when dialog opens
   useEffect(() => {
@@ -131,23 +141,23 @@ export function ProductDialog({
         {/* 🚀 Mobile Scroll Fix: Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto px-1 py-4 space-y-4 min-h-0">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor={nameId}>Name</Label>
             <Input
-              id="name"
+              id={nameId}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="type">Typ</Label>
+            <Label htmlFor={typeId}>Typ</Label>
             <Select
               value={formData.type}
               onValueChange={(value: 'service' | 'product') =>
                 setFormData({ ...formData, type: value })
               }
             >
-              <SelectTrigger id="type">
+              <SelectTrigger id={typeId}>
                 <SelectValue placeholder="Typ auswählen" />
               </SelectTrigger>
               <SelectContent>
@@ -158,9 +168,9 @@ export function ProductDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="default_price">Preis (CHF)</Label>
+            <Label htmlFor={defaultPriceId}>Preis (CHF)</Label>
             <Input
-              id="default_price"
+              id={defaultPriceId}
               type="number"
               step="0.05"
               min="0"
@@ -173,9 +183,9 @@ export function ProductDialog({
           {formData.type === 'service' && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="duration_minutes">Dauer (Minuten) *</Label>
+                <Label htmlFor={durationMinutesId}>Dauer (Minuten) *</Label>
                 <Input
-                  id="duration_minutes"
+                  id={durationMinutesId}
                   type="number"
                   min="5"
                   max="480"
@@ -190,13 +200,13 @@ export function ProductDialog({
 
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-1">
-                  <Label htmlFor="requires_booking">Im Buchungssystem verfügbar</Label>
+                  <Label htmlFor={requiresBookingId}>Im Buchungssystem verfügbar</Label>
                   <p className="text-xs text-muted-foreground">
                     Service kann für Termine gebucht werden
                   </p>
                 </div>
                 <Switch
-                  id="requires_booking"
+                  id={requiresBookingId}
                   checked={formData.requires_booking}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, requires_booking: checked })
@@ -205,9 +215,9 @@ export function ProductDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="booking_buffer_minutes">Pufferzeit (Minuten)</Label>
+                <Label htmlFor={bookingBufferMinutesId}>Pufferzeit (Minuten)</Label>
                 <Input
-                  id="booking_buffer_minutes"
+                  id={bookingBufferMinutesId}
                   type="number"
                   min="0"
                   max="60"
@@ -225,18 +235,18 @@ export function ProductDialog({
           )}
 
           <div className="flex items-center justify-between py-2">
-            <Label htmlFor="is_favorite">Als Favorit markieren</Label>
+            <Label htmlFor={isFavoriteId}>Als Favorit markieren</Label>
             <Switch
-              id="is_favorite"
+              id={isFavoriteId}
               checked={formData.is_favorite}
               onCheckedChange={(checked) => setFormData({ ...formData, is_favorite: checked })}
             />
           </div>
 
           <div className="flex items-center justify-between py-2">
-            <Label htmlFor="active">Aktiv</Label>
+            <Label htmlFor={activeId}>Aktiv</Label>
             <Switch
-              id="active"
+              id={activeId}
               checked={formData.active}
               onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
             />

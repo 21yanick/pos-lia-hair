@@ -1,23 +1,19 @@
 'use client'
 
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { supabase } from '@/shared/lib/supabase/client'
 
 export function AuthDebugPanel() {
-  const [authUser, setAuthUser] = useState<any>(null)
-  const [dbUser, setDbUser] = useState<any>(null)
+  const [authUser, setAuthUser] = useState<unknown>(null)
+  const [dbUser, setDbUser] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadUserData()
-  }, [loadUserData])
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -35,26 +31,32 @@ export function AuthDebugPanel() {
           // console.log('Fehler beim Abrufen des DB-Benutzers:', error);
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fehler beim Laden der Benutzerdaten:', err)
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadUserData()
+  }, [loadUserData])
 
   const synchronizeUser = async () => {
-    if (!authUser) return
+    if (!authUser || typeof authUser !== 'object' || !('id' in authUser) || !('email' in authUser))
+      return
 
     try {
       setSyncing(true)
 
       // console.log('Synchronisiere Benutzer...');
+      const user = authUser as { id: string; email: string; user_metadata?: { name?: string } }
       const { error } = await supabase.from('users').upsert({
-        id: authUser.id,
-        name: authUser.user_metadata?.name || authUser.email,
-        username: authUser.email.split('@')[0],
-        email: authUser.email,
+        id: user.id,
+        name: user.user_metadata?.name || user.email,
+        username: user.email.split('@')[0],
+        email: user.email,
         role: 'admin',
         active: true,
       })
@@ -66,9 +68,9 @@ export function AuthDebugPanel() {
 
       // console.log('Benutzer erfolgreich synchronisiert, lade Daten neu...');
       await loadUserData()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fehler bei der Synchronisierung:', err)
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
     } finally {
       setSyncing(false)
     }

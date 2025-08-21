@@ -19,7 +19,6 @@ export function PWAInstallCard() {
   const { toast } = useToast()
 
   const {
-    isInstallable,
     isInstalled,
     isPlatformSupported,
     platform,
@@ -133,8 +132,11 @@ export function PWAInstallCard() {
         <div className="space-y-4">
           {/* Features List */}
           <div className="space-y-2">
-            {getFeatures().map((feature, index) => (
-              <p key={index} className="text-sm text-muted-foreground">
+            {getFeatures().map((feature) => (
+              <p
+                key={`pwa-feature-${feature.slice(2, 12)}`}
+                className="text-sm text-muted-foreground"
+              >
                 {feature}
               </p>
             ))}

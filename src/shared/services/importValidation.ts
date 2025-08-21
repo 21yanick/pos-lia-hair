@@ -2,10 +2,13 @@
 // Centralized validation logic for all import data types
 
 import type {
+  BankAccountImport,
   ExpenseImport,
   ImportDataContainer,
   ItemImport,
+  OwnerTransactionImport,
   SaleImport,
+  UserImport,
   ValidationResult,
 } from '@/shared/types/import'
 
@@ -111,7 +114,7 @@ export function validateExpenses(expenses: ExpenseImport[]): ValidationResult {
   }
 }
 
-export function validateUsers(users: any[]): ValidationResult {
+export function validateUsers(users: UserImport[]): ValidationResult {
   const errors: string[] = []
 
   users.forEach((user, index) => {
@@ -159,7 +162,9 @@ export function validateUsers(users: any[]): ValidationResult {
   }
 }
 
-export function validateOwnerTransactions(ownerTransactions: any[]): ValidationResult {
+export function validateOwnerTransactions(
+  ownerTransactions: OwnerTransactionImport[]
+): ValidationResult {
   const errors: string[] = []
 
   ownerTransactions.forEach((transaction, index) => {
@@ -199,7 +204,7 @@ export function validateOwnerTransactions(ownerTransactions: any[]): ValidationR
   }
 }
 
-export function validateBankAccounts(bankAccounts: any[]): ValidationResult {
+export function validateBankAccounts(bankAccounts: BankAccountImport[]): ValidationResult {
   const errors: string[] = []
 
   bankAccounts.forEach((account, index) => {

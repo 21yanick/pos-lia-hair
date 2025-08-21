@@ -135,8 +135,8 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
+            {Array.from({ length: 4 }, (_, i) => i + 1).map((row) => (
+              <div key={`skeleton-booking-rules-${row}`} className="animate-pulse">
                 <div className="h-4 bg-muted rounded w-32 mb-2"></div>
                 <div className="h-10 bg-muted rounded"></div>
               </div>

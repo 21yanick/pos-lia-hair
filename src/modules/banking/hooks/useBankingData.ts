@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { supabase } from '@/shared/lib/supabase/client'
 import {
@@ -103,7 +103,7 @@ export function useBankingData(): UseBankingDataReturn {
   // DATA FETCHING
   // =====================================================
 
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -191,7 +191,7 @@ export function useBankingData(): UseBankingDataReturn {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentOrganization])
 
   // =====================================================
   // MATCHING ACTIONS
@@ -227,7 +227,11 @@ export function useBankingData(): UseBankingDataReturn {
 
         return true
       } else {
-        throw new Error((result.error as any)?.message || 'Failed to create provider match')
+        throw new Error(
+          result.error && typeof result.error === 'object' && 'message' in result.error
+            ? result.error.message
+            : 'Failed to create provider match'
+        )
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error creating match'
@@ -262,7 +266,11 @@ export function useBankingData(): UseBankingDataReturn {
 
         return true
       } else {
-        throw new Error((result.error as any)?.message || 'Failed to create bank match')
+        throw new Error(
+          result.error && typeof result.error === 'object' && 'message' in result.error
+            ? result.error.message
+            : 'Failed to create bank match'
+        )
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error creating match'

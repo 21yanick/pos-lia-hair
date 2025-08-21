@@ -102,7 +102,7 @@ export interface ProviderSummary {
   items: AvailableForBankMatching[]
 }
 
-export interface ProviderSummaryDashboard {
+export interface ProviderDashboardData {
   summaries: ProviderSummary[]
   grandTotal: number
   lastUpdated: Date
@@ -164,7 +164,7 @@ export interface MatchingPerformanceMetrics {
 export interface MatchingError {
   type: 'validation' | 'algorithm' | 'database' | 'timeout'
   message: string
-  details?: any
+  details?: unknown
   timestamp: Date
 }
 

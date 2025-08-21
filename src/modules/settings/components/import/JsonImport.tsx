@@ -43,7 +43,7 @@ const SAMPLE_ITEMS: ItemImport[] = [
 export function JsonImport() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [jsonData, setJsonData] = useState<any>(null)
+  const [jsonData, setJsonData] = useState<unknown>(null)
   // Removed activeTab - only single upload tab now
 
   const { state, processImport, resetState } = useImport()
@@ -269,7 +269,7 @@ export function JsonImport() {
                   </p>
                   <ul className="text-sm space-y-1 ml-4">
                     {state.errors.map((error, index) => (
-                      <li key={index}>• {error}</li>
+                      <li key={`json-error-${error.slice(0, 20)}-${index}`}>• {error}</li>
                     ))}
                   </ul>
                   <Button onClick={handleReset} size="sm" variant="outline" className="mt-2">

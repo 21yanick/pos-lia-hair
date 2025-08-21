@@ -79,6 +79,14 @@ export function useAppointmentCalendar(
     setCurrentMonth(startOfMonth(today))
   }, [])
 
+  // Utilities - Move before usage to fix hoisting issue
+  const isSameMonth = useCallback(
+    (date: Date): boolean => {
+      return formatYearMonth(date) === formatYearMonth(currentMonth)
+    },
+    [currentMonth]
+  )
+
   // Day Selection
   const selectDate = useCallback(
     (date: Date) => {
@@ -135,13 +143,6 @@ export function useAppointmentCalendar(
   const isToday = useCallback((date: Date): boolean => {
     return formatDateForAPI(date) === formatDateForAPI(new Date())
   }, [])
-
-  const isSameMonth = useCallback(
-    (date: Date): boolean => {
-      return formatYearMonth(date) === formatYearMonth(currentMonth)
-    },
-    [currentMonth]
-  )
 
   return {
     // State

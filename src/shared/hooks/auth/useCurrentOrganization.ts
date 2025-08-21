@@ -49,7 +49,7 @@ export function useCurrentOrganization(): CurrentOrganizationReturn {
   const slug = params?.slug as string | undefined
 
   // Get auth state
-  const { user, loading: authLoading, isAuthenticated } = useAuth()
+  const { loading: authLoading, isAuthenticated } = useAuth()
 
   // Load user's organization memberships
   const {

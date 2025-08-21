@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
-import { InvitationService } from '@/shared/services/invitationService'
+import {
+  createInvitationToken,
+  validateInvitation,
+  verifyInvitationToken,
+} from '@/shared/services/invitationService'
 
 export async function POST() {
   try {
@@ -16,12 +20,12 @@ export async function POST() {
 
     // 1. Create JWT token
     console.log('Creating invitation token...')
-    const token = InvitationService.createInvitationToken(testPayload)
+    const token = createInvitationToken(testPayload)
     console.log('Token created:', `${token.substring(0, 50)}...`)
 
     // 2. Verify JWT token
     console.log('Verifying invitation token...')
-    const decoded = InvitationService.verifyInvitationToken(token)
+    const decoded = verifyInvitationToken(token)
     console.log('Token verified:', {
       organizationName: decoded.organizationName,
       email: decoded.email,
@@ -31,7 +35,7 @@ export async function POST() {
 
     // 3. Test validation endpoint
     console.log('Testing validation endpoint...')
-    const validation = await InvitationService.validateInvitation(token)
+    const validation = await validateInvitation(token)
     console.log('Validation result:', validation)
 
     return NextResponse.json({

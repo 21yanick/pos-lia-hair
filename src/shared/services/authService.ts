@@ -13,6 +13,7 @@
 
 'use client'
 
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Database } from '@/types/database'
 
@@ -66,7 +67,7 @@ export async function checkUserExists(userId: string): Promise<User | null> {
 /**
  * Create a new user in the database from auth user
  */
-export async function createUserFromAuth(authUser: any): Promise<User> {
+export async function createUserFromAuth(authUser: SupabaseUser): Promise<User> {
   const { data: newUser, error } = await supabase
     .from('users')
     .insert({
@@ -123,11 +124,11 @@ export async function syncAuthUser(): Promise<SyncAuthUserResult> {
       success: true,
       user: newUser,
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error synchronizing auth user:', err)
     return {
       success: false,
-      error: err.message || 'Fehler bei der Benutzer-Synchronisierung',
+      error: err instanceof Error ? err.message : 'Fehler bei der Benutzer-Synchronisierung',
     }
   }
 }
@@ -154,8 +155,8 @@ export async function ensureUserExists(maxRetries = 3): Promise<SyncAuthUserResu
         const delay = Math.min(1000 * 2 ** (attempt - 1), 5000)
         await new Promise((resolve) => setTimeout(resolve, delay))
       }
-    } catch (err: any) {
-      lastError = err.message
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err)
 
       if (attempt < maxRetries) {
         const delay = Math.min(1000 * 2 ** (attempt - 1), 5000)
@@ -198,11 +199,11 @@ export async function updateUserProfile(
       success: true,
       user: updatedUser,
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in updateUserProfile:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Aktualisieren des Benutzerprofils',
+      error: err instanceof Error ? err.message : 'Fehler beim Aktualisieren des Benutzerprofils',
     }
   }
 }
@@ -220,7 +221,7 @@ export async function getUserById(userId: string): Promise<User | null> {
     }
 
     return user || null
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in getUserById:', err)
     return null
   }
@@ -261,8 +262,8 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
     }
 
     return { success: true }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in signOut:', err)
-    return { success: false, error: err.message || 'Fehler beim Abmelden' }
+    return { success: false, error: err instanceof Error ? err.message : 'Fehler beim Abmelden' }
   }
 }

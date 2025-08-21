@@ -1,10 +1,15 @@
 import { Bar, ComposedChart, Line, XAxis, YAxis } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/shared/components/ui/chart'
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/shared/components/ui/chart'
 import type { MonthlyData } from './MonthlyTrendChart'
 
 interface LazyChartProps {
   data: MonthlyData[]
-  config: any
+  config: ChartConfig
 }
 
 export default function LazyMonthlyChart({ data, config }: LazyChartProps) {

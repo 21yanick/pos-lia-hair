@@ -47,9 +47,13 @@ export function useCashBalance() {
       }
 
       return { success: true, balance: data || 0 }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fehler beim Abrufen des Bargeld-Bestands:', err)
-      return { success: false, error: err.message, balance: 0 }
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Unbekannter Fehler',
+        balance: 0,
+      }
     }
   }
 
@@ -123,10 +127,12 @@ export function useCashBalance() {
       )
 
       return { success: true, movements: enrichedData || [] }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
-      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
-      return { success: false, error: err.message, movements: [] }
+      const errorMessage =
+        err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
+      setError(errorMessage)
+      return { success: false, error: errorMessage, movements: [] }
     } finally {
       setLoading(false)
     }
@@ -161,10 +167,12 @@ export function useCashBalance() {
       }
 
       return { success: true, movements: data || [] }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
-      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten')
-      return { success: false, error: err.message, movements: [] }
+      const errorMessage =
+        err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
+      setError(errorMessage)
+      return { success: false, error: errorMessage, movements: [] }
     } finally {
       setLoading(false)
     }

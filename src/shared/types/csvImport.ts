@@ -1,7 +1,14 @@
 // CSV Import Type Definitions
 // Extends existing import system with CSV-specific functionality
 
-import type { ExpenseImport, ItemImport, SaleImport } from '@/shared/types/import'
+import type {
+  BankAccountImport,
+  ExpenseImport,
+  ItemImport,
+  OwnerTransactionImport,
+  SaleImport,
+  UserImport,
+} from '@/shared/types/import'
 
 // =================================
 // CSV Data Types
@@ -149,9 +156,9 @@ export interface CsvImportState {
     items?: ItemImport[]
     sales?: SaleImport[]
     expenses?: ExpenseImport[]
-    users?: any[]
-    owner_transactions?: any[]
-    bank_accounts?: any[]
+    users?: UserImport[]
+    owner_transactions?: OwnerTransactionImport[]
+    bank_accounts?: BankAccountImport[]
   } | null
   errors: string[]
   progress: number

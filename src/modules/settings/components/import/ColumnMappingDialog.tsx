@@ -59,12 +59,7 @@ export function ColumnMappingDialog({
   // Get field definitions for current import type
   const fieldDefinitions = FIELD_DEFINITIONS[importType]
 
-  // Initialize mappings on mount or when import type changes
-  useEffect(() => {
-    initializeMappings()
-  }, [initializeMappings])
-
-  const initializeMappings = () => {
+  const initializeMappings = useCallback(() => {
     const initialMappings: Record<string, ColumnMapping> = {}
 
     fieldDefinitions.forEach((field) => {
@@ -82,35 +77,14 @@ export function ColumnMappingDialog({
 
     setMappings(initialMappings)
     validateMappings(initialMappings)
-  }
+  }, [fieldDefinitions, csvData])
 
-  const findSuggestedHeader = (field: FieldDefinition, headers: string[]): string | null => {
-    const fieldKey = field.key.toLowerCase()
-    const fieldLabel = field.label.toLowerCase()
+  // Initialize mappings on mount or when import type changes
+  useEffect(() => {
+    initializeMappings()
+  }, [initializeMappings])
 
-    // Exact matches first
-    for (const header of headers) {
-      const headerLower = header.toLowerCase()
-      if (headerLower === fieldKey || headerLower === fieldLabel) {
-        return header
-      }
-    }
-
-    // Partial matches
-    const searchTerms = getSearchTermsForField(field.key)
-    for (const header of headers) {
-      const headerLower = header.toLowerCase()
-      for (const term of searchTerms) {
-        if (headerLower.includes(term)) {
-          return header
-        }
-      }
-    }
-
-    return null
-  }
-
-  const getSearchTermsForField = (fieldKey: string): string[] => {
+  const getSearchTermsForField = useCallback((fieldKey: string): string[] => {
     const searchMap: { [key: string]: string[] } = {
       name: ['name', 'produkt', 'service', 'bezeichnung'],
       default_price: ['price', 'preis', 'cost', 'kosten', 'betrag'],
@@ -132,19 +106,51 @@ export function ColumnMappingDialog({
     }
 
     return searchMap[fieldKey] || [fieldKey]
-  }
+  }, [])
 
-  const getSampleValue = (csvHeader: string, csvData: ParsedCsvData): string | undefined => {
-    // Get first non-empty value for this column
-    for (const row of csvData.rows.slice(0, 3)) {
-      // Check first 3 rows
-      const value = row[csvHeader]
-      if (value?.trim()) {
-        return value.trim()
+  const findSuggestedHeader = useCallback(
+    (field: FieldDefinition, headers: string[]): string | null => {
+      const fieldKey = field.key.toLowerCase()
+      const fieldLabel = field.label.toLowerCase()
+
+      // Exact matches first
+      for (const header of headers) {
+        const headerLower = header.toLowerCase()
+        if (headerLower === fieldKey || headerLower === fieldLabel) {
+          return header
+        }
       }
-    }
-    return undefined
-  }
+
+      // Partial matches
+      const searchTerms = getSearchTermsForField(field.key)
+      for (const header of headers) {
+        const headerLower = header.toLowerCase()
+        for (const term of searchTerms) {
+          if (headerLower.includes(term)) {
+            return header
+          }
+        }
+      }
+
+      return null
+    },
+    [getSearchTermsForField]
+  )
+
+  const getSampleValue = useCallback(
+    (csvHeader: string, data: ParsedCsvData): string | undefined => {
+      // Get first non-empty value for this column
+      for (const row of data.rows.slice(0, 3)) {
+        // Check first 3 rows
+        const value = row[csvHeader]
+        if (value?.trim()) {
+          return value.trim()
+        }
+      }
+      return undefined
+    },
+    []
+  )
 
   const handleMappingChange = (fieldKey: string, csvHeader: string) => {
     const newMappings = { ...mappings }
@@ -168,43 +174,46 @@ export function ColumnMappingDialog({
     validateMappings(newMappings)
   }
 
-  const validateMappings = (mappingsToValidate: Record<string, ColumnMapping>) => {
-    const errors: string[] = []
+  const validateMappings = useCallback(
+    (mappingsToValidate: Record<string, ColumnMapping>) => {
+      const errors: string[] = []
 
-    // Check required fields
-    fieldDefinitions.forEach((field) => {
-      const mapping = mappingsToValidate[field.key]
-      if (field.required && (!mapping.csvHeader || mapping.csvHeader.trim() === '')) {
-        errors.push(`Pflichtfeld '${field.label}' muss zugeordnet werden`)
-      }
-    })
-
-    // Check for duplicate mappings
-    const usedHeaders = new Set<string>()
-    Object.values(mappingsToValidate).forEach((mapping) => {
-      if (mapping.csvHeader?.trim()) {
-        if (usedHeaders.has(mapping.csvHeader)) {
-          errors.push(`Spalte '${mapping.csvHeader}' ist mehrfach zugeordnet`)
+      // Check required fields
+      fieldDefinitions.forEach((field) => {
+        const mapping = mappingsToValidate[field.key]
+        if (field.required && (!mapping.csvHeader || mapping.csvHeader.trim() === '')) {
+          errors.push(`Pflichtfeld '${field.label}' muss zugeordnet werden`)
         }
-        usedHeaders.add(mapping.csvHeader)
-      }
-    })
+      })
 
-    // Validate sample values
-    Object.entries(mappingsToValidate).forEach(([fieldKey, mapping]) => {
-      if (mapping.csvHeader && mapping.sampleValue) {
-        const field = fieldDefinitions.find((f) => f.key === fieldKey)
-        if (field) {
-          const validationError = validateSampleValue(field, mapping.sampleValue)
-          if (validationError) {
-            errors.push(`${field.label}: ${validationError}`)
+      // Check for duplicate mappings
+      const usedHeaders = new Set<string>()
+      Object.values(mappingsToValidate).forEach((mapping) => {
+        if (mapping.csvHeader?.trim()) {
+          if (usedHeaders.has(mapping.csvHeader)) {
+            errors.push(`Spalte '${mapping.csvHeader}' ist mehrfach zugeordnet`)
+          }
+          usedHeaders.add(mapping.csvHeader)
+        }
+      })
+
+      // Validate sample values
+      Object.entries(mappingsToValidate).forEach(([fieldKey, mapping]) => {
+        if (mapping.csvHeader && mapping.sampleValue) {
+          const field = fieldDefinitions.find((f) => f.key === fieldKey)
+          if (field) {
+            const validationError = validateSampleValue(field, mapping.sampleValue)
+            if (validationError) {
+              errors.push(`${field.label}: ${validationError}`)
+            }
           }
         }
-      }
-    })
+      })
 
-    setValidationErrors(errors)
-  }
+      setValidationErrors(errors)
+    },
+    [fieldDefinitions]
+  )
 
   const validateSampleValue = (field: FieldDefinition, sampleValue: string): string | null => {
     switch (field.type) {
@@ -446,8 +455,8 @@ export function ColumnMappingDialog({
                     <strong>Mapping-Fehler:</strong>
                   </p>
                   <ul className="list-disc list-inside space-y-1">
-                    {validationErrors.map((error, index) => (
-                      <li key={index} className="text-sm">
+                    {validationErrors.map((error) => (
+                      <li key={error} className="text-sm">
                         {error}
                       </li>
                     ))}

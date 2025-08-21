@@ -52,8 +52,8 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           <Card>
             <CardContent className="p-6">
               <div className="space-y-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-4">
+                {Array.from({ length: 4 }, (_, i) => i + 1).map((row) => (
+                  <div key={`skeleton-customer-detail-${row}`} className="flex items-center gap-4">
                     <div className="w-16 h-4 bg-muted rounded animate-pulse" />
                     <div className="w-48 h-4 bg-muted rounded animate-pulse" />
                   </div>
@@ -66,8 +66,11 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
             <CardContent className="p-6">
               <div className="w-32 h-6 bg-muted rounded animate-pulse mb-4" />
               <div className="space-y-3">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <div key={i} className="w-full h-20 bg-muted rounded animate-pulse" />
+                {Array.from({ length: 2 }, (_, i) => i + 1).map((row) => (
+                  <div
+                    key={`skeleton-customer-activity-${row}`}
+                    className="w-full h-20 bg-muted rounded animate-pulse"
+                  />
                 ))}
               </div>
             </CardContent>

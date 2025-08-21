@@ -17,7 +17,7 @@ import { CompanyInfoForm } from './CompanyInfoForm'
 import { LogoUploadSection } from './LogoUploadSection'
 
 export function BusinessSettingsPage() {
-  const { settings, loading, isConfigured } = useBusinessSettings()
+  const { loading, isConfigured } = useBusinessSettings()
   const [activeTab, setActiveTab] = useState('company')
 
   if (loading) {

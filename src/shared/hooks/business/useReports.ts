@@ -14,7 +14,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 // Legacy compatibility imports
-import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
+import { type CashMovement, useCashBalance } from '@/shared/hooks/business/useCashBalance'
 import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
 // Import optimized service functions
 import {
@@ -86,8 +86,8 @@ interface UseReportsQueryReturn {
 
   // Cash Balance Functions (delegated, Legacy Compatible)
   getCurrentCashBalance: () => Promise<{ success: boolean; balance: number }>
-  getCashMovementsForMonth: (start: Date, end: Date) => Promise<any>
-  getCashMovementsForDate: (date: string) => Promise<any>
+  getCashMovementsForMonth: (start: Date, end: Date) => Promise<CashMovement[]>
+  getCashMovementsForDate: (date: string) => Promise<CashMovement[]>
   cashLoading: boolean
   cashError: string | null
 }
@@ -124,7 +124,10 @@ export function useReports(): UseReportsQueryReturn {
     error: balanceError,
   } = useQuery({
     queryKey: queryKeys.business.dashboard.balance(organizationId || ''),
-    queryFn: () => getCurrentCashBalance(organizationId!),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getCurrentCashBalance(organizationId)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.balance,
     refetchInterval: cacheConfig.dashboard.balance.refetchInterval,
@@ -136,7 +139,10 @@ export function useReports(): UseReportsQueryReturn {
     error: todayError,
   } = useQuery<TodayStatsData>({
     queryKey: queryKeys.business.dashboard.todayStats(organizationId || '', today),
-    queryFn: () => getTodayStats(organizationId!),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getTodayStats(organizationId)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.todayStats,
     refetchOnWindowFocus: cacheConfig.dashboard.todayStats.refetchOnWindowFocus,
@@ -148,7 +154,10 @@ export function useReports(): UseReportsQueryReturn {
     error: transactionsError,
   } = useQuery<DashboardTransaction[]>({
     queryKey: queryKeys.business.dashboard.recentTransactions(organizationId || '', 10),
-    queryFn: () => getRecentTransactions(organizationId!, 10),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getRecentTransactions(organizationId, 10)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.recentTransactions,
   })
@@ -160,7 +169,10 @@ export function useReports(): UseReportsQueryReturn {
     error: weekError,
   } = useQuery<WeekStatsData>({
     queryKey: queryKeys.business.dashboard.weekStats(organizationId || '', ''),
-    queryFn: () => getWeekStats(organizationId!),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getWeekStats(organizationId)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.weekStats,
   })
@@ -171,7 +183,10 @@ export function useReports(): UseReportsQueryReturn {
     error: monthError,
   } = useQuery<MonthStatsData>({
     queryKey: queryKeys.business.dashboard.monthStats(organizationId || '', ''),
-    queryFn: () => getMonthStats(organizationId!),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getMonthStats(organizationId)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.monthStats,
   })
@@ -182,7 +197,10 @@ export function useReports(): UseReportsQueryReturn {
     error: activitiesError,
   } = useQuery<ActivityItem[]>({
     queryKey: queryKeys.business.dashboard.recentActivities(organizationId || '', 10),
-    queryFn: () => getRecentActivities(organizationId!, 10),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getRecentActivities(organizationId, 10)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.recentActivities,
   })
@@ -194,7 +212,10 @@ export function useReports(): UseReportsQueryReturn {
     error: trendsError,
   } = useQuery<MonthlyData[]>({
     queryKey: queryKeys.business.dashboard.monthlyTrends(organizationId || '', 12),
-    queryFn: () => getMonthlyTrends(organizationId!, 12),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getMonthlyTrends(organizationId, 12)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.monthlyTrends,
   })
@@ -205,7 +226,10 @@ export function useReports(): UseReportsQueryReturn {
     error: productsError,
   } = useQuery<number>({
     queryKey: queryKeys.business.dashboard.productCount(organizationId || ''),
-    queryFn: () => getProductCount(organizationId!),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getProductCount(organizationId)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.productCount,
   })
@@ -216,7 +240,10 @@ export function useReports(): UseReportsQueryReturn {
     error: yearError,
   } = useQuery<YearTotalData>({
     queryKey: queryKeys.business.dashboard.yearTotal(organizationId || '', currentYear),
-    queryFn: () => getYearTotal(organizationId!, currentYear),
+    queryFn: () => {
+      if (!organizationId) throw new Error('Organization ID required')
+      return getYearTotal(organizationId, currentYear)
+    },
     enabled: !!organizationId,
     ...cacheConfig.dashboard.yearTotal,
   })

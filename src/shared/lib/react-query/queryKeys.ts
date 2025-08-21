@@ -56,7 +56,7 @@ export const queryKeys = {
     cash: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'cash'] as const,
       balance: (orgId: string) => [...queryKeys.business.cash.all(orgId), 'balance'] as const,
-      movements: (orgId: string, filters?: any) =>
+      movements: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.cash.all(orgId), 'movements', filters] as const,
     },
 
@@ -64,7 +64,7 @@ export const queryKeys = {
     sales: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'sales'] as const,
       lists: (orgId: string) => [...queryKeys.business.sales.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) =>
+      list: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.sales.lists(orgId), filters] as const,
       details: (orgId: string) => [...queryKeys.business.sales.all(orgId), 'detail'] as const,
       detail: (orgId: string, saleId: string) =>
@@ -77,7 +77,7 @@ export const queryKeys = {
     items: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'items'] as const,
       lists: (orgId: string) => [...queryKeys.business.items.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) =>
+      list: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.items.lists(orgId), filters] as const,
       active: (orgId: string) => [...queryKeys.business.items.lists(orgId), 'active'] as const,
       favorites: (orgId: string) =>
@@ -98,7 +98,7 @@ export const queryKeys = {
     customers: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'customers'] as const,
       lists: (orgId: string) => [...queryKeys.business.customers.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) =>
+      list: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.customers.lists(orgId), filters] as const,
       active: (orgId: string) => [...queryKeys.business.customers.lists(orgId), 'active'] as const,
       search: (orgId: string, query: string) =>
@@ -122,7 +122,7 @@ export const queryKeys = {
     appointments: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'appointments'] as const,
       lists: (orgId: string) => [...queryKeys.business.appointments.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) =>
+      list: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.appointments.lists(orgId), filters] as const,
       byDate: (orgId: string, date: string) =>
         [...queryKeys.business.appointments.lists(orgId), 'byDate', date] as const,
@@ -157,7 +157,7 @@ export const queryKeys = {
     expenses: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'expenses'] as const,
       lists: (orgId: string) => [...queryKeys.business.expenses.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) =>
+      list: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.expenses.lists(orgId), filters] as const,
       dateRange: (orgId: string, startDate: string, endDate: string) =>
         [...queryKeys.business.expenses.lists(orgId), 'dateRange', startDate, endDate] as const,
@@ -180,7 +180,7 @@ export const queryKeys = {
     // Banking & Financial Data
     banking: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'banking'] as const,
-      transactions: (orgId: string, filters?: any) =>
+      transactions: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.banking.all(orgId), 'transactions', filters] as const,
       reconciliation: (orgId: string) =>
         [...queryKeys.business.banking.all(orgId), 'reconciliation'] as const,
@@ -229,7 +229,7 @@ export const queryKeys = {
     documents: {
       all: (orgId: string) => [...queryKeys.business.all(orgId), 'documents'] as const,
       lists: (orgId: string) => [...queryKeys.business.documents.all(orgId), 'list'] as const,
-      list: (orgId: string, filters?: any) =>
+      list: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.documents.lists(orgId), filters] as const,
       detail: (orgId: string, docId: string) =>
         [...queryKeys.business.documents.all(orgId), 'detail', docId] as const,

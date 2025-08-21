@@ -17,7 +17,7 @@ import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { useAuth } from '@/shared/hooks/auth/useAuth'
 import { supabase } from '@/shared/lib/supabase/client'
-import { EmailService } from '@/shared/services/emailService'
+import { sendWelcomeEmail } from '@/shared/services/emailService'
 
 function CreateOrganizationForm() {
   const { user } = useAuth()
@@ -140,7 +140,7 @@ function CreateOrganizationForm() {
 
       // 3. Send welcome email
       try {
-        await EmailService.sendWelcomeEmail({
+        await sendWelcomeEmail({
           to: user.email || '',
           userName: user.user_metadata?.name || user.email || '',
           organizationName: orgData.name,

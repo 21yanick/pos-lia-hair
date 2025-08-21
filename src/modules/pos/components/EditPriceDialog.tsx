@@ -1,6 +1,7 @@
 'use client'
 
 import { CheckCircle, Pencil } from 'lucide-react'
+import { useId } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -31,6 +32,8 @@ export function EditPriceDialog({
   onSave,
   onClose,
 }: EditPriceDialogProps) {
+  const editPriceId = useId()
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
@@ -50,11 +53,11 @@ export function EditPriceDialog({
         <div className="py-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="editPrice" className="text-base font-semibold">
+              <Label htmlFor={editPriceId} className="text-base font-semibold">
                 Neuer Preis (CHF)
               </Label>
               <Input
-                id="editPrice"
+                id={editPriceId}
                 type="number"
                 step="0.05"
                 min="0"

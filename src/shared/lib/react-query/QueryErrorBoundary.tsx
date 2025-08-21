@@ -254,7 +254,9 @@ export class QueryErrorBoundary extends Component<
                 {(isAuthError || isPermissionError) && (
                   <Button
                     variant="outline"
-                    onClick={() => (window.location.href = '/login')}
+                    onClick={() => {
+                      window.location.href = '/login'
+                    }}
                     className="flex-1"
                   >
                     Anmelden

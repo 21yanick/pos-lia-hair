@@ -55,14 +55,6 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
       //   organizationId,
       //   filter: `organization_id=eq.${organizationId}`,
       // })
-
-      // Get current user/session for debugging
-      const { data: user } = await supabase.auth.getUser()
-      // console.log('🔍 DEBUG current user:', {
-      //   userId: user?.user?.id,
-      //   email: user?.user?.email,
-      //   role: user?.user?.role,
-      // })
     }
 
     const requestStart = Date.now()
@@ -186,7 +178,7 @@ export async function uploadLogo(
     }
 
     // Upload new file
-    const { data, error } = await supabase.storage.from('business-logos').upload(fileName, file, {
+    const { error } = await supabase.storage.from('business-logos').upload(fileName, file, {
       cacheControl: '3600',
       upsert: false,
     })

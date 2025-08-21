@@ -58,7 +58,7 @@ interface UseItemsQueryReturn {
   ) => Promise<{ data: Item | null; error: string | null }>
 
   // Auth Operations (Legacy Compatible)
-  syncAuthUser: () => Promise<{ success: boolean; error?: string; user?: any }>
+  syncAuthUser: () => Promise<{ success: boolean; error?: string; user?: unknown }>
 }
 
 export function useItemsQuery(): UseItemsQueryReturn {
@@ -81,7 +81,6 @@ export function useItemsQuery(): UseItemsQueryReturn {
     data: items = [],
     isLoading,
     error: queryError,
-    refetch: refetchItems,
   } = useQuery({
     queryKey: queryKeys.business.items.optimized(organizationId || ''),
     queryFn: async () => {
@@ -106,9 +105,12 @@ export function useItemsQuery(): UseItemsQueryReturn {
     enabled: !!organizationId,
     staleTime: cacheConfig.items.staleTime, // 15 minutes
     gcTime: cacheConfig.items.gcTime, // 1 hour
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: unknown) => {
       // Don't retry on permission errors
-      if (error?.message?.includes('organization') || error?.message?.includes('401')) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('organization') || error.message.includes('401'))
+      ) {
         return false
       }
       return failureCount < 2
@@ -481,8 +483,8 @@ export function useItemsQuery(): UseItemsQueryReturn {
     try {
       const result = await createItemMutation.mutateAsync(newItem)
       return { data: result, error: null }
-    } catch (err: any) {
-      return { data: null, error: err.message || 'Fehler beim Hinzufügen' }
+    } catch (err: unknown) {
+      return { data: null, error: err instanceof Error ? err.message : 'Fehler beim Hinzufügen' }
     }
   }
 
@@ -491,8 +493,11 @@ export function useItemsQuery(): UseItemsQueryReturn {
     try {
       const result = await updateItemMutation.mutateAsync(updatedItem)
       return { data: result, error: null }
-    } catch (err: any) {
-      return { data: null, error: err.message || 'Fehler bei der Aktualisierung' }
+    } catch (err: unknown) {
+      return {
+        data: null,
+        error: err instanceof Error ? err.message : 'Fehler bei der Aktualisierung',
+      }
     }
   }
 
@@ -501,8 +506,8 @@ export function useItemsQuery(): UseItemsQueryReturn {
     try {
       await deleteItemMutation.mutateAsync(id)
       return { error: null }
-    } catch (err: any) {
-      return { error: err.message || 'Fehler beim Löschen' }
+    } catch (err: unknown) {
+      return { error: err instanceof Error ? err.message : 'Fehler beim Löschen' }
     }
   }
 
@@ -511,8 +516,8 @@ export function useItemsQuery(): UseItemsQueryReturn {
     try {
       const result = await toggleFavoriteMutation.mutateAsync({ id, currentValue })
       return { data: result, error: null }
-    } catch (err: any) {
-      return { data: null, error: err.message || 'Fehler beim Aktualisieren' }
+    } catch (err: unknown) {
+      return { data: null, error: err instanceof Error ? err.message : 'Fehler beim Aktualisieren' }
     }
   }
 
@@ -521,8 +526,8 @@ export function useItemsQuery(): UseItemsQueryReturn {
     try {
       const result = await toggleActiveMutation.mutateAsync({ id, currentValue })
       return { data: result, error: null }
-    } catch (err: any) {
-      return { data: null, error: err.message || 'Fehler beim Aktualisieren' }
+    } catch (err: unknown) {
+      return { data: null, error: err instanceof Error ? err.message : 'Fehler beim Aktualisieren' }
     }
   }
 
@@ -531,8 +536,11 @@ export function useItemsQuery(): UseItemsQueryReturn {
     try {
       const result = await syncAuthUser()
       return result
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Fehler bei der Synchronisierung' }
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Fehler bei der Synchronisierung',
+      }
     }
   }
 

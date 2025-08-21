@@ -1,7 +1,7 @@
 'use client'
 
 import { Download, ExternalLink, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/shared/lib/supabase/client'
 
 // Dynamic imports to avoid build issues with canvas node bindings
@@ -137,11 +137,14 @@ export function EnterprisePDFViewer({
     window.open(externalUrl, '_blank')
   }
 
-  const handleEscapeKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose()
-    }
-  }
+  const handleEscapeKey = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    },
+    [onClose]
+  )
 
   useEffect(() => {
     if (isOpen) {
@@ -170,6 +173,7 @@ export function EnterprisePDFViewer({
             <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">{title}</h3>
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={handleDownload}
                 className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
                 title="Herunterladen"
@@ -178,6 +182,7 @@ export function EnterprisePDFViewer({
               </button>
 
               <button
+                type="button"
                 onClick={handleExternalOpen}
                 className="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
                 title="Extern öffnen"
@@ -186,6 +191,7 @@ export function EnterprisePDFViewer({
               </button>
 
               <button
+                type="button"
                 onClick={onClose}
                 className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
                 title="Schließen"
@@ -224,12 +230,14 @@ export function EnterprisePDFViewer({
                   <div className="text-red-600 text-lg font-semibold mb-4">{error}</div>
                   <div className="space-y-3">
                     <button
+                      type="button"
                       onClick={handleDownload}
                       className="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       PDF herunterladen
                     </button>
                     <button
+                      type="button"
                       onClick={handleExternalOpen}
                       className="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
@@ -259,7 +267,7 @@ export function EnterprisePDFViewer({
 
 // Enhanced viewer component (will be uncommented after package installation)
 function EnhancedPDFViewer({
-  isOpen,
+  isOpen: _isOpen,
   pdfUrl,
   originalUrl,
   onClose,
@@ -297,6 +305,7 @@ function EnhancedPDFViewer({
           <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handleDownload}
               className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
               title="Herunterladen"
@@ -305,6 +314,7 @@ function EnhancedPDFViewer({
             </button>
 
             <button
+              type="button"
               onClick={handleExternalOpen}
               className="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
               title="Extern öffnen"
@@ -313,6 +323,7 @@ function EnhancedPDFViewer({
             </button>
 
             <button
+              type="button"
               onClick={onClose}
               className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
               title="Schließen"

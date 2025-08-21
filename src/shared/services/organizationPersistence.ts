@@ -1,6 +1,12 @@
 /**
  * Organization state persistence with mobile fallbacks
  */
+
+import {
+  deleteCookie as deleteSecureCookie,
+  getCookie as getSecureCookie,
+  setCookie as setSecureCookie,
+} from '@/shared/utils/cookies'
 import { deviceDetection } from '@/shared/utils/deviceDetection'
 
 const STORAGE_KEY = 'pos_lia_current_org'
@@ -49,7 +55,7 @@ class OrganizationPersistence {
           break
 
         case 'cookie':
-          this.setCookie(STORAGE_KEY, JSON.stringify(data), SESSION_TIMEOUT)
+          setSecureCookie(STORAGE_KEY, JSON.stringify(data), SESSION_TIMEOUT / 1000) // Convert to seconds
           break
 
         case 'memory':
@@ -93,7 +99,7 @@ class OrganizationPersistence {
         }
 
         case 'cookie': {
-          const cookieData = this.getCookie(STORAGE_KEY)
+          const cookieData = getSecureCookie(STORAGE_KEY)
           if (cookieData) {
             data = JSON.parse(cookieData)
           }
@@ -141,7 +147,7 @@ class OrganizationPersistence {
           break
 
         case 'cookie':
-          this.deleteCookie(STORAGE_KEY)
+          deleteSecureCookie(STORAGE_KEY)
           break
       }
     } catch (e) {
@@ -162,22 +168,7 @@ class OrganizationPersistence {
     return age < SESSION_TIMEOUT
   }
 
-  /**
-   * Cookie helpers
-   */
-  private setCookie(name: string, value: string, maxAge: number): void {
-    const expires = new Date(Date.now() + maxAge).toUTCString()
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`
-  }
-
-  private getCookie(name: string): string | null {
-    const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))
-    return match ? decodeURIComponent(match[2]) : null
-  }
-
-  private deleteCookie(name: string): void {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-  }
+  // Cookie helpers removed - using secure utility functions from @/shared/utils/cookies
 }
 
 // Export singleton

@@ -9,7 +9,7 @@ import {
   Upload,
   Zap,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -29,13 +29,14 @@ import {
 
 import { useImport } from '@/shared/hooks/business/useImport'
 import type { CsvImportState, CsvImportType, CsvMappingConfig } from '@/shared/types/csvImport'
-import { CsvParser, suggestImportType } from '@/shared/utils/csvParser'
+import { parseFile, suggestImportType, validateFile } from '@/shared/utils/csvParser'
 import { CsvToJsonTransformer } from '@/shared/utils/csvToJsonTransform'
 import { ColumnMappingDialog } from './ColumnMappingDialog'
 import { CsvDataPreview } from './CsvDataPreview'
 
 export function CsvImport() {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const importTypeId = useId()
 
   // CSV Import State
   const [csvState, setCsvState] = useState<CsvImportState>({
@@ -75,7 +76,7 @@ export function CsvImport() {
     })
 
     // Validate file
-    const validation = CsvParser.validateFile(file)
+    const validation = validateFile(file)
     if (!validation.isValid) {
       setCsvState((prev) => ({
         ...prev,
@@ -89,7 +90,7 @@ export function CsvImport() {
       setCsvState((prev) => ({ ...prev, status: 'file-loaded', file, progress: 25 }))
 
       // Parse CSV file
-      const parsedData = await CsvParser.parseFile(file)
+      const parsedData = await parseFile(file)
 
       if (parsedData.meta.errors.length > 0) {
         setCsvState((prev) => ({
@@ -147,7 +148,10 @@ export function CsvImport() {
 
     try {
       // Transform CSV data to JSON format
-      const transformedData = CsvToJsonTransformer.transform(csvState.parsedData!, mappingConfig)
+      const transformedData = CsvToJsonTransformer.transform(
+        csvState.parsedData || [],
+        mappingConfig
+      )
 
       setCsvState((prev) => ({
         ...prev,
@@ -625,9 +629,11 @@ export function CsvImport() {
   const renderImportTypeSelection = () => (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Import-Typ auswählen</label>
+        <label htmlFor={importTypeId} className="text-sm font-medium">
+          Import-Typ auswählen
+        </label>
         <Select value={selectedImportType} onValueChange={handleImportTypeChange}>
-          <SelectTrigger>
+          <SelectTrigger id={importTypeId}>
             <SelectValue placeholder="Was möchten Sie importieren?" />
           </SelectTrigger>
           <SelectContent>
@@ -782,8 +788,8 @@ export function CsvImport() {
               <strong>Fehler beim CSV Import:</strong>
             </p>
             <ul className="list-disc list-inside space-y-1">
-              {csvState.errors.map((error, index) => (
-                <li key={index} className="text-sm">
+              {csvState.errors.map((error) => (
+                <li key={error} className="text-sm">
                   {error}
                 </li>
               ))}
@@ -843,8 +849,8 @@ export function CsvImport() {
                 <strong>Import-Fehler:</strong>
               </p>
               <ul className="list-disc list-inside space-y-1">
-                {importState.errors.map((error, index) => (
-                  <li key={index} className="text-sm">
+                {importState.errors.map((error) => (
+                  <li key={error} className="text-sm">
                     {error}
                   </li>
                 ))}

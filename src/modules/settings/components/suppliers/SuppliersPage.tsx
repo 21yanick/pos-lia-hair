@@ -2,7 +2,7 @@
 
 import { Building2, Filter, Plus, Search, Upload, Users } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
 import { Badge } from '@/shared/components/ui/badge'
@@ -72,7 +72,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
   }, [])
 
   // Load suppliers
-  const loadSuppliers = async () => {
+  const loadSuppliers = useCallback(async () => {
     setLoading(true)
     try {
       if (!currentOrganization) {
@@ -111,7 +111,7 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentOrganization, activeFilter, categoryFilter, searchQuery, toast])
 
   // Load suppliers on mount and filter changes
   useEffect(() => {

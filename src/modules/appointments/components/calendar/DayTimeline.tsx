@@ -21,6 +21,7 @@ import {
 import { useAppointmentsByDate } from '../../hooks/useAppointments'
 import type {
   AppointmentBlock,
+  AppointmentService,
   DayTimelineProps,
   TimelineData,
   TimelineHour,
@@ -80,7 +81,7 @@ export function DayTimeline({
     const converted = appointmentsData.map((apt) => {
       // Parse services JSON array (from appointments_with_services view)
       // V6.1: services is Json type, need safe parsing
-      let services: any[] = []
+      let services: AppointmentService[] = []
       try {
         services =
           apt.services && typeof apt.services === 'object' && Array.isArray(apt.services)
@@ -201,7 +202,6 @@ export function DayTimeline({
                 key={hour.hour}
                 hour={hour}
                 selectedDate={selectedDate}
-                currentTime={currentTime}
                 slotInterval={timelineData.slotInterval}
                 onSlotClick={handleSlotClick}
                 onAppointmentClick={handleAppointmentClick}
@@ -265,14 +265,12 @@ function DayTimelineHeader({
 function TimelineHourComponent({
   hour,
   selectedDate,
-  currentTime,
   slotInterval,
   onSlotClick,
   onAppointmentClick,
 }: {
   hour: TimelineHour
   selectedDate: Date
-  currentTime: string
   slotInterval: number
   onSlotClick: (slot: TimeSlot) => void
   onAppointmentClick: (appointment: AppointmentBlock) => void
@@ -339,28 +337,42 @@ function TimeSlotComponent({
   const config = SLOT_CONFIG[slot.status]
   const isPast = isTimeInPast(slot.time, selectedDate)
 
+  const handleClick = () => {
+    if (slot.isClickable && !isPast) onSlotClick(slot)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && slot.isClickable && !isPast) {
+      e.preventDefault()
+      onSlotClick(slot)
+    }
+  }
+
   return (
-    <div
+    <button
+      type="button"
       className={cn(
-        'border-r border-border transition-all duration-200 flex items-center justify-center text-xs',
+        'border-r border-border transition-all duration-200 flex items-center justify-center text-xs bg-transparent p-0',
         config.className,
         isPast && 'opacity-40 cursor-not-allowed',
-        slot.isClickable && !isPast && 'hover:bg-muted/80 cursor-pointer'
+        slot.isClickable &&
+          !isPast &&
+          'hover:bg-muted/80 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
       )}
       style={{
         minHeight: TIMELINE_CONFIG.slotMinHeight,
         minWidth: TIMELINE_CONFIG.touchTargetSize,
       }}
-      onClick={() => slot.isClickable && !isPast && onSlotClick(slot)}
-      role={slot.isClickable && !isPast ? 'button' : 'gridcell'}
-      tabIndex={slot.isClickable && !isPast ? 0 : -1}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      disabled={!slot.isClickable || isPast}
       aria-label={`${formatTimeForDisplay(slot.time)} - ${config.description}${slot.breakReason ? `: ${slot.breakReason}` : ''}`}
       title={slot.breakReason || config.description}
     >
       {slot.status === 'break' && slot.breakReason && (
         <span className="text-xs font-medium text-warning-foreground">Pause</span>
       )}
-    </div>
+    </button>
   )
 }
 
@@ -392,19 +404,31 @@ function AppointmentBlockComponent({
   const customerName = appointment.customerName || appointment.title || 'Unbekannt'
   const timeRange = `${appointment.startTime} - ${appointment.endTime}`
 
+  const handleClick = () => {
+    onAppointmentClick(appointment)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onAppointmentClick(appointment)
+    }
+  }
+
   return (
-    <div
+    <button
+      type="button"
       className={cn(
-        'absolute left-0 right-2 rounded-lg cursor-pointer pointer-events-auto border shadow-lg z-10',
+        'absolute left-0 right-2 rounded-lg cursor-pointer pointer-events-auto border shadow-lg z-10 bg-transparent p-0 text-left',
+        'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
         appointmentStyle
       )}
       style={{
         top: position.top,
         height: Math.max(position.height, TIMELINE_CONFIG.appointmentMinHeight),
       }}
-      onClick={() => onAppointmentClick(appointment)}
-      role="button"
-      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
       aria-label={`Termin: ${appointment.title} von ${appointment.startTime} bis ${appointment.endTime}${appointment.customerName ? ` mit ${appointment.customerName}` : ''}`}
     >
       {isCompact ? (
@@ -430,7 +454,7 @@ function AppointmentBlockComponent({
           )}
         </div>
       )}
-    </div>
+    </button>
   )
 }
 
@@ -504,8 +528,8 @@ export function DayTimelineSkeleton({ className }: { className?: string }) {
 
       <CardContent className="flex-1 p-0">
         <div className="space-y-1 p-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4">
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((row) => (
+            <div key={`skeleton-timeline-${row}`} className="flex items-center gap-4">
               <div className="h-4 w-12 bg-muted rounded animate-pulse" />
               <div className="flex-1 h-16 bg-muted rounded animate-pulse" />
             </div>

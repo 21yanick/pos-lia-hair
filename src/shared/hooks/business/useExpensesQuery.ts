@@ -56,7 +56,12 @@ interface UseExpensesQueryReturn {
   createExpense: (
     data: ExpenseInsert,
     receiptFile?: File
-  ) => Promise<{ success: boolean; expense?: any; document?: any; error?: string }>
+  ) => Promise<{
+    success: boolean
+    expense?: ExpenseWithSupplier
+    document?: unknown
+    error?: string
+  }>
   loadExpenses: (
     limit?: number
   ) => Promise<{ success: boolean; expenses?: ExpenseWithSupplier[]; error?: string }>
@@ -72,7 +77,7 @@ interface UseExpensesQueryReturn {
   updateExpense: (
     id: string,
     updates: Partial<ExpenseUpdate>
-  ) => Promise<{ success: boolean; expense?: any; error?: string }>
+  ) => Promise<{ success: boolean; expense?: ExpenseWithSupplier; error?: string }>
   deleteExpense: (id: string) => Promise<{ success: boolean; error?: string }>
 
   // Analytics & Statistics (Legacy Compatible)
@@ -83,15 +88,15 @@ interface UseExpensesQueryReturn {
   uploadExpenseReceipt: (
     expenseId: string,
     file: File
-  ) => Promise<{ success: boolean; document?: any; error?: string }>
+  ) => Promise<{ success: boolean; document?: unknown; error?: string }>
   replaceExpenseReceipt: (
     expenseId: string,
     newFile: File
-  ) => Promise<{ success: boolean; document?: any; error?: string }>
+  ) => Promise<{ success: boolean; document?: unknown; error?: string }>
   generatePlaceholderReceipt: (
     expenseId: string,
     archiveLocation?: string
-  ) => Promise<{ success: boolean; document?: any; error?: string }>
+  ) => Promise<{ success: boolean; document?: unknown; error?: string }>
 
   // Constants (Legacy Compatible)
   EXPENSE_CATEGORIES: Record<ExpenseCategory, string>
@@ -149,8 +154,6 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
     data: expenses = [],
     isLoading: loading,
     error: queryError,
-    isFetching,
-    isStale,
   } = useQuery({
     queryKey: stableQueryKey,
     queryFn: queryFunction,
@@ -199,7 +202,7 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
       return result
     },
     onMutate: async ({ data }) => {
-      if (!queryKey) return
+      if (!queryKey || !organizationId) return
 
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey })
@@ -211,7 +214,7 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
       const optimisticExpense: ExpenseWithSupplier = {
         id: `temp-${Date.now()}`,
         ...data,
-        organization_id: organizationId!,
+        organization_id: organizationId,
         created_at: new Date().toISOString(),
         supplier: null,
       }
@@ -417,10 +420,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         expense: result.data,
         document: result.document || null,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -440,10 +443,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         success: true,
         expenses: result.data,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -466,10 +469,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         success: true,
         expenses: result.data,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -488,10 +491,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         success: true,
         expenses: result.data,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -505,10 +508,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         success: true,
         expense: result.data,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -519,10 +522,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
       return {
         success: true,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -534,10 +537,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         success: true,
         document: result.document,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -549,10 +552,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         success: true,
         document: result.document,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }
@@ -564,10 +567,10 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
         success: true,
         document: result.document,
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
-        error: err.message,
+        error: err instanceof Error ? err.message : 'An unknown error occurred',
       }
     }
   }

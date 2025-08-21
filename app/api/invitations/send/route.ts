@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { InvitationService } from '@/shared/services/invitationService'
+import { sendInvitation } from '@/shared/services/invitationService'
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send invitation
-    const _result = await InvitationService.sendInvitation({
+    const _result = await sendInvitation({
       organizationId,
       email,
       role,

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { InvitationService } from '@/shared/services/invitationService'
+import { validateInvitation } from '@/shared/services/invitationService'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate invitation token
-    const validation = await InvitationService.validateInvitation(token)
+    const validation = await validateInvitation(token)
 
     if (!validation.valid) {
       return NextResponse.json(

@@ -72,7 +72,7 @@ export async function createOwnerTransaction(transaction: OwnerTransactionInsert
 
 export async function getOwnerTransactions(
   userId: string
-): Promise<{ data: OwnerTransactionRow[]; error: any }> {
+): Promise<{ data: OwnerTransactionRow[]; error: Error | null }> {
   try {
     const { data, error } = await supabase
       .from('owner_transactions')
@@ -126,7 +126,7 @@ export async function deleteOwnerTransaction(id: string) {
 
 export async function getOwnerBalance(
   userId: string
-): Promise<{ data: OwnerBalance | null; error: any }> {
+): Promise<{ data: OwnerBalance | null; error: Error | null }> {
   try {
     // TODO: PostgreSQL RPC function 'get_owner_loan_balance' needs to be created in Supabase
     // Temporarily skip RPC call to avoid 502 errors

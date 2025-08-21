@@ -2,7 +2,15 @@
 // Core database operations and business logic for imports
 
 import { supabase } from '@/shared/lib/supabase/client'
-import type { ExpenseImport, ItemImport, SaleImport } from '@/shared/types/import'
+import type {
+  BankAccountImport,
+  ExpenseImport,
+  ItemImport,
+  OwnerTransactionImport,
+  SaleImport,
+  SupplierImport,
+  UserImport,
+} from '@/shared/types/import'
 
 // =================================
 // Progress Callback Type
@@ -46,7 +54,10 @@ export async function importItems(
 // User Import Services
 // =================================
 
-export async function importUsers(users: any[], updateProgress: ProgressCallback): Promise<number> {
+export async function importUsers(
+  users: UserImport[],
+  updateProgress: ProgressCallback
+): Promise<number> {
   updateProgress(10, 'Importiere Benutzer...')
 
   // Check for existing users to prevent duplicates
@@ -82,7 +93,7 @@ export async function importUsers(users: any[], updateProgress: ProgressCallback
 // =================================
 
 export async function importOwnerTransactions(
-  ownerTransactions: any[],
+  ownerTransactions: OwnerTransactionImport[],
   userId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
@@ -111,7 +122,7 @@ export async function importOwnerTransactions(
 // =================================
 
 export async function importBankAccounts(
-  bankAccounts: any[],
+  bankAccounts: BankAccountImport[],
   userId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
@@ -163,7 +174,7 @@ export async function importBankAccounts(
 // =================================
 
 export async function importSuppliers(
-  suppliers: any[],
+  suppliers: SupplierImport[],
   userId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
@@ -390,7 +401,9 @@ export async function calculateDailySummariesForImport(
   const salesDates = new Set<string>()
 
   // Add ONLY sales dates - expenses don't create daily summaries
-  sales.forEach((sale) => salesDates.add(sale.date))
+  for (const sale of sales) {
+    salesDates.add(sale.date)
+  }
 
   // REMOVED: expense dates don't trigger daily summaries
   // expenses.forEach(expense => allDates.add(expense.date))

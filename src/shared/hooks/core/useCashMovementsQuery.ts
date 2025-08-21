@@ -64,8 +64,8 @@ interface UseCashMovementsQueryReturn {
   ) => Promise<CashMovement[]>
 
   // Query Management (React Query specific)
-  refetchBalance: () => Promise<any>
-  refetchMovements: () => Promise<any>
+  refetchBalance: () => Promise<unknown>
+  refetchMovements: () => Promise<unknown>
   invalidateAll: () => Promise<void>
 }
 

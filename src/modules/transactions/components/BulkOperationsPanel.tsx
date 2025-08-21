@@ -67,8 +67,10 @@ export function BulkOperationsPanel({
       } else {
         setOperationError(result.error || 'Fehler beim Erstellen des ZIP-Archivs')
       }
-    } catch (error: any) {
-      setOperationError(`ZIP Download fehlgeschlagen: ${error.message}`)
+    } catch (error: unknown) {
+      setOperationError(
+        `ZIP Download fehlgeschlagen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`
+      )
     } finally {
       setIsLoading(false)
     }
@@ -92,8 +94,10 @@ export function BulkOperationsPanel({
         setOperationStatus(null)
         onBulkComplete()
       }, 2000)
-    } catch (error: any) {
-      setOperationError(`CSV Export fehlgeschlagen: ${error.message}`)
+    } catch (error: unknown) {
+      setOperationError(
+        `CSV Export fehlgeschlagen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`
+      )
     } finally {
       setIsLoading(false)
     }
@@ -120,8 +124,10 @@ export function BulkOperationsPanel({
         setOperationStatus(null)
         onBulkComplete()
       }, 2000)
-    } catch (error: any) {
-      setOperationError(`PDF Regeneration fehlgeschlagen: ${error.message}`)
+    } catch (error: unknown) {
+      setOperationError(
+        `PDF Regeneration fehlgeschlagen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`
+      )
     } finally {
       setIsLoading(false)
     }

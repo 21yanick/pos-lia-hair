@@ -18,6 +18,7 @@ import {
 import { VisuallyHidden } from '@/shared/components/ui/visually-hidden'
 import { useIsMobile } from '@/shared/hooks/core/useMobile'
 import { cn } from '@/shared/utils'
+import { setCookie } from '@/shared/utils/cookies'
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -84,7 +85,7 @@ const SidebarProvider = React.forwardRef<
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        setCookie(SIDEBAR_COOKIE_NAME, openState.toString(), SIDEBAR_COOKIE_MAX_AGE)
       },
       [setOpenProp, open]
     )

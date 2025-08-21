@@ -1,7 +1,7 @@
 'use client'
 
 import { Building, Edit2, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -33,7 +33,6 @@ export function SupplierCategoriesForm() {
     updateCategory,
     removeCategory,
     validateCategoryKey,
-    isDefaultCategory,
   } = useSupplierCategories()
 
   const { toast } = useToast()
@@ -48,6 +47,11 @@ export function SupplierCategoriesForm() {
     null
   )
   const [editLabel, setEditLabel] = useState('')
+
+  // 🆔 Generate unique IDs for accessibility compliance
+  const supplierCategoryKeyId = useId()
+  const supplierCategoryLabelId = useId()
+  const editSupplierLabelId = useId()
 
   const handleAddCategory = async () => {
     if (!newCategoryKey.trim() || !newCategoryLabel.trim()) {
@@ -245,9 +249,9 @@ export function SupplierCategoriesForm() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="supplier-category-key">Key (z.B. local_vendors)</Label>
+                <Label htmlFor={supplierCategoryKeyId}>Key (z.B. local_vendors)</Label>
                 <Input
-                  id="supplier-category-key"
+                  id={supplierCategoryKeyId}
                   value={newCategoryKey}
                   onChange={(e) =>
                     setNewCategoryKey(e.target.value.toLowerCase().replace(/[^a-z_]/g, ''))
@@ -257,9 +261,9 @@ export function SupplierCategoriesForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="supplier-category-label">Anzeigename</Label>
+                <Label htmlFor={supplierCategoryLabelId}>Anzeigename</Label>
                 <Input
-                  id="supplier-category-label"
+                  id={supplierCategoryLabelId}
                   value={newCategoryLabel}
                   onChange={(e) => setNewCategoryLabel(e.target.value)}
                   placeholder="z.B. Lokale Anbieter"
@@ -300,9 +304,9 @@ export function SupplierCategoriesForm() {
             </DialogHeader>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-supplier-label">Anzeigename</Label>
+              <Label htmlFor={editSupplierLabelId}>Anzeigename</Label>
               <Input
-                id="edit-supplier-label"
+                id={editSupplierLabelId}
                 value={editLabel}
                 onChange={(e) => setEditLabel(e.target.value)}
                 placeholder="z.B. Lokale Anbieter"

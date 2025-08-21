@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Customer } from '@/shared/services/customerService'
-import type { UnifiedTransaction } from '../types/unifiedTransactions'
+import type { TransactionSearchQuery, UnifiedTransaction } from '../types/unifiedTransactions'
 
 /**
  * Transaction Query Keys - matches useTransactionsQuery pattern
@@ -12,7 +12,7 @@ import type { UnifiedTransaction } from '../types/unifiedTransactions'
 const transactionKeys = {
   all: ['transactions'] as const,
   lists: () => [...transactionKeys.all, 'list'] as const,
-  list: (query: any) => [...transactionKeys.lists(), query] as const,
+  list: (query: TransactionSearchQuery) => [...transactionKeys.lists(), query] as const,
 }
 
 /**

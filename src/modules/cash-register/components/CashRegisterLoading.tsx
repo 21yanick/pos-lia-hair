@@ -46,7 +46,10 @@ export default function CashRegisterLoading() {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               {[...Array(2)].map((_, i) => (
-                <div key={i} className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+                <div
+                  key={`skeleton-cash-register-${i + 1}`}
+                  className="flex flex-col items-center p-3 rounded-lg bg-muted/50"
+                >
                   <div className="h-6 w-6 bg-muted rounded-full mb-2"></div>
                   <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
                   <div className="h-6 bg-muted rounded w-3/4"></div>

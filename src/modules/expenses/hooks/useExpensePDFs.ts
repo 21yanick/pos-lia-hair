@@ -23,7 +23,9 @@ const cacheSyncCallbacks = new Set<() => void>()
 function updateGlobalCache(expenseId: string, pdfs: ExpensePDF[]) {
   globalPdfsCache.set(expenseId, pdfs)
   // Notify all hook instances about the cache change
-  cacheSyncCallbacks.forEach((callback) => callback())
+  cacheSyncCallbacks.forEach((callback) => {
+    void callback()
+  })
 }
 
 export function useExpensePDFs() {
@@ -44,15 +46,15 @@ export function useExpensePDFs() {
     }
   }, [])
 
-  // 🛡️ SECURITY GUARD - Consistent across all functions
-  const securityGuard = () => {
+  // 🛡️ SECURITY GUARD - Consistent across all functions (useCallback for React Hook stability)
+  const securityGuard = useCallback(() => {
     if (!currentOrganization) {
       throw new Error('Keine Organization ausgewählt. Multi-Tenant Sicherheit verletzt.')
     }
     return currentOrganization.id
-  }
+  }, [currentOrganization])
 
-  const getStorageUrl = async (filePath: string) => {
+  const getStorageUrl = useCallback(async (filePath: string) => {
     try {
       const { data: urlData, error: urlError } = await supabase.storage
         .from('documents')
@@ -68,7 +70,7 @@ export function useExpensePDFs() {
       console.error('Fehler beim Abrufen der Storage URL:', err)
       return null
     }
-  }
+  }, [])
 
   const loadExpensePDFs = useCallback(
     async (expenseId: string): Promise<ExpensePDF[]> => {
@@ -119,9 +121,9 @@ export function useExpensePDFs() {
 
         updateGlobalCache(expenseId, enrichedPDFs)
         return enrichedPDFs
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Fehler beim Laden der Expense PDFs:', err)
-        setError(err.message || 'Fehler beim Laden der PDFs')
+        setError(err instanceof Error ? err.message : 'Fehler beim Laden der PDFs')
         return []
       } finally {
         setLoading(false)
@@ -156,7 +158,9 @@ export function useExpensePDFs() {
       globalPdfsCache.clear()
     }
     // Notify all hook instances
-    cacheSyncCallbacks.forEach((callback) => callback())
+    cacheSyncCallbacks.forEach((callback) => {
+      void callback()
+    })
   }, [])
 
   const deleteExpensePDF = useCallback(
@@ -201,10 +205,10 @@ export function useExpensePDFs() {
 
         invalidateCache(expenseId)
         return { success: true }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Fehler beim Löschen des PDFs:', err)
-        setError(err.message || 'Fehler beim Löschen des PDFs')
-        return { success: false, error: err.message }
+        setError(err instanceof Error ? err.message : 'Fehler beim Löschen des PDFs')
+        return { success: false, error: err instanceof Error ? err.message : 'Unbekannter Fehler' }
       } finally {
         setLoading(false)
       }

@@ -96,7 +96,10 @@ export async function createSale(
   data: CreateSaleData,
   organizationId: string,
   cashMovementService?: {
-    createSaleCashMovement: (saleId: string, amount: number) => Promise<any>
+    createSaleCashMovement: (
+      saleId: string,
+      amount: number
+    ) => Promise<{ success: boolean; error?: string }>
   }
 ): Promise<CreateSaleResult> {
   // console.log('🔥 salesService: createSale called with data:', data)
@@ -164,7 +167,7 @@ export async function createSale(
     }
 
     // Create PDF receipt
-    let receiptResult: any
+    let receiptResult: { publicUrl?: string } | undefined
     try {
       receiptResult = await createReceiptPDF(sale, data.items, validOrgId)
     } catch (docErr) {
@@ -181,9 +184,12 @@ export async function createSale(
           ? data.received_amount - data.total_amount
           : 0,
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error('❌ Fehler beim Verkauf:', err)
-    return { success: false, error: err.message || 'Ein unerwarteter Fehler ist aufgetreten' }
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten',
+    }
   }
 }
 
@@ -194,7 +200,10 @@ export async function cancelSale(
   saleId: string,
   organizationId: string,
   cashMovementService?: {
-    reverseCashMovement: (referenceId: string, referenceType: 'sale' | 'expense') => Promise<any>
+    reverseCashMovement: (
+      referenceId: string,
+      referenceType: 'sale' | 'expense'
+    ) => Promise<{ success: boolean; error?: string }>
   }
 ): Promise<{ success: true; sale: Sale } | { success: false; error: string }> {
   try {
@@ -227,9 +236,9 @@ export async function cancelSale(
     }
 
     return { success: true, sale: data }
-  } catch (err: any) {
+  } catch (err) {
     console.error('❌ Fehler beim Stornieren des Verkaufs:', err)
-    return { success: false, error: err.message || 'Fehler beim Stornieren' }
+    return { success: false, error: err instanceof Error ? err.message : 'Fehler beim Stornieren' }
   }
 }
 
@@ -324,11 +333,11 @@ export async function createReceiptPDF(
       : null
 
     // Generate PDF
-    const pdfComponent = React.createElement(ReceiptPDF, {
+    const pdfComponent: React.ReactElement = React.createElement(ReceiptPDF, {
       sale,
       items,
       businessSettings: resolvedBusinessSettings,
-    }) as any
+    })
     const blob = await pdf(pdfComponent).toBlob()
     const fileName = `quittung-${sale.id}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
@@ -367,8 +376,11 @@ export async function createReceiptPDF(
     const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath)
 
     return { success: true, publicUrl: urlData.publicUrl }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Fehler bei PDF-Erstellung:', error)
-    return { success: false, error: error.message }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Fehler bei PDF-Erstellung',
+    }
   }
 }

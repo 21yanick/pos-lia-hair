@@ -211,8 +211,8 @@ export function ProviderMatchPreview({
 
                   {/* Match Reasons */}
                   <div className="mt-3 flex flex-wrap gap-1">
-                    {candidate.matchReasons.map((reason, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
+                    {candidate.matchReasons.map((reason) => (
+                      <Badge key={`${candidateId}-${reason}`} variant="outline" className="text-xs">
                         {reason}
                       </Badge>
                     ))}

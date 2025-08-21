@@ -358,8 +358,8 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
           </View>
 
           {/* Table Rows */}
-          {items.map((item, index) => (
-            <View key={index} style={styles.itemsTableRow}>
+          {items.map((item) => (
+            <View key={item.id} style={styles.itemsTableRow}>
               <Text style={styles.itemName}>{item.name}</Text>
               <Text style={styles.itemQuantity}>{item.quantity}×</Text>
               <Text style={styles.itemPrice}>CHF {item.price.toFixed(2)}</Text>

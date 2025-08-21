@@ -186,10 +186,10 @@ export function useProductActions(): UseProductActionsReturn {
           variant: 'destructive',
         })
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: 'Fehler',
-        description: `Fehler: ${err.message}`,
+        description: `Fehler: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`,
         variant: 'destructive',
       })
     }

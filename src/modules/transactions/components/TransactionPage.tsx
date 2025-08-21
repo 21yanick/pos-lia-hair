@@ -19,7 +19,7 @@ import { formatCurrency } from '@/shared/utils'
 import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
 import { useDebounce } from '../hooks/useDebounce'
 import { usePdfActions } from '../hooks/usePdfActions'
-import { useInvalidateTransactions, useTransactionsQuery } from '../hooks/useTransactionsQuery'
+import { useTransactionsQuery } from '../hooks/useTransactionsQuery'
 import type {
   QuickFilterPreset,
   TransactionSearchQuery,
@@ -361,8 +361,7 @@ export default function TransactionPage() {
   }, [debouncedSearchQuery, activeFilters, dateRange])
 
   // React Query
-  const { data: transactions = [], isLoading, error } = useTransactionsQuery(query)
-  const { invalidateAll } = useInvalidateTransactions()
+  const { data: transactions = [], error } = useTransactionsQuery(query)
   const pdfActions = usePdfActions()
 
   // Stats

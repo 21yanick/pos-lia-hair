@@ -1,7 +1,7 @@
 'use client'
 
 import { CheckCircle, CreditCard, Loader2, Smartphone, Wallet, Zap } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { CustomerAutocomplete } from '@/shared/components/customer'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -49,6 +49,9 @@ export function PaymentDialog({
   onClose,
 }: PaymentDialogProps) {
   const [cashChange, setCashChange] = useState(0)
+
+  // 🆔 Generate unique ID for accessibility compliance
+  const cashReceivedId = useId()
 
   // Rückgeld berechnen
   useEffect(() => {
@@ -173,11 +176,11 @@ export function PaymentDialog({
           {/* Bargeld-Eingabe */}
           {selectedPaymentMethod === 'cash' && (
             <div className="space-y-4 p-4 bg-payment-cash/5 border border-payment-cash/20 rounded-xl">
-              <Label htmlFor="cashReceived" className="text-base font-semibold">
+              <Label htmlFor={cashReceivedId} className="text-base font-semibold">
                 Erhaltener Betrag
               </Label>
               <Input
-                id="cashReceived"
+                id={cashReceivedId}
                 type="number"
                 step="0.05"
                 min={cartTotal}

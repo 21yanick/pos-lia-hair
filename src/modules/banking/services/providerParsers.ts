@@ -153,10 +153,11 @@ export function parseTWINTCsv(csvContent: string): {
         }
 
         // Create row object
-        const row: TWINTCsvRow = {} as TWINTCsvRow
+        const rowData: Record<string, string> = {}
         headers.forEach((header, i) => {
-          ;(row as any)[header] = values[i] || ''
+          rowData[header] = values[i] || ''
         })
+        const row = rowData as TWINTCsvRow
 
         // Parse into ProviderRecord
         const record = parseTWINTRow(row, index + 5)
@@ -278,10 +279,11 @@ export function parseSumUpCsv(csvContent: string): {
         }
 
         // Create row object
-        const row: SumUpCsvRow = {} as SumUpCsvRow
+        const rowData: Record<string, string> = {}
         headers.forEach((header, i) => {
-          ;(row as any)[header] = values[i] || ''
+          rowData[header] = values[i] || ''
         })
+        const row = rowData as SumUpCsvRow
 
         // Filter: Only process "Umsatz" transactions that are "Erfolgreich"
         if (row.Zahlungsart !== 'Umsatz' || row.Status !== 'Erfolgreich') {

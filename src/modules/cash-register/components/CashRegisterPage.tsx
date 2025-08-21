@@ -33,14 +33,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
+import { type CashMovement, useCashBalance } from '@/shared/hooks/business/useCashBalance'
 import { useToast } from '@/shared/hooks/core/useToast'
 import { getTodaySwiss } from '@/shared/utils/dateUtils'
 
 export default function CashRegisterPage() {
   // Hooks
   const { toast } = useToast()
-  const { loading, error, getCurrentCashBalance, getCashMovementsForMonth } = useCashBalance()
+  const { loading, getCurrentCashBalance, getCashMovementsForMonth } = useCashBalance()
 
   // State für Cash Register Page
   const [entries, setEntries] = useState<CashEntry[]>([])
@@ -97,7 +97,7 @@ export default function CashRegisterPage() {
         // Cash movements zu CashEntry konvertieren
         const allEntries: CashEntry[] = []
         if (movementsResult.success) {
-          movementsResult.movements.forEach((movement: any) => {
+          movementsResult.movements.forEach((movement: CashMovement) => {
             if (movement.created_at) {
               allEntries.push({
                 id: movement.id,
@@ -543,7 +543,7 @@ export default function CashRegisterPage() {
                           new Date(a.created_at || a.date).getTime()
                       )
 
-                      return displayEntries.map((entry: any, _displayIndex: number) => {
+                      return displayEntries.map((entry: CashEntry, _displayIndex: number) => {
                         // Finde Index in chronologischer Liste für Saldo-Berechnung
                         const chronoIndex = chronologicalEntries.findIndex((e) => e.id === entry.id)
 
@@ -683,7 +683,7 @@ export default function CashRegisterPage() {
                       new Date(a.created_at || a.date).getTime()
                   )
 
-                  return displayEntries.map((entry: any, _displayIndex: number) => {
+                  return displayEntries.map((entry: CashEntry, _displayIndex: number) => {
                     // Finde Index in chronologischer Liste für Saldo-Berechnung
                     const chronoIndex = chronologicalEntries.findIndex((e) => e.id === entry.id)
 

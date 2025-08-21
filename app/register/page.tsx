@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import type React from 'react'
-import { Suspense, useEffect, useId, useState } from 'react'
+import { Suspense, useCallback, useEffect, useId, useState } from 'react'
 import { PublicRoute } from '@/shared/components/auth'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -18,8 +18,8 @@ import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { SmartAppLogo } from '@/shared/components/ui/SmartAppLogo'
 import { supabase } from '@/shared/lib/supabase/client'
-import { EmailService } from '@/shared/services/emailService'
-import { InvitationService } from '@/shared/services/invitationService'
+import { sendWelcomeEmail } from '@/shared/services/emailService'
+import { acceptInvitation } from '@/shared/services/invitationService'
 
 interface InvitationInfo {
   organizationName: string
@@ -51,14 +51,8 @@ function RegisterForm() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  // Validate invitation token on page load
-  useEffect(() => {
-    if (inviteToken) {
-      validateInvitationToken(inviteToken)
-    }
-  }, [inviteToken, validateInvitationToken])
-
-  const validateInvitationToken = async (token: string) => {
+  // Validate invitation token function
+  const validateInvitationToken = useCallback(async (token: string) => {
     setIsValidatingInvite(true)
     setError('')
 
@@ -85,7 +79,14 @@ function RegisterForm() {
     } finally {
       setIsValidatingInvite(false)
     }
-  }
+  }, [])
+
+  // Validate invitation token on page load
+  useEffect(() => {
+    if (inviteToken) {
+      validateInvitationToken(inviteToken)
+    }
+  }, [inviteToken, validateInvitationToken])
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -149,11 +150,11 @@ function RegisterForm() {
       if (inviteToken) {
         // 3. Accept invitation using JWT token
         try {
-          const result = await InvitationService.acceptInvitation(inviteToken, authData.user.id)
+          const result = await acceptInvitation(inviteToken, authData.user.id)
 
           // 4. Send welcome email for new team member
           try {
-            await EmailService.sendWelcomeEmail({
+            await sendWelcomeEmail({
               to: email.trim(),
               userName: name.trim(),
               organizationName: result.organization.name,

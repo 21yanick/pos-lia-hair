@@ -7,7 +7,7 @@
 'use client'
 
 import { AlertCircle, Banknote, CreditCard, DollarSign, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -140,6 +140,12 @@ export function OwnerTransactionDialog({
   >('bank_transfer')
   const [notes, setNotes] = useState('')
 
+  // Generate unique IDs for form elements
+  const amountId = useId()
+  const descriptionId = useId()
+  const dateId = useId()
+  const notesId = useId()
+
   // UI State
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -177,7 +183,9 @@ export function OwnerTransactionDialog({
     const currentMethodAvailable = availableMethods.some((method) => method.value === paymentMethod)
 
     if (!currentMethodAvailable && availableMethods.length > 0) {
-      setPaymentMethod(availableMethods[0].value as any)
+      setPaymentMethod(
+        availableMethods[0].value as 'bank_transfer' | 'private_card' | 'private_cash'
+      )
     }
   }, [transactionType, paymentMethod])
 
@@ -229,7 +237,7 @@ export function OwnerTransactionDialog({
         notes: notes.trim() || null,
       }
 
-      const { data, error: apiError } = await createOwnerTransaction(transactionData)
+      const { error: apiError } = await createOwnerTransaction(transactionData)
 
       if (apiError) {
         throw new Error(apiError.message || 'Failed to create owner transaction')
@@ -262,9 +270,9 @@ export function OwnerTransactionDialog({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Amount Input */}
           <div className="space-y-2">
-            <Label htmlFor="amount">{config.amountLabel} (CHF) *</Label>
+            <Label htmlFor={amountId}>{config.amountLabel} (CHF) *</Label>
             <Input
-              id="amount"
+              id={amountId}
               type="number"
               step="0.01"
               min="0.01"
@@ -278,9 +286,9 @@ export function OwnerTransactionDialog({
 
           {/* Description Input */}
           <div className="space-y-2">
-            <Label htmlFor="description">Beschreibung *</Label>
+            <Label htmlFor={descriptionId}>Beschreibung *</Label>
             <Input
-              id="description"
+              id={descriptionId}
               placeholder={config.descriptionPlaceholder}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -290,9 +298,9 @@ export function OwnerTransactionDialog({
 
           {/* Date Input */}
           <div className="space-y-2">
-            <Label htmlFor="date">Datum *</Label>
+            <Label htmlFor={dateId}>Datum *</Label>
             <Input
-              id="date"
+              id={dateId}
               type="date"
               value={transactionDate}
               onChange={(e) => setTransactionDate(e.target.value)}
@@ -330,9 +338,9 @@ export function OwnerTransactionDialog({
 
           {/* Notes (Optional) */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notizen (optional)</Label>
+            <Label htmlFor={notesId}>Notizen (optional)</Label>
             <Textarea
-              id="notes"
+              id={notesId}
               placeholder="Zusätzliche Informationen..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}

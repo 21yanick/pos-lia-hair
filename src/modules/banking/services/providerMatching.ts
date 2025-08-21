@@ -7,6 +7,8 @@
 import type { UnmatchedProviderReport, UnmatchedSaleForProvider } from '../types/banking'
 import { intelligentMatchingService } from './intelligentMatching'
 import type {
+  AmountMatchAnalysis,
+  DateMatchAnalysis,
   MatchingConfig,
   MatchingServiceResult,
   ProviderAutoMatchResult,
@@ -303,8 +305,8 @@ export class ProviderMatchingService {
   private generateProviderMatchReasons(
     _scores: { providerMatch: number; amountMatch: number; dateMatch: number },
     details: { amountDifference: number; daysDifference: number; providerMatches: boolean },
-    amountAnalysis: any,
-    dateAnalysis: any
+    amountAnalysis: AmountMatchAnalysis,
+    dateAnalysis: DateMatchAnalysis
   ): string[] {
     const reasons: string[] = []
 

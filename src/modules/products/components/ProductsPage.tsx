@@ -23,6 +23,7 @@ import {
 } from '@/shared/components/ui/table'
 import { type Item, useItems } from '@/shared/hooks/business/useItems'
 import { useToast } from '@/shared/hooks/core/useToast'
+import type { ItemInsert, ItemUpdate } from '@/types/database'
 import { useProductActions } from '../hooks/useProductActions'
 import { ProductCard } from './ProductCard'
 import { ProductDialog } from './ProductDialog'
@@ -73,7 +74,7 @@ export function ProductsPage() {
   }, [])
 
   const handleSaveAndClose = useCallback(
-    async (formData: any, currentItem: Item | null) => {
+    async (formData: ItemInsert | ItemUpdate, currentItem: Item | null) => {
       const success = await handleSaveItem(formData, currentItem)
       if (success) {
         setIsDialogOpen(false)

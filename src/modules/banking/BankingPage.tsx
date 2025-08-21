@@ -57,8 +57,6 @@ export function BankingPage() {
 
   // Real data from Banking API
   const {
-    unmatchedSales,
-    unmatchedProviderReports,
     stats,
     isLoading,
     error,

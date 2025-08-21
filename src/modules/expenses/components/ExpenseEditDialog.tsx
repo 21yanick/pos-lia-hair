@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { SupplierAutocomplete } from '@/shared/components/supplier/SupplierAutocomplete'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
 import { Button } from '@/shared/components/ui/button'
@@ -27,12 +27,13 @@ import { useToast } from '@/shared/hooks/core/useToast'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Expense, ExpenseCategory } from '@/shared/types/expenses'
 import type { Supplier } from '@/shared/types/suppliers'
+import type { ExpenseUpdate } from '@/types/database'
 
 interface ExpenseEditDialogProps {
   expense: Expense
   open: boolean
   onOpenChange: (open: boolean) => void
-  onUpdate: (id: string, updates: any) => Promise<{ success: boolean; error?: string }>
+  onUpdate: (id: string, updates: ExpenseUpdate) => Promise<{ success: boolean; error?: string }>
 }
 
 export function ExpenseEditDialog({
@@ -59,6 +60,13 @@ export function ExpenseEditDialog({
     invoice_number: '',
     notes: '',
   })
+
+  // Generate unique IDs for form elements
+  const amountId = useId()
+  const paymentDateId = useId()
+  const descriptionId = useId()
+  const invoiceNumberId = useId()
+  const notesId = useId()
 
   // Initialize form data when expense changes
   useEffect(() => {
@@ -184,9 +192,9 @@ export function ExpenseEditDialog({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Betrag (CHF) *</Label>
+                <Label htmlFor={amountId}>Betrag (CHF) *</Label>
                 <Input
-                  id="amount"
+                  id={amountId}
                   type="number"
                   step="0.01"
                   value={formData.amount}
@@ -197,9 +205,9 @@ export function ExpenseEditDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="payment_date">Zahlungsdatum *</Label>
+                <Label htmlFor={paymentDateId}>Zahlungsdatum *</Label>
                 <Input
-                  id="payment_date"
+                  id={paymentDateId}
                   type="date"
                   value={formData.payment_date}
                   onChange={(e) =>
@@ -211,9 +219,9 @@ export function ExpenseEditDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Beschreibung *</Label>
+              <Label htmlFor={descriptionId}>Beschreibung *</Label>
               <Input
-                id="description"
+                id={descriptionId}
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="z.B. Büromiete Januar 2024"
@@ -274,9 +282,9 @@ export function ExpenseEditDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="invoice_number">Rechnungsnummer</Label>
+                <Label htmlFor={invoiceNumberId}>Rechnungsnummer</Label>
                 <Input
-                  id="invoice_number"
+                  id={invoiceNumberId}
                   value={formData.invoice_number}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, invoice_number: e.target.value }))
@@ -287,9 +295,9 @@ export function ExpenseEditDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notizen</Label>
+              <Label htmlFor={notesId}>Notizen</Label>
               <Textarea
-                id="notes"
+                id={notesId}
                 value={formData.notes}
                 onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                 placeholder="Zusätzliche Informationen..."

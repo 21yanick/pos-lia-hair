@@ -1,7 +1,8 @@
 'use client'
 
 import { AlertCircle, CheckCircle, ImageIcon, Loader2, Trash2, Upload } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import Image from 'next/image'
+import { useCallback, useId, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -13,9 +14,10 @@ export function LogoUploadSection() {
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputId = useId()
 
-  // File validation
-  const validateFile = (file: File): string | null => {
+  // File validation (useCallback for React Hook stability)
+  const validateFile = useCallback((file: File): string | null => {
     const allowedTypes = ['image/jpeg', 'image/png']
     if (!allowedTypes.includes(file.type)) {
       return 'Nur JPEG und PNG Dateien sind erlaubt'
@@ -26,7 +28,7 @@ export function LogoUploadSection() {
     }
 
     return null
-  }
+  }, [])
 
   // Handle file upload
   const handleFileUpload = useCallback(
@@ -124,9 +126,11 @@ export function LogoUploadSection() {
           <div className="flex items-center space-x-4 p-4 border border-input rounded-lg bg-background">
             <div className="w-16 h-16 flex items-center justify-center border border-input rounded-lg bg-muted overflow-hidden">
               {settings?.logo_url ? (
-                <img
+                <Image
                   src={settings.logo_url}
                   alt="Firmen-Logo"
+                  width={64}
+                  height={64}
                   className="w-full h-full object-contain"
                 />
               ) : (
@@ -174,12 +178,13 @@ export function LogoUploadSection() {
         </div>
 
         {/* Drag & Drop Area */}
-        <div
+        <section
           className={`
             relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
             ${dragActive ? 'border-primary bg-primary/10' : 'border-input hover:border-primary/50'}
             ${uploading ? 'opacity-50 pointer-events-none' : ''}
           `}
+          aria-label="Logo Upload Bereich"
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -189,9 +194,11 @@ export function LogoUploadSection() {
             {previewUrl ? (
               <div className="space-y-3">
                 <div className="w-20 h-20 mx-auto border border-input rounded-lg bg-muted overflow-hidden">
-                  <img
+                  <Image
                     src={previewUrl}
                     alt="Logo Vorschau"
+                    width={80}
+                    height={80}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -219,13 +226,14 @@ export function LogoUploadSection() {
 
           {/* Hidden File Input */}
           <Input
+            id={fileInputId}
             type="file"
             accept="image/jpeg,image/png"
             onChange={handleFileInputChange}
             disabled={uploading}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
-        </div>
+        </section>
 
         {/* Manual Upload Button */}
         <div className="text-center">

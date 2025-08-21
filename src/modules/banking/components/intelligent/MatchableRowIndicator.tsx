@@ -96,7 +96,6 @@ export function MatchableRowIndicator({
 // Row wrapper component for table integration
 interface MatchableTableRowProps {
   status: MatchStatus
-  confidence?: number
   children: React.ReactNode
   onClick?: () => void
   className?: string
@@ -104,7 +103,6 @@ interface MatchableTableRowProps {
 
 export function MatchableTableRow({
   status,
-  confidence,
   children,
   onClick,
   className = '',

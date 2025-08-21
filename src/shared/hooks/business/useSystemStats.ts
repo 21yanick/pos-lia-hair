@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { supabase } from '@/shared/lib/supabase/client'
 
@@ -24,7 +24,7 @@ export function useSystemStats() {
   // 🔒 SECURITY: Multi-Tenant Organization Context
   const { currentOrganization } = useCurrentOrganization()
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -108,13 +108,13 @@ export function useSystemStats() {
 
       // console.log('Final organization stats:', newStats)
       setStats(newStats)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading system stats:', err)
-      setError(err.message || 'Fehler beim Laden der Systemstatistiken')
+      setError(err instanceof Error ? err.message : 'Fehler beim Laden der Systemstatistiken')
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentOrganization])
 
   useEffect(() => {
     if (currentOrganization) {

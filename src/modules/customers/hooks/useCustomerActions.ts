@@ -112,7 +112,6 @@ export const useCustomerActions = (organizationId: string) => {
     mutationFn: ({
       noteId,
       data,
-      customerId,
     }: {
       noteId: string
       data: { block_name?: string; content?: string }
@@ -127,7 +126,7 @@ export const useCustomerActions = (organizationId: string) => {
 
   // Delete customer note
   const deleteNoteMutation = useMutation({
-    mutationFn: ({ noteId, customerId }: { noteId: string; customerId: string }) =>
+    mutationFn: ({ noteId }: { noteId: string; customerId: string }) =>
       deleteCustomerNote(noteId, organizationId),
     onSuccess: (_, { customerId }) => {
       queryClient.invalidateQueries({

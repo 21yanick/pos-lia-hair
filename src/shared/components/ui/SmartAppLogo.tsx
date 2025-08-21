@@ -1,6 +1,7 @@
 'use client'
 
 import { ImageIcon } from 'lucide-react'
+import Image from 'next/image'
 import { useTheme } from 'next-themes'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
 import { cn } from '@/shared/utils'
@@ -79,9 +80,11 @@ export function SmartAppLogo({
 
   // Render logo
   return (
-    <img
+    <Image
       src={logoUrl}
       alt={alt}
+      width={200}
+      height={50}
       className={cn(
         'object-contain transition-opacity duration-200',
         sizeClasses[size],
@@ -89,11 +92,18 @@ export function SmartAppLogo({
         className
       )}
       onClick={onClick}
-      onError={(e) => {
-        // console.warn('App logo failed to load:', logoUrl)
-        // Hide broken image
-        e.currentTarget.style.display = 'none'
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onClick()
+        }
       }}
+      onError={() => {
+        // console.warn('App logo failed to load:', logoUrl)
+        // Image component handles broken images better than regular img
+      }}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? 'button' : undefined}
     />
   )
 }

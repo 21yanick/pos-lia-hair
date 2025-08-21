@@ -289,7 +289,7 @@ export class IntelligentMatchingService {
     return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
   }
 
-  formatMatchReasons(scores: { [key: string]: number }, _details: any = {}): string[] {
+  formatMatchReasons(scores: { [key: string]: number }, _details: unknown = {}): string[] {
     const reasons: string[] = []
 
     Object.entries(scores).forEach(([key, score]) => {

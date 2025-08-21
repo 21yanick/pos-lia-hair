@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Loader2, Lock, User } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -28,6 +28,13 @@ export function ProfileForm() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  // 🆔 Generate unique IDs for accessibility compliance
+  const nameId = useId()
+  const emailId = useId()
+  const currentPasswordId = useId()
+  const newPasswordId = useId()
+  const confirmPasswordId = useId()
 
   // Load user data
   useEffect(() => {
@@ -124,9 +131,9 @@ export function ProfileForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor={nameId}>Name *</Label>
               <Input
-                id="name"
+                id={nameId}
                 value={profileData.name}
                 onChange={(e) => handleProfileChange('name', e.target.value)}
                 placeholder="Ihr vollständiger Name"
@@ -136,9 +143,9 @@ export function ProfileForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">E-Mail *</Label>
+              <Label htmlFor={emailId}>E-Mail *</Label>
               <Input
-                id="email"
+                id={emailId}
                 type="email"
                 value={profileData.email}
                 onChange={(e) => handleProfileChange('email', e.target.value)}
@@ -186,9 +193,9 @@ export function ProfileForm() {
 
           <div className="space-y-4 max-w-md">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
+              <Label htmlFor={currentPasswordId}>Aktuelles Passwort</Label>
               <Input
-                id="currentPassword"
+                id={currentPasswordId}
                 type="password"
                 value={passwordData.currentPassword}
                 onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
@@ -198,9 +205,9 @@ export function ProfileForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="newPassword">Neues Passwort</Label>
+              <Label htmlFor={newPasswordId}>Neues Passwort</Label>
               <Input
-                id="newPassword"
+                id={newPasswordId}
                 type="password"
                 value={passwordData.newPassword}
                 onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
@@ -210,9 +217,9 @@ export function ProfileForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+              <Label htmlFor={confirmPasswordId}>Passwort bestätigen</Label>
               <Input
-                id="confirmPassword"
+                id={confirmPasswordId}
                 type="password"
                 value={passwordData.confirmPassword}
                 onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}

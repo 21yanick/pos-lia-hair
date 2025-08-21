@@ -20,7 +20,7 @@ import { TeamMembersList } from './TeamMembersList'
 export function TeamSettingsPage() {
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const { currentOrganization, memberships } = useCurrentOrganization()
-  const { can, role, isAdmin, isOwner } = useOrganizationPermissions()
+  const { can, isAdmin, isOwner } = useOrganizationPermissions()
 
   // Permission check - only admins and owners can manage team
   const canManageTeam = can('settings.manage_users') || isAdmin || isOwner

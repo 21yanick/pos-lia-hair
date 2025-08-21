@@ -12,9 +12,22 @@ import type {
   BulkDetectionResult,
   MatchingConfig,
   MatchingServiceResult,
+  ProviderDashboardData,
   ProviderSummary,
-  ProviderSummaryDashboard,
 } from './matchingTypes'
+
+// =====================================================
+// LOCAL TYPES
+// =====================================================
+
+interface CombinationMatch {
+  items: AvailableForBankMatching[]
+  itemCount: number
+  totalAmount: number
+  amountDifference: number
+  score: number
+}
+
 import { DEFAULT_MATCHING_CONFIG } from './matchingTypes'
 
 // =====================================================
@@ -77,14 +90,15 @@ export class BankMatchingService {
       const suggestion: BankMatchSuggestion = {
         bankTransactionId: bankTransaction.id,
         topCandidates,
-        bulkDetection: bulkDetection.detected
-          ? {
-              provider: bulkDetection.provider!,
-              items: bulkDetection.items,
-              totalAmount: bulkDetection.totalAmount,
-              confidence: bulkDetection.confidence,
-            }
-          : undefined,
+        bulkDetection:
+          bulkDetection.detected && bulkDetection.provider
+            ? {
+                provider: bulkDetection.provider,
+                items: bulkDetection.items,
+                totalAmount: bulkDetection.totalAmount,
+                confidence: bulkDetection.confidence,
+              }
+            : undefined,
         summary: {
           bestConfidence: topCandidates.length > 0 ? topCandidates[0].confidence : 0,
           totalSuggestions: topCandidates.length,
@@ -121,7 +135,7 @@ export class BankMatchingService {
 
   async generateProviderSummary(
     availableItems: AvailableForBankMatching[]
-  ): Promise<MatchingServiceResult<ProviderSummaryDashboard>> {
+  ): Promise<MatchingServiceResult<ProviderDashboardData>> {
     try {
       this.matchingCore.startPerformanceTracking()
 
@@ -180,7 +194,7 @@ export class BankMatchingService {
 
       const grandTotal = summaries.reduce((sum, summary) => sum + summary.totalAmount, 0)
 
-      const dashboard: ProviderSummaryDashboard = {
+      const dashboard: ProviderDashboardData = {
         summaries,
         grandTotal,
         lastUpdated: new Date(),
@@ -399,7 +413,7 @@ export class BankMatchingService {
 
   private calculateBulkConfidence(
     _bankTransaction: UnmatchedBankTransaction,
-    combination: any,
+    combination: CombinationMatch,
     _provider: string
   ): number {
     let confidence = 60 // Base score for provider detection
@@ -485,7 +499,7 @@ export class BankMatchingService {
 
   private createCombinationCandidate(
     bankTransaction: UnmatchedBankTransaction,
-    combination: any
+    combination: CombinationMatch
   ): BankMatchCandidate {
     const scores = {
       amountAccuracy: combination.score,
@@ -572,10 +586,25 @@ export class BankMatchingService {
   }
 
   private generateBankMatchReasons(
-    _scores: any,
-    amountAnalysis: any,
-    dateAnalysis: any,
-    descriptionAnalysis: any
+    _scores: {
+      amountAccuracy: number
+      dateProximity: number
+      descriptionMatch: number
+      itemCountPenalty: number
+    },
+    amountAnalysis: {
+      category: 'exact' | 'close' | 'similar'
+      difference: number
+      score: number
+    },
+    dateAnalysis: {
+      category: 'same_day' | 'next_day' | string
+      score: number
+    },
+    descriptionAnalysis: {
+      providerDetected: boolean
+      score: number
+    }
   ): string[] {
     const reasons: string[] = []
 

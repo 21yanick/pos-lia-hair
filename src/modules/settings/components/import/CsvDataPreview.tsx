@@ -124,7 +124,7 @@ export function CsvDataPreview({
         </TableHeader>
         <TableBody>
           {items.map((item, index) => (
-            <TableRow key={index}>
+            <TableRow key={`item-${item.name}-${index}`}>
               <TableCell className="font-medium">{item.name}</TableCell>
               <TableCell>CHF {item.default_price.toFixed(2)}</TableCell>
               <TableCell>
@@ -165,7 +165,7 @@ export function CsvDataPreview({
         </TableHeader>
         <TableBody>
           {sales.map((sale, index) => (
-            <TableRow key={index}>
+            <TableRow key={`sale-${sale.date}-${sale.time}-${index}`}>
               <TableCell>{sale.date}</TableCell>
               <TableCell>{sale.time}</TableCell>
               <TableCell className="font-medium">CHF {sale.total_amount.toFixed(2)}</TableCell>
@@ -207,7 +207,7 @@ export function CsvDataPreview({
         </TableHeader>
         <TableBody>
           {expenses.map((expense, index) => (
-            <TableRow key={index}>
+            <TableRow key={`expense-${expense.date}-${expense.amount}-${index}`}>
               <TableCell>{expense.date}</TableCell>
               <TableCell className="font-medium">CHF {expense.amount.toFixed(2)}</TableCell>
               <TableCell className="max-w-[200px] truncate">{expense.description}</TableCell>
@@ -306,7 +306,7 @@ export function CsvDataPreview({
               </p>
               <ul className="list-disc list-inside space-y-1">
                 {validation.errors.map((error, index) => (
-                  <li key={index} className="text-sm">
+                  <li key={`error-${error.slice(0, 20)}-${index}`} className="text-sm">
                     {error}
                   </li>
                 ))}
@@ -327,7 +327,7 @@ export function CsvDataPreview({
               </p>
               <ul className="list-disc list-inside space-y-1">
                 {validation.warnings.map((warning, index) => (
-                  <li key={index} className="text-sm">
+                  <li key={`warning-${warning.slice(0, 20)}-${index}`} className="text-sm">
                     {warning}
                   </li>
                 ))}
@@ -359,7 +359,7 @@ export function CsvDataPreview({
               </TableHeader>
               <TableBody>
                 {displayRows.map((row, index) => (
-                  <TableRow key={index}>
+                  <TableRow key={`row-${index}-${Object.values(row).slice(0, 2).join('-')}`}>
                     {mappedHeaders.map((header) => (
                       <TableCell key={`${index}-${header}`} className="max-w-[200px] truncate">
                         {row[header] || <span className="text-muted-foreground">-</span>}

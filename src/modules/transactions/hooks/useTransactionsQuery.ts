@@ -13,7 +13,10 @@ import type {
 /**
  * Calculate PDF status for a transaction
  */
-function calculatePdfStatus(tx: any): { status: PdfStatus; requirement: PdfRequirement } {
+function calculatePdfStatus(tx: UnifiedTransaction): {
+  status: PdfStatus
+  requirement: PdfRequirement
+} {
   // Cash Movements and Bank Transactions don't need PDFs
   if (tx.transaction_type === 'cash_movement' || tx.transaction_type === 'bank_transaction') {
     return {

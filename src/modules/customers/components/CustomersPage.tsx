@@ -99,8 +99,8 @@ export function CustomersPage() {
       {/* Loading State */}
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i}>
+          {Array.from({ length: 8 }, (_, i) => `skeleton-customer-${i + 1}`).map((skeletonId) => (
+            <Card key={skeletonId}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <Skeleton className="h-10 w-10 rounded-full" />

@@ -124,8 +124,8 @@ export function VacationManager({ className }: VacationManagerProps) {
 
     try {
       await addVacationPeriod({
-        start: newVacation.start!,
-        end: newVacation.end!,
+        start: newVacation.start,
+        end: newVacation.end,
         reason: newVacation.reason?.trim(),
       })
 
@@ -161,8 +161,8 @@ export function VacationManager({ className }: VacationManagerProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
+            {Array.from({ length: 3 }, (_, i) => i + 1).map((row) => (
+              <div key={`skeleton-vacation-${row}`} className="animate-pulse">
                 <div className="h-20 bg-muted rounded"></div>
               </div>
             ))}
@@ -355,7 +355,7 @@ export function VacationManager({ className }: VacationManagerProps) {
 
               return (
                 <div
-                  key={index}
+                  key={`vacation-${vacation.start}-${vacation.end}`}
                   className={cn(
                     'border rounded-lg p-4 transition-colors',
                     isCurrent && 'bg-destructive/5 border-destructive/20',

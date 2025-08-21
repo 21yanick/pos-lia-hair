@@ -74,6 +74,60 @@ export interface ExpenseImport {
   notes?: string
 }
 
+export interface UserImport {
+  name: string
+  username: string
+  email: string
+  role: 'admin' | 'staff'
+  active?: boolean
+}
+
+export interface OwnerTransactionImport {
+  transaction_type: 'deposit' | 'expense' | 'withdrawal'
+  amount: number
+  description: string
+  transaction_date: string
+  payment_method: 'bank_transfer' | 'private_card' | 'private_cash'
+  notes?: string
+}
+
+export interface BankAccountImport {
+  name: string
+  bank_name: string
+  iban?: string
+  account_number?: string
+  current_balance?: number
+  is_active?: boolean
+  notes?: string
+}
+
+export interface SupplierImport {
+  name: string
+  category:
+    | 'beauty_supplies'
+    | 'equipment'
+    | 'utilities'
+    | 'rent'
+    | 'insurance'
+    | 'professional_services'
+    | 'retail'
+    | 'online_marketplace'
+    | 'real_estate'
+    | 'other'
+  contact_email?: string
+  contact_phone?: string
+  website?: string
+  address_line1?: string
+  address_line2?: string
+  city?: string
+  postal_code?: string
+  country?: string
+  iban?: string
+  vat_number?: string
+  is_active?: boolean
+  notes?: string
+}
+
 // =================================
 // Import Process Types
 // =================================
@@ -109,10 +163,10 @@ export const DEFAULT_CONFIG: ImportConfig = {
 
 export interface ImportDataContainer {
   items?: ItemImport[]
-  users?: any[]
-  owner_transactions?: any[]
-  bank_accounts?: any[]
-  suppliers?: any[]
+  users?: UserImport[]
+  owner_transactions?: OwnerTransactionImport[]
+  bank_accounts?: BankAccountImport[]
+  suppliers?: SupplierImport[]
   sales?: SaleImport[]
   expenses?: ExpenseImport[]
 }

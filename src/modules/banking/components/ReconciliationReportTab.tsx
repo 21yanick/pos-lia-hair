@@ -13,7 +13,7 @@ import {
   History,
   Users,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -41,6 +41,14 @@ import {
 } from '@/shared/utils/dateUtils'
 import { exportMonthlyPDFWithReconciliation } from '@/shared/utils/exportHelpers'
 
+interface DocumentReport {
+  id: string
+  file_name: string
+  file_path: string
+  created_at: string
+  file_size?: number | null
+}
+
 export function ReconciliationReportTab() {
   const [reconciliationData, setReconciliationData] = useState<ReconciliationData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,7 +57,7 @@ export function ReconciliationReportTab() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     return getTodaySwissString().slice(0, 7) // "2024-11" format in Swiss timezone
   })
-  const [generatedReports, setGeneratedReports] = useState<any[]>([])
+  const [generatedReports, setGeneratedReports] = useState<DocumentReport[]>([])
   const [showArchive, setShowArchive] = useState(false)
 
   // Generate available months (last 12 months) in Swiss timezone
@@ -75,6 +83,40 @@ export function ReconciliationReportTab() {
     return months
   }
 
+  // Define functions with useCallback before useEffect
+  const loadReconciliationData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await getReconciliationData(selectedMonth)
+      setReconciliationData(data)
+    } catch (err: unknown) {
+      console.error('Error loading reconciliation data:', err)
+      setError('Fehler beim Laden der Abgleich-Daten')
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedMonth])
+
+  const loadGeneratedReports = useCallback(async () => {
+    try {
+      const { data: documents, error } = await supabase
+        .from('documents')
+        .select('id, file_name, file_path, created_at, file_size')
+        .like('file_name', 'monatsabschluss-%')
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (error) {
+        // console.error('Error loading generated reports:', error)
+      } else {
+        setGeneratedReports(documents || [])
+      }
+    } catch (err) {
+      console.error('Error loading reports:', err)
+    }
+  }, [])
+
   // Load reconciliation data when month changes
   useEffect(() => {
     loadReconciliationData()
@@ -82,20 +124,6 @@ export function ReconciliationReportTab() {
       loadGeneratedReports()
     }
   }, [showArchive, loadGeneratedReports, loadReconciliationData])
-
-  const loadReconciliationData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await getReconciliationData(selectedMonth)
-      setReconciliationData(data)
-    } catch (err: any) {
-      console.error('Error loading reconciliation data:', err)
-      setError('Fehler beim Laden der Abgleich-Daten')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Navigate months in Swiss timezone
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -121,27 +149,7 @@ export function ReconciliationReportTab() {
     setSelectedMonth(newMonthString)
   }
 
-  // Load generated reports from Supabase documents storage
-  const loadGeneratedReports = async () => {
-    try {
-      const { data: documents, error } = await supabase
-        .from('documents')
-        .select('id, file_name, file_path, created_at, file_size')
-        .like('file_name', 'monatsabschluss-%')
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (error) {
-        // console.error('Error loading generated reports:', error)
-      } else {
-        setGeneratedReports(documents || [])
-      }
-    } catch (err) {
-      console.error('Error loading reports:', err)
-    }
-  }
-
-  const handleViewReport = async (document: any) => {
+  const handleViewReport = async (document: DocumentReport) => {
     try {
       const { data, error } = await supabase.storage
         .from('documents')
@@ -233,7 +241,7 @@ export function ReconciliationReportTab() {
       if (showArchive) {
         setTimeout(() => loadGeneratedReports(), 2000)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error generating PDF:', err)
       setError('Fehler beim Generieren des PDF-Berichts')
     } finally {
@@ -247,7 +255,7 @@ export function ReconciliationReportTab() {
         <Skeleton className="h-8 w-64" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+            <Card key={`skeleton-reconciliation-${i + 1}`}>
               <CardHeader className="pb-3">
                 <Skeleton className="h-4 w-24" />
               </CardHeader>
@@ -489,9 +497,9 @@ export function ReconciliationReportTab() {
                   </CardHeader>
                   <CardContent className="space-y-3 max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto">
                     {/* ALL unmatched sales */}
-                    {reconciliationData.providerReconciliation.unmatchedSales.map((sale, index) => (
+                    {reconciliationData.providerReconciliation.unmatchedSales.map((sale) => (
                       <div
-                        key={index}
+                        key={sale.receiptNumber}
                         className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border-l-4 border-red-500"
                       >
                         <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
@@ -507,9 +515,9 @@ export function ReconciliationReportTab() {
                     ))}
 
                     {/* ALL success matches */}
-                    {reconciliationData.providerReconciliation.matches.map((match, index) => (
+                    {reconciliationData.providerReconciliation.matches.map((match) => (
                       <div
-                        key={index}
+                        key={match.sale.receiptNumber}
                         className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border-l-4 border-green-500"
                       >
                         <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
@@ -535,29 +543,25 @@ export function ReconciliationReportTab() {
                   </CardHeader>
                   <CardContent className="space-y-3 max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto">
                     {/* ALL unmatched bank transactions */}
-                    {reconciliationData.bankReconciliation.unmatchedBankTransactions.map(
-                      (tx, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border-l-4 border-red-500"
-                        >
-                          <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              Bank: {tx.amount.toFixed(2)} CHF ({tx.date})
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {tx.description}
-                            </p>
-                          </div>
+                    {reconciliationData.bankReconciliation.unmatchedBankTransactions.map((tx) => (
+                      <div
+                        key={`${tx.date}-${tx.amount}-${tx.description.slice(0, 20)}`}
+                        className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border-l-4 border-red-500"
+                      >
+                        <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            Bank: {tx.amount.toFixed(2)} CHF ({tx.date})
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">{tx.description}</p>
                         </div>
-                      )
-                    )}
+                      </div>
+                    ))}
 
                     {/* ALL success matches */}
-                    {reconciliationData.bankReconciliation.matches.map((match, index) => (
+                    {reconciliationData.bankReconciliation.matches.map((match) => (
                       <div
-                        key={index}
+                        key={`${match.bankTransaction.amount}-${match.bankTransaction.date}`}
                         className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border-l-4 border-green-500"
                       >
                         <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />

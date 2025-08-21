@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import {
+  type Organization,
   type OrganizationRole,
   type Permission,
   ROLE_PERMISSIONS,
@@ -19,7 +20,7 @@ interface OrganizationPermissionsReturn {
 
   // Current state
   role: OrganizationRole | null
-  organization: any // Current organization
+  organization: Organization | null // Current organization
 
   // Loading state
   loading: boolean

@@ -124,7 +124,6 @@ function MonthHeader({
     <div className="flex items-center justify-between">
       <MonthNavigationButton
         direction="prev"
-        targetDate={prevMonth}
         onClick={handlePrevMonth}
         aria-label={`Vorheriger Monat (${formatMonthYear(prevMonth)})`}
       />
@@ -133,7 +132,6 @@ function MonthHeader({
 
       <MonthNavigationButton
         direction="next"
-        targetDate={nextMonth}
         onClick={handleNextMonth}
         aria-label={`Nächster Monat (${formatMonthYear(nextMonth)})`}
       />
@@ -146,12 +144,10 @@ function MonthHeader({
  */
 function MonthNavigationButton({
   direction,
-  targetDate,
   onClick,
   'aria-label': ariaLabel,
 }: {
   direction: 'prev' | 'next'
-  targetDate: Date
   onClick: () => void
   'aria-label': string
 }) {
@@ -211,7 +207,10 @@ function DaysGrid({
   return (
     <div className="space-y-1">
       {weeks.map((week, weekIndex) => (
-        <div key={weekIndex} className="grid grid-cols-7 gap-1">
+        <div
+          key={week[0]?.date.getTime() || `week-${weekIndex}`}
+          className="grid grid-cols-7 gap-1"
+        >
           {week.map((day) => (
             <DayCell
               key={day.date.getTime()}
@@ -260,20 +259,21 @@ function DayCell({
   }
 
   return (
-    <div
+    <button
+      type="button"
+      disabled={!day.isClickable}
       className={cn(
         // Base styles
-        'relative h-12 flex items-center justify-center text-sm rounded-md transition-all duration-200',
+        'relative h-12 flex items-center justify-center text-sm rounded-md transition-all duration-200 bg-transparent p-0',
         // Status-specific styles
         config.className,
         // Interactive styles
-        day.isClickable && 'cursor-pointer hover:scale-105 hover:shadow-sm active:scale-95',
+        day.isClickable &&
+          'cursor-pointer hover:scale-105 hover:shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
         // Additional vacation styling
         day.status === 'vacation' &&
           'before:absolute before:inset-0 before:bg-gradient-to-br before:from-transparent before:to-destructive/10 before:rounded-md'
       )}
-      role={day.isClickable ? 'button' : 'gridcell'}
-      tabIndex={day.isClickable ? 0 : -1}
       aria-label={getDayAriaLabel(day)}
       title={getDayAriaLabel(day)}
       onClick={handleClick}
@@ -293,7 +293,7 @@ function DayCell({
       {day.status === 'vacation' && (
         <span className="absolute bottom-0.5 right-0.5 text-destructive text-xs font-bold">■</span>
       )}
-    </div>
+    </button>
   )
 }
 
@@ -314,16 +314,19 @@ export function MonthGridSkeleton({ className }: { className?: string }) {
         <div className="space-y-4">
           {/* Weekday headers */}
           <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="h-8 bg-muted rounded animate-pulse" />
+            {['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'].map((day) => (
+              <div key={`skeleton-weekday-${day}`} className="h-8 bg-muted rounded animate-pulse" />
             ))}
           </div>
           {/* Days grid */}
           <div className="space-y-1">
-            {Array.from({ length: 6 }).map((_, weekIndex) => (
-              <div key={weekIndex} className="grid grid-cols-7 gap-1">
-                {Array.from({ length: 7 }).map((_, dayIndex) => (
-                  <div key={dayIndex} className="h-12 bg-muted rounded animate-pulse" />
+            {[1, 2, 3, 4, 5, 6].map((weekNum) => (
+              <div key={`skeleton-week-${weekNum}`} className="grid grid-cols-7 gap-1">
+                {[1, 2, 3, 4, 5, 6, 7].map((dayNum) => (
+                  <div
+                    key={`skeleton-day-w${weekNum}-d${dayNum}`}
+                    className="h-12 bg-muted rounded animate-pulse"
+                  />
                 ))}
               </div>
             ))}

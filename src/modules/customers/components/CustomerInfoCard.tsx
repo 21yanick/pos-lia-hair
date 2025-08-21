@@ -25,7 +25,7 @@ interface CustomerInfoCardProps {
 
 type EditField = 'name' | 'phone' | 'email' | null
 
-export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) {
+export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
   const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const { updateCustomer } = useCustomerActions(currentOrganization?.id || '')
@@ -189,7 +189,8 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div
+                <button
+                  type="button"
                   className="group cursor-pointer hover:bg-muted rounded p-2 -m-2 transition-colors flex items-center justify-between min-w-0"
                   onClick={() => startEdit(field)}
                 >
@@ -199,7 +200,7 @@ export function CustomerInfoCard({ customer, onUpdate }: CustomerInfoCardProps) 
                     {displayValue}
                   </span>
                   <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity shrink-0 ml-2" />
-                </div>
+                </button>
               </TooltipTrigger>
               <TooltipContent>
                 <p className="text-xs">Klicken zum Bearbeiten • Automatisches Speichern</p>

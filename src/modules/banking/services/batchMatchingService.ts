@@ -10,13 +10,24 @@ import { supabase } from '@/shared/lib/supabase/client'
 // TYPES
 // =====================================================
 
+interface BankTransactionForBatch {
+  id: string
+  amount: number
+  description: string
+  transaction_date: string
+}
+
+interface ProviderReportForBatch {
+  id: string
+  provider: string
+  net_amount: number
+  settlement_date: string
+  sale_id: string
+  sales: { id: string }[] // Array of related sales
+}
+
 export interface BatchMatchCandidate {
-  bankTransaction: {
-    id: string
-    amount: number
-    description: string
-    transaction_date: string
-  }
+  bankTransaction: BankTransactionForBatch
   providerReports: {
     id: string
     provider: string
@@ -161,8 +172,8 @@ export async function findBatchMatchCandidates(
 // =====================================================
 
 async function findBatchCombinations(
-  bankTx: any,
-  providerReports: any[]
+  bankTx: BankTransactionForBatch,
+  providerReports: ProviderReportForBatch[]
 ): Promise<BatchMatchCandidate[]> {
   const candidates: BatchMatchCandidate[] = []
   const tolerance = 2.0 // ±2 CHF tolerance

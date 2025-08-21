@@ -13,8 +13,8 @@ import {
 import { supabase } from '@/shared/lib/supabase/client'
 
 export function UserDebug() {
-  const [authUser, setAuthUser] = useState<any>(null)
-  const [customUsers, setCustomUsers] = useState<any[]>([])
+  const [authUser, setAuthUser] = useState<unknown>(null)
+  const [customUsers, setCustomUsers] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
@@ -25,7 +25,7 @@ export function UserDebug() {
         setLoading(true)
 
         // Auth-Benutzer abrufen
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        const { error: sessionError } = await supabase.auth.getSession()
         if (sessionError) throw sessionError
 
         const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -41,9 +41,9 @@ export function UserDebug() {
         if (customUsersError) throw customUsersError
 
         setCustomUsers(customUsersData || [])
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Fehler beim Abrufen der Benutzerdaten:', err)
-        setError(err.message || 'Fehler beim Abrufen der Benutzerdaten')
+        setError(err instanceof Error ? err.message : 'Fehler beim Abrufen der Benutzerdaten')
       } finally {
         setLoading(false)
       }
@@ -53,16 +53,18 @@ export function UserDebug() {
   }, [])
 
   const syncAuthUserToCustomTable = async () => {
-    if (!authUser) return
+    if (!authUser || typeof authUser !== 'object' || !('id' in authUser) || !('email' in authUser))
+      return
 
     try {
       setSyncing(true)
 
       // Prüfen, ob der Benutzer bereits existiert
+      const user = authUser as { id: string; email: string; user_metadata?: { name?: string } }
       const { data: existingUser, error: queryError } = await supabase
         .from('users')
         .select('*')
-        .eq('id', authUser.id)
+        .eq('id', user.id)
         .single()
 
       if (queryError && queryError.code !== 'PGRST116') {
@@ -75,17 +77,17 @@ export function UserDebug() {
         await supabase
           .from('users')
           .update({
-            email: authUser.email,
+            email: user.email,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', authUser.id)
+          .eq('id', user.id)
       } else {
         // Neuen Benutzer anlegen
         const { error: insertError } = await supabase.from('users').insert({
-          id: authUser.id,
-          name: authUser.user_metadata?.name || 'Admin Benutzer',
-          username: authUser.email.split('@')[0],
-          email: authUser.email,
+          id: user.id,
+          name: user.user_metadata?.name || 'Admin Benutzer',
+          username: user.email.split('@')[0],
+          email: user.email,
           role: 'admin',
           active: true,
         })
@@ -99,9 +101,9 @@ export function UserDebug() {
       if (refreshError) throw refreshError
 
       setCustomUsers(updatedUsers || [])
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fehler beim Synchronisieren des Benutzers:', err)
-      setError(err.message || 'Fehler beim Synchronisieren des Benutzers')
+      setError(err instanceof Error ? err.message : 'Fehler beim Synchronisieren des Benutzers')
     } finally {
       setSyncing(false)
     }
@@ -109,7 +111,16 @@ export function UserDebug() {
 
   if (loading) return <div>Lade Benutzerdaten...</div>
 
-  const userMatch = customUsers.find((user) => user.id === authUser?.id)
+  const userMatch = customUsers.find(
+    (user) =>
+      typeof user === 'object' &&
+      user &&
+      'id' in user &&
+      typeof authUser === 'object' &&
+      authUser &&
+      'id' in authUser &&
+      user.id === (authUser as { id: string }).id
+  )
   const needsSync = !userMatch
 
   return (

@@ -6,7 +6,7 @@
  */
 
 import { Clock, Edit, Loader2, User } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -59,6 +59,19 @@ export function EditAppointmentDialog({
     notes: '',
   })
 
+  // Generate unique IDs for form elements
+  const startTimeId = useId()
+  const endTimeId = useId()
+  const customerNameId = useId()
+  const notesId = useId()
+
+  // Normalize time to HH:mm format
+  const normalizeTime = useCallback((time: string): string => {
+    if (!time) return '09:00'
+    const [hours, minutes] = time.split(':').map(Number)
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+  }, [])
+
   // Initialize form when appointment changes
   useEffect(() => {
     if (appointment) {
@@ -71,13 +84,6 @@ export function EditAppointmentDialog({
       })
     }
   }, [appointment, normalizeTime])
-
-  // Normalize time to HH:mm format
-  const normalizeTime = (time: string): string => {
-    if (!time) return '09:00'
-    const [hours, minutes] = time.split(':').map(Number)
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-  }
 
   // Calculate end time when start time or duration changes
   const calculateEndTime = (startTime: string, durationMinutes: number): string => {
@@ -140,11 +146,12 @@ export function EditAppointmentDialog({
 
       onSuccess?.()
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Edit appointment error:', error)
       toast({
         title: 'Fehler',
-        description: error?.message || 'Termin konnte nicht aktualisiert werden.',
+        description:
+          error instanceof Error ? error.message : 'Termin konnte nicht aktualisiert werden.',
         variant: 'destructive',
       })
     }
@@ -173,18 +180,18 @@ export function EditAppointmentDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="startTime">Startzeit</Label>
+                <Label htmlFor={startTimeId}>Startzeit</Label>
                 <Input
-                  id="startTime"
+                  id={startTimeId}
                   type="time"
                   value={formData.startTime}
                   onChange={(e) => handleStartTimeChange(e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="endTime">Endzeit</Label>
+                <Label htmlFor={endTimeId}>Endzeit</Label>
                 <Input
-                  id="endTime"
+                  id={endTimeId}
                   type="time"
                   value={formData.endTime}
                   readOnly
@@ -219,9 +226,9 @@ export function EditAppointmentDialog({
             </div>
 
             <div>
-              <Label htmlFor="customerName">Name</Label>
+              <Label htmlFor={customerNameId}>Name</Label>
               <Input
-                id="customerName"
+                id={customerNameId}
                 type="text"
                 value={formData.customerName}
                 onChange={(e) => setFormData((prev) => ({ ...prev, customerName: e.target.value }))}
@@ -232,9 +239,9 @@ export function EditAppointmentDialog({
 
           {/* Notizen Section */}
           <div className="space-y-3">
-            <Label htmlFor="notes">Notizen</Label>
+            <Label htmlFor={notesId}>Notizen</Label>
             <Textarea
-              id="notes"
+              id={notesId}
               value={formData.notes}
               onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Zusätzliche Notizen..."

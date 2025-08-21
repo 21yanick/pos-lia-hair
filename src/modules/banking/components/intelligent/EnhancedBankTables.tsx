@@ -1,7 +1,7 @@
 'use client'
 
 import { Building2, CheckCircle2, Layers, TrendingUp } from 'lucide-react'
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
@@ -19,11 +19,34 @@ import { formatDateForAPI, formatDateForDisplay } from '@/shared/utils/dateUtils
 import { useBankingData } from '../../hooks/useBankingData'
 import { BankSettlementConnector } from './BankSettlementConnector'
 
+interface MatchableItem {
+  id: string
+  amount: number
+  date: string
+  description: string
+  item_type: string
+}
+
+interface BankTransaction {
+  amount: number
+  transaction_date: string
+  description: string
+}
+
+interface MatchAnalysis {
+  finalScore: number
+  scores: {
+    amountAccuracy: number
+    dateProximity: number
+    descriptionMatch: number
+  }
+}
+
 interface SettlementGroup {
   provider: 'twint' | 'sumup' | 'cash' | 'owner' | 'expenses'
   displayName: string
   icon: string
-  items: any[]
+  items: MatchableItem[]
   totalAmount: number
   confidence?: number
   isDetected?: boolean
@@ -125,168 +148,178 @@ export function EnhancedBankTables({
   // Generate base settlement groups from available items (ALWAYS)
   const baseSettlements = generateSettlementGroups()
 
-  // Auto-highlighting logic: Intelligent weighted scoring system (like Provider Matching)
-  const findPotentialMatches = (
-    bankTransactionId: string
-  ): { itemIds: string[]; scores: Map<string, number> } => {
-    const bankTransaction = unmatchedBankTransactions.find((t) => t.id === bankTransactionId)
-    if (!bankTransaction) return { itemIds: [], scores: new Map() }
-
-    const _bankAmount = bankTransaction.amount
-    const _bankDate = new Date(bankTransaction.transaction_date)
-
-    // console.log('🔍 Intelligent Banking Match Analysis:', {
-    //   id: bankTransactionId,
-    //   amount: bankAmount,
-    //   date: bankTransaction.transaction_date,
-    //   description: bankTransaction.description
-    // })
-
-    const potentialMatches: Array<{ id: string; score: number; item: any; breakdown: any }> = []
-
-    availableForMatching.forEach((item) => {
-      const analysis = analyzeIntelligentBankMatch(bankTransaction, item)
-
-      // Only consider matches with reasonable confidence (>= 50%)
-      if (analysis.finalScore >= 50) {
-        potentialMatches.push({
-          id: item.id,
-          score: analysis.finalScore,
-          item,
-          breakdown: analysis,
-        })
-
-        // console.log('💡 Intelligent Match Found:', {
-        //   item: {
-        //     id: item.id,
-        //     amount: item.amount,
-        //     date: item.date,
-        //     description: item.description,
-        //     type: item.item_type
-        //   },
-        //   scores: {
-        //     amount: analysis.scores.amountAccuracy,
-        //     date: analysis.scores.dateProximity,
-        //     description: analysis.scores.descriptionMatch,
-        //     final: analysis.finalScore
-        //   },
-        //   weights: analysis.weights,
-        //   calculation: analysis.calculation
-        // })
-      }
-    })
-
-    // Sort by score and return top matches
-    const sortedMatches = potentialMatches.sort((a, b) => b.score - a.score).slice(0, 3) // Top 3 matches
-
-    // console.log('🎯 Top Intelligent Matches:', sortedMatches.map(m => ({
-    //   id: m.id,
-    //   finalScore: Math.round(m.score),
-    //   amount: m.item.amount,
-    //   description: m.item.description,
-    //   breakdown: `Amount:${m.breakdown.scores.amountAccuracy}% × Date:${m.breakdown.scores.dateProximity}% × Desc:${m.breakdown.scores.descriptionMatch}%`
-    // })))
-
-    // Create scores map
-    const scores = new Map<string, number>()
-    sortedMatches.forEach((match) => {
-      scores.set(match.id, match.score)
-    })
-
-    return {
-      itemIds: sortedMatches.map((match) => match.id),
-      scores,
-    }
-  }
-
   // Intelligent weighted scoring analysis (based on Provider Matching algorithm)
-  const analyzeIntelligentBankMatch = (bankTransaction: any, item: any) => {
-    const weights = {
-      amountAccuracy: 70,
-      dateProximity: 20,
-      descriptionMatch: 10,
-    }
-
-    const scores = {
-      amountAccuracy: 0,
-      dateProximity: 0,
-      descriptionMatch: 0,
-    }
-
-    // 1. AMOUNT ACCURACY (70% weight)
-    const amountDiff = Math.abs(bankTransaction.amount - item.amount)
-    if (amountDiff < 0.01) {
-      scores.amountAccuracy = 100 // Perfect match
-    } else if (amountDiff <= 0.05) {
-      scores.amountAccuracy = 95 // Near perfect
-    } else if (amountDiff <= 1.0) {
-      scores.amountAccuracy = Math.max(80 - amountDiff * 10, 60) // Good match
-    } else if (amountDiff <= 5.0) {
-      scores.amountAccuracy = Math.max(60 - amountDiff * 5, 30) // Fair match
-    } else {
-      scores.amountAccuracy = 0 // Poor match
-    }
-
-    // 2. DATE PROXIMITY (20% weight) - Same logic as Provider Matching
-    const bankDate = new Date(bankTransaction.transaction_date)
-    const itemDate = new Date(item.date)
-    const timeDiff = Math.abs(bankDate.getTime() - itemDate.getTime())
-    const daysDifference = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
-
-    if (daysDifference === 0) {
-      scores.dateProximity = 100 // Same day
-    } else if (daysDifference === 1) {
-      scores.dateProximity = 75 // Next day
-    } else if (daysDifference <= 7) {
-      scores.dateProximity = 50 // Same week
-    } else {
-      scores.dateProximity = Math.max(0, 20 - daysDifference) // Diminishing returns
-    }
-
-    // 3. DESCRIPTION MATCH (10% weight)
-    const bankDesc = bankTransaction.description.toLowerCase()
-    const itemDesc = item.description.toLowerCase()
-
-    // Simple keyword matching
-    if (bankDesc.includes(itemDesc) || itemDesc.includes(bankDesc)) {
-      scores.descriptionMatch = 90
-    } else {
-      // Check for common words
-      const bankWords = bankDesc.split(/\s+/)
-      const itemWords = itemDesc.split(/\s+/)
-      const commonWords = bankWords.filter(
-        (word) => word.length > 3 && itemWords.some((iw) => iw.includes(word) || word.includes(iw))
-      )
-
-      if (commonWords.length > 0) {
-        scores.descriptionMatch = Math.min(70, commonWords.length * 25)
-      } else {
-        scores.descriptionMatch = 10 // Base score for having descriptions
+  const analyzeIntelligentBankMatch = useCallback(
+    (bankTransaction: BankTransaction, item: MatchableItem) => {
+      const weights = {
+        amountAccuracy: 70,
+        dateProximity: 20,
+        descriptionMatch: 10,
       }
-    }
 
-    // 4. CALCULATE WEIGHTED AVERAGE (like Provider Matching)
-    const totalScore =
-      (scores.amountAccuracy * weights.amountAccuracy +
-        scores.dateProximity * weights.dateProximity +
-        scores.descriptionMatch * weights.descriptionMatch) /
-      (weights.amountAccuracy + weights.dateProximity + weights.descriptionMatch)
+      const scores = {
+        amountAccuracy: 0,
+        dateProximity: 0,
+        descriptionMatch: 0,
+      }
 
-    const finalScore = Math.round(totalScore)
+      // 1. AMOUNT ACCURACY (70% weight)
+      const amountDiff = Math.abs(bankTransaction.amount - item.amount)
+      if (amountDiff < 0.01) {
+        scores.amountAccuracy = 100 // Perfect match
+      } else if (amountDiff <= 0.05) {
+        scores.amountAccuracy = 95 // Near perfect
+      } else if (amountDiff <= 1.0) {
+        scores.amountAccuracy = Math.max(80 - amountDiff * 10, 60) // Good match
+      } else if (amountDiff <= 5.0) {
+        scores.amountAccuracy = Math.max(60 - amountDiff * 5, 30) // Fair match
+      } else {
+        scores.amountAccuracy = 0 // Poor match
+      }
 
-    return {
-      scores,
-      weights,
-      finalScore,
-      calculation: `(${scores.amountAccuracy}×${weights.amountAccuracy} + ${scores.dateProximity}×${weights.dateProximity} + ${scores.descriptionMatch}×${weights.descriptionMatch}) / 100 = ${finalScore}%`,
-      details: {
-        amountDifference: Math.abs(bankTransaction.amount - item.amount),
-        daysDifference,
-        bankDate: formatDateForAPI(bankDate),
-        itemDate: formatDateForAPI(itemDate),
-      },
-    }
-  }
+      // 2. DATE PROXIMITY (20% weight) - Same logic as Provider Matching
+      const bankDate = new Date(bankTransaction.transaction_date)
+      const itemDate = new Date(item.date)
+      const timeDiff = Math.abs(bankDate.getTime() - itemDate.getTime())
+      const daysDifference = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
+
+      if (daysDifference === 0) {
+        scores.dateProximity = 100 // Same day
+      } else if (daysDifference === 1) {
+        scores.dateProximity = 75 // Next day
+      } else if (daysDifference <= 7) {
+        scores.dateProximity = 50 // Same week
+      } else {
+        scores.dateProximity = Math.max(0, 20 - daysDifference) // Diminishing returns
+      }
+
+      // 3. DESCRIPTION MATCH (10% weight)
+      const bankDesc = bankTransaction.description.toLowerCase()
+      const itemDesc = item.description.toLowerCase()
+
+      // Simple keyword matching
+      if (bankDesc.includes(itemDesc) || itemDesc.includes(bankDesc)) {
+        scores.descriptionMatch = 90
+      } else {
+        // Check for common words
+        const bankWords = bankDesc.split(/\s+/)
+        const itemWords = itemDesc.split(/\s+/)
+        const commonWords = bankWords.filter(
+          (word) =>
+            word.length > 3 && itemWords.some((iw) => iw.includes(word) || word.includes(iw))
+        )
+
+        if (commonWords.length > 0) {
+          scores.descriptionMatch = Math.min(70, commonWords.length * 25)
+        } else {
+          scores.descriptionMatch = 10 // Base score for having descriptions
+        }
+      }
+
+      // 4. CALCULATE WEIGHTED AVERAGE (like Provider Matching)
+      const totalScore =
+        (scores.amountAccuracy * weights.amountAccuracy +
+          scores.dateProximity * weights.dateProximity +
+          scores.descriptionMatch * weights.descriptionMatch) /
+        (weights.amountAccuracy + weights.dateProximity + weights.descriptionMatch)
+
+      const finalScore = Math.round(totalScore)
+
+      return {
+        scores,
+        weights,
+        finalScore,
+        calculation: `(${scores.amountAccuracy}×${weights.amountAccuracy} + ${scores.dateProximity}×${weights.dateProximity} + ${scores.descriptionMatch}×${weights.descriptionMatch}) / 100 = ${finalScore}%`,
+        details: {
+          amountDifference: Math.abs(bankTransaction.amount - item.amount),
+          daysDifference,
+          bankDate: formatDateForAPI(bankDate),
+          itemDate: formatDateForAPI(itemDate),
+        },
+      }
+    },
+    []
+  )
+
+  // Auto-highlighting logic: Intelligent weighted scoring system (like Provider Matching)
+  const findPotentialMatches = useCallback(
+    (bankTransactionId: string): { itemIds: string[]; scores: Map<string, number> } => {
+      const bankTransaction = unmatchedBankTransactions.find((t) => t.id === bankTransactionId)
+      if (!bankTransaction) return { itemIds: [], scores: new Map() }
+
+      const _bankAmount = bankTransaction.amount
+      const _bankDate = new Date(bankTransaction.transaction_date)
+
+      // console.log('🔍 Intelligent Banking Match Analysis:', {
+      //   id: bankTransactionId,
+      //   amount: bankAmount,
+      //   date: bankTransaction.transaction_date,
+      //   description: bankTransaction.description
+      // })
+
+      const potentialMatches: Array<{
+        id: string
+        score: number
+        item: MatchableItem
+        breakdown: MatchAnalysis
+      }> = []
+
+      availableForMatching.forEach((item) => {
+        const analysis = analyzeIntelligentBankMatch(bankTransaction, item)
+
+        // Only consider matches with reasonable confidence (>= 50%)
+        if (analysis.finalScore >= 50) {
+          potentialMatches.push({
+            id: item.id,
+            score: analysis.finalScore,
+            item,
+            breakdown: analysis,
+          })
+
+          // console.log('💡 Intelligent Match Found:', {
+          //   item: {
+          //     id: item.id,
+          //     amount: item.amount,
+          //     date: item.date,
+          //     description: item.description,
+          //     type: item.item_type
+          //   },
+          //   scores: {
+          //     amount: analysis.scores.amountAccuracy,
+          //     date: analysis.scores.dateProximity,
+          //     description: analysis.scores.descriptionMatch,
+          //     final: analysis.finalScore
+          //   },
+          //   weights: analysis.weights,
+          //   calculation: analysis.calculation
+          // })
+        }
+      })
+
+      // Sort by score and return top matches
+      const sortedMatches = potentialMatches.sort((a, b) => b.score - a.score).slice(0, 3) // Top 3 matches
+
+      // console.log('🎯 Top Intelligent Matches:', sortedMatches.map(m => ({
+      //   id: m.id,
+      //   finalScore: Math.round(m.score),
+      //   amount: m.item.amount,
+      //   description: m.item.description,
+      //   breakdown: `Amount:${m.breakdown.scores.amountAccuracy}% × Date:${m.breakdown.scores.dateProximity}% × Desc:${m.breakdown.scores.descriptionMatch}%`
+      // })))
+
+      // Create scores map
+      const scores = new Map<string, number>()
+      sortedMatches.forEach((match) => {
+        scores.set(match.id, match.score)
+      })
+
+      return {
+        itemIds: sortedMatches.map((match) => match.id),
+        scores,
+      }
+    },
+    [unmatchedBankTransactions, availableForMatching, analyzeIntelligentBankMatch]
+  )
 
   // Auto-highlight when bank transaction changes
   React.useEffect(() => {
@@ -401,8 +434,8 @@ export function EnhancedBankTables({
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i}>
+                  Array.from({ length: 3 }, (_, i) => i + 1).map((row) => (
+                    <TableRow key={`skeleton-bank-row-${row}`}>
                       <TableCell>
                         <Skeleton className="h-4 w-20" />
                       </TableCell>

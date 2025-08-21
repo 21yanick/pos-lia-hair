@@ -54,7 +54,7 @@ const ROLE_CONFIG = {
 } as const
 
 export function TeamMembersList() {
-  const [memberToRemove, setMemberToRemove] = useState<any>(null)
+  const [memberToRemove, setMemberToRemove] = useState<TeamMember | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const { currentOrganization } = useCurrentOrganization()
@@ -62,7 +62,7 @@ export function TeamMembersList() {
   const { role: userRole } = useOrganizationPermissions()
 
   // Load team members with user details
-  const { data: teamMembers = [], isLoading: teamLoading, error } = useTeamMembersQuery()
+  const { data: teamMembers = [] } = useTeamMembersQuery()
 
   const getInitials = (name: string) => {
     return name
@@ -202,7 +202,7 @@ export function TeamMembersList() {
                     {/* Role and Status Badges */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge
-                        variant={roleConfig.variant as any}
+                        variant={roleConfig.variant as 'destructive' | 'secondary' | 'default'}
                         className="flex items-center gap-1 text-xs flex-shrink-0"
                       >
                         <RoleIcon className="h-3 w-3" />

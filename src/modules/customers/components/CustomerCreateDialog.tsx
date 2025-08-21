@@ -1,7 +1,7 @@
 'use client'
 
 import { Loader2, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -16,15 +16,20 @@ import { Label } from '@/shared/components/ui/label'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useToast } from '@/shared/hooks/core/useToast'
 import type { CustomerFormData } from '@/shared/services/customerService'
+import type { CustomerRow } from '@/types/database'
 import { useCustomerActions } from '../hooks/useCustomerActions'
 
 interface CustomerCreateDialogProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (customer: any) => void
+  onSuccess?: (customer: CustomerRow) => void
 }
 
 export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCreateDialogProps) {
+  const nameId = useId()
+  const phoneId = useId()
+  const emailId = useId()
+
   const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const { createCustomer } = useCustomerActions(currentOrganization?.id || '')
@@ -111,9 +116,9 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name Field */}
           <div className="space-y-2">
-            <Label htmlFor="name">Name *</Label>
+            <Label htmlFor={nameId}>Name *</Label>
             <Input
-              id="name"
+              id={nameId}
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="z.B. Maria Müller"
@@ -124,9 +129,9 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
 
           {/* Phone Field */}
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefon</Label>
+            <Label htmlFor={phoneId}>Telefon</Label>
             <Input
-              id="phone"
+              id={phoneId}
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -138,9 +143,9 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
 
           {/* Email Field */}
           <div className="space-y-2">
-            <Label htmlFor="email">E-Mail</Label>
+            <Label htmlFor={emailId}>E-Mail</Label>
             <Input
-              id="email"
+              id={emailId}
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}

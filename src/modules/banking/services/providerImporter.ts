@@ -176,7 +176,7 @@ async function checkProviderDuplicates(
   const errorRecords: ProviderImportError[] = []
 
   // Check if file was already imported
-  const { data: existingFile } = await (supabase as any)
+  const { data: existingFile } = await supabase
     .from('provider_import_sessions')
     .select('id')
     .eq('filename', filename)
@@ -245,7 +245,7 @@ async function createProviderImportSession(
     notes: `Provider: ${preview.detectedFormat}, Records: ${preview.newRecords.length} new, ${preview.duplicateRecords.length} duplicates`,
   }
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('provider_import_sessions')
     .insert(session)
     .select()
@@ -286,7 +286,7 @@ async function executeProviderImport(
         payment_method: record.provider,
         currency: record.currency,
         import_filename: sessionId, // Use session ID as filename reference
-        raw_data: record.raw_data as any,
+        raw_data: record.raw_data,
         status: 'unmatched', // Must match provider_reports_status_check constraint
         user_id: userId,
         notes: record.description,
@@ -295,7 +295,7 @@ async function executeProviderImport(
       // Insert batch
       const { data, error } = await supabase
         .from('provider_reports')
-        .insert(providerReports as any)
+        .insert(providerReports)
         .select('id')
 
       if (error) {
@@ -347,7 +347,12 @@ async function updateProviderImportSession(
   status: 'completed' | 'failed',
   updates: { records_imported?: number; records_failed?: number }
 ): Promise<void> {
-  const updateData: any = {
+  const updateData: {
+    status: 'completed' | 'failed'
+    completed_at: string
+    records_imported?: number
+    records_failed?: number
+  } = {
     status,
     completed_at: new Date().toISOString(),
   }
@@ -360,7 +365,7 @@ async function updateProviderImportSession(
     updateData.records_failed = updates.records_failed
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('provider_import_sessions')
     .update(updateData)
     .eq('id', sessionId)

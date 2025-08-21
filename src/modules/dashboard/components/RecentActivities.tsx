@@ -30,15 +30,20 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="flex justify-between items-center p-3 border rounded">
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted animate-pulse rounded w-24" />
-                  <div className="h-3 bg-muted animate-pulse rounded w-32" />
+            {['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'].map(
+              (position) => (
+                <div
+                  key={`skeleton-activity-${position}`}
+                  className="flex justify-between items-center p-3 border rounded"
+                >
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted animate-pulse rounded w-24" />
+                    <div className="h-3 bg-muted animate-pulse rounded w-32" />
+                  </div>
+                  <div className="h-6 bg-muted animate-pulse rounded w-20" />
                 </div>
-                <div className="h-6 bg-muted animate-pulse rounded w-20" />
-              </div>
-            ))}
+              )
+            )}
           </div>
         </CardContent>
       </Card>

@@ -306,7 +306,10 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
                 </View>
 
                 {reconciliationData.providerReconciliation.matches.map((match, index) => (
-                  <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                  <View
+                    key={`match-${match.sale.receiptNumber}`}
+                    style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}
+                  >
                     <Text style={[styles.colMedium]}>{match.sale.receiptNumber}</Text>
                     <Text style={[styles.colSmall, styles.colRight]}>
                       {match.sale.amount.toFixed(2)}
@@ -359,7 +362,9 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
                     const isMultipleItems = match.matchedItems.length > 1
 
                     return (
-                      <View key={index}>
+                      <View
+                        key={`bank-${match.bankTransaction.date}-${match.bankTransaction.amount}`}
+                      >
                         <View style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
                           <Text style={[styles.colSmall, styles.colRight]}>
                             {hasDiscrepancy && isMultipleItems
@@ -373,8 +378,11 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
 
                         {/* Positions-Details */}
                         <View style={styles.itemDetails}>
-                          {match.matchedItems.map((item, itemIndex) => (
-                            <Text key={itemIndex} style={styles.itemDetail}>
+                          {match.matchedItems.map((item, _itemIndex) => (
+                            <Text
+                              key={`item-${item.description}-${item.amount}`}
+                              style={styles.itemDetail}
+                            >
                               • {item.description}{' '}
                               {item.settlementDate
                                 ? `(${item.settlementDate})`
@@ -433,7 +441,10 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
               {reconciliationData.cashMovements
                 .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                 .map((movement, index) => (
-                  <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                  <View
+                    key={`cash-${movement.date}-${movement.amount}-${movement.type}`}
+                    style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}
+                  >
                     <Text style={[styles.colMedium]}>{movement.date}</Text>
                     <Text style={[styles.colMedium]}>{movement.receiptNumber || '-'}</Text>
                     <Text style={[styles.colLarge]}>{movement.description}</Text>

@@ -28,7 +28,7 @@ export async function checkCAMTDuplicates(
 
   try {
     // 1. FILE-LEVEL CHECK: Has this file been imported before?
-    const { data: fileCheck } = await supabase.rpc('check_file_already_imported' as any, {
+    const { data: fileCheck } = await supabase.rpc('check_file_already_imported', {
       p_filename: filename,
       p_bank_account_id: bankAccountId,
     })
@@ -36,7 +36,7 @@ export async function checkCAMTDuplicates(
     const fileAlreadyImported = fileCheck === true
 
     // 2. PERIOD-LEVEL CHECK: Do we have transactions in this date range?
-    const { data: periodCheck } = await supabase.rpc('check_period_overlap' as any, {
+    const { data: periodCheck } = await supabase.rpc('check_period_overlap', {
       p_from_date: formatDateForAPI(statement.fromDateTime),
       p_to_date: formatDateForAPI(statement.toDateTime),
       p_bank_account_id: bankAccountId,
@@ -46,7 +46,7 @@ export async function checkCAMTDuplicates(
 
     // 3. REFERENCE-LEVEL CHECK: Which AcctSvcrRef already exist?
     const references = entries.map((entry) => entry.accountServiceReference)
-    const { data: duplicateRefs } = await supabase.rpc('check_duplicate_references' as any, {
+    const { data: duplicateRefs } = await supabase.rpc('check_duplicate_references', {
       p_references: references,
       p_bank_account_id: bankAccountId,
     })
@@ -182,9 +182,9 @@ export async function executeCAMTImport(
     )
 
     // 3. Insert bank transactions
-    const { data: insertedTransactions, error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from('bank_transactions')
-      .insert(bankTransactions as any)
+      .insert(bankTransactions)
       .select('id')
 
     if (insertError) {
@@ -209,7 +209,7 @@ export async function executeCAMTImport(
     }
 
     const { error: sessionError } = await supabase
-      .from('bank_import_sessions' as any)
+      .from('bank_import_sessions')
       .insert(importSession)
 
     if (sessionError) {
@@ -243,7 +243,7 @@ export async function executeCAMTImport(
         notes: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       }
 
-      await supabase.from('bank_import_sessions' as any).insert(failedSession)
+      await supabase.from('bank_import_sessions').insert(failedSession)
     } catch (_sessionError) {
       // console.warn('Failed to create failed import session:', sessionError)
     }
@@ -365,7 +365,7 @@ export async function importCAMTFile(
 
 export async function getImportHistory(bankAccountId: string) {
   const { data, error } = await supabase
-    .from('bank_import_sessions' as any)
+    .from('bank_import_sessions')
     .select('*')
     .eq('bank_account_id', bankAccountId)
     .order('imported_at', { ascending: false })

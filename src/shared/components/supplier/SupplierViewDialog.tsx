@@ -12,7 +12,7 @@ import {
   MapPin,
   Phone,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -48,14 +48,7 @@ export function SupplierViewDialog({
   const [error, setError] = useState<string | null>(null)
   const [supplier, setSupplier] = useState<Supplier | null>(null)
 
-  // Load supplier data when dialog opens
-  useEffect(() => {
-    if (open && supplierId && currentOrganization) {
-      loadSupplierData()
-    }
-  }, [open, supplierId, currentOrganization, loadSupplierData])
-
-  const loadSupplierData = async () => {
+  const loadSupplierData = useCallback(async () => {
     if (!supplierId || !currentOrganization) return
 
     setLoading(true)
@@ -74,7 +67,14 @@ export function SupplierViewDialog({
     } finally {
       setLoading(false)
     }
-  }
+  }, [supplierId, currentOrganization])
+
+  // Load supplier data when dialog opens
+  useEffect(() => {
+    if (open && supplierId && currentOrganization) {
+      loadSupplierData()
+    }
+  }, [open, supplierId, currentOrganization, loadSupplierData])
 
   // Reset when dialog closes
   const handleOpenChange = (newOpen: boolean) => {
@@ -130,7 +130,7 @@ export function SupplierViewDialog({
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Kategorie</label>
+                    <span className="text-sm font-medium text-muted-foreground">Kategorie</span>
                     <div className="mt-1">
                       <Badge variant="outline">{SUPPLIER_CATEGORIES[supplier.category]}</Badge>
                     </div>
@@ -138,7 +138,7 @@ export function SupplierViewDialog({
                 </div>
                 {supplier.notes && (
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Notizen</label>
+                    <span className="text-sm font-medium text-muted-foreground">Notizen</span>
                     <p className="text-sm mt-1 bg-muted p-3 rounded-md">{supplier.notes}</p>
                   </div>
                 )}
@@ -159,7 +159,7 @@ export function SupplierViewDialog({
                     <div className="flex items-center space-x-3">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground">E-Mail</label>
+                        <span className="text-sm font-medium text-muted-foreground">E-Mail</span>
                         <div>
                           <a
                             href={`mailto:${supplier.contact_email}`}
@@ -176,7 +176,7 @@ export function SupplierViewDialog({
                     <div className="flex items-center space-x-3">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground">Telefon</label>
+                        <span className="text-sm font-medium text-muted-foreground">Telefon</span>
                         <div>
                           <a
                             href={`tel:${supplier.contact_phone}`}
@@ -193,7 +193,7 @@ export function SupplierViewDialog({
                     <div className="flex items-center space-x-3">
                       <ExternalLink className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground">Website</label>
+                        <span className="text-sm font-medium text-muted-foreground">Website</span>
                         <div>
                           <a
                             href={supplier.website}
@@ -252,15 +252,13 @@ export function SupplierViewDialog({
                 <CardContent className="space-y-4">
                   {supplier.iban && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">IBAN</label>
+                      <span className="text-sm font-medium text-muted-foreground">IBAN</span>
                       <p className="font-mono text-sm">{supplier.iban}</p>
                     </div>
                   )}
                   {supplier.vat_number && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">
-                        UID-Nummer
-                      </label>
+                      <span className="text-sm font-medium text-muted-foreground">UID-Nummer</span>
                       <p className="font-mono text-sm">{supplier.vat_number}</p>
                     </div>
                   )}
@@ -279,11 +277,11 @@ export function SupplierViewDialog({
               <CardContent className="space-y-2">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <label className="text-muted-foreground">Erstellt am</label>
+                    <span className="text-muted-foreground">Erstellt am</span>
                     <p>{new Date(supplier.created_at).toLocaleDateString('de-CH')}</p>
                   </div>
                   <div>
-                    <label className="text-muted-foreground">Letzte Änderung</label>
+                    <span className="text-muted-foreground">Letzte Änderung</span>
                     <p>{new Date(supplier.updated_at).toLocaleDateString('de-CH')}</p>
                   </div>
                 </div>

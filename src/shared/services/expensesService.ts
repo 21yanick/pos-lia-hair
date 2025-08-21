@@ -24,7 +24,7 @@ import {
   getLastDayOfMonth,
   getTodaySwissString,
 } from '@/shared/utils/dateUtils'
-import type { Database } from '@/types/database'
+import type { Database, DocumentRow } from '@/types/database'
 
 // ========================================
 // Utility Functions
@@ -96,7 +96,7 @@ export type ExpenseMutationResult =
   | {
       success: true
       data: Expense
-      document?: any // Document from receipt upload
+      document?: DocumentRow // Document from receipt upload
     }
   | {
       success: false
@@ -115,7 +115,7 @@ export type ExpenseDeleteResult =
 export type DocumentUploadResult =
   | {
       success: true
-      document: any
+      document: DocumentRow
     }
   | {
       success: false
@@ -211,11 +211,11 @@ export async function getExpenses(
       success: true,
       data: expensesWithSupplier,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in getExpenses:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Laden der Ausgaben',
+      error: err instanceof Error ? err.message : 'Fehler beim Laden der Ausgaben',
     }
   }
 }
@@ -265,11 +265,11 @@ export async function getExpensesByDateRange(
       success: true,
       data: expensesWithSupplier,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in getExpensesByDateRange:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Laden der Ausgaben',
+      error: err instanceof Error ? err.message : 'Fehler beim Laden der Ausgaben',
     }
   }
 }
@@ -331,11 +331,11 @@ export async function createExpense(
       data: expense,
       document: uploadResult,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in createExpense:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Erstellen der Ausgabe',
+      error: err instanceof Error ? err.message : 'Fehler beim Erstellen der Ausgabe',
     }
   }
 }
@@ -371,11 +371,11 @@ export async function updateExpense(
       success: true,
       data,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in updateExpense:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Aktualisieren der Ausgabe',
+      error: err instanceof Error ? err.message : 'Fehler beim Aktualisieren der Ausgabe',
     }
   }
 }
@@ -395,7 +395,7 @@ export async function deleteExpense(
     }
 
     // First get the expense for security check
-    const { data: expense, error: fetchError } = await supabase
+    const { error: fetchError } = await supabase
       .from('expenses')
       .select('*')
       .eq('id', expenseId)
@@ -422,11 +422,11 @@ export async function deleteExpense(
     return {
       success: true,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in deleteExpense:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Löschen der Ausgabe',
+      error: err instanceof Error ? err.message : 'Fehler beim Löschen der Ausgabe',
     }
   }
 }
@@ -489,11 +489,11 @@ export async function uploadExpenseReceipt(
       success: true,
       document,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in uploadExpenseReceipt:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Hochladen des Belegs',
+      error: err instanceof Error ? err.message : 'Fehler beim Hochladen des Belegs',
     }
   }
 }
@@ -591,11 +591,11 @@ export async function replaceExpenseReceipt(
       success: true,
       document,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in replaceExpenseReceipt:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Ersetzen des Belegs',
+      error: err instanceof Error ? err.message : 'Fehler beim Ersetzen des Belegs',
     }
   }
 }
@@ -660,7 +660,7 @@ export async function generatePlaceholderReceipt(
       archiveLocation: archiveLocation || 'Physisches Archiv',
       createdBy: userData.user.email || 'System',
       businessSettings: resolvedBusinessSettings,
-    }) as any
+    }) as React.ReactElement
 
     const blob = await pdf(pdfComponent).toBlob()
     const fileName = `placeholder-beleg-${expense.id}.pdf`
@@ -701,11 +701,11 @@ export async function generatePlaceholderReceipt(
       success: true,
       document,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in generatePlaceholderReceipt:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Erstellen des Platzhalter-Belegs',
+      error: err instanceof Error ? err.message : 'Fehler beim Erstellen des Platzhalter-Belegs',
     }
   }
 }

@@ -256,7 +256,7 @@ export const useDeleteAppointment = (organizationId: string) => {
       }
       return appointmentId
     },
-    onSuccess: (deletedAppointmentId, _variables, _context: any) => {
+    onSuccess: (deletedAppointmentId, _variables, _context: unknown) => {
       // Note: We need the appointment date for targeted invalidation
       // For now, invalidate all to ensure consistency
       queryClient.invalidateQueries({

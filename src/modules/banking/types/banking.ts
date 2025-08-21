@@ -4,6 +4,9 @@
 // Auto-generated from DB schema: 06_banking_system_rebuild.sql
 // Date: 2025-01-06
 
+import type { CAMTEntry } from './camt'
+import type { SumUpCsvRow, TWINTCsvRow } from './provider'
+
 // =====================================================
 // CORE BANKING TYPES
 // =====================================================
@@ -71,7 +74,7 @@ export type BankTransactionRow = {
   import_batch_id: string | null
   import_filename: string | null
   import_date: string
-  raw_data: any | null // JSONB
+  raw_data: CAMTEntry | Record<string, unknown> | null // JSONB - CAMT XML data or other bank import formats
   status: BankTransactionStatus
   user_id: string
   created_at: string
@@ -91,7 +94,7 @@ export type BankTransactionInsert = {
   import_batch_id?: string | null
   import_filename?: string | null
   import_date?: string
-  raw_data?: any | null
+  raw_data?: CAMTEntry | Record<string, unknown> | null
   status?: BankTransactionStatus
   user_id: string
   created_at?: string
@@ -111,7 +114,7 @@ export type BankTransactionUpdate = {
   import_batch_id?: string | null
   import_filename?: string | null
   import_date?: string
-  raw_data?: any | null
+  raw_data?: CAMTEntry | Record<string, unknown> | null
   status?: BankTransactionStatus
   user_id?: string
   created_at?: string
@@ -140,7 +143,7 @@ export type ProviderReportRow = {
   currency: string
   import_filename: string
   import_date: string
-  raw_data: any | null // JSONB
+  raw_data: TWINTCsvRow | SumUpCsvRow | Record<string, unknown> | null // JSONB - Original CSV row data
   sale_id: string | null
   status: ProviderReportStatus
   user_id: string
@@ -163,7 +166,7 @@ export type ProviderReportInsert = {
   currency?: string
   import_filename: string
   import_date?: string
-  raw_data?: any | null
+  raw_data?: TWINTCsvRow | SumUpCsvRow | Record<string, unknown> | null
   sale_id?: string | null
   status?: ProviderReportStatus
   user_id: string
@@ -186,7 +189,7 @@ export type ProviderReportUpdate = {
   currency?: string
   import_filename?: string
   import_date?: string
-  raw_data?: any | null
+  raw_data?: TWINTCsvRow | SumUpCsvRow | Record<string, unknown> | null
   sale_id?: string | null
   status?: ProviderReportStatus
   user_id?: string
@@ -400,32 +403,7 @@ export type AvailableForBankMatching = {
 // BUSINESS LOGIC TYPES
 // =====================================================
 
-// Provider Import Data Structure
-export interface TWINTCsvRow {
-  'Datum Überweisung': string
-  'Datum Abrechnung': string
-  Währung: string
-  Transaktionsgebühr: string
-  'Gutgeschriebener Betrag': string
-  'Betrag Transaktion': string
-  Transaktionsdatum: string
-  Transaktionszeit: string
-  'Order ID': string
-  'Transaktions-ID': string
-}
-
-export interface SumUpCsvRow {
-  'E-Mail': string
-  Datum: string
-  'Transaktions-ID': string
-  Zahlungsart: string
-  Status: string
-  Kartentyp: string
-  'Betrag inkl. MwSt.': string
-  Gebühr: string
-  Auszahlung: string
-  Auszahlungsdatum: string
-}
+// Provider Import Data Structure - Removed duplicate interfaces (already imported from './provider')
 
 // Matching Algorithm
 export interface MatchingCandidate {
