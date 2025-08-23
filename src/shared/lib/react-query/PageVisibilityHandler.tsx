@@ -18,7 +18,7 @@ import { useCallback, useEffect, useRef } from 'react'
 export function PageVisibilityHandler() {
   const queryClient = useQueryClient()
   const isInitialLoad = useRef(true)
-  const debounceTimer = useRef<number>()
+  const debounceTimer = useRef<number | undefined>(undefined) // V6.1 Pattern 18: Type Guard - React 19 useRef requires initial value
 
   const handleTabFocus = useCallback(() => {
     // Skip initial page load to avoid unnecessary requests

@@ -92,8 +92,19 @@ export function useSupplierCategories() {
           [key]: label,
         }
 
+        // V6.1 Pattern 21: Database to Form Data Transformation
         await upsertBusinessSettings({
           ...businessSettings,
+          // Ensure form-safe string values (never null)
+          company_name: businessSettings.company_name ?? '',
+          company_tagline: businessSettings.company_tagline ?? '',
+          company_address: businessSettings.company_address ?? '',
+          company_postal_code: businessSettings.company_postal_code ?? '',
+          company_city: businessSettings.company_city ?? '',
+          company_phone: businessSettings.company_phone ?? '',
+          company_email: businessSettings.company_email ?? '',
+          company_website: businessSettings.company_website ?? '',
+          company_uid: businessSettings.company_uid ?? '',
           custom_supplier_categories: updatedCustomCategories,
         })
 
@@ -101,7 +112,7 @@ export function useSupplierCategories() {
         return { success: true }
       } catch (err: unknown) {
         console.error('Error in addCategory:', err)
-        return { success: false, error: err.message }
+        return { success: false, error: err instanceof Error ? err.message : String(err) } // V6.1: Unknown error handling
       }
     },
     [businessSettings, refetch, currentOrganization]
@@ -128,15 +139,26 @@ export function useSupplierCategories() {
           [key]: newLabel,
         }
 
+        // V6.1 Pattern 21: Database to Form Data Transformation
         await upsertBusinessSettings({
           ...businessSettings,
+          // Ensure form-safe string values (never null)
+          company_name: businessSettings.company_name ?? '',
+          company_tagline: businessSettings.company_tagline ?? '',
+          company_address: businessSettings.company_address ?? '',
+          company_postal_code: businessSettings.company_postal_code ?? '',
+          company_city: businessSettings.company_city ?? '',
+          company_phone: businessSettings.company_phone ?? '',
+          company_email: businessSettings.company_email ?? '',
+          company_website: businessSettings.company_website ?? '',
+          company_uid: businessSettings.company_uid ?? '',
           custom_supplier_categories: updatedCustomCategories,
         })
 
         await refetch()
         return { success: true }
       } catch (err: unknown) {
-        return { success: false, error: err.message }
+        return { success: false, error: err instanceof Error ? err.message : String(err) } // V6.1: Unknown error handling
       }
     },
     [businessSettings, refetch, currentOrganization]
@@ -161,15 +183,26 @@ export function useSupplierCategories() {
         const updatedCustomCategories = { ...businessSettings.custom_supplier_categories }
         delete updatedCustomCategories[key]
 
+        // V6.1 Pattern 21: Database to Form Data Transformation
         await upsertBusinessSettings({
           ...businessSettings,
+          // Ensure form-safe string values (never null)
+          company_name: businessSettings.company_name ?? '',
+          company_tagline: businessSettings.company_tagline ?? '',
+          company_address: businessSettings.company_address ?? '',
+          company_postal_code: businessSettings.company_postal_code ?? '',
+          company_city: businessSettings.company_city ?? '',
+          company_phone: businessSettings.company_phone ?? '',
+          company_email: businessSettings.company_email ?? '',
+          company_website: businessSettings.company_website ?? '',
+          company_uid: businessSettings.company_uid ?? '',
           custom_supplier_categories: updatedCustomCategories,
         })
 
         await refetch()
         return { success: true }
       } catch (err: unknown) {
-        return { success: false, error: err.message }
+        return { success: false, error: err instanceof Error ? err.message : String(err) } // V6.1: Unknown error handling
       }
     },
     [businessSettings, refetch, currentOrganization]

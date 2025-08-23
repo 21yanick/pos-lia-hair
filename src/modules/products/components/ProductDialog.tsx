@@ -68,7 +68,7 @@ export function ProductDialog({
       if (currentItem) {
         setFormData({
           name: currentItem.name,
-          type: currentItem.type,
+          type: currentItem.type as 'service' | 'product', // V6.1 Pattern 19: Schema Property Alignment - cast database string to union type
           default_price: currentItem.default_price.toString(),
           is_favorite: currentItem.is_favorite ?? false,
           active: currentItem.active ?? true,

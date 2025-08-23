@@ -292,9 +292,17 @@ export const queryKeyUtils = {
 
 // Type exports for better TypeScript support
 export type QueryKey = readonly unknown[]
-export type BusinessQueryKey = ReturnType<
-  (typeof queryKeys.business)[keyof typeof queryKeys.business]
->
+
+// V6.1 Pattern 18: Type Safety - Extract only function types with proper typing
+type BusinessQueryFunctions = {
+  [K in keyof typeof queryKeys.business]: (typeof queryKeys.business)[K] extends (
+    ...args: readonly unknown[]
+  ) => readonly unknown[]
+    ? (typeof queryKeys.business)[K]
+    : never
+}[keyof typeof queryKeys.business]
+
+export type BusinessQueryKey = ReturnType<BusinessQueryFunctions>
 export type AuthQueryKey = ReturnType<(typeof queryKeys.auth)[keyof typeof queryKeys.auth]>
 export type OrganizationQueryKey = ReturnType<
   (typeof queryKeys.organization)[keyof typeof queryKeys.organization]

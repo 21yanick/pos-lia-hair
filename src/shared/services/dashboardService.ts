@@ -104,7 +104,8 @@ export async function getCurrentCashBalance(orgId: string): Promise<number> {
  */
 export async function getTodayStats(orgId: string, date?: string): Promise<TodayStatsData> {
   const targetDate = date || new Date().toISOString().split('T')[0]
-  const { start, end } = getSwissDayRange(targetDate)
+  // V6.1: Convert string date to Date object for getSwissDayRange
+  const { start, end } = getSwissDayRange(new Date(targetDate))
 
   const { data: sales, error } = await supabase
     .from('sales')
@@ -122,7 +123,8 @@ export async function getTodayStats(orgId: string, date?: string): Promise<Today
   // Client-side aggregation for optimal performance
   const todayStats = (sales || []).reduce(
     (acc, sale) => {
-      const amount = parseFloat(sale.total_amount) || 0
+      // V6.1: total_amount is already number type, no parseFloat needed
+      const amount = sale.total_amount || 0
       acc.revenue += amount
       acc.transactions += 1
 
@@ -166,11 +168,13 @@ export async function getRecentTransactions(
 
   return (sales || []).map((sale) => ({
     id: sale.id,
-    time: new Date(sale.created_at).toLocaleTimeString('de-CH', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-    amount: parseFloat(sale.total_amount) || 0,
+    time: sale.created_at
+      ? new Date(sale.created_at).toLocaleTimeString('de-CH', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : 'N/A', // V6.1: Null safety for created_at
+    amount: sale.total_amount || 0, // V6.1: Already number type
     method: sale.payment_method as 'cash' | 'twint' | 'sumup',
   }))
 }
@@ -208,7 +212,8 @@ export async function getWeekStats(orgId: string, weekStart?: string): Promise<W
 
   return (sales || []).reduce(
     (acc, sale) => {
-      acc.revenue += parseFloat(sale.total_amount) || 0
+      // V6.1: total_amount is already number type
+      acc.revenue += sale.total_amount || 0
       acc.transactionCount += 1
       return acc
     },
@@ -251,13 +256,10 @@ export async function getMonthStats(orgId: string, monthStart?: string): Promise
     throw new Error('Fehler beim Laden der Monatsausgaben')
   }
 
-  const revenue = (salesResult.data || []).reduce(
-    (sum, sale) => sum + (parseFloat(sale.total_amount) || 0),
-    0
-  )
+  const revenue = (salesResult.data || []).reduce((sum, sale) => sum + (sale.total_amount || 0), 0)
 
   const expenses = (expensesResult.data || []).reduce(
-    (sum, expense) => sum + (parseFloat(expense.amount) || 0),
+    (sum, expense) => sum + (expense.amount || 0),
     0
   )
 
@@ -304,26 +306,32 @@ export async function getRecentActivities(orgId: string, limit = 10): Promise<Ac
   const activities: ActivityItem[] = [
     ...(salesResult.data || []).map((sale) => ({
       id: sale.id,
-      date: sale.created_at.split('T')[0],
-      time: new Date(sale.created_at).toLocaleTimeString('de-CH', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      // V6.1: Null safety for created_at
+      date: sale.created_at ? sale.created_at.split('T')[0] : 'N/A',
+      time: sale.created_at
+        ? new Date(sale.created_at).toLocaleTimeString('de-CH', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'N/A',
       type: 'sale' as const,
       description: `Verkauf #${sale.id.slice(0, 8)}`,
-      amount: parseFloat(sale.total_amount) || 0,
+      amount: sale.total_amount || 0,
       paymentMethod: sale.payment_method as 'cash' | 'twint' | 'sumup',
     })),
     ...(expensesResult.data || []).map((expense) => ({
       id: expense.id,
-      date: expense.created_at.split('T')[0],
-      time: new Date(expense.created_at).toLocaleTimeString('de-CH', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      // V6.1: Null safety for expense created_at
+      date: expense.created_at ? expense.created_at.split('T')[0] : 'N/A',
+      time: expense.created_at
+        ? new Date(expense.created_at).toLocaleTimeString('de-CH', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'N/A',
       type: 'expense' as const,
       description: expense.description || `${expense.category}`,
-      amount: parseFloat(expense.amount) || 0,
+      amount: expense.amount || 0,
       paymentMethod: expense.payment_method as 'cash' | 'twint' | 'sumup' | 'bank',
       category: expense.category,
     })),
@@ -385,11 +393,13 @@ export async function getMonthlyTrends(orgId: string, monthsBack = 12): Promise<
 
   // Aggregate sales by month
   ;(salesResult.data || []).forEach((sale) => {
+    // V6.1: Null safety for created_at
+    if (!sale.created_at) return
     const monthKey = sale.created_at.substring(0, 7) // YYYY-MM
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = { revenue: 0, expenses: 0 }
     }
-    monthlyData[monthKey].revenue += parseFloat(sale.total_amount) || 0
+    monthlyData[monthKey].revenue += sale.total_amount || 0
   })
 
   // Aggregate expenses by month
@@ -398,7 +408,7 @@ export async function getMonthlyTrends(orgId: string, monthsBack = 12): Promise<
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = { revenue: 0, expenses: 0 }
     }
-    monthlyData[monthKey].expenses += parseFloat(expense.amount) || 0
+    monthlyData[monthKey].expenses += expense.amount || 0
   })
 
   // Convert to array and fill missing months
@@ -476,13 +486,10 @@ export async function getYearTotal(orgId: string, year?: number): Promise<YearTo
     throw new Error('Fehler beim Laden der Jahresausgaben')
   }
 
-  const revenue = (salesResult.data || []).reduce(
-    (sum, sale) => sum + (parseFloat(sale.total_amount) || 0),
-    0
-  )
+  const revenue = (salesResult.data || []).reduce((sum, sale) => sum + (sale.total_amount || 0), 0)
 
   const expenses = (expensesResult.data || []).reduce(
-    (sum, expense) => sum + (parseFloat(expense.amount) || 0),
+    (sum, expense) => sum + (expense.amount || 0),
     0
   )
 

@@ -104,9 +104,12 @@ export function useTransactionsQuery(query: TransactionSearchQuery = {}) {
 
       if (error) throw error
 
-      // Calculate PDF status for each transaction
-      const transactionsWithPdfStatus = (data || []).map((tx) => {
-        const pdfStatus = calculatePdfStatus(tx)
+      // V6.1 Pattern 19: Schema Property Alignment - database view data structure
+      const typedData = (data || []) as Omit<UnifiedTransaction, 'pdf_status' | 'pdf_requirement'>[]
+
+      // V6.1 Pattern 19: Schema Property Alignment - add calculated PDF properties
+      const transactionsWithPdfStatus = typedData.map((tx) => {
+        const pdfStatus = calculatePdfStatus(tx as UnifiedTransaction) // V6.1 Pattern 19: Safe casting for calculation
         return {
           ...tx,
           pdf_status: pdfStatus.status,
@@ -124,8 +127,8 @@ export function useTransactionsQuery(query: TransactionSearchQuery = {}) {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
 
-    // Keep previous data while fetching
-    keepPreviousData: true,
+    // Keep previous data while fetching (React Query v5 migration)
+    placeholderData: (previousData) => previousData, // V6.1 Pattern 20: Library API Compatibility - React Query v5 migration
   })
 }
 
@@ -151,10 +154,11 @@ export function useUpdateTransaction() {
 
       if (error) throw error
 
-      // Calculate PDF status for the updated transaction
-      const pdfStatus = calculatePdfStatus(data)
+      // V6.1 Pattern 19: Schema Property Alignment - calculate PDF status for updated transaction
+      const baseTransaction = data as Omit<UnifiedTransaction, 'pdf_status' | 'pdf_requirement'> // V6.1 Pattern 19: Safe partial casting
+      const pdfStatus = calculatePdfStatus(baseTransaction as UnifiedTransaction) // V6.1 Pattern 19: Safe casting for calculation
       return {
-        ...data,
+        ...baseTransaction,
         pdf_status: pdfStatus.status,
         pdf_requirement: pdfStatus.requirement,
       } as UnifiedTransaction

@@ -81,21 +81,12 @@ export function ExpenseEditDialog({
         notes: expense.notes || '',
       })
 
-      // Set supplier if available
-      if (expense.supplier) {
-        setSelectedSupplier(expense.supplier)
-      } else if (expense.supplier_name) {
-        // Create a minimal supplier object for display
-        setSelectedSupplier({
-          id: '',
-          name: expense.supplier_name,
-          category: 'other',
-          is_active: true,
-          created_at: '',
-          organization_id: '',
-        })
-      } else {
+      // V6.1: Use supplier_id to fetch full supplier or keep null if only name exists
+      if (expense.supplier_id) {
+        // TODO: Could fetch full supplier by ID if needed for editing
         setSelectedSupplier(null)
+      } else {
+        setSelectedSupplier(null) // V6.1: Clean state - supplier_name handled in form data
       }
     }
   }, [expense])

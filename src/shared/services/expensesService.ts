@@ -202,9 +202,15 @@ export async function getExpenses(
     }
 
     // Transform data to include supplier relation
+    // V6.1 Pattern 19: Schema Property Alignment for supplier.is_active
     const expensesWithSupplier = (data || []).map((expense) => ({
       ...expense,
-      supplier: expense.suppliers || null,
+      supplier: expense.suppliers
+        ? {
+            ...expense.suppliers,
+            is_active: expense.suppliers.is_active ?? false, // V6.1: null → boolean transformation
+          }
+        : null,
     }))
 
     return {
@@ -256,9 +262,15 @@ export async function getExpensesByDateRange(
     }
 
     // Transform data to include supplier relation
+    // V6.1 Pattern 19: Schema Property Alignment for supplier.is_active
     const expensesWithSupplier = (data || []).map((expense) => ({
       ...expense,
-      supplier: expense.suppliers || null,
+      supplier: expense.suppliers
+        ? {
+            ...expense.suppliers,
+            is_active: expense.suppliers.is_active ?? false, // V6.1: null → boolean transformation
+          }
+        : null,
     }))
 
     return {
@@ -329,7 +341,7 @@ export async function createExpense(
     return {
       success: true,
       data: expense,
-      document: uploadResult,
+      document: uploadResult || undefined, // V6.1 Pattern 17: null → undefined transformation
     }
   } catch (err: unknown) {
     console.error('Error in createExpense:', err)
@@ -650,7 +662,7 @@ export async function generatePlaceholderReceipt(
     const resolvedBusinessSettings = businessSettings
       ? {
           ...businessSettings,
-          logo_url: resolveLogoUrl(businessSettings.logo_url),
+          logo_url: resolveLogoUrl(businessSettings.logo_url ?? undefined), // V6.1 Pattern 17: null → undefined
         }
       : null
 
@@ -662,7 +674,7 @@ export async function generatePlaceholderReceipt(
       businessSettings: resolvedBusinessSettings,
     }) as React.ReactElement
 
-    const blob = await pdf(pdfComponent).toBlob()
+    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
     const fileName = `placeholder-beleg-${expense.id}.pdf`
     const filePath = `${validOrgId}/expense_receipts/${fileName}`
 

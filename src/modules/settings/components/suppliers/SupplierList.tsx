@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useToast } from '@/shared/hooks/core/useToast'
 import { deleteSupplier, updateSupplier } from '@/shared/services/supplierServices'
 import type { Supplier } from '@/shared/types/suppliers'
@@ -34,6 +35,7 @@ interface SupplierListProps {
 
 export function SupplierList({ suppliers, loading, onSupplierUpdated }: SupplierListProps) {
   const { toast } = useToast()
+  const { currentOrganization } = useCurrentOrganization() // V6.1 Pattern 18: Function Signature Alignment
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   // Dialog states
@@ -42,11 +44,17 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null)
 
   const handleToggleActive = async (supplier: Supplier) => {
+    if (!currentOrganization?.id) return // V6.1 Pattern 18: Ensure organization context
+
     setActionLoading(supplier.id)
     try {
-      await updateSupplier(supplier.id, {
-        is_active: !supplier.is_active,
-      })
+      await updateSupplier(
+        supplier.id,
+        {
+          is_active: !supplier.is_active,
+        },
+        currentOrganization.id
+      ) // V6.1 Pattern 18: Function Signature Alignment - added missing organizationId
 
       toast({
         title: 'Erfolg',
@@ -66,13 +74,15 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
   }
 
   const handleDelete = async (supplier: Supplier) => {
+    if (!currentOrganization?.id) return // V6.1 Pattern 18: Ensure organization context
+
     if (!confirm(`Möchten Sie "${supplier.name}" wirklich löschen?`)) {
       return
     }
 
     setActionLoading(supplier.id)
     try {
-      await deleteSupplier(supplier.id)
+      await deleteSupplier(supplier.id, currentOrganization.id) // V6.1 Pattern 18: Function Signature Alignment - added missing organizationId
 
       toast({
         title: 'Erfolg',
@@ -172,7 +182,10 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
 
                 {/* Category */}
                 <TableCell>
-                  <Badge variant="outline">{SUPPLIER_CATEGORIES[supplier.category]}</Badge>
+                  <Badge variant="outline">
+                    {supplier.category ? SUPPLIER_CATEGORIES[supplier.category] : 'Unbekannt'}
+                  </Badge>
+                  {/* V6.1 Pattern 17: Null Safety - handle null category */}
                 </TableCell>
 
                 {/* Contact */}

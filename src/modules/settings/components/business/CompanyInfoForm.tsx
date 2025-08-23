@@ -8,14 +8,14 @@ import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Separator } from '@/shared/components/ui/separator'
 import { useBusinessSettings } from '@/shared/hooks/business/useBusinessSettings'
-import type { BusinessSettingsFormData } from '@/shared/types/businessSettings'
 import { DEFAULT_BUSINESS_SETTINGS } from '@/shared/types/businessSettings'
 
 export function CompanyInfoForm() {
   const { settings, updateSettings, saving } = useBusinessSettings()
   const [error, setError] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState<BusinessSettingsFormData>({
+  // V6.1 Pattern 21: Form State with guaranteed string values (never null)
+  const [formData, setFormData] = useState({
     company_name: '',
     company_tagline: '',
     company_address: '',
@@ -46,27 +46,31 @@ export function CompanyInfoForm() {
   useEffect(() => {
     if (settings) {
       setFormData({
-        company_name: settings.company_name || '',
-        company_tagline: settings.company_tagline || '',
-        company_address: settings.company_address || '',
-        company_postal_code: settings.company_postal_code || '',
-        company_city: settings.company_city || '',
-        company_phone: settings.company_phone || '',
-        company_email: settings.company_email || '',
-        company_website: settings.company_website || '',
-        company_uid: settings.company_uid || '',
-        default_currency: settings.default_currency,
-        tax_rate: settings.tax_rate,
-        pdf_show_logo: settings.pdf_show_logo,
-        pdf_show_company_details: settings.pdf_show_company_details,
+        // V6.1 Pattern 21: Database-to-Form Value Transformation
+        company_name: settings.company_name ?? '',
+        company_tagline: settings.company_tagline ?? '',
+        company_address: settings.company_address ?? '',
+        company_postal_code: settings.company_postal_code ?? '',
+        company_city: settings.company_city ?? '',
+        company_phone: settings.company_phone ?? '',
+        company_email: settings.company_email ?? '',
+        company_website: settings.company_website ?? '',
+        company_uid: settings.company_uid ?? '',
+        // V6.1: Required fields with database null safety
+        default_currency:
+          settings.default_currency ?? DEFAULT_BUSINESS_SETTINGS.default_currency ?? 'CHF',
+        tax_rate: settings.tax_rate ?? DEFAULT_BUSINESS_SETTINGS.tax_rate ?? 7.7,
+        pdf_show_logo: settings.pdf_show_logo ?? DEFAULT_BUSINESS_SETTINGS.pdf_show_logo ?? true,
+        pdf_show_company_details:
+          settings.pdf_show_company_details ??
+          DEFAULT_BUSINESS_SETTINGS.pdf_show_company_details ??
+          true,
       })
     }
   }, [settings])
 
-  const handleInputChange = (
-    field: keyof BusinessSettingsFormData,
-    value: string | number | boolean
-  ) => {
+  // V6.1: Form field handler with type safety for form values (never null)
+  const handleInputChange = (field: keyof typeof formData, value: string | number | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     setError(null)
   }

@@ -7,23 +7,79 @@
 'use client'
 
 import { supabase } from '@/shared/lib/supabase/client'
-// Note: Types from ../types/banking are imported but may not be directly used
-// They're referenced in interfaces and function signatures
+// Note: Types from ../types/banking are imported in the Provider section with aliases to avoid conflicts
 
 // =====================================================
 // BANK ACCOUNTS
 // =====================================================
 
+// Import Clean Architecture types
+import type { BankReconciliationMatchInsert } from '../types/banking'
+
+// =====================================================
+// RECONCILIATION SESSION MANAGEMENT (Clean Architecture)
+// =====================================================
+
+/**
+ * Get or create current month reconciliation session
+ * Clean Architecture: Session-aware reconciliation system
+ */
+async function getOrCreateReconciliationSession(organizationId: string): Promise<string> {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+
+  // Try to find existing session for current month
+  const { data: existingSession, error: findError } = await supabase
+    .from('bank_reconciliation_sessions')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .eq('year', year)
+    .eq('month', month)
+    .single()
+
+  if (existingSession && !findError) {
+    return existingSession.id
+  }
+
+  // Create new session for current month
+  const { data: newSession, error: createError } = await supabase
+    .from('bank_reconciliation_sessions')
+    .insert({
+      year,
+      month,
+      organization_id: organizationId,
+      status: 'in_progress',
+      bank_entries_count: 0,
+      matched_entries_count: 0,
+      unmatched_entries_count: 0,
+      completion_percentage: 0,
+    })
+    .select('id')
+    .single()
+
+  if (createError || !newSession) {
+    throw new Error(`Failed to create reconciliation session: ${createError?.message}`)
+  }
+
+  return newSession.id
+}
+
+// Clean Architecture: Database schema-aligned type
 export interface BankAccount {
   id: string
-  name: string
+  account_name: string // Database uses account_name, not name
+  account_type: string
   bank_name: string
-  iban?: string | null
-  current_balance: number
-  last_statement_date?: string | null
-  is_active: boolean
-  user_id: string
+  bic: string | null
   created_at: string
+  currency: string
+  current_balance: number
+  iban: string
+  is_active: boolean
+  last_transaction_date: string | null
+  notes: string | null
+  organization_id: string | null // Database uses organization_id, not user_id
   updated_at: string
 }
 
@@ -48,15 +104,7 @@ export async function getBankAccounts(organizationId: string) {
 // =====================================================
 
 // Left Side: Unmatched Sales for Provider Matching
-export interface UnmatchedSaleForProvider {
-  id: string
-  created_at: string
-  total_amount: number
-  payment_method: string
-  payment_display: string
-  customer_name?: string
-  banking_status: string
-}
+// Type imported from ../types/banking (Clean Architecture)
 
 export async function getUnmatchedSalesForProvider(organizationId: string) {
   const { data, error } = await supabase
@@ -74,17 +122,7 @@ export async function getUnmatchedSalesForProvider(organizationId: string) {
 }
 
 // Right Side: Unmatched Provider Reports
-export interface UnmatchedProviderReport {
-  id: string
-  provider: string
-  provider_display: string
-  transaction_date: string
-  gross_amount: number
-  fees: number
-  net_amount: number
-  payment_method: string | null
-  status: string
-}
+// Type imported from ../types/banking (Clean Architecture)
 
 export async function getUnmatchedProviderReports(organizationId: string) {
   const { data, error } = await supabase
@@ -269,27 +307,65 @@ export async function createProviderMatch(saleId: string, providerReportId: stri
   }
 }
 
-// Create Bank Match (Tab 2: Bank Transaction ↔ Items)
+// Create Bank Match (Tab 2: Bank Transaction ↔ Items) - Clean Architecture
 export async function createBankMatch(
   bankTransactionId: string,
   matchedItems: Array<{
     type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction'
     id: string
     amount: number
-  }>
+  }>,
+  organizationId: string
 ) {
   try {
-    // Create transaction matches
-    const matchInserts = matchedItems.map((item) => ({
-      bank_transaction_id: bankTransactionId,
-      matched_type: item.type,
-      matched_id: item.id,
-      matched_amount: item.amount,
-      match_type: 'manual' as const,
-      match_confidence: 100.0,
-    }))
+    // Clean Architecture: Session-aware reconciliation system
+    const sessionId = await getOrCreateReconciliationSession(organizationId)
 
-    const { error: matchError } = await supabase.from('transaction_matches').insert(matchInserts)
+    // Clean Architecture: Proper field mapping based on actual DB schema
+    const matchInserts: BankReconciliationMatchInsert[] = matchedItems.map((item) => {
+      const baseMatch: BankReconciliationMatchInsert = {
+        session_id: sessionId, // REQUIRED field
+        bank_transaction_id: bankTransactionId,
+        match_type: 'manual', // varchar(20) NOT NULL
+        confidence_score: 1.0, // numeric(3,2) 0-1 (100% confidence for manual matches)
+        amount_difference: 0, // Perfect match assumed for manual
+        status: 'approved', // Manual matches are pre-approved
+        organization_id: organizationId,
+        // Initialize specific reference fields to null
+        provider_report_id: null,
+        sale_id: null,
+        expense_id: null,
+        notes: null,
+        created_by: null,
+      }
+
+      // Map item type to correct reference field
+      switch (
+        item.type // ✅ RESTORED: Use parameter property name in createBankMatch
+      ) {
+        case 'sale':
+          baseMatch.sale_id = item.id
+          baseMatch.notes = `Manual match to sale (amount: ${item.amount})`
+          break
+        case 'expense':
+          baseMatch.expense_id = item.id
+          baseMatch.notes = `Manual match to expense (amount: ${item.amount})`
+          break
+        case 'cash_movement':
+        case 'owner_transaction':
+          // These don't have direct reference fields in bank_reconciliation_matches
+          // Store in notes for now (Clean Architecture - explicit decision)
+          baseMatch.notes = `Manual match to ${item.type} (ID: ${item.id}, amount: ${item.amount})` // ✅ RESTORED: Use parameter property
+          break
+      }
+
+      return baseMatch
+    })
+
+    // Clean Architecture: Properly typed database insert
+    const { error: matchError } = await supabase
+      .from('bank_reconciliation_matches')
+      .insert(matchInserts)
 
     if (matchError) throw matchError
 
@@ -303,25 +379,33 @@ export async function createBankMatch(
 
     // Update matched items status
     for (const item of matchedItems) {
-      let table: string
+      // ✅ RESTORED: Use parameter name in createBankMatch
+      // V6.1: Clean Architecture - type-safe table selection
+      type BankingTable = 'sales' | 'expenses' | 'cash_movements' | 'owner_transactions'
+      let table: BankingTable
       let updateData: Record<string, unknown>
 
       if (item.type === 'sale') {
+        // ✅ RESTORED: Use parameter property in createBankMatch
         table = 'sales'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' }
       } else if (item.type === 'expense') {
+        // ✅ RESTORED: Use parameter property in createBankMatch
         table = 'expenses'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
       } else if (item.type === 'cash_movement') {
+        // ✅ RESTORED: Use parameter property in createBankMatch
         table = 'cash_movements'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
       } else if (item.type === 'owner_transaction') {
+        // ✅ RESTORED: Use parameter property in createBankMatch
         table = 'owner_transactions'
         updateData = { related_bank_transaction_id: bankTransactionId, banking_status: 'matched' }
       } else {
         continue // Skip unknown types
       }
 
+      // V6.1: Type-safe dynamic table update with union type
       const { error } = await supabase.from(table).update(updateData).eq('id', item.id)
 
       if (error) throw error
@@ -339,13 +423,33 @@ export async function createBankMatch(
 // =====================================================
 
 export async function createBankAccount(account: {
-  name: string
+  account_name: string // Clean Architecture: Match database schema
   bank_name: string
-  iban?: string
-  account_number?: string
-  user_id: string
+  iban: string // Database requires this field
+  bic?: string // Optional in schema
+  account_type?: string // Default: 'checking'
+  currency?: string // Default: 'CHF'
+  organization_id: string // Required for multi-tenancy
 }) {
-  const { data, error } = await supabase.from('bank_accounts').insert([account]).select().single()
+  // Clean Architecture: Map to exact database schema
+  const accountData = {
+    account_name: account.account_name,
+    bank_name: account.bank_name,
+    iban: account.iban,
+    bic: account.bic || null,
+    account_type: account.account_type || 'checking',
+    currency: account.currency || 'CHF',
+    organization_id: account.organization_id,
+    is_active: true,
+    current_balance: 0,
+    notes: null,
+  }
+
+  const { data, error } = await supabase
+    .from('bank_accounts')
+    .insert([accountData])
+    .select()
+    .single()
 
   return { data, error }
 }
@@ -355,12 +459,12 @@ export async function createBankAccount(account: {
 // =====================================================
 // New endpoints for smart matching algorithms
 
-// Import types from banking.ts to avoid conflicts
+// Import types from banking.ts (Clean Architecture)
 import type {
   AvailableForBankMatching as BankingAvailableForBankMatching,
   UnmatchedBankTransaction as BankingUnmatchedBankTransaction,
-  UnmatchedProviderReport as BankingUnmatchedProviderReport,
-  UnmatchedSaleForProvider as BankingUnmatchedSaleForProvider,
+  UnmatchedProviderReport,
+  UnmatchedSaleForProvider,
 } from '../types/banking'
 import { bankMatchingService } from './bankMatching'
 import type {
@@ -376,15 +480,15 @@ import { providerMatchingService } from './providerMatching'
 // PROVIDER MATCHING (Tab 1)
 // =====================================================
 
-export async function getProviderMatchSuggestions(): Promise<{
+export async function getProviderMatchSuggestions(organizationId: string): Promise<{
   data: ProviderMatchResult | null
   error: unknown
 }> {
   try {
-    // Get current unmatched data
+    // Get current unmatched data - Clean Architecture: Organization-scoped
     const [salesResult, reportsResult] = await Promise.all([
-      getUnmatchedSalesForProvider(),
-      getUnmatchedProviderReports(),
+      getUnmatchedSalesForProvider(organizationId),
+      getUnmatchedProviderReports(organizationId),
     ])
 
     if (salesResult.error || reportsResult.error) {
@@ -393,8 +497,8 @@ export async function getProviderMatchSuggestions(): Promise<{
       )
     }
 
-    const sales = (salesResult.data as unknown as BankingUnmatchedSaleForProvider[]) || []
-    const reports = (reportsResult.data as unknown as BankingUnmatchedProviderReport[]) || []
+    const sales = (salesResult.data as unknown as UnmatchedSaleForProvider[]) || []
+    const reports = (reportsResult.data as unknown as UnmatchedProviderReport[]) || []
 
     // Run intelligent matching
     const result = await providerMatchingService.findProviderMatches(sales, reports)
@@ -410,7 +514,10 @@ export async function getProviderMatchSuggestions(): Promise<{
   }
 }
 
-export async function executeAutoProviderMatch(candidates?: ProviderMatchCandidate[]): Promise<{
+export async function executeAutoProviderMatch(
+  organizationId: string, // ✅ ADDED: Multi-Tenant security parameter
+  candidates?: ProviderMatchCandidate[]
+): Promise<{
   data: ProviderAutoMatchResult | null
   error: unknown
 }> {
@@ -419,7 +526,7 @@ export async function executeAutoProviderMatch(candidates?: ProviderMatchCandida
 
     // If no candidates provided, get fresh suggestions
     if (!matchCandidates) {
-      const suggestionsResult = await getProviderMatchSuggestions()
+      const suggestionsResult = await getProviderMatchSuggestions(organizationId) // ✅ FIXED: Pass organizationId
       if (suggestionsResult.error || !suggestionsResult.data) {
         throw new Error('Failed to get match suggestions')
       }
@@ -472,7 +579,10 @@ export async function executeAutoProviderMatch(candidates?: ProviderMatchCandida
 // BANK MATCHING (Tab 2)
 // =====================================================
 
-export async function getBankMatchSuggestions(bankTransactionId: string): Promise<{
+export async function getBankMatchSuggestions(
+  bankTransactionId: string,
+  organizationId: string // ✅ ADDED: Multi-Tenant security parameter
+): Promise<{
   data: BankMatchSuggestion | null
   error: unknown
 }> {
@@ -489,7 +599,7 @@ export async function getBankMatchSuggestions(bankTransactionId: string): Promis
     }
 
     // Get available items for matching
-    const availableResult = await getAvailableForBankMatching()
+    const availableResult = await getAvailableForBankMatching(organizationId) // ✅ FIXED: Pass organizationId
     if (availableResult.error) {
       throw new Error(`Failed to get available items: ${availableResult.error.message}`)
     }
@@ -514,13 +624,15 @@ export async function getBankMatchSuggestions(bankTransactionId: string): Promis
   }
 }
 
-export async function getProviderSummaries(): Promise<{
+export async function getProviderSummaries(
+  organizationId: string // ✅ ADDED: Multi-Tenant security parameter
+): Promise<{
   data: ProviderDashboardData | null
   error: unknown
 }> {
   try {
     // Get available items for summary
-    const availableResult = await getAvailableForBankMatching()
+    const availableResult = await getAvailableForBankMatching(organizationId) // ✅ FIXED: Pass organizationId
     if (availableResult.error) {
       throw new Error(`Failed to get available items: ${availableResult.error.message}`)
     }
@@ -549,12 +661,16 @@ export async function getProviderSummaries(): Promise<{
 export async function createIntelligentBankMatch(
   bankTransactionId: string,
   selectedItemIds: string[],
+  organizationId: string,
   confidence?: number,
   matchType: 'manual' | 'suggested' = 'suggested'
 ) {
   try {
+    // Clean Architecture: Session-aware reconciliation system
+    const sessionId = await getOrCreateReconciliationSession(organizationId)
+
     // Get the selected items with their details
-    const availableResult = await getAvailableForBankMatching()
+    const availableResult = await getAvailableForBankMatching(organizationId) // ✅ FIXED: Pass organizationId
     if (availableResult.error) {
       throw new Error(`Failed to get available items: ${availableResult.error.message}`)
     }
@@ -567,24 +683,49 @@ export async function createIntelligentBankMatch(
       throw new Error('No valid items selected for matching')
     }
 
-    // Convert to the format expected by createBankMatch
-    const matchedItems = selectedItems.map((item) => ({
-      type: item.item_type as 'sale' | 'expense' | 'cash_movement' | 'owner_transaction',
-      id: item.id,
-      amount: item.amount,
-    }))
+    // Clean Architecture: Proper field mapping based on actual DB schema
+    const matchInserts: BankReconciliationMatchInsert[] = selectedItems.map((item) => {
+      const baseMatch: BankReconciliationMatchInsert = {
+        session_id: sessionId, // REQUIRED field
+        bank_transaction_id: bankTransactionId,
+        match_type: matchType === 'manual' ? 'manual' : 'fuzzy', // Map suggested → fuzzy
+        confidence_score: confidence ? confidence / 100 : 0.8, // Convert % to 0-1 scale
+        amount_difference: 0, // TODO: Calculate actual difference
+        status: matchType === 'manual' ? 'approved' : 'pending', // Manual = approved, suggested = pending
+        organization_id: organizationId,
+        // Initialize specific reference fields to null
+        provider_report_id: null,
+        sale_id: null,
+        expense_id: null,
+        notes: null,
+        created_by: null,
+      }
 
-    // Create the matches in transaction_matches table with enhanced metadata
-    const matchInserts = matchedItems.map((item) => ({
-      bank_transaction_id: bankTransactionId,
-      matched_type: item.type,
-      matched_id: item.id,
-      matched_amount: item.amount,
-      match_type: matchType,
-      match_confidence: confidence || 100.0,
-    }))
+      // Map item type to correct reference field
+      const itemType = item.item_type as 'sale' | 'expense' | 'cash_movement' | 'owner_transaction'
+      switch (itemType) {
+        case 'sale':
+          baseMatch.sale_id = item.id
+          baseMatch.notes = `${matchType} match to sale (amount: ${item.amount}, confidence: ${confidence || 80}%)`
+          break
+        case 'expense':
+          baseMatch.expense_id = item.id
+          baseMatch.notes = `${matchType} match to expense (amount: ${item.amount}, confidence: ${confidence || 80}%)`
+          break
+        case 'cash_movement':
+        case 'owner_transaction':
+          // Store in notes for now (Clean Architecture - explicit decision)
+          baseMatch.notes = `${matchType} match to ${itemType} (ID: ${item.id}, amount: ${item.amount}, confidence: ${confidence || 80}%)`
+          break
+      }
 
-    const { error: matchError } = await supabase.from('transaction_matches').insert(matchInserts)
+      return baseMatch
+    })
+
+    // Clean Architecture: Properly typed database insert
+    const { error: matchError } = await supabase
+      .from('bank_reconciliation_matches')
+      .insert(matchInserts)
 
     if (matchError) throw matchError
 
@@ -597,26 +738,30 @@ export async function createIntelligentBankMatch(
     if (bankError) throw bankError
 
     // Update matched items status
-    for (const item of matchedItems) {
-      let table: string
+    for (const item of selectedItems) {
+      // ✅ FIXED: Use correct variable name
+      // V6.1: Clean Architecture - type-safe table selection
+      type BankingTable = 'sales' | 'expenses' | 'cash_movements' | 'owner_transactions'
+      let table: BankingTable
       let updateData: Record<string, unknown>
 
-      if (item.type === 'sale') {
+      if (item.item_type === 'sale') {
         table = 'sales'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'fully_matched' }
-      } else if (item.type === 'expense') {
+      } else if (item.item_type === 'expense') {
         table = 'expenses'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
-      } else if (item.type === 'cash_movement') {
+      } else if (item.item_type === 'cash_movement') {
         table = 'cash_movements'
         updateData = { bank_transaction_id: bankTransactionId, banking_status: 'matched' }
-      } else if (item.type === 'owner_transaction') {
+      } else if (item.item_type === 'owner_transaction') {
         table = 'owner_transactions'
         updateData = { related_bank_transaction_id: bankTransactionId, banking_status: 'matched' }
       } else {
         continue // Skip unknown types
       }
 
+      // V6.1: Type-safe dynamic table update with union type
       const { error } = await supabase.from(table).update(updateData).eq('id', item.id)
 
       if (error) throw error

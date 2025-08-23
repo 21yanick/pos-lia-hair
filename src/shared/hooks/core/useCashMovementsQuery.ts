@@ -158,7 +158,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
         throw new Error('Fehler beim Laden der Kassenbewegungen')
       }
 
-      return data || []
+      return (data || []) as CashMovement[] // V6.1 Pattern 19: Schema Property Alignment - string literal type casting
     },
     enabled: !!organizationId,
     staleTime: cacheConfig.cashMovements.staleTime,
@@ -212,7 +212,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
         throw new Error('Fehler beim Erstellen der Kassenbewegung')
       }
 
-      return data
+      return data as CashMovement // V6.1 Pattern 19: Schema Property Alignment - string literal type casting
     },
     onMutate: async (newMovement) => {
       if (!organizationId) return
@@ -415,7 +415,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       .order('created_at', { ascending: false })
 
     if (error) throw new Error('Fehler beim Laden der Bargeld-Bewegungen')
-    return data || []
+    return (data || []) as CashMovement[] // V6.1 Pattern 19: Schema Property Alignment - string literal type casting
   }
 
   // Get Cash Movements by Reference (Legacy Compatible)
@@ -434,7 +434,7 @@ export function useCashMovementsQuery(): UseCashMovementsQueryReturn {
       .order('created_at', { ascending: false })
 
     if (error) throw new Error('Fehler beim Laden der Bargeld-Bewegungen')
-    return data || []
+    return (data || []) as CashMovement[] // V6.1 Pattern 19: Schema Property Alignment - string literal type casting
   }
 
   // Get Current Balance (Legacy Compatible)

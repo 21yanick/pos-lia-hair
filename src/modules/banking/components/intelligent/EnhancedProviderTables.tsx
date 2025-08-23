@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { TransactionTypeBadge } from '@/shared/components/ui/TransactionTypeBadge'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { useBankingData } from '../../hooks/useBankingData'
 import { executeAutoProviderMatch } from '../../services/bankingApi'
@@ -40,6 +41,8 @@ export function EnhancedProviderTables({
   const [isExecuting, setIsExecuting] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useCurrentOrganization()
   const { unmatchedSales, unmatchedProviderReports, isLoading } = useBankingData()
 
   // Analysis function
@@ -142,16 +145,29 @@ export function EnhancedProviderTables({
 
     setIsExecuting(true)
     try {
+      // 🔒 CRITICAL SECURITY: Organization required for multi-tenant security
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
+
       // Get the actual match candidates for the selected matches
       const selectedCandidates = matchCandidates.filter((candidate) =>
         selectedMatches.includes(`${candidate.sale.id}-${candidate.providerReport.id}`)
       )
 
       // Execute the matches using the banking API
-      const result = await executeAutoProviderMatch(selectedCandidates)
+      const result = await executeAutoProviderMatch(
+        currentOrganization.id, // ✅ SECURITY: Organization-scoped execution
+        selectedCandidates
+      )
 
       if (result.error) {
-        throw new Error(result.error.message || 'Match execution failed')
+        // Type-safe error message extraction (Clean Architecture)
+        const errorMessage =
+          typeof result.error === 'object' && result.error !== null && 'message' in result.error
+            ? String(result.error.message)
+            : 'Match execution failed'
+        throw new Error(errorMessage)
       }
 
       // Success - reset state and refresh data

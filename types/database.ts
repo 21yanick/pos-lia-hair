@@ -7,12 +7,13 @@
 // Size: 76KB generated TypeScript definitions
 // ===================================================================
 
-import type { Database as GeneratedDB } from './supabase_generated_v6.1'
+import type { Database as GeneratedDB, Json } from './supabase_generated_v6.1'
 
 // ===================================================================
 // RE-EXPORT GENERATED STRUCTURE WITH CLEAN NAMES
 // ===================================================================
 export type DatabaseSchema = GeneratedDB['public']
+export type { Json }
 export type Tables = DatabaseSchema['Tables']
 export type Views = DatabaseSchema['Views']
 export type Functions = DatabaseSchema['Functions']
@@ -88,6 +89,10 @@ export type ProviderReportRow = Tables['provider_reports']['Row']
 export type ProviderReportInsert = Tables['provider_reports']['Insert']
 export type ProviderReportUpdate = Tables['provider_reports']['Update']
 
+export type BankReconciliationMatchRow = Tables['bank_reconciliation_matches']['Row']
+export type BankReconciliationMatchInsert = Tables['bank_reconciliation_matches']['Insert']
+export type BankReconciliationMatchUpdate = Tables['bank_reconciliation_matches']['Update']
+
 export type DocumentSequenceRow = Tables['document_sequences']['Row']
 export type DocumentSequenceInsert = Tables['document_sequences']['Insert']
 export type DocumentSequenceUpdate = Tables['document_sequences']['Update']
@@ -119,7 +124,6 @@ export type DocumentInsert = Tables['documents']['Insert']
 // ▶️ ADDITIONAL V6.1 TABLES
 export type DailyClosureLockRow = Tables['daily_closure_locks']['Row']
 export type BankReconciliationSessionRow = Tables['bank_reconciliation_sessions']['Row']
-export type BankReconciliationMatchRow = Tables['bank_reconciliation_matches']['Row']
 
 // ===================================================================
 // VIEW TYPES - V6.1 Analytics and Reports

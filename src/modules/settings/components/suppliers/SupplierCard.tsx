@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Switch } from '@/shared/components/ui/switch'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization' // V6.1 Multi-tenant Security Pattern
 import { useToast } from '@/shared/hooks/core/useToast'
 import { deleteSupplier, updateSupplier } from '@/shared/services/supplierServices'
 import type { Supplier } from '@/shared/types/suppliers'
@@ -25,14 +26,29 @@ interface SupplierCardProps {
 
 export function SupplierCard({ supplier, onSupplierUpdated, onView, onEdit }: SupplierCardProps) {
   const { toast } = useToast()
+  const { currentOrganization } = useCurrentOrganization() // V6.1 Multi-tenant Security Pattern
   const [actionLoading, setActionLoading] = useState(false)
 
   const handleToggleActive = async () => {
+    // V6.1 Pattern 17: Null Safety - validate organization before operations
+    if (!currentOrganization?.id) {
+      toast({
+        title: 'Fehler',
+        description: 'Keine Organisation ausgewählt',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setActionLoading(true)
     try {
-      await updateSupplier(supplier.id, {
-        is_active: !supplier.is_active,
-      })
+      await updateSupplier(
+        supplier.id,
+        {
+          is_active: !supplier.is_active,
+        },
+        currentOrganization.id
+      ) // V6.1 Multi-tenant Security Pattern - organizationId validated
 
       toast({
         title: 'Erfolg',
@@ -52,13 +68,23 @@ export function SupplierCard({ supplier, onSupplierUpdated, onView, onEdit }: Su
   }
 
   const handleDelete = async () => {
+    // V6.1 Pattern 17: Null Safety - validate organization before operations
+    if (!currentOrganization?.id) {
+      toast({
+        title: 'Fehler',
+        description: 'Keine Organisation ausgewählt',
+        variant: 'destructive',
+      })
+      return
+    }
+
     if (!confirm(`Möchten Sie "${supplier.name}" wirklich löschen?`)) {
       return
     }
 
     setActionLoading(true)
     try {
-      await deleteSupplier(supplier.id)
+      await deleteSupplier(supplier.id, currentOrganization.id) // V6.1 Multi-tenant Security Pattern - organizationId validated
 
       toast({
         title: 'Erfolg',
@@ -86,7 +112,8 @@ export function SupplierCard({ supplier, onSupplierUpdated, onView, onEdit }: Su
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className="text-xs">
               <span className="hidden sm:inline">
-                {SUPPLIER_CATEGORIES[supplier.category] || 'Unbekannt'}
+                {(supplier.category && SUPPLIER_CATEGORIES[supplier.category]) || 'Unbekannt'}{' '}
+                {/* V6.1 Pattern 17: Null Safety - prevent null index access */}
               </span>
               <span className="sm:hidden">Kat.</span>
             </Badge>
@@ -187,8 +214,9 @@ export function SupplierCard({ supplier, onSupplierUpdated, onView, onEdit }: Su
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Aktiv</span>
+            {/* V6.1 Pattern 17: Null Safety - boolean|null → boolean */}
             <Switch
-              checked={supplier.is_active}
+              checked={supplier.is_active ?? false}
               onCheckedChange={handleToggleActive}
               disabled={actionLoading}
             />

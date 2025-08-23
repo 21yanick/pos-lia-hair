@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useExpenseCategories } from '@/shared/hooks/business/useExpenseCategories'
 import { type ExpenseCategory, useExpenses } from '@/shared/hooks/business/useExpenses'
 import { useToast } from '@/shared/hooks/core/useToast'
@@ -53,6 +54,7 @@ export function ExpensesPage() {
   const { categories: EXPENSE_CATEGORIES } = useExpenseCategories()
 
   const { toast } = useToast()
+  const { currentOrganization } = useCurrentOrganization() // V6.1: Multi-tenant support
 
   // State für neue Ausgabe
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -177,6 +179,7 @@ export function ExpensesPage() {
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
       user_id: userData.user.id,
+      organization_id: currentOrganization?.id || '', // V6.1: Required field for multi-tenant
     }
 
     let result: Awaited<ReturnType<typeof createExpense>>
@@ -707,17 +710,9 @@ export function ExpensesPage() {
                               invoice_number: '',
                               notes: expense.notes || '',
                             })
-                            if (expense.supplier) {
-                              setSelectedSupplier(expense.supplier)
-                            } else if (expense.supplier_name) {
-                              setSelectedSupplier({
-                                id: '',
-                                name: expense.supplier_name,
-                                category: 'other',
-                                is_active: true,
-                                created_at: '',
-                                organization_id: '',
-                              })
+                            // V6.1: expense.supplier doesn't exist in schema
+                            if (expense.supplier_name) {
+                              setSelectedSupplier(null) // V6.1: Clean state - supplier_name handled in form data
                             }
                             setIsDialogOpen(true)
                           }}

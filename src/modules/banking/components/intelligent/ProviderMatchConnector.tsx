@@ -6,7 +6,7 @@ import type { ProviderMatchCandidate } from '../../services/matchingTypes'
 interface ProviderMatchConnectorProps {
   matchCandidates: ProviderMatchCandidate[]
   selectedMatches: string[]
-  containerRef: React.RefObject<HTMLDivElement>
+  containerRef: React.RefObject<HTMLDivElement | null>
 }
 
 interface ConnectionLine {

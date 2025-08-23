@@ -1,24 +1,12 @@
 /**
  * Transaction Hooks Index
  *
- * Clean exports for all transaction-related hooks
+ * V6.1: Clean exports for actual existing transaction hooks only
  */
 
-export type { PaginationActions, PaginationContext, PaginationState } from './usePagination'
-export { usePagination } from './usePagination'
+// V6.1: Actual existing hooks
+export { useDebounce } from './useDebounce'
 export { usePdfActions } from './usePdfActions'
-// Type exports
-export type { EnhancedUnifiedTransaction } from './useSwissTransactionData'
-// Specialized hooks
-export { useSwissTransactionData } from './useSwissTransactionData'
-export type { TransactionCenterConfig, TransactionCenterState } from './useTransactionCenter'
-// Main orchestrator hook
-export { useTransactionCenter } from './useTransactionCenter'
-export type { ActiveFilters, FilterAnalytics, FilterPreset } from './useTransactionFilters'
-export { useTransactionFilters } from './useTransactionFilters'
-export type { SearchMetadata, SearchState } from './useTransactionSearch'
-export { useTransactionSearch } from './useTransactionSearch'
-export type { EnhancedTransactionStats, StatsCalculationOptions } from './useTransactionStats'
-export { useTransactionStats } from './useTransactionStats'
-// Keep existing hooks for compatibility
+export { useTransactionCustomer } from './useTransactionCustomer'
+export { useTransactionsQuery } from './useTransactionsQuery'
 export { useUnifiedTransactions } from './useUnifiedTransactions'

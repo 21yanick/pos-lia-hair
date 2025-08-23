@@ -6,6 +6,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { getProviderSummaries } from '../../services/bankingApi'
 import type { ProviderDashboardData, ProviderSummary } from '../../services/matchingTypes'
 
@@ -22,15 +23,28 @@ export function ProviderSummaryDashboard({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useCurrentOrganization()
+
   const loadSummaries = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const { data, error: apiError } = await getProviderSummaries()
+      // 🔒 CRITICAL SECURITY: Organization required for multi-tenant security
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
+
+      const { data, error: apiError } = await getProviderSummaries(currentOrganization.id)
 
       if (apiError || !data) {
-        throw new Error(apiError?.message || 'Fehler beim Laden der Provider-Summaries')
+        // Type-safe error message extraction (Clean Architecture)
+        const errorMessage =
+          typeof apiError === 'object' && apiError !== null && 'message' in apiError
+            ? String(apiError.message)
+            : 'Fehler beim Laden der Provider-Summaries'
+        throw new Error(errorMessage)
       }
 
       setDashboard(data)
@@ -39,7 +53,7 @@ export function ProviderSummaryDashboard({
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [currentOrganization])
 
   useEffect(() => {
     loadSummaries()

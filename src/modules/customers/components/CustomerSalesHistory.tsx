@@ -66,7 +66,7 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
     }
   }
 
-  const totalSales = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount), 0)
+  const totalSales = sales.reduce((sum, sale) => sum + sale.total_amount, 0)
 
   // Loading state
   if (isLoading) {
@@ -151,7 +151,9 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                             <div className="flex items-center gap-2 min-w-0">
                               <Calendar className="h-3 w-3 shrink-0" />
                               <span className="text-sm text-muted-foreground truncate">
-                                {formatRelativeDate(sale.created_at)}
+                                {sale.created_at
+                                  ? formatRelativeDate(sale.created_at)
+                                  : 'Datum nicht verfügbar'}
                               </span>
                               {hasItems && (
                                 <Badge variant="outline" className="text-xs shrink-0">
@@ -168,7 +170,7 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                                 {getPaymentMethodLabel(sale.payment_method)}
                               </Badge>
                               <div className="font-semibold">
-                                CHF {parseFloat(sale.total_amount).toFixed(2)}
+                                CHF {sale.total_amount.toFixed(2)}
                               </div>
                               {hasItems &&
                                 (isExpanded ? (
@@ -210,17 +212,20 @@ export function CustomerSalesHistory({ customerId }: CustomerSalesHistoryProps) 
                                   {saleItem.quantity && saleItem.quantity > 1 ? (
                                     <div className="text-right">
                                       <div className="text-xs text-muted-foreground">
-                                        {saleItem.quantity}x {parseFloat(saleItem.price).toFixed(2)}
+                                        {saleItem.quantity}x {saleItem.price.toFixed(2)}{' '}
+                                        {/* V6.1: price is already number */}
                                       </div>
                                       <div>
                                         CHF{' '}
-                                        {(
-                                          parseFloat(saleItem.price) * (saleItem.quantity || 1)
-                                        ).toFixed(2)}
+                                        {(saleItem.price * (saleItem.quantity || 1)) // V6.1: price is already number
+                                          .toFixed(2)}
                                       </div>
                                     </div>
                                   ) : (
-                                    <>CHF {parseFloat(saleItem.price).toFixed(2)}</>
+                                    <>
+                                      CHF {saleItem.price.toFixed(2)}{' '}
+                                      {/* V6.1: price is already number */}
+                                    </>
                                   )}
                                 </div>
                               </div>

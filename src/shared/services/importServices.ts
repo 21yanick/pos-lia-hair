@@ -24,6 +24,7 @@ type ProgressCallback = (progress: number, phase: string) => void
 
 export async function importItems(
   items: ItemImport[],
+  organizationId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
   updateProgress(10, 'Importiere Produkte...')
@@ -40,8 +41,9 @@ export async function importItems(
     return 0 // No new items to import
   }
 
-  // Business-Centric: Items haben keine user_id!
-  const { data, error } = await supabase.from('items').insert(newItems).select()
+  // V6.1: Add organization_id for multi-tenant support
+  const itemsWithOrgId = newItems.map((item) => ({ ...item, organization_id: organizationId }))
+  const { data, error } = await supabase.from('items').insert(itemsWithOrgId).select()
 
   if (error) {
     throw new Error(`Items Import Fehler: ${error.message}`)
@@ -124,6 +126,7 @@ export async function importOwnerTransactions(
 export async function importBankAccounts(
   bankAccounts: BankAccountImport[],
   userId: string,
+  organizationId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
   updateProgress(10, 'Importiere Bankkonten...')
@@ -131,11 +134,11 @@ export async function importBankAccounts(
   // Check for existing bank accounts to prevent duplicates (by name and IBAN)
   const existingAccounts = await supabase
     .from('bank_accounts')
-    .select('name, iban')
+    .select('account_name, iban') // V6.1: Field renamed from 'name' to 'account_name'
     .eq('user_id', userId)
 
   const existingNames = new Set(
-    existingAccounts.data?.map((account) => account.name.toLowerCase()) || []
+    existingAccounts.data?.map((account) => account.account_name.toLowerCase()) || [] // V6.1: Use account_name field
   )
   const existingIbans = new Set(
     existingAccounts.data?.filter((account) => account.iban).map((account) => account.iban) || []
@@ -152,10 +155,17 @@ export async function importBankAccounts(
     return 0 // No new accounts to import
   }
 
-  // Add user_id and timestamps to all accounts
+  // V6.1: Add user_id, organization_id, timestamps and map field names
   const accountsWithUserId = newAccounts.map((account) => ({
-    ...account,
+    account_name: account.name, // V6.1: Map 'name' to 'account_name'
+    bank_name: account.bank_name,
+    iban: account.iban || '', // V6.1: Database expects string, not undefined - provide empty string as fallback
+    account_number: account.account_number,
+    current_balance: account.current_balance,
+    is_active: account.is_active,
+    notes: account.notes,
     user_id: userId,
+    organization_id: organizationId, // V6.1: Multi-tenant support
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }))
@@ -176,6 +186,7 @@ export async function importBankAccounts(
 export async function importSuppliers(
   suppliers: SupplierImport[],
   userId: string,
+  organizationId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
   updateProgress(10, 'Importiere Lieferanten...')
@@ -196,10 +207,12 @@ export async function importSuppliers(
     return 0 // No new suppliers to import
   }
 
-  // Add user_id and timestamps to all suppliers
+  // V6.1: Add user_id, organization_id, timestamps and required normalized_name field
   const suppliersWithUserId = newSuppliers.map((supplier) => ({
     ...supplier,
+    normalized_name: supplier.name.toLowerCase().trim(), // V6.1: Required normalized_name field
     user_id: userId,
+    organization_id: organizationId, // V6.1: Multi-tenant support
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }))
@@ -234,6 +247,7 @@ export async function getItemIdByName(itemName: string): Promise<string | null> 
 export async function importSales(
   sales: SaleImport[],
   targetUserId: string,
+  organizationId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
   updateProgress(40, 'Importiere Verkäufe...')
@@ -241,7 +255,7 @@ export async function importSales(
   let totalSalesImported = 0
 
   for (const sale of sales) {
-    // 1. Create Sale
+    // 1. Create Sale - V6.1: Add organization_id for multi-tenant support
     const saleData = {
       total_amount: sale.total_amount,
       payment_method: sale.payment_method,
@@ -249,6 +263,7 @@ export async function importSales(
       notes: sale.notes || null,
       created_at: `${sale.date}T${sale.time}:00`,
       user_id: targetUserId, // User-Level: Wer hat verkauft
+      organization_id: organizationId, // V6.1: Multi-tenant support
     }
 
     const { data: saleResult, error: saleError } = await supabase
@@ -276,6 +291,8 @@ export async function importSales(
         item_id: itemId, // Use item_id instead of item_name
         price: item.price,
         notes: item.notes || null,
+        organization_id: organizationId, // V6.1: Multi-tenant support
+        user_id: targetUserId, // V6.1: Required user_id field
       })
     }
 
@@ -298,6 +315,7 @@ export async function importSales(
 export async function importExpenses(
   expenses: ExpenseImport[],
   targetUserId: string,
+  organizationId: string,
   updateProgress: ProgressCallback
 ): Promise<number> {
   updateProgress(60, 'Importiere Ausgaben...')
@@ -313,6 +331,7 @@ export async function importExpenses(
     notes: expense.notes || null,
     created_at: `${expense.date}T12:00:00`, // Default time for expenses
     user_id: targetUserId, // User-Level: Wer hat erfasst
+    organization_id: organizationId, // V6.1: Multi-tenant support
   }))
 
   const { data, error } = await supabase.from('expenses').insert(expensesData).select()

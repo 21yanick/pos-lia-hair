@@ -53,7 +53,8 @@ export const organizationService = {
       throw new Error(`Failed to assign owner role: ${memberError.message}`)
     }
 
-    return org
+    // V6.1 Pattern 17: Null Safety - Database null → Interface undefined transformation
+    return org as Organization
   },
 
   // Update Organisation
@@ -69,7 +70,8 @@ export const organizationService = {
       throw new Error(`Failed to update organization: ${error.message}`)
     }
 
-    return org
+    // V6.1 Pattern 17: Null Safety - Database null → Interface undefined transformation
+    return org as Organization
   },
 
   // Soft-Delete Organisation (setzt active auf false)
@@ -85,17 +87,19 @@ export const organizationService = {
   async getOrganization(idOrSlug: string): Promise<Organization | null> {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug)
 
-    const query = supabase.from('organizations').select('*').eq('active', true).single()
+    // Clean Architecture: Build query before finalization (KISS principle)
+    const baseQuery = supabase.from('organizations').select('*').eq('active', true)
 
     const { data, error } = isUuid
-      ? await query.eq('id', idOrSlug)
-      : await query.eq('slug', idOrSlug)
+      ? await baseQuery.eq('id', idOrSlug).single()
+      : await baseQuery.eq('slug', idOrSlug).single()
 
     if (error) {
       return null
     }
 
-    return data
+    // V6.1 Pattern 17: Null Safety - Database null → Interface undefined transformation
+    return data as Organization
   },
 
   // User zu Organisation einladen

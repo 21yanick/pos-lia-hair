@@ -72,7 +72,7 @@ export async function exportMonthlyPDF(
     const resolvedBusinessSettings = businessSettings
       ? {
           ...businessSettings,
-          logo_url: resolveLogoUrl(businessSettings.logo_url),
+          logo_url: resolveLogoUrl(businessSettings.logo_url ?? undefined), // V6.1 Pattern 17: Null Safety - transform null to undefined
         }
       : null
 
@@ -85,7 +85,7 @@ export async function exportMonthlyPDF(
 
     // PDF direkt mit react-pdf erstellen
     const { pdf } = await import('@react-pdf/renderer')
-    const blob = await pdf(pdfComponent as React.ReactElement).toBlob() // Proper React element typing
+    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
     const fileName = `monatsabschluss-${selectedMonth}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
 
@@ -237,7 +237,7 @@ async function createFallbackPDF(
     selectedMonth,
   })
 
-  return await pdf(pdfComponent as React.ReactElement).toBlob() // Proper React element typing
+  return await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
 }
 
 // PDF Export mit bereits geladenen reconciliationData (für ReconciliationReportTab)
@@ -267,7 +267,7 @@ export async function exportMonthlyPDFWithReconciliation(
 
     // PDF direkt mit react-pdf erstellen
     const { pdf } = await import('@react-pdf/renderer')
-    const blob = await pdf(pdfComponent as React.ReactElement).toBlob()
+    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
     const fileName = `monatsabschluss-${selectedMonth}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
 

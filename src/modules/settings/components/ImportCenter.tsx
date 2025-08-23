@@ -58,7 +58,8 @@ export function ImportCenter() {
             <div className="space-y-2">
               <p className="text-sm font-medium">Benutzer</p>
               <p className="text-2xl font-bold text-primary">
-                {statsLoading ? '...' : stats.usersCount}
+                {statsLoading ? '...' : stats.salesCount}{' '}
+                {/* V6.1 Pattern 16: Property Name Correction - usersCount → salesCount */}
               </p>
             </div>
             <div className="space-y-2">

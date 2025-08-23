@@ -23,8 +23,7 @@ import {
 } from '@/shared/components/ui/table'
 import { type Item, useItems } from '@/shared/hooks/business/useItems'
 import { useToast } from '@/shared/hooks/core/useToast'
-import type { ItemInsert, ItemUpdate } from '@/types/database'
-import { useProductActions } from '../hooks/useProductActions'
+import { type ProductFormData, useProductActions } from '../hooks/useProductActions'
 import { ProductCard } from './ProductCard'
 import { ProductDialog } from './ProductDialog'
 
@@ -74,7 +73,8 @@ export function ProductsPage() {
   }, [])
 
   const handleSaveAndClose = useCallback(
-    async (formData: ItemInsert | ItemUpdate, currentItem: Item | null) => {
+    async (formData: ProductFormData, currentItem: Item | null) => {
+      // V6.1 Pattern 18: Function Signature Alignment - match ProductDialog expectation
       const success = await handleSaveItem(formData, currentItem)
       if (success) {
         setIsDialogOpen(false)

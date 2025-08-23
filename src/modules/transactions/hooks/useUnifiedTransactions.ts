@@ -10,6 +10,8 @@ import type {
   TransactionSearchQuery,
   TransactionSort,
   TransactionStats,
+  TransactionType, // V6.1 Pattern 19: Schema Property Alignment - import missing type
+  TypeCode, // V6.1 Pattern 19: Schema Property Alignment - import TypeCode for casting
   UnifiedTransaction,
 } from '../types/unifiedTransactions'
 
@@ -277,15 +279,29 @@ export function useUnifiedTransactions() {
           throw dbError
         }
 
-        const transactionData = (data || []).map((tx) => {
-          // Business-aware PDF Status berechnen
-          const pdfInfo = calculatePdfStatus(tx)
-          return {
-            ...tx,
-            pdf_status: pdfInfo.status,
-            pdf_requirement: pdfInfo.requirement,
-          }
-        })
+        const transactionData = (data || [])
+          .filter((tx) => tx.id !== null && tx.transaction_type !== null) // V6.1 Pattern 17: Null Safety - filter out invalid records
+          .map((tx) => {
+            // V6.1 Pattern 19: Schema Property Alignment - Transform database nullable types to interface types
+            const baseTransaction = {
+              ...tx,
+              id: tx.id as string, // V6.1 Pattern 17: Null Safety - guaranteed non-null after filter
+              transaction_type: tx.transaction_type as TransactionType,
+              type_code: tx.type_code as TypeCode, // V6.1 Pattern 19: Cast database string to TypeCode union
+              amount: tx.amount || 0,
+              user_id: tx.user_id || '',
+              description: tx.description || '',
+            } // V6.1 Pattern 19: Safe partial transaction before PDF calculation
+
+            // V6.1 Pattern 19: Schema Property Alignment - safe casting for PDF calculation
+            // Note: calculatePdfStatus only needs transaction_type, has_pdf, document_id properties
+            const pdfInfo = calculatePdfStatus(baseTransaction as unknown as UnifiedTransaction)
+            return {
+              ...baseTransaction,
+              pdf_status: pdfInfo.status,
+              pdf_requirement: pdfInfo.requirement,
+            } as UnifiedTransaction // V6.1 Pattern 19: Final casting to complete UnifiedTransaction
+          })
         setTransactions(transactionData)
 
         // Statistiken berechnen
@@ -382,8 +398,9 @@ export function useUnifiedTransactions() {
             throw new Error(`Unbekannter Transaction Type: ${transactionType}`)
         }
 
+        // V6.1 Pattern 18: Type Safety - Union type for dynamic table selection
         const { data, error } = await supabase
-          .from(tableName)
+          .from(tableName as 'sales' | 'expenses' | 'cash_movements' | 'bank_transactions')
           .select('*')
           .eq('id', transactionId)
           .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped

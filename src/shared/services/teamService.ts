@@ -340,9 +340,9 @@ export async function resendInvitation(
     }
 
     // Use existing invitation service to send new invitation
-    const { InvitationService } = await import('./invitationService')
+    const { sendInvitation } = await import('./invitationService') // V6.1 Pattern 20: Missing Dependencies Resolution - Import actual function export
 
-    const result = await InvitationService.sendInvitation({
+    const result = await sendInvitation({
       organizationId: validOrgId,
       email,
       role,

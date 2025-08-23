@@ -70,6 +70,7 @@ export function CsvDataPreview({
     .filter((mapping) => mapping.csvHeader?.trim())
     .map((mapping) => mapping.csvHeader)
 
+  // V6.1 Pattern 4: Function Return Value Guarantee (no undefined)
   const getTransformedDataStats = () => {
     switch (mappingConfig.importType) {
       case 'items':
@@ -89,6 +90,13 @@ export function CsvDataPreview({
           count: transformedData.expenses?.length || 0,
           type: 'Ausgaben',
           icon: <FileText className="h-4 w-4" />,
+        }
+      default:
+        // V6.1: Guarantee return value for unknown import types
+        return {
+          count: 0,
+          type: 'Unbekannt',
+          icon: <Database className="h-4 w-4" />,
         }
     }
   }

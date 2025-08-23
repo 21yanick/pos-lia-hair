@@ -283,7 +283,10 @@ export const PlaceholderReceiptPDF: React.FC<PlaceholderReceiptPDFProps> = ({
 
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Erfasst am</Text>
-            <Text style={styles.detailValue}>{formatDate(expense.created_at)}</Text>
+            <Text style={styles.detailValue}>
+              {expense.created_at ? formatDate(expense.created_at) : 'Unbekannt'}
+            </Text>{' '}
+            {/* V6.1 Pattern 17: Null Safety - Handle null created_at */}
           </View>
         </View>
 

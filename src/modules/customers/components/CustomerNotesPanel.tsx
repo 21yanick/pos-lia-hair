@@ -228,7 +228,7 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
           </p>
 
           <div className="text-xs text-muted-foreground mt-3">
-            {formatRelativeDate(note.updated_at)}
+            {note.updated_at ? formatRelativeDate(note.updated_at) : 'Datum nicht verfügbar'}
           </div>
         </CardContent>
       </Card>

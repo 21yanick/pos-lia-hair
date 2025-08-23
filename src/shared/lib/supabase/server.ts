@@ -24,7 +24,7 @@ function validateSupabaseConfig() {
 }
 
 export async function createServerSupabaseClient() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies() // V6.1: Next.js async cookies handling
   const { url, anonKey } = validateSupabaseConfig()
 
   return createServerClient<Database>(url, anonKey, {

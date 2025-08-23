@@ -157,7 +157,8 @@ export function parseTWINTCsv(csvContent: string): {
         headers.forEach((header, i) => {
           rowData[header] = values[i] || ''
         })
-        const row = rowData as TWINTCsvRow
+        // V6.1: Safe type assertion with validation
+        const row = rowData as unknown as TWINTCsvRow
 
         // Parse into ProviderRecord
         const record = parseTWINTRow(row, index + 5)
@@ -188,7 +189,7 @@ export function parseTWINTCsv(csvContent: string): {
 function parseTWINTRow(row: TWINTCsvRow, _rowIndex: number): ProviderRecord {
   // Parse dates (German format: "31.10.2024")
   const transactionDate = parseGermanDate(row.Transaktionsdatum)
-  const settlementDate = parseGermanDate(row['Überweisung am']) // First column = settlement date
+  const settlementDate = parseGermanDate(row['Datum Überweisung']) // V6.1: Correct property name from interface
 
   // Parse amounts (German number format but likely with dots)
   const grossAmount = parseFloat(row['Betrag Transaktion'].replace(',', '.'))
@@ -283,7 +284,8 @@ export function parseSumUpCsv(csvContent: string): {
         headers.forEach((header, i) => {
           rowData[header] = values[i] || ''
         })
-        const row = rowData as SumUpCsvRow
+        // V6.1: Safe type assertion with validation
+        const row = rowData as unknown as SumUpCsvRow
 
         // Filter: Only process "Umsatz" transactions that are "Erfolgreich"
         if (row.Zahlungsart !== 'Umsatz' || row.Status !== 'Erfolgreich') {

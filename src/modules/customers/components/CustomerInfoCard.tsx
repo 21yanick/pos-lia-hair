@@ -23,7 +23,7 @@ interface CustomerInfoCardProps {
   onUpdate?: (updatedCustomer: Customer) => void
 }
 
-type EditField = 'name' | 'phone' | 'email' | null
+type EditField = 'name' | 'phone' | 'email' | 'is_active' | null // V6.1: Add missing is_active field
 
 export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
   const { toast } = useToast()
@@ -35,6 +35,7 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
     name: customer.name,
     phone: customer.phone || '',
     email: customer.email || '',
+    is_active: customer.is_active, // V6.1: Include is_active field
   })
 
   const startEdit = (field: EditField) => {
@@ -44,6 +45,7 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
       name: customer.name,
       phone: customer.phone || '',
       email: customer.email || '',
+      is_active: customer.is_active, // V6.1: Include is_active field
     })
   }
 
@@ -53,17 +55,28 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
       name: customer.name,
       phone: customer.phone || '',
       email: customer.email || '',
+      is_active: customer.is_active, // V6.1: Include is_active field
     })
   }
 
   const saveField = async (field: keyof CustomerFormData) => {
-    const newValue = editValues[field]?.trim()
+    // V6.1: Handle boolean vs string fields differently
+    const fieldValue = editValues[field]
+    const newValue =
+      field === 'is_active'
+        ? fieldValue // boolean field - no trim needed
+        : typeof fieldValue === 'string'
+          ? fieldValue.trim()
+          : fieldValue
+
     const oldValue =
       field === 'phone'
         ? customer.phone || ''
         : field === 'email'
           ? customer.email || ''
-          : customer.name
+          : field === 'is_active'
+            ? customer.is_active
+            : customer.name
 
     // Check if value changed
     if (newValue === oldValue) {
@@ -81,8 +94,8 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
       return
     }
 
-    // Validate email format
-    if (field === 'email' && newValue && !newValue.includes('@')) {
+    // Validate email format - V6.1: Type guard for string values only
+    if (field === 'email' && newValue && typeof newValue === 'string' && !newValue.includes('@')) {
       toast({
         title: 'Fehler',
         description: 'Ungültige E-Mail-Adresse.',
@@ -173,7 +186,7 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
           <div className="flex gap-2">
             <Input
               type={type}
-              value={editValues[field] || ''}
+              value={typeof editValues[field] === 'string' ? editValues[field] : ''} // V6.1: Type guard for string values only
               onChange={(e) => setEditValues((prev) => ({ ...prev, [field]: e.target.value }))}
               onBlur={() => saveField(field)}
               onKeyDown={(e) => handleKeyDown(e, field)}
@@ -248,7 +261,7 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-3">
                     <Switch
-                      checked={customer.is_active}
+                      checked={customer.is_active ?? undefined} // V6.1: Convert null to undefined for component
                       onCheckedChange={toggleStatus}
                       disabled={updateCustomer.isPending}
                     />
@@ -275,11 +288,13 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
         <div className="space-y-2">
           <Label className="text-sm font-medium">Erstellt am</Label>
           <div className="text-sm text-muted-foreground">
-            {new Date(customer.created_at).toLocaleDateString('de-DE', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-            })}
+            {customer.created_at &&
+              new Date(customer.created_at).toLocaleDateString('de-DE', {
+                // V6.1: Null safety for Date constructor
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
           </div>
         </div>
       </CardContent>

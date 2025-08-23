@@ -10,7 +10,7 @@ import type { Sale } from '@/shared/services/salesService'
 export interface SaleWithItems extends Sale {
   sale_items: Array<{
     id: string
-    price: string
+    price: number // V6.1: Database schema returns number, not string
     quantity: number
     notes: string | null
     item: {
@@ -122,7 +122,7 @@ export const useCustomerSalesStats = (customerId: string, organizationId: string
       }
 
       const sales = data || []
-      const totalSpent = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount), 0)
+      const totalSpent = sales.reduce((sum, sale) => sum + sale.total_amount, 0) // V6.1: total_amount is already number
       const visitCount = sales.length
 
       return {

@@ -262,9 +262,9 @@ export function BankingPage() {
               <CreditCard className="h-4 w-4 mr-1" />
               Raiffeisen Bank Balance
             </p>
-            {raiffeisenAccount?.last_statement_date && (
+            {raiffeisenAccount?.last_transaction_date && (
               <p className="text-xs text-muted-foreground mt-1">
-                Letzter Import: {formatDateForDisplay(raiffeisenAccount.last_statement_date)}
+                Letzter Import: {formatDateForDisplay(raiffeisenAccount.last_transaction_date)}
               </p>
             )}
           </CardContent>

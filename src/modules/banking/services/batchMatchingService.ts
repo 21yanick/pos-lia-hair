@@ -15,6 +15,7 @@ interface BankTransactionForBatch {
   amount: number
   description: string
   transaction_date: string
+  organization_id: string | null // V6.1: Null safety for database field
 }
 
 interface ProviderReportForBatch {
@@ -67,7 +68,7 @@ export async function findBatchMatchCandidates(
     // Get unmatched bank transactions
     const { data: unmatchedBankTx, error: bankError } = await supabase
       .from('bank_transactions')
-      .select('id, amount, description, transaction_date')
+      .select('id, amount, description, transaction_date, organization_id') // V6.1: Include organization_id for multi-tenant compliance
       .eq('status', 'unmatched')
       .eq('organization_id', organizationId) // ✅ CRITICAL FIX: Organization filter
       .order('transaction_date')
@@ -109,8 +110,8 @@ export async function findBatchMatchCandidates(
               id: exactMatch.id,
               provider: exactMatch.provider,
               net_amount: exactMatch.net_amount,
-              settlement_date: exactMatch.settlement_date,
-              sale_id: exactMatch.sales[0]?.id || '',
+              settlement_date: exactMatch.settlement_date || '', // ✅ FIXED: Null-safety for settlement_date
+              sale_id: exactMatch.sales?.id || '', // ✅ FIXED: Modern optional chaining
             },
           ],
           totalProviderAmount: exactMatch.net_amount,
@@ -138,8 +139,8 @@ export async function findBatchMatchCandidates(
               id: toleranceMatch.id,
               provider: toleranceMatch.provider,
               net_amount: toleranceMatch.net_amount,
-              settlement_date: toleranceMatch.settlement_date,
-              sale_id: toleranceMatch.sales[0]?.id || '',
+              settlement_date: toleranceMatch.settlement_date || '', // ✅ FIXED: Null-safety for settlement_date
+              sale_id: toleranceMatch.sales?.id || '', // ✅ FIXED: Modern optional chaining
             },
           ],
           totalProviderAmount: toleranceMatch.net_amount,
@@ -155,7 +156,27 @@ export async function findBatchMatchCandidates(
       }
 
       // Strategy 3: Batch matching (multiple providers sum to bank amount)
-      const batchCandidates = await findBatchCombinations(bankTx, matchedProviders || [])
+      // Type-safe transformation to ProviderReportForBatch[] (Clean Architecture)
+      const validProviders: ProviderReportForBatch[] = (matchedProviders || [])
+        .filter(
+          (p) =>
+            p.settlement_date !== null &&
+            p.sales !== null &&
+            typeof p.sales === 'object' &&
+            'id' in p.sales
+        )
+        .map(
+          (p): ProviderReportForBatch => ({
+            id: p.id,
+            provider: p.provider,
+            net_amount: p.net_amount,
+            settlement_date: p.settlement_date as string, // Safe after filter
+            sale_id: (p.sales as { id: string }).id, // Safe after filter
+            sales: [p.sales as { id: string }], // Convert single object to array
+          })
+        )
+
+      const batchCandidates = await findBatchCombinations(bankTx, validProviders)
       candidates.push(...batchCandidates)
     }
 
@@ -199,7 +220,7 @@ async function findBatchCombinations(
             provider: pr.provider,
             net_amount: pr.net_amount,
             settlement_date: pr.settlement_date,
-            sale_id: pr.sales[0]?.id || '',
+            sale_id: pr.sales?.[0]?.id || '', // ✅ FIXED: Modern optional chaining for arrays
           })),
           totalProviderAmount: totalAmount,
           difference: diff,
@@ -230,7 +251,7 @@ async function findBatchCombinations(
             provider: pr.provider,
             net_amount: pr.net_amount,
             settlement_date: pr.settlement_date,
-            sale_id: pr.sales[0]?.id || '',
+            sale_id: pr.sales?.[0]?.id || '', // ✅ FIXED: Modern optional chaining for arrays
           })),
           totalProviderAmount: totalAmount,
           difference: diff,
@@ -297,23 +318,23 @@ export async function executeBatchMatches(
     for (const candidate of candidates) {
       try {
         // Create transaction matches for each provider report
+        // V6.1 Pattern 19: Schema Property Alignment - V6.1 database schema compliance
         const matches = candidate.providerReports.map((pr) => ({
           bank_transaction_id: candidate.bankTransaction.id,
-          matched_type: 'provider_batch',
-          matched_id: pr.id,
-          matched_amount: pr.net_amount,
-          match_confidence: candidate.confidence,
-          match_details: {
-            match_type: candidate.matchType,
-            total_amount: candidate.totalProviderAmount,
-            difference: candidate.difference,
-            reasons: candidate.reasons,
-            provider_count: candidate.providerReports.length,
-          },
+          match_type: 'provider_batch', // V6.1: Correct field name
+          provider_report_id: pr.id, // V6.1: Use provider_report_id for provider reports
+          confidence_score: candidate.confidence, // V6.1: Correct field name
+          amount_difference: candidate.difference, // V6.1: Use amount_difference
+          session_id: '', // TODO: Add session management
+          organization_id: candidate.bankTransaction.organization_id || '', // V6.1: Null safety for organization_id
+          notes: `Batch match: ${candidate.providerReports.length} provider reports`, // V6.1: Human-readable description
         }))
 
-        // Insert transaction matches
-        const { error: matchError } = await supabase.from('transaction_matches').insert(matches)
+        // No local type needed - using V6.1 BankReconciliationMatchInsert from database.ts
+
+        const { error: matchError } = await supabase
+          .from('bank_reconciliation_matches')
+          .insert(matches) // V6.1 Pattern 19: Clean schema alignment - no casting needed
 
         if (matchError) throw matchError
 
@@ -397,4 +418,4 @@ export async function runAutomaticBatchMatching(
   return await executeBatchMatches(highConfidenceCandidates)
 }
 
-export { findBatchMatchCandidates, executeBatchMatches }
+// ✅ FIXED: Removed duplicate executeBatchMatches export (already exported as function declaration)

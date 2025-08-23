@@ -121,11 +121,11 @@ export function usePdfActions() {
           const cartItems =
             sale.sale_items?.map(
               (item: {
-                item_id: string
+                item_id: string | null // V6.1 Pattern 17: Null Safety - align with database schema
                 price: number
-                items?: { name?: string; type?: string }
+                items: { id: string; name: string; type: string; default_price: number } | null // V6.1 Pattern 19: Schema Property Alignment - match database schema
               }) => ({
-                id: item.item_id,
+                id: item.item_id || '', // V6.1 Pattern 17: Null Safety - handle null item_id
                 name: item.items?.name || 'Unbekanntes Produkt',
                 category: item.items?.type === 'service' ? 'Dienstleistung' : 'Produkt',
                 price: item.price,
@@ -227,8 +227,9 @@ export function usePdfActions() {
   const downloadMultiplePdfs = useCallback(
     async (transactions: UnifiedTransaction[]) => {
       if (!currentOrganization) {
-        toast.error('Keine Organization ausgewählt')
-        return false
+        const error = 'Keine Organization ausgewählt'
+        toast.error(error)
+        return { success: false, error }
       }
 
       const pdfsToDownload = transactions.filter(
@@ -236,8 +237,9 @@ export function usePdfActions() {
       )
 
       if (pdfsToDownload.length === 0) {
-        toast.error('Keine PDFs zum Download verfügbar')
-        return false
+        const error = 'Keine PDFs zum Download verfügbar'
+        toast.error(error)
+        return { success: false, error }
       }
 
       const toastId = toast.loading('Erstelle ZIP-Archiv...')
@@ -280,10 +282,11 @@ export function usePdfActions() {
         setTimeout(() => URL.revokeObjectURL(zipUrl), 100)
 
         toast.success('ZIP-Archiv heruntergeladen', { id: toastId })
-        return true
-      } catch (_err) {
-        toast.error('Fehler beim Erstellen des Archivs', { id: toastId })
-        return false
+        return { success: true }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Fehler beim Erstellen des Archivs'
+        toast.error(errorMsg, { id: toastId })
+        return { success: false, error: errorMsg }
       }
     },
     [currentOrganization, getStorageUrl]

@@ -17,7 +17,7 @@ import { Separator } from '@/shared/components/ui/separator'
 import { Switch } from '@/shared/components/ui/switch'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import type { DayWorkingHours, WeekDay, WorkingHours } from '@/shared/types/businessSettings'
-import { DEFAULT_WORKING_HOURS } from '@/shared/types/businessSettings'
+import { safeWorkingHours } from '@/shared/types/businessSettings'
 import { cn } from '@/shared/utils'
 
 const WEEKDAYS: { key: WeekDay; label: string; short: string }[] = [
@@ -37,7 +37,7 @@ interface BusinessHoursConfigProps {
 export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
   const { settings, loading, saving, updateWorkingHours } = useBusinessSettingsQuery()
   const [workingHours, setWorkingHours] = useState<WorkingHours>(
-    settings?.working_hours || DEFAULT_WORKING_HOURS
+    safeWorkingHours(settings?.working_hours)
   )
   const [hasChanges, setHasChanges] = useState(false)
 
@@ -45,9 +45,9 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
   if (
     settings?.working_hours &&
     !hasChanges &&
-    JSON.stringify(workingHours) !== JSON.stringify(settings.working_hours)
+    JSON.stringify(workingHours) !== JSON.stringify(safeWorkingHours(settings.working_hours))
   ) {
-    setWorkingHours(settings.working_hours)
+    setWorkingHours(safeWorkingHours(settings.working_hours))
   }
 
   const updateDayHours = (day: WeekDay, updates: Partial<DayWorkingHours>) => {
@@ -95,7 +95,7 @@ export function BusinessHoursConfig({ className }: BusinessHoursConfigProps) {
   }
 
   const handleReset = () => {
-    setWorkingHours(settings?.working_hours || DEFAULT_WORKING_HOURS)
+    setWorkingHours(safeWorkingHours(settings?.working_hours))
     setHasChanges(false)
   }
 

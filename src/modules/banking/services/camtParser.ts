@@ -12,6 +12,7 @@ import type {
   CAMTEntry,
   CAMTImportResult,
   CAMTStatement,
+  CAMTValidationError, // ✅ FIXED: Added missing import
 } from '../types/camt'
 
 // =====================================================
@@ -287,7 +288,7 @@ function parseBankTransactionCode(
   const domain = getTextContent(domnElement, 'Cd')
 
   const fmlyElement = domnElement.querySelector('Fmly')
-  if (!fmlyElement) return { domain }
+  if (!fmlyElement) return { domain, family: '' } // ✅ FIXED: Added required family property
 
   const family = getTextContent(fmlyElement, 'Cd')
   const subfamily = getTextContent(fmlyElement, 'SubFmlyCd')

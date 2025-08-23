@@ -154,14 +154,16 @@ export function useItemsQuery(): UseItemsQueryReturn {
       const optimisticItem: Item = {
         id: `temp-${Date.now()}`,
         name: newItem.name,
-        price: newItem.price || 0,
-        category: newItem.category || null,
-        description: newItem.description || null,
+        default_price: newItem.default_price || 0, // V6.1 Pattern 19: Schema Property Alignment - price → default_price
+        type: newItem.type,
+        duration_minutes: newItem.duration_minutes || null, // V6.1 Pattern 19: Schema Property Alignment - use database columns
         active: newItem.active ?? true,
         is_favorite: newItem.is_favorite ?? false,
         organization_id: organizationId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        booking_buffer_minutes: newItem.booking_buffer_minutes || null, // V6.1 Pattern 19: Schema Property Alignment
+        deleted: newItem.deleted ?? false, // V6.1 Pattern 19: Schema Property Alignment
+        requires_booking: newItem.requires_booking ?? false, // V6.1 Pattern 19: Schema Property Alignment
       }
 
       // Optimistically update the cache
@@ -555,7 +557,7 @@ export function useItemsQuery(): UseItemsQueryReturn {
     toggleFavoriteMutation.isPending ||
     toggleActiveMutation.isPending
 
-  const combinedError = error || queryError?.message || null
+  const combinedError = error || (queryError instanceof Error ? queryError.message : null) || null // V6.1 Pattern 17: Null Safety - safe error message access
 
   // ========================================
   // Return Interface (Legacy Compatible)

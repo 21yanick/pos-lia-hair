@@ -6,12 +6,12 @@
 
 import { supabase } from '@/shared/lib/supabase/client'
 import { formatDateForAPI } from '@/shared/utils/dateUtils'
+import type { Json } from '@/types/supabase_generated_v6.1' // V6.1: Json type for JSONB fields
 import type {
   ProviderDuplicateCheck,
   ProviderImportError,
   ProviderImportPreview,
   ProviderImportResult,
-  ProviderImportSession,
   ProviderRecord,
 } from '../types/provider'
 import {
@@ -139,21 +139,12 @@ export async function importProviderFile(
   const startTime = Date.now()
 
   try {
-    // Create import session
-    const importSession = await createProviderImportSession(preview, userId)
-
-    // Execute import
-    const result = await executeProviderImport(preview.newRecords, importSession.id, userId)
-
-    // Update session status
-    await updateProviderImportSession(importSession.id, 'completed', {
-      records_imported: result.recordsImported,
-      records_failed: result.recordsFailed,
-    })
+    // V6.1: Direct import without session tracking
+    const result = await executeProviderImport(preview.newRecords, preview.filename, userId)
 
     return {
       ...result,
-      importSessionId: importSession.id,
+      importSessionId: preview.filename, // Use filename as reference
       processingTimeMs: Date.now() - startTime,
     }
   } catch (error) {
@@ -175,12 +166,11 @@ async function checkProviderDuplicates(
   const duplicateRecords: ProviderRecord[] = []
   const errorRecords: ProviderImportError[] = []
 
-  // Check if file was already imported
+  // V6.1: Check if file was already imported using provider_reports table
   const { data: existingFile } = await supabase
-    .from('provider_import_sessions')
+    .from('provider_reports')
     .select('id')
-    .eq('filename', filename)
-    .eq('status', 'completed')
+    .eq('report_filename', filename)
     .limit(1)
 
   const fileAlreadyImported = (existingFile?.length || 0) > 0
@@ -226,41 +216,12 @@ async function checkProviderDuplicates(
 // DATABASE OPERATIONS
 // =====================================================
 
-async function createProviderImportSession(
-  preview: ProviderImportPreview,
-  userId: string
-): Promise<ProviderImportSession> {
-  const session: Omit<ProviderImportSession, 'id' | 'created_at'> = {
-    provider: preview.provider,
-    filename: preview.filename,
-    import_type: 'csv',
-    total_records: preview.totalRecords,
-    new_records: preview.newRecords.length,
-    duplicate_records: preview.duplicateRecords.length,
-    error_records: preview.invalidRecords.length,
-    date_range_from: formatDateForAPI(preview.dateRange.from),
-    date_range_to: formatDateForAPI(preview.dateRange.to),
-    status: 'pending',
-    imported_by: userId,
-    notes: `Provider: ${preview.detectedFormat}, Records: ${preview.newRecords.length} new, ${preview.duplicateRecords.length} duplicates`,
-  }
-
-  const { data, error } = await supabase
-    .from('provider_import_sessions')
-    .insert(session)
-    .select()
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to create import session: ${error.message}`)
-  }
-
-  return data
-}
+// V6.1 NOTE: Session functions removed - V6.1 uses direct filename tracking
+// Import tracking handled via report_filename field in provider_reports table
 
 async function executeProviderImport(
   records: ProviderRecord[],
-  sessionId: string,
+  filename: string,
   userId: string
 ): Promise<Omit<ProviderImportResult, 'importSessionId' | 'processingTimeMs'>> {
   const importedRecords: ProviderRecord[] = []
@@ -273,23 +234,20 @@ async function executeProviderImport(
     const batch = records.slice(i, i + batchSize)
 
     try {
-      // Prepare provider_reports data
+      // V6.1: Adapt to settlement-level provider_reports schema
       const providerReports = batch.map((record) => ({
         provider: record.provider,
-        transaction_date: formatDateForAPI(record.transaction_date),
+        report_date: formatDateForAPI(record.transaction_date), // V6.1 required field
         settlement_date: formatDateForAPI(record.settlement_date),
         gross_amount: record.gross_amount,
         fees: record.fees,
         net_amount: record.net_amount,
-        provider_transaction_id: record.provider_transaction_id,
-        provider_reference: record.provider_reference,
-        payment_method: record.provider,
+        transaction_count: 1, // V6.1 required field - single transaction per report
         currency: record.currency,
-        import_filename: sessionId, // Use session ID as filename reference
-        raw_data: record.raw_data,
-        status: 'unmatched', // Must match provider_reports_status_check constraint
-        user_id: userId,
-        notes: record.description,
+        report_filename: filename, // V6.1 field name
+        raw_data: record.raw_data as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
+        status: 'pending', // V6.1 constraint: pending/matched/settled
+        organization_id: userId, // V6.1 multi-tenant
       }))
 
       // Insert batch
@@ -342,39 +300,7 @@ async function executeProviderImport(
   }
 }
 
-async function updateProviderImportSession(
-  sessionId: string,
-  status: 'completed' | 'failed',
-  updates: { records_imported?: number; records_failed?: number }
-): Promise<void> {
-  const updateData: {
-    status: 'completed' | 'failed'
-    completed_at: string
-    records_imported?: number
-    records_failed?: number
-  } = {
-    status,
-    completed_at: new Date().toISOString(),
-  }
-
-  // Add update fields that exist in the table
-  if (updates.records_imported !== undefined) {
-    updateData.records_imported = updates.records_imported
-  }
-  if (updates.records_failed !== undefined) {
-    updateData.records_failed = updates.records_failed
-  }
-
-  const { error } = await supabase
-    .from('provider_import_sessions')
-    .update(updateData)
-    .eq('id', sessionId)
-
-  if (error) {
-    // console.error('Failed to update import session:', error)
-    // Don't throw - this is not critical for the import process
-  }
-}
+// V6.1 NOTE: Session update functions removed - V6.1 uses direct import tracking
 
 // =====================================================
 // EXPORTS

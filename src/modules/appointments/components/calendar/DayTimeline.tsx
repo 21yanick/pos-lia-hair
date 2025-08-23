@@ -79,14 +79,19 @@ export function DayTimeline({
     }
 
     const converted = appointmentsData.map((apt) => {
-      // Parse services JSON array (from appointments_with_services view)
-      // V6.1: services is Json type, need safe parsing
+      // Type-safe Json to AppointmentService[] conversion (Clean Architecture)
       let services: AppointmentService[] = []
       try {
-        services =
-          apt.services && typeof apt.services === 'object' && Array.isArray(apt.services)
-            ? apt.services
-            : []
+        if (apt.services && Array.isArray(apt.services)) {
+          // Type-safe mapping with validation (KISS principle)
+          services = (apt.services as unknown[]).filter(
+            (service): service is AppointmentService =>
+              service !== null &&
+              typeof service === 'object' &&
+              'id' in service &&
+              'name' in service
+          )
+        }
       } catch (e) {
         console.warn('Failed to parse appointment services:', e)
         services = []

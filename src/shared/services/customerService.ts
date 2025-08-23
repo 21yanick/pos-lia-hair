@@ -46,6 +46,8 @@ export type CustomerFormData = {
   name: string
   phone?: string
   email?: string
+  // V6.1: Add missing is_active field (exists in database schema)
+  is_active?: boolean | null
 }
 
 // ========================================
@@ -221,7 +223,7 @@ export async function updateCustomer(
 
   const updateData: Partial<CustomerInsert> = {
     ...data,
-    updated_at: new Date().toISOString(),
+    // V6.1 Pattern 18: Type Guard - updated_at auto-managed by database, removed from manual updates
   }
 
   // Only explicitly set phone/email to null if they were provided in the update

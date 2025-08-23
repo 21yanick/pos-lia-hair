@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, ArrowRight, CheckCircle, FileText, MapPin, Target } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react' // V6.1 Pattern 16: Missing Import Fix
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -59,6 +59,7 @@ export function ColumnMappingDialog({
   // Get field definitions for current import type
   const fieldDefinitions = FIELD_DEFINITIONS[importType]
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: helper functions are stable useCallback
   const initializeMappings = useCallback(() => {
     const initialMappings: Record<string, ColumnMapping> = {}
 
@@ -77,7 +78,7 @@ export function ColumnMappingDialog({
 
     setMappings(initialMappings)
     validateMappings(initialMappings)
-  }, [fieldDefinitions, csvData])
+  }, [fieldDefinitions, csvData]) // V6.1 Pattern 25: Stable useCallback functions don't need dependencies
 
   // Initialize mappings on mount or when import type changes
   useEffect(() => {
@@ -174,6 +175,51 @@ export function ColumnMappingDialog({
     validateMappings(newMappings)
   }
 
+  const validateSampleValue = useCallback(
+    (field: FieldDefinition, sampleValue: string): string | null => {
+      switch (field.type) {
+        case 'number': {
+          const cleanValue = sampleValue.replace(/[CHF\s₣,]/g, '').replace(',', '.')
+          if (Number.isNaN(parseFloat(cleanValue))) {
+            return `Beispielwert '${sampleValue}' ist keine gültige Zahl`
+          }
+          break
+        }
+
+        case 'date': {
+          const dateFormats = [
+            /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD
+            /^\d{1,2}\.\d{1,2}\.\d{4}$/, // DD.MM.YYYY
+            /^\d{1,2}\/\d{1,2}\/\d{4}$/, // DD/MM/YYYY
+          ]
+          if (!dateFormats.some((format) => format.test(sampleValue))) {
+            return `Beispielwert '${sampleValue}' ist kein gültiges Datum (DD.MM.YYYY oder YYYY-MM-DD)`
+          }
+          break
+        }
+
+        case 'time':
+          if (!/^([01]?\d|2[0-3]):([0-5]\d)$/.test(sampleValue)) {
+            return `Beispielwert '${sampleValue}' ist keine gültige Uhrzeit (HH:MM)`
+          }
+          break
+
+        case 'enum':
+          if (field.enumValues) {
+            const lowerValue = sampleValue.toLowerCase()
+            const lowerEnumValues = field.enumValues.map((v) => v.toLowerCase())
+            if (!lowerEnumValues.includes(lowerValue)) {
+              return `Beispielwert '${sampleValue}' muss einer von: ${field.enumValues.join(', ')}`
+            }
+          }
+          break
+      }
+
+      return null
+    },
+    []
+  )
+
   const validateMappings = useCallback(
     (mappingsToValidate: Record<string, ColumnMapping>) => {
       const errors: string[] = []
@@ -212,50 +258,8 @@ export function ColumnMappingDialog({
 
       setValidationErrors(errors)
     },
-    [fieldDefinitions]
+    [fieldDefinitions, validateSampleValue]
   )
-
-  const validateSampleValue = (field: FieldDefinition, sampleValue: string): string | null => {
-    switch (field.type) {
-      case 'number': {
-        const cleanValue = sampleValue.replace(/[CHF\s₣,]/g, '').replace(',', '.')
-        if (Number.isNaN(parseFloat(cleanValue))) {
-          return `Beispielwert '${sampleValue}' ist keine gültige Zahl`
-        }
-        break
-      }
-
-      case 'date': {
-        const dateFormats = [
-          /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD
-          /^\d{1,2}\.\d{1,2}\.\d{4}$/, // DD.MM.YYYY
-          /^\d{1,2}\/\d{1,2}\/\d{4}$/, // DD/MM/YYYY
-        ]
-        if (!dateFormats.some((format) => format.test(sampleValue))) {
-          return `Beispielwert '${sampleValue}' ist kein gültiges Datum (DD.MM.YYYY oder YYYY-MM-DD)`
-        }
-        break
-      }
-
-      case 'time':
-        if (!/^([01]?\d|2[0-3]):([0-5]\d)$/.test(sampleValue)) {
-          return `Beispielwert '${sampleValue}' ist keine gültige Uhrzeit (HH:MM)`
-        }
-        break
-
-      case 'enum':
-        if (field.enumValues) {
-          const lowerValue = sampleValue.toLowerCase()
-          const lowerEnumValues = field.enumValues.map((v) => v.toLowerCase())
-          if (!lowerEnumValues.includes(lowerValue)) {
-            return `Beispielwert '${sampleValue}' muss einer von: ${field.enumValues.join(', ')}`
-          }
-        }
-        break
-    }
-
-    return null
-  }
 
   const handleConfirm = () => {
     const isValid = validationErrors.length === 0

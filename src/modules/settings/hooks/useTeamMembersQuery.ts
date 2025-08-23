@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { supabase } from '@/shared/lib/supabase/client'
 
-interface TeamMember {
+export interface TeamMember {
+  // V6.1 Pattern: Export interface for cross-module usage
   id: string
   user_id: string
   role: 'owner' | 'admin' | 'staff'
@@ -51,7 +52,13 @@ async function fetchTeamMembers(organizationId: string): Promise<TeamMember[]> {
     throw new Error(`Failed to load team members: ${error.message}`)
   }
 
-  return data || []
+  // V6.1 Pattern 19: Schema Property Alignment + Pattern 17: Null Safety
+  return (data || []).map((member) => ({
+    ...member,
+    role: member.role as 'owner' | 'admin' | 'staff', // V6.1 Pattern 19: Cast database string to union type
+    joined_at: member.joined_at || '', // V6.1 Pattern 17: Null Safety - handle null joined_at
+    active: member.active ?? true, // V6.1 Pattern 17: Null Safety - handle null active
+  }))
 }
 
 // Hook

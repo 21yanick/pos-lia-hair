@@ -169,7 +169,8 @@ export async function createSale(
     // Create PDF receipt
     let receiptResult: { publicUrl?: string } | undefined
     try {
-      receiptResult = await createReceiptPDF(sale, data.items, validOrgId)
+      const pdfResult = await createReceiptPDF(sale, data.items, validOrgId) // V6.1 Pattern 17: Extract result properly
+      receiptResult = pdfResult.success ? { publicUrl: pdfResult.publicUrl } : undefined // V6.1 Pattern 17: Handle success/error type mismatch
     } catch (docErr) {
       console.error('⚠️ Fehler bei der automatischen Quittungserstellung:', docErr)
       // Don't throw here, sale was successful
@@ -328,7 +329,7 @@ export async function createReceiptPDF(
     const resolvedBusinessSettings = businessSettings
       ? {
           ...businessSettings,
-          logo_url: resolveLogoUrl(businessSettings.logo_url),
+          logo_url: resolveLogoUrl(businessSettings.logo_url ?? undefined), // V6.1 Pattern 17: Null Safety - transform null to undefined
         }
       : null
 
@@ -338,7 +339,7 @@ export async function createReceiptPDF(
       items,
       businessSettings: resolvedBusinessSettings,
     })
-    const blob = await pdf(pdfComponent).toBlob()
+    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
     const fileName = `quittung-${sale.id}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
 

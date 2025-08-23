@@ -147,11 +147,13 @@ export function CsvImport() {
     }
 
     try {
+      // V6.1 Pattern 17: Null Safety - Validate parsedData before transformation
+      if (!csvState.parsedData) {
+        throw new Error('No CSV data parsed. Please parse a CSV file first.')
+      }
+
       // Transform CSV data to JSON format
-      const transformedData = CsvToJsonTransformer.transform(
-        csvState.parsedData || [],
-        mappingConfig
-      )
+      const transformedData = CsvToJsonTransformer.transform(csvState.parsedData, mappingConfig)
 
       setCsvState((prev) => ({
         ...prev,

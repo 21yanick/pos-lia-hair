@@ -215,8 +215,17 @@ export async function acceptInvitation(
 
     return {
       success: true,
-      organization,
-      membership,
+      organization: {
+        ...organization,
+        active: organization.active ?? true, // V6.1 Pattern 17: Null Safety - Default to true if null
+      },
+      membership: {
+        ...membership,
+        role: membership.role as 'staff' | 'admin' | 'owner', // V6.1 Pattern 19: Schema Property Alignment - Cast database string to union type
+        active: membership.active ?? true, // V6.1 Pattern 17: Null Safety - Default to true if null
+        created_at: membership.created_at || '', // V6.1 Pattern 17: Null Safety - Default to empty string if null
+        joined_at: membership.joined_at || '', // V6.1 Pattern 17: Null Safety - Default to empty string if null
+      },
       role: invitation.role,
     }
   } catch (error) {

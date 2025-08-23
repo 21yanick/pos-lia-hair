@@ -2,7 +2,11 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/shared/lib/supabase/client'
-import type { Organization, OrganizationMembership } from '@/shared/types/organizations'
+import type {
+  Organization,
+  OrganizationMembership,
+  OrganizationRole,
+} from '@/shared/types/organizations'
 
 // Query Key als Konstante für Konsistenz
 export const ORGANIZATIONS_QUERY_KEY = ['organizations', 'user'] as const
@@ -60,6 +64,9 @@ async function fetchUserOrganizations(): Promise<OrganizationMembership[]> {
   // Type-sichere Transformation
   return (data || []).map((membership) => ({
     ...membership,
+    role: membership.role as OrganizationRole, // V6.1 Pattern 19: Schema Property Alignment - cast database string to OrganizationRole
+    joined_at: membership.joined_at || '', // V6.1 Pattern 17: Null Safety - handle null joined_at
+    active: membership.active ?? true, // V6.1 Pattern 17: Null Safety - handle null active
     organization: membership.organization as Organization,
   }))
 }

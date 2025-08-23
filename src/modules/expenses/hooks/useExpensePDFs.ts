@@ -106,12 +106,13 @@ export function useExpensePDFs() {
 
         const enrichedPDFs: ExpensePDF[] = await Promise.all(
           (documents || []).map(async (doc) => {
-            const url = doc.file_path ? await getStorageUrl(doc.file_path) : ''
+            const storageUrl = doc.file_path ? await getStorageUrl(doc.file_path) : null
 
             return {
               ...doc,
               expenseId,
-              url,
+              // V6.1 Pattern 17: Null Safety - convert database nulls to interface-compatible types
+              url: storageUrl || undefined, // Convert null to undefined for optional property
               displayName: doc.file_name || `Beleg ${doc.created_at?.split('T')[0]}`,
               description: doc.notes || 'Ausgaben-Beleg',
               fileType: doc.file_path ? doc.file_path.split('.').pop() : 'pdf',

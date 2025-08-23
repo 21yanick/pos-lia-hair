@@ -362,19 +362,21 @@ export default function TransactionPage() {
 
   // React Query
   const { data: transactions = [], error } = useTransactionsQuery(query)
+  // V6.1: Ensure proper typing for unified_transactions_view
+  const typedTransactions = transactions as UnifiedTransaction[]
   const pdfActions = usePdfActions()
 
   // Stats
   const stats = useMemo(() => {
     const s = {
-      total: transactions.length,
+      total: typedTransactions.length,
       byType: { sale: 0, expense: 0 },
       withPdf: 0,
       withoutPdf: 0,
       totalAmount: 0,
     }
 
-    transactions.forEach((tx) => {
+    typedTransactions.forEach((tx) => {
       if (tx.transaction_type === 'sale') s.byType.sale++
       else if (tx.transaction_type === 'expense') s.byType.expense++
 
@@ -385,7 +387,7 @@ export default function TransactionPage() {
     })
 
     return s
-  }, [transactions])
+  }, [typedTransactions.forEach, typedTransactions.length])
 
   // Handlers
   const handlePdfAction = async (transaction: UnifiedTransaction) => {
@@ -430,7 +432,9 @@ export default function TransactionPage() {
             variant="outline"
             size="sm"
             onClick={async () => {
-              const selected = transactions.filter((tx) => selectedTransactions.includes(tx.id))
+              const selected = typedTransactions.filter((tx) =>
+                selectedTransactions.includes(tx.id)
+              )
               await pdfActions.downloadMultiplePdfs(selected)
               setSelectedTransactions([])
             }}
@@ -522,8 +526,8 @@ export default function TransactionPage() {
       <Card>
         <CardHeader>
           <CardTitle>Transaktionen</CardTitle>
-          {transactions.length > 0 && (
-            <CardDescription>{transactions.length} Einträge</CardDescription>
+          {typedTransactions.length > 0 && (
+            <CardDescription>{typedTransactions.length} Einträge</CardDescription>
           )}
         </CardHeader>
         <CardContent>
@@ -531,7 +535,7 @@ export default function TransactionPage() {
             <div className="text-center py-8 text-destructive">
               Fehler beim Laden der Transaktionen
             </div>
-          ) : transactions.length === 0 ? (
+          ) : typedTransactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {hasActiveFilters
                 ? 'Keine Transaktionen gefunden'
@@ -543,9 +547,9 @@ export default function TransactionPage() {
               <div className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Checkbox
-                    checked={selectedTransactions.length === transactions.length}
+                    checked={selectedTransactions.length === typedTransactions.length}
                     onCheckedChange={(checked) =>
-                      setSelectedTransactions(checked ? transactions.map((tx) => tx.id) : [])
+                      setSelectedTransactions(checked ? typedTransactions.map((tx) => tx.id) : [])
                     }
                   />
                   <span className="text-sm font-medium">
@@ -555,12 +559,12 @@ export default function TransactionPage() {
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground hidden sm:block">
-                  {transactions.length} Transaktionen
+                  {typedTransactions.length} Transaktionen
                 </div>
               </div>
 
               {/* Transaction Cards */}
-              {transactions.map((transaction) => (
+              {typedTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
                   className="border rounded-lg p-4 w-full max-w-full overflow-hidden hover:bg-muted/50 transition-colors"

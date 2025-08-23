@@ -4,8 +4,25 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Item } from '@/shared/hooks/business/useItems'
 import { useItems } from '@/shared/hooks/business/useItems'
 import { usePOSState } from '@/shared/hooks/business/usePOSState'
-import type { CartItem, CreateSaleData } from '@/shared/hooks/business/useSales'
+import type { CartItem, CreateSaleData, Sale } from '@/shared/hooks/business/useSales'
 import { useSales } from '@/shared/hooks/business/useSales'
+import type { TransactionItem } from '@/shared/types/transactions'
+
+// V6.1 Pattern 19: Schema Property Alignment - Sale to TransactionItem adapter
+function saleToTransactionItem(sale: Sale): TransactionItem {
+  return {
+    id: sale.id,
+    date: sale.created_at ? sale.created_at.split('T')[0] : new Date().toISOString().split('T')[0], // V6.1: Extract date from created_at
+    time: sale.created_at
+      ? sale.created_at.split('T')[1].split('.')[0]
+      : new Date().toTimeString().split(' ')[0], // V6.1: Extract time from created_at
+    amount: sale.total_amount || 0, // V6.1: Use total_amount from sales schema
+    method: (sale.payment_method as TransactionItem['method']) || 'cash', // V6.1: Cast payment_method to TransactionItem method
+    status: 'completed' as TransactionItem['status'], // V6.1: Default to completed status for new sales
+    type: 'sale', // V6.1: Fixed transaction type for sales
+    description: sale.notes || undefined, // V6.1: Map notes to description
+  }
+}
 
 // Warenkorb-Logik Hook (optimized with useCallback)
 function useCart() {
@@ -168,7 +185,7 @@ export function usePOS() {
         // Speichere alle notwendigen Daten für den ConfirmationDialog
         posState.setTransactionResult({
           success: true,
-          transaction: result.sale,
+          transaction: saleToTransactionItem(result.sale), // V6.1 Pattern 19: Schema Property Alignment - Convert Sale to TransactionItem
           change: result.change,
           receiptUrl: result.receiptUrl,
           amount: cartTotal,

@@ -119,26 +119,14 @@ export interface BankTransactionInsert {
   transaction_code?: string // Serialized BkTxCd
   import_filename: string
   import_date: string // ISO datetime string
-  raw_data: CAMTEntry // Original entry as JSONB
+  raw_data: Record<string, unknown> // V6.1 Pattern 19: JSONB Schema Alignment - structured JSON data
   status: 'unmatched'
   user_id: string
+  organization_id: string // V6.1 Multi-Tenant Security
 }
 
-export interface BankImportSessionInsert {
-  bank_account_id: string
-  import_filename: string
-  import_type: 'camt053'
-  total_entries: number
-  new_entries: number
-  duplicate_entries: number
-  error_entries: number
-  statement_from_date: string // ISO date string
-  statement_to_date: string // ISO date string
-  status: 'pending' | 'completed' | 'failed'
-  imported_by: string
-  organization_id: string // ✅ ADDED: Multi-Tenant support
-  notes?: string
-}
+// V6.1 NOTE: bank_import_sessions table removed - V6.1 uses direct filename tracking
+// via import_filename field in bank_transactions table with check_file_already_imported() function
 
 // =====================================================
 // VALIDATION AND ERROR TYPES

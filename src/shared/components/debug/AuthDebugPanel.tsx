@@ -76,7 +76,7 @@ export function AuthDebugPanel() {
     }
   }
 
-  const isConfigOk = authUser && dbUser
+  const isConfigOk = Boolean(authUser && dbUser) // V6.1 Pattern 18: Type Guard - Convert unknown logical result to boolean
 
   return (
     <Card className="mb-6">

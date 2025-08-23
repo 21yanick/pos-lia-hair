@@ -332,7 +332,8 @@ export function ExpenseActions({
             )}
 
             <div className="text-xs text-muted-foreground pt-2 border-t">
-              <p>Erstellt: {formatDate(expense.created_at)}</p>
+              <p>Erstellt: {expense.created_at ? formatDate(expense.created_at) : 'Unbekannt'}</p>{' '}
+              {/* V6.1: Null safety for formatDate */}
               <p>ID: {expense.id}</p>
             </div>
           </div>

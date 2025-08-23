@@ -122,11 +122,15 @@ export const useTimeSlotAvailability = (
 /**
  * Mutation hook for creating appointments
  */
-export const useCreateAppointment = (organizationId: string) => {
+export const useCreateAppointment = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (appointmentData: AppointmentInsert) => {
+      if (!organizationId) {
+        throw new Error('Organization ID is required')
+      }
+
       const result = await createAppointment(appointmentData, organizationId)
       if (!result.success) {
         throw new Error(result.error)
@@ -134,8 +138,14 @@ export const useCreateAppointment = (organizationId: string) => {
       return result.data
     },
     onSuccess: (newAppointment) => {
-      // Invalidate specific date query for immediate update
+      // Early returns for invalid states (KISS principle)
+      if (!organizationId) return
+      if (!newAppointment.appointment_date) return
+
+      // Type-safe cache invalidation
       const appointmentDate = newAppointment.appointment_date
+
+      // Invalidate specific date query for immediate update
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.appointments.byDate(organizationId, appointmentDate),
       })
@@ -159,11 +169,15 @@ export const useCreateAppointment = (organizationId: string) => {
 /**
  * Mutation hook for updating appointments
  */
-export const useUpdateAppointment = (organizationId: string) => {
+export const useUpdateAppointment = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (appointmentUpdate: AppointmentUpdate) => {
+      if (!organizationId) {
+        throw new Error('Organization ID is required')
+      }
+
       const result = await updateAppointment(appointmentUpdate, organizationId)
       if (!result.success) {
         throw new Error(result.error)
@@ -171,15 +185,22 @@ export const useUpdateAppointment = (organizationId: string) => {
       return result.data
     },
     onSuccess: (updatedAppointment) => {
-      // Invalidate specific date query for immediate update
+      // Early returns for invalid states (KISS principle)
+      if (!organizationId) return
+      if (!updatedAppointment.appointment_date || !updatedAppointment.id) return
+
+      // Type-safe cache invalidation
       const appointmentDate = updatedAppointment.appointment_date
+      const appointmentId = updatedAppointment.id
+
+      // Invalidate specific date query for immediate update
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.appointments.byDate(organizationId, appointmentDate),
       })
 
       // Update specific appointment in cache
       queryClient.setQueryData(
-        queryKeys.business.appointments.detail(organizationId, updatedAppointment.id),
+        queryKeys.business.appointments.detail(organizationId, appointmentId),
         updatedAppointment
       )
 
@@ -202,27 +223,46 @@ export const useUpdateAppointment = (organizationId: string) => {
 /**
  * Mutation hook for cancelling appointments
  */
-export const useCancelAppointment = (organizationId: string) => {
+export const useCancelAppointment = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (appointmentId: string) => {
+      if (!organizationId) {
+        throw new Error('Organization ID is required')
+      }
+
+      // Get appointment first for cache invalidation
+      const appointment = await getAppointmentById(appointmentId, organizationId)
+      if (!appointment) {
+        throw new Error('Appointment not found')
+      }
+
       const result = await cancelAppointment(appointmentId, organizationId)
       if (!result.success) {
         throw new Error(result.error)
       }
-      return result.data
+
+      // Return original appointment for cache invalidation
+      return appointment
     },
     onSuccess: (cancelledAppointment) => {
-      // Invalidate specific date query for immediate update
+      // Early returns for invalid states (KISS principle)
+      if (!organizationId) return
+      if (!cancelledAppointment.appointment_date || !cancelledAppointment.id) return
+
+      // Type-safe cache invalidation
       const appointmentDate = cancelledAppointment.appointment_date
+      const appointmentId = cancelledAppointment.id
+
+      // Invalidate specific date query for immediate update
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.appointments.byDate(organizationId, appointmentDate),
       })
 
       // Update specific appointment in cache
       queryClient.setQueryData(
-        queryKeys.business.appointments.detail(organizationId, cancelledAppointment.id),
+        queryKeys.business.appointments.detail(organizationId, appointmentId),
         cancelledAppointment
       )
 

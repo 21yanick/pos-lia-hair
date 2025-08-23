@@ -153,7 +153,7 @@ export function OrganizationSelector({
             {memberships.map(({ organization, role }) => (
               <OrganizationCard
                 key={organization.id}
-                organization={organization}
+                organization={organization as OrganizationRow} // V6.1 Pattern 17: Null Safety - Type alignment for undefined → null compatibility
                 role={role}
                 isLoading={switching === organization.slug}
                 onSelect={() => handleSwitchOrganization(organization.slug)}

@@ -1,7 +1,10 @@
 // Import PDF Generation Services
 // Handles all PDF generation for import processes
 
+// V6.1 Pattern 21: Library API Compatibility imports handled by createElement
+import type React from 'react' // V6.1: React types for PDF components
 import { supabase } from '@/shared/lib/supabase/client'
+import type { Sale } from '@/shared/services/salesService' // V6.1 Pattern 19: Schema Property Alignment
 import type { ExpenseImport, SaleImport } from '@/shared/types/import'
 
 // =================================
@@ -125,8 +128,8 @@ export async function generateReceiptPDFsForSales(
     }
 
     try {
-      // Transform sale data for PDF component
-      const saleForPDF = {
+      // V6.1 Pattern 19: Schema Property Alignment - Complete Sale object for PDF compatibility
+      const saleForPDF: Sale = {
         id: sale.id,
         total_amount: sale.total_amount,
         payment_method: sale.payment_method,
@@ -134,13 +137,20 @@ export async function generateReceiptPDFsForSales(
         notes: sale.notes,
         created_at: sale.created_at,
         user_id: targetUserId,
-        // Settlement fields (null for import data)
+        organization_id: targetUserId, // V6.1 Multi-tenant requirement
+        // V6.1 Banking fields (null for import data)
+        bank_transaction_id: null,
+        banking_status: null,
+        customer_id: null,
+        customer_name: null,
         gross_amount: null,
         provider_fee: null,
         net_amount: null,
         settlement_status: 'pending' as const,
         settlement_date: null,
         provider_reference_id: null,
+        provider_report_id: null,
+        receipt_number: null,
       }
 
       const itemsForPDF =
@@ -164,13 +174,13 @@ export async function generateReceiptPDFsForSales(
         const { ReceiptPDF } = await import('@/shared/components/pdf/ReceiptPDF')
         const { createElement } = await import('react')
 
-        // Generate PDF blob
+        // V6.1 Pattern 21: Library API Compatibility - React PDF Document with proper typing
         const pdfDocument = createElement(ReceiptPDF, {
           sale: saleForPDF,
           items: itemsForPDF,
-        })
+        }) as React.ReactElement // V6.1 Pattern 17: PDF ReactElement type compatibility
 
-        const pdfBlob = await pdf(pdfDocument).toBlob()
+        const pdfBlob = await pdf(pdfDocument as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
 
         // console.log(`🔍 PDF generated successfully, size: ${pdfBlob.size} bytes`)
 
@@ -332,12 +342,12 @@ export async function generateExpenseReceiptPDFs(
         )
         const { createElement } = await import('react')
 
-        // Generate PDF blob
+        // V6.1 Pattern 21: Library API Compatibility - React PDF Document with proper typing
         const pdfDocument = createElement(PlaceholderReceiptPDF, {
           expense: dbExpense,
-        })
+        }) as React.ReactElement // V6.1 Pattern 17: PDF ReactElement type compatibility
 
-        const pdfBlob = await pdf(pdfDocument).toBlob()
+        const pdfBlob = await pdf(pdfDocument as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
 
         // console.log(`🔍 Expense PDF generated, size: ${pdfBlob.size} bytes`)
 

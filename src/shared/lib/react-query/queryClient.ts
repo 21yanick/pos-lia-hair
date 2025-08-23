@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query'
+import { type NetworkMode, QueryClient } from '@tanstack/react-query' // V6.1 Pattern 21: Library API Compatibility - Import NetworkMode and QueryStatus types
 
 /**
  * React Query Configuration for POS System
@@ -48,14 +48,14 @@ const queryClientConfig = {
       throwOnError: false,
 
       // Network mode
-      networkMode: 'online', // Only fetch when online
+      networkMode: 'online' as NetworkMode, // V6.1 Pattern 21: Library API Compatibility - Explicit NetworkMode type cast
     },
     mutations: {
       // Retry mutations once on failure
       retry: 1,
 
       // Don't retry mutations on network error to avoid duplicates
-      networkMode: 'online',
+      networkMode: 'online' as NetworkMode, // V6.1 Pattern 21: Library API Compatibility - Explicit NetworkMode type cast
 
       // Throw errors to error boundaries for mutations
       throwOnError: false,
@@ -189,8 +189,9 @@ if (process.env.NODE_ENV === 'development') {
       // console.log('🔴 React Query: Query removed:', event.query.queryKey)
     } else if (event.type === 'updated') {
       const query = event.query
-      if (query.state.status === 'loading') {
-        // console.log('🟡 React Query: Query loading:', query.queryKey)
+      if (query.state.status === 'pending') {
+        // V6.1 Pattern 21: Library API Compatibility - React Query v5 uses 'pending' instead of 'loading'
+        // console.log('🟡 React Query: Query pending:', query.queryKey)
       } else if (query.state.status === 'success') {
         // console.log('🟢 React Query: Query success:', query.queryKey)
       } else if (query.state.status === 'error') {

@@ -21,7 +21,7 @@ import {
 import { Separator } from '@/shared/components/ui/separator'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import type { BookingRules, DisplayPreferences } from '@/shared/types/businessSettings'
-import { DEFAULT_BOOKING_RULES, DEFAULT_DISPLAY_PREFERENCES } from '@/shared/types/businessSettings'
+import { safeBookingRules, safeDisplayPreferences } from '@/shared/types/businessSettings'
 
 interface BookingRulesConfigProps {
   className?: string
@@ -70,10 +70,10 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
     useBusinessSettingsQuery()
 
   const [bookingRules, setBookingRules] = useState<BookingRules>(
-    settings?.booking_rules || DEFAULT_BOOKING_RULES
+    safeBookingRules(settings?.booking_rules)
   )
   const [displayPreferences, setDisplayPreferences] = useState<DisplayPreferences>(
-    settings?.display_preferences || DEFAULT_DISPLAY_PREFERENCES
+    safeDisplayPreferences(settings?.display_preferences)
   )
   const [hasChanges, setHasChanges] = useState(false)
 
@@ -81,16 +81,17 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
   if (
     settings?.booking_rules &&
     !hasChanges &&
-    JSON.stringify(bookingRules) !== JSON.stringify(settings.booking_rules)
+    JSON.stringify(bookingRules) !== JSON.stringify(safeBookingRules(settings.booking_rules))
   ) {
-    setBookingRules(settings.booking_rules)
+    setBookingRules(safeBookingRules(settings.booking_rules))
   }
   if (
     settings?.display_preferences &&
     !hasChanges &&
-    JSON.stringify(displayPreferences) !== JSON.stringify(settings.display_preferences)
+    JSON.stringify(displayPreferences) !==
+      JSON.stringify(safeDisplayPreferences(settings.display_preferences))
   ) {
-    setDisplayPreferences(settings.display_preferences)
+    setDisplayPreferences(safeDisplayPreferences(settings.display_preferences))
   }
 
   const updateBookingRule = <K extends keyof BookingRules>(key: K, value: BookingRules[K]) => {
@@ -119,8 +120,8 @@ export function BookingRulesConfig({ className }: BookingRulesConfigProps) {
   }
 
   const handleReset = () => {
-    setBookingRules(settings?.booking_rules || DEFAULT_BOOKING_RULES)
-    setDisplayPreferences(settings?.display_preferences || DEFAULT_DISPLAY_PREFERENCES)
+    setBookingRules(safeBookingRules(settings?.booking_rules))
+    setDisplayPreferences(safeDisplayPreferences(settings?.display_preferences))
     setHasChanges(false)
   }
 

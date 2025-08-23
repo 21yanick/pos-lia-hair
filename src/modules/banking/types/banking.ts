@@ -3,6 +3,7 @@
 // =====================================================
 // Auto-generated from DB schema: 06_banking_system_rebuild.sql
 // Date: 2025-01-06
+// Updated: 2025-01-22 - Direct DB Schema Analysis (Clean Architecture)
 
 import type { CAMTEntry } from './camt'
 import type { SumUpCsvRow, TWINTCsvRow } from './provider'
@@ -276,10 +277,24 @@ export type ExpenseWithBanking = {
 // Extended Cash Movement with Banking fields
 export type CashMovementWithBanking = {
   id: string
-  // ... existing cash movement fields
+  // V6.1: Align with actual cash_movements schema
+  created_at: string | null
+  type: string // V6.1: Generic string (not union) - will cast in components
+  amount: number
+  description: string // V6.1: NOT NULL in database
+  organization_id: string | null
+  user_id: string
+  // V6.1: Missing properties that exist in schema
+  movement_number: string | null
+  reference_id: string | null
+  reference_type: string | null
+  movement_type: string | null
+  // Banking integration fields
   bank_transaction_id: string | null
-  banking_status: SimpleBankingStatus
-  movement_type: MovementType
+  banking_status: string | null // V6.1: Generic string, not enum
+  // Enriched fields (added by queries, not in base schema)
+  sale_receipt_number?: string | null
+  sale_customer_name?: string | null
 }
 
 // Movement Type for Cash Movements
@@ -551,6 +566,44 @@ export interface ImportExecutionResult {
   importedCount: number
   errors: string[]
   sessionId?: string
+}
+
+// =====================================================
+// BANK RECONCILIATION MATCHES - DIRECT DB SCHEMA (Clean Architecture)
+// =====================================================
+// Schema analyzed via: \d bank_reconciliation_matches (2025-01-22)
+
+export interface BankReconciliationMatch {
+  id: string // uuid PRIMARY KEY
+  session_id: string // uuid NOT NULL (REQUIRED!)
+  bank_transaction_id?: string | null // uuid
+  provider_report_id?: string | null // uuid
+  sale_id?: string | null // uuid
+  expense_id?: string | null // uuid
+  match_type: 'exact' | 'fuzzy' | 'manual' // varchar(20) NOT NULL
+  confidence_score?: number | null // numeric(3,2) 0-1, default 0.5
+  amount_difference?: number | null // numeric(10,2) default 0
+  status?: string | null // varchar(20) default 'pending' ('pending'|'approved'|'rejected')
+  notes?: string | null // text
+  created_by?: string | null // uuid
+  created_at?: string // timestamp auto
+  reviewed_at?: string | null // timestamp
+  organization_id?: string | null // uuid
+}
+
+export interface BankReconciliationMatchInsert {
+  session_id: string // REQUIRED
+  bank_transaction_id?: string | null
+  provider_report_id?: string | null
+  sale_id?: string | null
+  expense_id?: string | null
+  match_type: 'exact' | 'fuzzy' | 'manual' // REQUIRED
+  confidence_score?: number | null
+  amount_difference?: number | null
+  status?: string | null
+  notes?: string | null
+  created_by?: string | null
+  organization_id?: string | null
 }
 
 // =====================================================

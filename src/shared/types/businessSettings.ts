@@ -1,28 +1,28 @@
 export interface BusinessSettings {
   id: string
-  user_id: string
+  user_id?: string // V6.1: Optional - organization-scoped, no user_id required
   organization_id: string
 
-  // Company Data
-  company_name?: string
-  company_tagline?: string
-  company_address?: string
-  company_postal_code?: string
-  company_city?: string
-  company_phone?: string
-  company_email?: string
-  company_website?: string
-  company_uid?: string
+  // Company Data - V6.1: Allow null from database
+  company_name?: string | null
+  company_tagline?: string | null
+  company_address?: string | null
+  company_postal_code?: string | null
+  company_city?: string | null
+  company_phone?: string | null
+  company_email?: string | null
+  company_website?: string | null
+  company_uid?: string | null
 
-  // Logo (Business - for PDFs, receipts)
-  logo_url?: string
-  logo_storage_path?: string
+  // Logo (Business - for PDFs, receipts) - V6.1: Allow null
+  logo_url?: string | null
+  logo_storage_path?: string | null
 
-  // App Logos (for UI, navigation, login)
-  app_logo_light_url?: string
-  app_logo_light_storage_path?: string
-  app_logo_dark_url?: string
-  app_logo_dark_storage_path?: string
+  // App Logos (for UI, navigation, login) - V6.1: Allow null
+  app_logo_light_url?: string | null
+  app_logo_light_storage_path?: string | null
+  app_logo_dark_url?: string | null
+  app_logo_dark_storage_path?: string | null
 
   // Settings
   default_currency: string
@@ -33,10 +33,11 @@ export interface BusinessSettings {
   custom_supplier_categories?: Record<string, string>
 
   // Appointment Settings (JSONB fields from database)
-  working_hours: WorkingHours
-  booking_rules: BookingRules
-  display_preferences: DisplayPreferences
-  vacation_periods: VacationPeriod[]
+  // V6.1: JSONB fields compatible with both structured types and Json
+  working_hours: WorkingHours | Record<string, any> | null
+  booking_rules: BookingRules | Record<string, any> | null
+  display_preferences: DisplayPreferences | Record<string, any> | null
+  vacation_periods: VacationPeriod[] | any[] | null
 
   // Timestamps
   created_at: string
@@ -45,30 +46,32 @@ export interface BusinessSettings {
 
 export interface BusinessSettingsFormData {
   company_name: string
-  company_tagline?: string
-  company_address?: string
-  company_postal_code?: string
-  company_city?: string
-  company_phone?: string
-  company_email?: string
-  company_website?: string
-  company_uid?: string
-  logo_url?: string
-  logo_storage_path?: string
-  app_logo_light_url?: string
-  app_logo_light_storage_path?: string
-  app_logo_dark_url?: string
-  app_logo_dark_storage_path?: string
+  // V6.1: Align with database nullable columns (string | null)
+  company_tagline?: string | null
+  company_address?: string | null
+  company_postal_code?: string | null
+  company_city?: string | null
+  company_phone?: string | null
+  company_email?: string | null
+  company_website?: string | null
+  company_uid?: string | null
+  logo_url?: string | null
+  logo_storage_path?: string | null
+  app_logo_light_url?: string | null
+  app_logo_light_storage_path?: string | null
+  app_logo_dark_url?: string | null
+  app_logo_dark_storage_path?: string | null
   default_currency: string
   tax_rate: number
   pdf_show_logo: boolean
   pdf_show_company_details: boolean
   custom_expense_categories?: Record<string, string>
   custom_supplier_categories?: Record<string, string>
-  working_hours?: WorkingHours
-  booking_rules?: BookingRules
-  display_preferences?: DisplayPreferences
-  vacation_periods?: VacationPeriod[]
+  // V6.1: JSONB fields compatible with both structured types and Json
+  working_hours?: WorkingHours | Record<string, any> | null
+  booking_rules?: BookingRules | Record<string, any> | null
+  display_preferences?: DisplayPreferences | Record<string, any> | null
+  vacation_periods?: VacationPeriod[] | any[] | null
 }
 
 // =================================
@@ -160,4 +163,98 @@ export const DEFAULT_BUSINESS_SETTINGS: Partial<BusinessSettings> = {
   booking_rules: DEFAULT_BOOKING_RULES,
   display_preferences: DEFAULT_DISPLAY_PREFERENCES,
   vacation_periods: [],
+}
+
+// =================================
+// V6.1 JSONB Type Safety Guards
+// =================================
+
+/**
+ * Safely extract WorkingHours from JSONB union type
+ * V6.1: JSONB fields can be stored as Record<string, any> or null
+ */
+export function safeWorkingHours(
+  value: WorkingHours | Record<string, any> | null | undefined
+): WorkingHours {
+  // Return default if null/undefined
+  if (!value) return DEFAULT_WORKING_HOURS
+
+  // Check if it has the expected WorkingHours structure
+  if (
+    typeof value === 'object' &&
+    'monday' in value &&
+    'tuesday' in value &&
+    typeof value.monday === 'object' &&
+    'start' in value.monday &&
+    'end' in value.monday
+  ) {
+    return value as WorkingHours
+  }
+
+  // Fallback to default if structure doesn't match
+  return DEFAULT_WORKING_HOURS
+}
+
+/**
+ * Safely extract BookingRules from JSONB union type
+ */
+export function safeBookingRules(
+  value: BookingRules | Record<string, any> | null | undefined
+): BookingRules {
+  if (!value) return DEFAULT_BOOKING_RULES
+
+  // Check if it has the expected BookingRules structure
+  if (
+    typeof value === 'object' &&
+    'slotInterval' in value &&
+    'defaultDuration' in value &&
+    typeof value.slotInterval === 'number'
+  ) {
+    return value as BookingRules
+  }
+
+  return DEFAULT_BOOKING_RULES
+}
+
+/**
+ * Safely extract DisplayPreferences from JSONB union type
+ */
+export function safeDisplayPreferences(
+  value: DisplayPreferences | Record<string, any> | null | undefined
+): DisplayPreferences {
+  if (!value) return DEFAULT_DISPLAY_PREFERENCES
+
+  // Check if it has the expected DisplayPreferences structure
+  if (
+    typeof value === 'object' &&
+    'timelineStart' in value &&
+    'timelineEnd' in value &&
+    typeof value.timelineStart === 'string'
+  ) {
+    return value as DisplayPreferences
+  }
+
+  return DEFAULT_DISPLAY_PREFERENCES
+}
+
+/**
+ * Safely extract VacationPeriods from JSONB union type
+ */
+export function safeVacationPeriods(
+  value: VacationPeriod[] | any[] | null | undefined
+): VacationPeriod[] {
+  if (!value || !Array.isArray(value)) return []
+
+  // Filter out invalid entries and ensure proper structure
+  return value.filter(
+    (period): period is VacationPeriod =>
+      typeof period === 'object' &&
+      period !== null &&
+      'start' in period &&
+      'end' in period &&
+      'reason' in period &&
+      typeof period.start === 'string' &&
+      typeof period.end === 'string' &&
+      typeof period.reason === 'string'
+  )
 }

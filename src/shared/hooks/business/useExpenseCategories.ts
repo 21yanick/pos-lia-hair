@@ -90,6 +90,7 @@ export function useExpenseCategories() {
 
         await upsertBusinessSettings({
           ...businessSettings,
+          company_name: businessSettings.company_name || '', // V6.1 Pattern 17: Null Safety - string | null | undefined → string
           custom_expense_categories: updatedCustomCategories,
         })
 
@@ -126,6 +127,7 @@ export function useExpenseCategories() {
 
         await upsertBusinessSettings({
           ...businessSettings,
+          company_name: businessSettings.company_name || '', // V6.1 Pattern 17: Null Safety - string | null | undefined → string
           custom_expense_categories: updatedCustomCategories,
         })
 
@@ -159,6 +161,7 @@ export function useExpenseCategories() {
 
         await upsertBusinessSettings({
           ...businessSettings,
+          company_name: businessSettings.company_name || '', // V6.1 Pattern 17: Null Safety - string | null | undefined → string
           custom_expense_categories: updatedCustomCategories,
         })
 
@@ -214,6 +217,6 @@ export function useExpenseCategories() {
 
     // Utils
     isDefaultCategory: (key: string) => key in DEFAULT_EXPENSE_CATEGORIES,
-    getCategoryLabel: (key: string) => categories[key] || key,
+    getCategoryLabel: (key: string) => (categories as Record<string, string>)[key] || key, // V6.1 Pattern 13: Index Access Safety - safe index access
   }
 }

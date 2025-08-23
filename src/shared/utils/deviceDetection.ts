@@ -91,7 +91,7 @@ export const deviceDetection = {
     }
 
     // Other browsers: Check for PDF plugin
-    const hasPDFPlugin = navigator.mimeTypes['application/pdf']
+    const hasPDFPlugin = navigator.mimeTypes.namedItem('application/pdf') // V6.1 Pattern 18: Type Guard - Use namedItem for mimeTypes access
     return hasPDFPlugin !== undefined
   },
 

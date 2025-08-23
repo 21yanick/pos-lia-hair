@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { createProviderMatch, getProviderMatchSuggestions } from '../../services/bankingApi'
 import type {
   ProviderAutoMatchResult,
@@ -32,16 +33,29 @@ export function ProviderAutoMatchButtonV2({
   const [error, setError] = useState<string | null>(null)
   const [showPreview, setShowPreview] = useState(false)
 
+  // 🔒 SECURITY: Multi-Tenant Organization Context
+  const { currentOrganization } = useCurrentOrganization()
+
   const startAnalysis = async () => {
     setPhase('analyzing')
     setError(null)
     setLastResult(null)
 
     try {
-      const { data, error: apiError } = await getProviderMatchSuggestions()
+      // 🔒 CRITICAL SECURITY: Organization required for multi-tenant security
+      if (!currentOrganization) {
+        throw new Error('Keine Organization ausgewählt. Bitte wählen Sie eine Organization.')
+      }
+
+      const { data, error: apiError } = await getProviderMatchSuggestions(currentOrganization.id)
 
       if (apiError || !data) {
-        throw new Error(apiError?.message || 'Fehler beim Analysieren der Matches')
+        // Type-safe error message extraction (Clean Architecture)
+        const errorMessage =
+          typeof apiError === 'object' && apiError !== null && 'message' in apiError
+            ? String(apiError.message)
+            : 'Fehler beim Analysieren der Matches'
+        throw new Error(errorMessage)
       }
 
       setSuggestions(data)
@@ -85,9 +99,14 @@ export function ProviderAutoMatchButtonV2({
             matchedPairs++
             processedCandidates.push(candidate)
           } else {
-            errors.push(
-              `Sale ${candidate.sale.id}: ${matchResult.error?.message || 'Unbekannter Fehler'}`
-            )
+            // Type-safe error message extraction (Clean Architecture)
+            const errorMessage =
+              typeof matchResult.error === 'object' &&
+              matchResult.error !== null &&
+              'message' in matchResult.error
+                ? String(matchResult.error.message)
+                : 'Unbekannter Fehler'
+            errors.push(`Sale ${candidate.sale.id}: ${errorMessage}`)
           }
         } catch (error) {
           errors.push(

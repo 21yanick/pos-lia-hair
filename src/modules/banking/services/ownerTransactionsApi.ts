@@ -14,6 +14,9 @@ import type {
   OwnerTransactionUpdate,
 } from '../types/banking'
 
+// Re-export types for external modules (Clean Architecture)
+export type { OwnerBalance, OwnerTransactionInsert }
+
 // =====================================================
 // OWNER TRANSACTIONS CRUD
 // =====================================================
@@ -82,10 +85,10 @@ export async function getOwnerTransactions(
 
     if (error) throw error
 
-    return { data: data || [], error: null }
+    return { data: (data || []) as OwnerTransactionRow[], error: null }
   } catch (error) {
     console.error('Error fetching owner transactions:', error)
-    return { data: [], error }
+    return { data: [], error: error as Error }
   }
 }
 
@@ -175,7 +178,7 @@ export async function getOwnerBalance(
     return { data: balance, error: null }
   } catch (error) {
     console.error('Error fetching owner balance:', error)
-    return { data: null, error }
+    return { data: null, error: error as Error }
   }
 }
 

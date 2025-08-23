@@ -20,29 +20,32 @@ export async function parseFile(file: File, options: CsvParseOptions = {}): Prom
       header: false, // We'll handle headers manually for better control
       skipEmptyLines: true,
       delimiter: '', // Auto-detect
-      encoding: 'UTF-8',
+      // V6.1 Pattern 20: Library API Compatibility - encoding handled automatically by Papa Parse
       complete: (results) => {
         try {
+          // V6.1 Pattern 17: Handle Papa Parse errors through results object
+          if (results.errors && results.errors.length > 0) {
+            const errorMessages = results.errors.map((err) => err.message).join(', ')
+            reject(new Error(`CSV Parse Error: ${errorMessages}`))
+            return
+          }
           const parsedData = processParseResults(results, options)
           resolve(parsedData)
         } catch (error) {
           reject(error)
         }
       },
-      error: (error) => {
-        reject(new Error(`CSV Parse Error: ${error.message}`))
-      },
     }
 
     // Override defaults with user options
-    const finalOptions: Papa.ParseConfig = {
+    const finalOptions = {
       ...defaultOptions,
       delimiter: options.delimiter || '',
       skipEmptyLines: options.skipEmptyLines ?? true,
       preview: options.preview || 0, // 0 = parse all rows
-    }
+    } as Papa.ParseLocalConfig<string[], File> // V6.1 Pattern 23: Papa Parse Local File Config
 
-    Papa.parse(file, finalOptions)
+    Papa.parse<string[]>(file, finalOptions) // V6.1 Pattern 27: Papa Parse Generic Type Refinement (string[] for CSV rows)
   })
 }
 
@@ -71,7 +74,10 @@ function processParseResults(
   const { rows, emptyRows } = convertRowsToObjects(dataRows, headers)
 
   // Collect parsing errors
-  const errors = results.errors?.map((error) => `Row ${error.row + 1}: ${error.message}`) || []
+  const errors =
+    results.errors?.map(
+      (error) => `Row ${error.row != null ? error.row + 1 : '?'}: ${error.message}`
+    ) || [] // V6.1 Pattern 17: Null Safety - handle undefined row numbers
 
   // Add validation errors
   if (headers.length !== new Set(headers).size) {
@@ -154,7 +160,8 @@ function isEmptyRow(row: string[]): boolean {
  */
 export async function detectDelimiter(file: File): Promise<string> {
   return new Promise((resolve) => {
-    Papa.parse(file, {
+    Papa.parse<string[]>(file, {
+      // V6.1 Pattern 27: Papa Parse Generic Type Refinement (string[] for CSV rows)
       preview: 5, // Only parse first 5 rows for detection
       complete: (results) => {
         // Papa Parse automatically detects delimiter

@@ -1,12 +1,11 @@
 /**
  * Transaction Components Index
  *
- * Clean exports for transaction components - simplified after over-engineering cleanup
+ * V6.1: Clean exports for transaction components - only existing files
  */
 
-// Shared components (keep existing)
+// V6.1: Actual existing components
 export { BulkOperationsPanel } from './BulkOperationsPanel'
-// Main page components
-export { default as CleanTransactionPage } from './CleanTransactionPage'
+export { CustomerAssignDialog } from './CustomerAssignDialog'
 export { DateRangePicker } from './DateRangePicker'
-export { default as TransactionCenterPage } from './TransactionCenterPage' // Legacy
+export { default as TransactionPage } from './TransactionPage'

@@ -14,6 +14,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import type { CashMovementWithBanking } from '@/modules/banking/types/banking'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -33,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { type CashMovement, useCashBalance } from '@/shared/hooks/business/useCashBalance'
+import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
 import { useToast } from '@/shared/hooks/core/useToast'
 import { getTodaySwiss } from '@/shared/utils/dateUtils'
 
@@ -97,11 +98,11 @@ export default function CashRegisterPage() {
         // Cash movements zu CashEntry konvertieren
         const allEntries: CashEntry[] = []
         if (movementsResult.success) {
-          movementsResult.movements.forEach((movement: CashMovement) => {
+          movementsResult.movements.forEach((movement: CashMovementWithBanking) => {
             if (movement.created_at) {
               allEntries.push({
                 id: movement.id,
-                type: movement.type,
+                type: movement.type as 'cash_in' | 'cash_out', // V6.1: Safe cast from database string
                 amount: movement.amount,
                 description: movement.description,
                 date: movement.created_at.split('T')[0],

@@ -38,7 +38,7 @@ interface ProfileMenuProps {
 }
 
 export function ProfileMenu({ className }: ProfileMenuProps) {
-  const { user, userRole, signOut } = useAuth()
+  const { user, signOut } = useAuth() // V6.1: userRole moved to organization membership
   const { currentOrganization, memberships: userOrganizations } = useCurrentOrganization()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
@@ -54,7 +54,12 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
   }
 
   const hasMultipleOrganizations = userOrganizations.length > 1
-  const roleDisplay = userRole ? roleConfig[userRole] : null
+  // V6.1 Pattern 19: Get role from current organization membership instead of deprecated userRole
+  const currentMembership = userOrganizations.find(
+    (m) => m.organization.id === currentOrganization?.id
+  )
+  const userRole = currentMembership?.role
+  const roleDisplay = userRole ? roleConfig[userRole as OrganizationRole] : null
 
   const handleSignOut = async () => {
     setIsOpen(false)
@@ -78,10 +83,16 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
             className
           )}
         >
-          <ProfileAvatar name={user.name} email={user.email} size="md" showOnlineStatus />
+          <ProfileAvatar
+            name={user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+            email={user.email}
+            size="md"
+            showOnlineStatus
+          />
           <div className="hidden md:flex flex-col items-start text-left min-w-0">
             <span className="text-sm font-medium truncate max-w-32">
-              {user.name || user.email?.split('@')[0] || 'User'}
+              {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}{' '}
+              {/* V6.1: Use user_metadata.full_name instead of deprecated user.name */}
             </span>
             {roleDisplay && (
               <span className="text-xs text-muted-foreground truncate max-w-32">
@@ -97,10 +108,18 @@ export function ProfileMenu({ className }: ProfileMenuProps) {
         {/* User Information Header */}
         <DropdownMenuLabel className="p-3">
           <div className="flex items-center space-x-3">
-            <ProfileAvatar name={user.name} email={user.email} size="lg" showOnlineStatus />
+            <ProfileAvatar
+              name={user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+              email={user.email}
+              size="lg"
+              showOnlineStatus
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium leading-none truncate">
-                {user.name || 'Unbenannter Benutzer'}
+                {user.user_metadata?.full_name ||
+                  user.email?.split('@')[0] ||
+                  'Unbenannter Benutzer'}{' '}
+                {/* V6.1: Use user_metadata.full_name */}
               </p>
               <p className="text-xs text-muted-foreground mt-1 truncate">{user.email}</p>
               <div className="flex items-center gap-2 mt-2">

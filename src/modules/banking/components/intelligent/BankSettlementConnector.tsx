@@ -7,7 +7,7 @@ interface BankSettlementConnectorProps {
   highlightedItems?: string[] // Auto-highlighted potential matches
   highlightedScores?: Map<string, number> // Scores for highlighted items
   selectedBankTransaction?: string | null // For manual connections
-  containerRef: React.RefObject<HTMLDivElement>
+  containerRef: React.RefObject<HTMLDivElement | null>
 }
 
 interface ConnectionLine {

@@ -133,7 +133,7 @@ export function useDocuments() {
         (documentsData || []).map(async (doc) => {
           let url = ''
           if (doc.file_path) {
-            url = await getStorageUrl(doc.file_path)
+            url = (await getStorageUrl(doc.file_path)) || '' // V6.1 Pattern 17: Null Safety - null → string transformation
           }
 
           // Betrag und Status aus verknüpften Tabellen laden
@@ -202,8 +202,8 @@ export function useDocuments() {
             status,
             displayName: displayInfo.displayName,
             description: displayInfo.description,
-            icon: displayInfo.icon,
-            badgeColor: displayInfo.badgeColor,
+            icon: undefined, // V6.1 Pattern 19: Schema Property Alignment - icon not in DocumentDisplayInfo
+            badgeColor: undefined, // V6.1 Pattern 19: Schema Property Alignment - badgeColor not in DocumentDisplayInfo
             fileType: doc.file_path ? doc.file_path.split('.').pop() : 'pdf',
           }
         })
@@ -212,10 +212,11 @@ export function useDocuments() {
       // Filter nach Suchbegriff
       let filteredDocs = enrichedDocs
       if (filter?.searchTerm) {
+        const searchTermLower = filter.searchTerm.toLowerCase() // V6.1 Pattern 17: Null Safety - extract and validate search term
         filteredDocs = enrichedDocs.filter(
           (doc) =>
-            doc.displayName?.toLowerCase().includes(filter.searchTerm?.toLowerCase()) ||
-            doc.type.toLowerCase().includes(filter.searchTerm?.toLowerCase())
+            doc.displayName?.toLowerCase().includes(searchTermLower) ||
+            doc.type.toLowerCase().includes(searchTermLower)
         )
       }
 

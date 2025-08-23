@@ -21,10 +21,10 @@ import {
   getUnmatchedProviderReports,
   getUnmatchedSalesForProvider,
   type UnmatchedBankTransaction,
-  type UnmatchedProviderReport,
-  type UnmatchedSaleForProvider,
 } from '../services/bankingApi'
 import { getOwnerBalance, type OwnerBalance } from '../services/ownerTransactionsApi'
+// Clean Architecture: Import canonical types from centralized location
+import type { UnmatchedProviderReport, UnmatchedSaleForProvider } from '../types/banking'
 
 // =====================================================
 // HOOK INTERFACE
@@ -149,13 +149,34 @@ export function useBankingData(): UseBankingDataReturn {
         throw new Error(`Bank: ${bankResult.error.message || 'Unknown error'}`)
       }
       if (matchingResult.error) {
-        throw new Error(`Matching: ${matchingResult.error.message || 'Unknown error'}`)
+        // Type-safe error message extraction (Clean Architecture)
+        const errorMessage =
+          typeof matchingResult.error === 'object' &&
+          matchingResult.error !== null &&
+          'message' in matchingResult.error
+            ? String(matchingResult.error.message)
+            : 'Unknown error'
+        throw new Error(`Matching: ${errorMessage}`)
       }
       if (statsResult.error) {
-        throw new Error(`Stats: ${statsResult.error.message || 'Unknown error'}`)
+        // Type-safe error message extraction (Clean Architecture)
+        const errorMessage =
+          typeof statsResult.error === 'object' &&
+          statsResult.error !== null &&
+          'message' in statsResult.error
+            ? String(statsResult.error.message)
+            : 'Unknown error'
+        throw new Error(`Stats: ${errorMessage}`)
       }
       if (accountsResult.error) {
-        throw new Error(`Accounts: ${accountsResult.error.message || 'Unknown error'}`)
+        // Type-safe error message extraction (Clean Architecture)
+        const errorMessage =
+          typeof accountsResult.error === 'object' &&
+          accountsResult.error !== null &&
+          'message' in accountsResult.error
+            ? String(accountsResult.error.message)
+            : 'Unknown error'
+        throw new Error(`Accounts: ${errorMessage}`)
       }
       if (ownerBalanceResult.error) {
         // console.warn('Owner Balance fetch failed:', ownerBalanceResult.error) // Non-critical, just warn
@@ -201,6 +222,12 @@ export function useBankingData(): UseBankingDataReturn {
     saleId: string,
     providerReportId: string
   ): Promise<boolean> => {
+    // Null-safety: Early return if organization not available (Clean Architecture)
+    if (!currentOrganization?.id) {
+      setError('Organization context required for banking operations')
+      return false
+    }
+
     try {
       const result = await createProviderMatch(saleId, providerReportId)
 
@@ -213,8 +240,8 @@ export function useBankingData(): UseBankingDataReturn {
 
         // Refresh Tab 2 data - matched sale should now appear in available_for_bank_matching
         const [matchingResult, statsResult] = await Promise.all([
-          getAvailableForBankMatching(currentOrganization?.id), // 🔒 SECURITY: Organization-scoped
-          getBankingStats(currentOrganization?.id), // 🔒 SECURITY: Organization-scoped
+          getAvailableForBankMatching(currentOrganization.id), // 🔒 SECURITY: Organization-scoped (safe after guard)
+          getBankingStats(currentOrganization.id), // 🔒 SECURITY: Organization-scoped (safe after guard)
         ])
 
         if (matchingResult.data && !matchingResult.error) {
@@ -227,11 +254,9 @@ export function useBankingData(): UseBankingDataReturn {
 
         return true
       } else {
-        throw new Error(
-          result.error && typeof result.error === 'object' && 'message' in result.error
-            ? result.error.message
-            : 'Failed to create provider match'
-        )
+        // Clean Architecture: Type-safe error extraction
+        const errorMessage = result.error ? String(result.error) : 'Failed to create provider match'
+        throw new Error(errorMessage)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error creating match'
@@ -243,10 +268,21 @@ export function useBankingData(): UseBankingDataReturn {
 
   const handleBankMatch = async (
     bankTransactionId: string,
-    matchedItems: Array<{ type: 'sale' | 'expense' | 'cash_movement'; id: string; amount: number }>
+    matchedItems: Array<{
+      type: 'sale' | 'expense' | 'cash_movement' | 'owner_transaction'
+      id: string
+      amount: number
+    }>
   ): Promise<boolean> => {
+    // Null-safety: Early return if organization not available (Clean Architecture)
+    if (!currentOrganization?.id) {
+      setError('Organization context required for banking operations')
+      return false
+    }
+
     try {
-      const result = await createBankMatch(bankTransactionId, matchedItems)
+      // Clean Architecture: Pass organizationId for session-aware reconciliation
+      const result = await createBankMatch(bankTransactionId, matchedItems, currentOrganization.id)
 
       if (result.success) {
         // Remove matched items from local state
@@ -259,18 +295,16 @@ export function useBankingData(): UseBankingDataReturn {
         setAvailableForMatching((prev) => prev.filter((item) => !matchedIds.includes(item.id)))
 
         // Refresh stats
-        const statsResult = await getBankingStats(currentOrganization?.id) // 🔒 SECURITY: Organization-scoped
+        const statsResult = await getBankingStats(currentOrganization.id) // 🔒 SECURITY: Organization-scoped (safe after guard)
         if (statsResult.data && !statsResult.error) {
           setStats(statsResult.data)
         }
 
         return true
       } else {
-        throw new Error(
-          result.error && typeof result.error === 'object' && 'message' in result.error
-            ? result.error.message
-            : 'Failed to create bank match'
-        )
+        // Clean Architecture: Type-safe error extraction
+        const errorMessage = result.error ? String(result.error) : 'Failed to create bank match'
+        throw new Error(errorMessage)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error creating match'

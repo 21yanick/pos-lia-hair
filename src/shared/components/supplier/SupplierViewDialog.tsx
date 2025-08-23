@@ -132,7 +132,10 @@ export function SupplierViewDialog({
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">Kategorie</span>
                     <div className="mt-1">
-                      <Badge variant="outline">{SUPPLIER_CATEGORIES[supplier.category]}</Badge>
+                      <Badge variant="outline">
+                        {SUPPLIER_CATEGORIES[supplier.category as keyof typeof SUPPLIER_CATEGORIES]}
+                      </Badge>
+                      {/* V6.1 Pattern 19: Schema Property Alignment - cast database string to SupplierCategory */}
                     </div>
                   </div>
                 </div>
@@ -278,11 +281,21 @@ export function SupplierViewDialog({
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Erstellt am</span>
-                    <p>{new Date(supplier.created_at).toLocaleDateString('de-CH')}</p>
+                    <p>
+                      {supplier.created_at
+                        ? new Date(supplier.created_at).toLocaleDateString('de-CH')
+                        : 'Unbekannt'}
+                    </p>
+                    {/* V6.1 Pattern 17: Null Safety - handle null created_at */}
                   </div>
                   <div>
                     <span className="text-muted-foreground">Letzte Änderung</span>
-                    <p>{new Date(supplier.updated_at).toLocaleDateString('de-CH')}</p>
+                    <p>
+                      {supplier.updated_at
+                        ? new Date(supplier.updated_at).toLocaleDateString('de-CH')
+                        : 'Unbekannt'}
+                    </p>
+                    {/* V6.1 Pattern 17: Null Safety - handle null updated_at */}
                   </div>
                 </div>
               </CardContent>

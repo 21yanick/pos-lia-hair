@@ -339,7 +339,7 @@ export async function deleteItem(
     console.error('Error in deleteItem:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Löschen des Artikels',
+      error: err instanceof Error ? err.message : String(err) || 'Fehler beim Löschen des Artikels', // V6.1: Unknown error handling
     }
   }
 }
@@ -371,7 +371,10 @@ export async function restoreItem(
     console.error('Error in restoreItem:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Wiederherstellen des Artikels',
+      error:
+        err instanceof Error
+          ? err.message
+          : String(err) || 'Fehler beim Wiederherstellen des Artikels', // V6.1: Unknown error handling
     }
   }
 }
@@ -409,7 +412,10 @@ export async function toggleItemFavorite(
     console.error('Error in toggleItemFavorite:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Ändern des Favoriten-Status',
+      error:
+        err instanceof Error
+          ? err.message
+          : String(err) || 'Fehler beim Ändern des Favoriten-Status', // V6.1: Unknown error handling
     }
   }
 }
@@ -443,7 +449,8 @@ export async function toggleItemActive(
     console.error('Error in toggleItemActive:', err)
     return {
       success: false,
-      error: err.message || 'Fehler beim Ändern des Aktiv-Status',
+      error:
+        err instanceof Error ? err.message : String(err) || 'Fehler beim Ändern des Aktiv-Status', // V6.1: Unknown error handling
     }
   }
 }
@@ -474,7 +481,7 @@ export async function bulkUpdateItems(
       }
     } catch (err) {
       results.failed++
-      results.errors.push(`${update.id}: ${err.message}`)
+      results.errors.push(`${update.id}: ${err instanceof Error ? err.message : String(err)}`) // V6.1: Unknown error handling
     }
   }
 
@@ -491,7 +498,7 @@ export async function getItemsCountByCategory(
 
   const { data, error } = await supabase
     .from('items')
-    .select('category')
+    .select('type') // V6.1: Use type field instead of removed category field
     .eq('organization_id', validOrgId)
     .eq('active', true)
     .neq('deleted', true) // Exclude deleted items
@@ -501,10 +508,10 @@ export async function getItemsCountByCategory(
     throw new Error('Fehler beim Laden der Kategorie-Statistiken')
   }
 
-  // Count items by category
+  // Count items by type (service/product) - V6.1: Schema alignment
   const counts: Record<string, number> = {}
   data?.forEach((item) => {
-    const category = item.category || 'Ohne Kategorie'
+    const category = item.type // V6.1: Use type field (service/product) instead of removed category field
     counts[category] = (counts[category] || 0) + 1
   })
 
@@ -528,7 +535,7 @@ export async function getItemsOptimized(organizationId: string) {
       total: items.length,
       active: items.filter((item) => item.active).length,
       favorites: items.filter((item) => item.is_favorite).length,
-      categories: [...new Set(items.map((item) => item.category).filter(Boolean))],
+      categories: [...new Set(items.map((item) => item.type).filter(Boolean))], // V6.1 Pattern 20: Schema alignment - Use type field instead of removed category field
       lastUpdated: new Date().toISOString(),
     },
   }

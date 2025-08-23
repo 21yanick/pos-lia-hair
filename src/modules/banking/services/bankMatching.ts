@@ -256,10 +256,18 @@ export class BankMatchingService {
     }
 
     // 1. Amount accuracy (70% weight)
+    // Extract compatible tolerances for analyzeAmountMatch (Clean Architecture)
+    const compatibleTolerances = {
+      exactAmountTolerance: this.config.bank.tolerances.exactAmountTolerance,
+      closeAmountTolerance: this.config.bank.tolerances.closeAmountTolerance,
+      maxAmountTolerance: this.config.bank.tolerances.maxAmountTolerance,
+      maxDaysTolerance: 7, // Bank matching uses default date tolerance
+    }
+
     const amountAnalysis = this.matchingCore.analyzeAmountMatch(
       bankTransaction.amount,
       item.amount,
-      this.config.bank.tolerances
+      compatibleTolerances
     )
     scores.amountAccuracy = amountAnalysis.score
 
@@ -286,9 +294,16 @@ export class BankMatchingService {
       descriptionMatch: this.config.bank.scores.descriptionMatchWeight,
     })
 
+    // Extract compatible properties for generateBankMatchReasons (Clean Architecture)
+    const compatibleAmountAnalysis = {
+      category: amountAnalysis.category === 'different' ? 'similar' : amountAnalysis.category,
+      difference: amountAnalysis.difference,
+      score: amountAnalysis.score,
+    } as const
+
     const matchReasons = this.generateBankMatchReasons(
       scores,
-      amountAnalysis,
+      compatibleAmountAnalysis,
       dateAnalysis,
       descriptionAnalysis
     )

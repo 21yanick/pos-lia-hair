@@ -42,20 +42,34 @@ export interface ProviderReport {
   id: string
   provider: string
   net_amount: number
-  settlement_date: string
+  settlement_date: string | null // V6.1: Allow nullable settlement_date
   fees: number
   status: string
 }
 
 export interface TransactionMatch {
-  bank_transaction_id: string
-  matched_type: string
-  matched_id: string
-  matched_amount: number
-  match_confidence: number
-  matched_at: string
-  match_type: string
+  // V6.1: Hybrid interface supporting both legacy and new schema
+  bank_transaction_id: string | null
+  // Legacy fields (for backward compatibility)
+  matched_type?: string
+  matched_id?: string
+  matched_amount?: number
+  match_confidence?: number
+  matched_at?: string
+  match_type?: string
+  // V6.1 fields (from actual database)
+  amount_difference?: number | null
+  confidence_score?: number | null
+  created_at?: string | null
+  created_by?: string | null
+  expense_id?: string | null
+  owner_transaction_id?: string | null
+  sale_id?: string | null
+  cash_movement_id?: string | null
+  status?: string | null
+  updated_at?: string | null
   notes: string | null
+  detailedData?: unknown // V6.1: Dynamic property added during processing
 }
 
 export interface BankMatch {
@@ -194,11 +208,14 @@ async function getProviderReconciliationData(startDate: string, endDate: string)
       .map((sale) => sale.provider_report_id)
 
     let providerReports: ProviderReport[] = []
-    if (providerReportIds.length > 0) {
+    // V6.1: Filter null values for Supabase .in() query
+    const validProviderReportIds = providerReportIds.filter((id): id is string => id !== null)
+
+    if (validProviderReportIds.length > 0) {
       const { data: reports, error: reportsError } = await supabase
         .from('provider_reports')
         .select('id, provider, net_amount, settlement_date, fees, status')
-        .in('id', providerReportIds)
+        .in('id', validProviderReportIds)
 
       if (reportsError) {
         // console.error('Error fetching provider reports:', reportsError)
@@ -233,7 +250,7 @@ async function getProviderReconciliationData(startDate: string, endDate: string)
           sale: {
             receiptNumber: sale.receipt_number || sale.id,
             amount: sale.total_amount,
-            date: formatDateForDisplay(sale.created_at),
+            date: sale.created_at ? formatDateForDisplay(sale.created_at) : 'N/A', // V6.1: Null safety
             paymentMethod: sale.payment_method,
             saleId: sale.id,
           },
@@ -254,7 +271,7 @@ async function getProviderReconciliationData(startDate: string, endDate: string)
     const unmatchedSalesProcessed: UnmatchedSale[] = (unmatchedSales || []).map((sale) => ({
       receiptNumber: sale.receipt_number || sale.id,
       amount: sale.total_amount,
-      date: formatDateForDisplay(sale.created_at),
+      date: sale.created_at ? formatDateForDisplay(sale.created_at) : 'N/A', // V6.1: Null safety
       paymentMethod: sale.payment_method,
       reason: 'Kein Provider-Settlement gefunden',
     }))
@@ -322,30 +339,33 @@ async function getBankReconciliationData(startDate: string, endDate: string) {
 
     if (bankTransactionIds.length > 0) {
       // Get all transaction matches first
+      // V6.1: Use bank_reconciliation_matches with all columns to discover schema
       const { data: matchesData, error: bankMatchError } = await supabase
-        .from('transaction_matches')
-        .select(
-          'bank_transaction_id, matched_type, matched_id, matched_amount, match_confidence, matched_at, match_type, notes'
-        )
+        .from('bank_reconciliation_matches')
+        .select('*') // V6.1: Select all columns to work with available schema
         .in('bank_transaction_id', bankTransactionIds)
 
       if (bankMatchError) {
         // console.error('Error fetching bank matches:', bankMatchError)
         // Continue with empty matches instead of failing
       } else {
-        bankMatches = matchesData || []
+        // V6.1: Cast to TransactionMatch with flexible schema compatibility
+        bankMatches = (matchesData || []) as TransactionMatch[]
       }
 
-      // Get detailed data for all match types in parallel
+      // Get detailed data for all match types in parallel - V6.1: Filter undefined values for type safety
       const providerMatchIds = bankMatches
         .filter((m) => m.matched_type === 'provider_batch')
         .map((m) => m.matched_id)
+        .filter((id): id is string => id !== undefined) // V6.1: Type-safe array for .in() query
       const expenseMatchIds = bankMatches
         .filter((m) => m.matched_type === 'expense')
         .map((m) => m.matched_id)
+        .filter((id): id is string => id !== undefined) // V6.1: Type-safe array for .in() query
       const ownerTxMatchIds = bankMatches
         .filter((m) => m.matched_type === 'owner_transaction')
         .map((m) => m.matched_id)
+        .filter((id): id is string => id !== undefined) // V6.1: Type-safe array for .in() query
 
       const [providerReports, expenses, ownerTransactions] = await Promise.all([
         // Load provider reports with all relevant fields
@@ -414,11 +434,12 @@ async function getBankReconciliationData(startDate: string, endDate: string) {
         const bankTxId = match.bank_transaction_id
         const bankTx = matchedBankTransactions.find((bt) => bt.id === bankTxId)
 
-        if (!acc[bankTxId] && bankTx) {
+        if (bankTxId && !acc[bankTxId] && bankTx) {
+          // V6.1: Null safety for bank_transaction_id before object access
           acc[bankTxId] = {
             bankTransaction: {
               amount: bankTx.amount,
-              date: formatDateForDisplay(bankTx.transaction_date),
+              date: bankTx.transaction_date ? formatDateForDisplay(bankTx.transaction_date) : 'N/A', // V6.1: Null safety
               description: bankTx.description,
               bankTransactionId: bankTxId,
             },
@@ -427,20 +448,25 @@ async function getBankReconciliationData(startDate: string, endDate: string) {
           }
         }
 
-        if (acc[bankTxId]) {
+        if (bankTxId && acc[bankTxId]) {
+          // V6.1: Null safety for bank_transaction_id before object access
           acc[bankTxId].matchedItems.push({
-            type: match.matched_type,
+            type: match.matched_type || 'unknown', // V6.1: Default for undefined matched_type
             description: getMatchedItemDescription(
-              match.matched_type,
-              match.matched_amount,
+              match.matched_type || 'unknown', // V6.1: Default for undefined matched_type
+              match.matched_amount || 0, // V6.1: Default for undefined matched_amount
               match.detailedData,
               match
             ),
-            amount: match.matched_amount,
-            itemId: match.matched_id,
-            settlementDate: match.detailedData?.settlement_date
-              ? formatDateForDisplay(match.detailedData.settlement_date)
-              : undefined,
+            amount: match.matched_amount || 0, // V6.1: Default for undefined matched_amount
+            itemId: match.matched_id || '', // V6.1: Default for undefined matched_id
+            settlementDate:
+              match.detailedData &&
+              typeof match.detailedData === 'object' &&
+              'settlement_date' in match.detailedData &&
+              match.detailedData.settlement_date
+                ? formatDateForDisplay(match.detailedData.settlement_date as string)
+                : undefined, // V6.1: Safe type narrowing for detailedData
           })
         }
 
@@ -455,7 +481,7 @@ async function getBankReconciliationData(startDate: string, endDate: string) {
     const unmatchedBankTransactionsProcessed: UnmatchedBankTransaction[] =
       unmatchedBankTransactions.map((tx) => ({
         amount: tx.amount,
-        date: formatDateForDisplay(tx.transaction_date),
+        date: tx.transaction_date ? formatDateForDisplay(tx.transaction_date) : 'N/A', // V6.1: Null safety
         description: tx.description,
         bankTransactionId: tx.id,
         suggestions: generateSuggestions(tx), // Add intelligent suggestions
@@ -515,23 +541,33 @@ function getMatchedItemDescription(
 
     case 'provider_batch':
       if (detailedData) {
-        const provider = detailedData.provider?.toUpperCase() || 'Provider'
-        const netAmount = detailedData.net_amount?.toFixed(2) || amount.toFixed(2)
-        const fees = detailedData.fees?.toFixed(2) || '0.00'
-        const settlementDate = detailedData.settlement_date
-          ? formatDateForDisplay(detailedData.settlement_date)
+        // V6.1: Safe type interface for provider batch detailedData
+        const data = detailedData as {
+          provider?: string
+          net_amount?: number
+          fees?: number
+          settlement_date?: string
+        }
+        const provider = data.provider?.toUpperCase() || 'Provider'
+        const netAmount = data.net_amount?.toFixed(2) || amount.toFixed(2)
+        const fees = data.fees?.toFixed(2) || '0.00'
+        const settlementDate = data.settlement_date
+          ? formatDateForDisplay(data.settlement_date)
           : 'Datum unbekannt'
         return `${provider} Settlement (${netAmount} CHF netto, Gebühren: ${fees} CHF) - ${settlementDate}`
       }
       return `Anbieter-Abrechnung (${amount.toFixed(2)} CHF)`
 
     case 'expense':
-      if (detailedData) {
-        const description = detailedData.description || 'Ausgabe'
-        const category = detailedData.category ? getCategoryDisplayName(detailedData.category) : ''
-        const paymentDate = detailedData.payment_date
-          ? formatDateForDisplay(detailedData.payment_date)
-          : ''
+      if (detailedData && typeof detailedData === 'object' && detailedData !== null) {
+        const data = detailedData as {
+          description?: string
+          category?: string
+          payment_date?: string
+        } // V6.1: Safe type interface for expense detailedData
+        const description = data.description || 'Ausgabe'
+        const category = data.category ? getCategoryDisplayName(data.category) : ''
+        const paymentDate = data.payment_date ? formatDateForDisplay(data.payment_date) : ''
         const categoryPart = category ? ` (Kategorie: ${category})` : ''
         const datePart = paymentDate ? ` - ${paymentDate}` : ''
         return `Ausgabe: ${description}${categoryPart}${datePart}`
@@ -539,9 +575,14 @@ function getMatchedItemDescription(
       return `Ausgabe (${amount.toFixed(2)} CHF)`
 
     case 'owner_transaction':
-      if (detailedData) {
-        const description = detailedData.description || 'Owner-Transaktion'
-        const txType = detailedData.transaction_type
+      if (detailedData && typeof detailedData === 'object' && detailedData !== null) {
+        const data = detailedData as {
+          description?: string
+          transaction_type?: string
+          match_type?: string
+        } // V6.1: Safe type interface for owner transaction detailedData
+        const description = data.description || 'Owner-Transaktion'
+        const txType = data.transaction_type
         const typeLabel =
           txType === 'withdrawal'
             ? 'Privatentnahme'
@@ -549,7 +590,12 @@ function getMatchedItemDescription(
               ? 'Kapitaleinlage'
               : 'Owner-Transaktion'
         const matchTypeLabel =
-          matchData?.match_type === 'automatic' ? ' - Automatisch abgeglichen' : ''
+          matchData &&
+          typeof matchData === 'object' &&
+          matchData !== null &&
+          (matchData as { match_type?: string }).match_type === 'automatic'
+            ? ' - Automatisch abgeglichen'
+            : '' // V6.1: Type guard for unknown matchData
         return `${typeLabel}: ${description}${matchTypeLabel}`
       }
       return `Owner-Transaktion (${amount.toFixed(2)} CHF)`
@@ -710,6 +756,7 @@ async function batchLoadSalesReferences(
     salesMap.set(sale.id, {
       id: sale.id,
       displayName: sale.receipt_number || sale.id,
+      entityType: 'sale', // V6.1: Required property for ReferencedEntity interface
     })
   }
 
@@ -731,6 +778,7 @@ async function batchLoadExpensesReferences(
     expensesMap.set(expense.id, {
       id: expense.id,
       displayName: expense.description || `Expense ${expense.id.slice(0, 8)}`,
+      entityType: 'expense', // V6.1: Required property for ReferencedEntity interface
     })
   }
 
@@ -752,6 +800,7 @@ async function batchLoadOwnerTransactionReferences(
     ownerTxMap.set(tx.id, {
       id: tx.id,
       displayName: tx.description || `Owner Tx ${tx.id.slice(0, 8)}`,
+      entityType: 'owner_transaction', // V6.1: Required property for ReferencedEntity interface
     })
   }
 
@@ -801,11 +850,12 @@ function mergeCashMovementsWithReferences(
 
     return {
       amount: movement.amount,
-      type: movement.type,
-      date: formatDateForDisplay(movement.created_at),
+      type:
+        movement.type === 'cash_in' || movement.type === 'cash_out' ? movement.type : 'cash_out', // V6.1: Type assertion with validation for union types
+      date: movement.created_at ? formatDateForDisplay(movement.created_at) : 'N/A', // V6.1: Null safety
       description: movement.description,
       receiptNumber,
-      referenceType: movement.reference_type,
+      referenceType: movement.reference_type || undefined, // V6.1: Convert null to undefined for optional property
     }
   })
 }
@@ -830,14 +880,15 @@ async function getCashMovementsData(startDate: string, endDate: string): Promise
       return []
     }
 
-    // Step 2: Group reference IDs by type
-    const referenceGroups = groupReferencesByType(rawMovements)
+    // Step 2: Filter movements with valid created_at and group reference IDs by type
+    const validMovements = rawMovements.filter((m): m is RawCashMovement => m.created_at !== null) // V6.1: Null filtering for interface compliance
+    const referenceGroups = groupReferencesByType(validMovements)
 
     // Step 3: Batch load all referenced entities in parallel
     const loadedReferences = await batchLoadAllReferences(referenceGroups)
 
     // Step 4: Merge movements with their references (in-memory join)
-    return mergeCashMovementsWithReferences(rawMovements, loadedReferences)
+    return mergeCashMovementsWithReferences(validMovements, loadedReferences)
   } catch (error) {
     console.error('Error in getCashMovementsData:', error)
     return []

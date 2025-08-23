@@ -13,7 +13,7 @@ import {
 } from '@/shared/components/ui/card'
 import { Progress } from '@/shared/components/ui/progress'
 import { useImport } from '@/shared/hooks/business/useImport'
-import type { ItemImport } from '@/shared/types/import'
+import type { ImportDataContainer, ItemImport } from '@/shared/types/import'
 
 // Sample JSON für Tests
 const SAMPLE_ITEMS: ItemImport[] = [
@@ -43,7 +43,7 @@ const SAMPLE_ITEMS: ItemImport[] = [
 export function JsonImport() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [jsonData, setJsonData] = useState<unknown>(null)
+  const [jsonData, setJsonData] = useState<ImportDataContainer | null>(null) // V6.1: Proper typing for import data
   // Removed activeTab - only single upload tab now
 
   const { state, processImport, resetState } = useImport()

@@ -44,7 +44,11 @@ export type AppointmentUpdate = Partial<
     Database['public']['Tables']['appointments']['Update'],
     'id' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'
   >
-> & { id: string }
+> & {
+  id: string
+  // V6.1 Pattern 19: Schema Property Alignment - Add services property for update operations
+  services?: AppointmentServiceForCreation[]
+}
 
 export type AppointmentQueryResult =
   | {
@@ -90,12 +94,13 @@ export function validateOrganizationId(organizationId: string | undefined): stri
   return organizationId
 }
 
+// V6.1: Appointment validation type without services (validated separately)
+type AppointmentDataForValidation = Omit<AppointmentInsert, 'services'> | AppointmentUpdate
+
 /**
  * Validate appointment data
  */
-export function validateAppointmentData(
-  appointmentData: AppointmentInsert | AppointmentUpdate
-): void {
+export function validateAppointmentData(appointmentData: AppointmentDataForValidation): void {
   // Validate time format (HH:mm)
   const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
 
@@ -144,8 +149,12 @@ export function validateAppointmentData(
     }
   }
 
-  // Validate estimated price
-  if ('estimated_price' in appointmentData && appointmentData.estimated_price !== undefined) {
+  // Validate estimated price - V6.1: Enhanced null safety
+  if (
+    'estimated_price' in appointmentData &&
+    appointmentData.estimated_price !== undefined &&
+    appointmentData.estimated_price !== null
+  ) {
     if (appointmentData.estimated_price < 0) {
       throw new Error('Geschätzter Preis darf nicht negativ sein.')
     }
@@ -361,8 +370,17 @@ export async function createAppointment(
 
     if (fetchError) {
       console.error('Error fetching complete appointment:', fetchError)
-      // Return basic appointment data if view fetch fails
-      return { success: true, data: createdAppointment }
+      // Return basic appointment data with V6.1 view-compatible fallbacks
+      return {
+        success: true,
+        data: {
+          ...createdAppointment,
+          // V6.1: Add missing view-specific fields for type compatibility
+          services: null,
+          total_duration_minutes: null,
+          total_price: null,
+        },
+      }
     }
 
     return { success: true, data: completeAppointment }
@@ -441,13 +459,16 @@ export async function updateAppointment(
       }
 
       // Insert new appointment services
-      const appointmentServices = updateData.services.map((service) => ({
-        appointment_id: id,
-        item_id: service.item_id,
-        service_price: service.service_price,
-        service_duration_minutes: service.service_duration_minutes,
-        sort_order: service.sort_order,
-      }))
+      const appointmentServices = updateData.services.map(
+        (service: AppointmentServiceForCreation) => ({
+          // V6.1 Pattern 17: Explicit type annotation
+          appointment_id: id,
+          item_id: service.item_id,
+          service_price: service.service_price,
+          service_duration_minutes: service.service_duration_minutes,
+          sort_order: service.sort_order,
+        })
+      )
 
       const { error: servicesError } = await supabase
         .from('appointment_services')
@@ -471,8 +492,17 @@ export async function updateAppointment(
 
     if (fetchError) {
       console.error('Error fetching complete appointment:', fetchError)
-      // Return basic appointment data if view fetch fails
-      return { success: true, data: updatedAppointment }
+      // Return basic appointment data with V6.1 view-compatible fallbacks
+      return {
+        success: true,
+        data: {
+          ...updatedAppointment,
+          // V6.1: Add missing view-specific fields for type compatibility
+          services: null,
+          total_duration_minutes: null,
+          total_price: null,
+        },
+      }
     }
 
     const data = completeAppointment
@@ -619,5 +649,6 @@ export async function getCustomerAppointments(
     throw new Error('Fehler beim Laden der Kundentermine')
   }
 
-  return data || []
+  // V6.1 Pattern 15: Interface-Implementation Alignment - Query returns compatible appointment data
+  return (data as unknown as Appointment[]) || []
 }

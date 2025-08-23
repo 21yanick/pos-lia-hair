@@ -12,9 +12,10 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { CashMovementWithBanking } from '@/modules/banking/types/banking'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 // Legacy compatibility imports
-import { type CashMovement, useCashBalance } from '@/shared/hooks/business/useCashBalance'
+import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
 import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
 // Import optimized service functions
 import {
@@ -86,8 +87,13 @@ interface UseReportsQueryReturn {
 
   // Cash Balance Functions (delegated, Legacy Compatible)
   getCurrentCashBalance: () => Promise<{ success: boolean; balance: number }>
-  getCashMovementsForMonth: (start: Date, end: Date) => Promise<CashMovement[]>
-  getCashMovementsForDate: (date: string) => Promise<CashMovement[]>
+  getCashMovementsForMonth: (
+    start: Date,
+    end: Date
+  ) => Promise<{ success: boolean; movements: CashMovementWithBanking[]; error?: string }>
+  getCashMovementsForDate: (
+    date: string
+  ) => Promise<{ success: boolean; movements: CashMovementWithBanking[]; error?: string }>
   cashLoading: boolean
   cashError: string | null
 }

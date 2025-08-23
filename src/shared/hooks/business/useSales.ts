@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useCashMovements } from '@/shared/hooks/core/useCashMovements'
+import { type CashMovement, useCashMovements } from '@/shared/hooks/core/useCashMovements'
 import { cacheConfig, queryKeys } from '@/shared/lib/react-query'
 import {
   type CartItem,
@@ -48,22 +48,37 @@ interface UseSalesReturn {
   sales: Sale[]
   currentSale: Sale | null
 
-  // Core Operations (Legacy Compatible)
-  createSale: (data: CreateSaleData) => Promise<CreateSaleResult>
+  // Core Operations (Legacy Compatible) - V6.1: Updated return types to match implementation
+  createSale: (
+    data: CreateSaleData
+  ) => Promise<CreateSaleResult | { success: false; error: string }>
   createReceiptPDF: (
     sale: Sale,
     items: CartItem[]
   ) => Promise<{ success: true; publicUrl: string } | { success: false; error: string }>
 
-  // Query Operations (Legacy Compatible)
-  loadTodaySales: () => Promise<Sale[]>
-  getSalesForDateRange: (startDate: string, endDate: string) => Promise<Sale[]>
-  loadSalesForDateRange: (startDate: string, endDate: string) => Promise<Sale[]>
+  // Query Operations (Legacy Compatible) - V6.1: Aligned with wrapped response pattern
+  loadTodaySales: () => Promise<{ success: boolean; data?: Sale[]; error?: string }>
+  getSalesForDateRange: (
+    startDate: string,
+    endDate: string
+  ) => Promise<{ success: boolean; sales: Sale[]; error?: string }>
+  loadSalesForDateRange: (
+    startDate: string,
+    endDate: string
+  ) => Promise<{ success: boolean; sales: Sale[]; error?: string }>
 
   // Modification Operations (Legacy Compatible)
   cancelSale: (
     saleId: string
   ) => Promise<{ success: true; sale: Sale } | { success: false; error: string }>
+
+  // Cash Movement Operations (V6.1: Aligned with useCashMovements actual return types)
+  createSaleCashMovement: (saleId: string, amount: number) => Promise<CashMovement | null>
+  reverseCashMovement: (
+    referenceId: string,
+    referenceType: 'expense' | 'sale'
+  ) => Promise<CashMovement | null>
 }
 
 export function useSales(): UseSalesReturn {
@@ -118,7 +133,7 @@ export function useSales(): UseSalesReturn {
       }
 
       const result = await createSaleService(data, organizationId, {
-        createSaleCashMovement,
+        createSaleCashMovement: adaptedCreateSaleCashMovement, // V6.1: Use service contract adapter
       })
 
       if (!result.success) {
@@ -143,17 +158,36 @@ export function useSales(): UseSalesReturn {
         })
       ) as Sale[]
 
-      // Create optimistic sale
+      // Create optimistic sale - V6.1: Complete Sale schema alignment
       const optimisticSale: Sale = {
         id: `temp-${Date.now()}`,
-        total_amount: newSaleData.total_amount.toString(),
+        total_amount: newSaleData.total_amount,
         payment_method: newSaleData.payment_method,
         status: 'completed',
         notes: newSaleData.notes || null,
         user_id: 'current-user',
         organization_id: organizationId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        // V6.1: Add missing required Sale properties
+        bank_transaction_id: null,
+        banking_status: null,
+        customer_id: null,
+        customer_name: null,
+        gross_amount: newSaleData.total_amount,
+        net_amount: newSaleData.total_amount, // V6.1: Correct field name is net_amount, not tax_amount
+        // V6.1: Removed discount_amount - not part of Sale schema
+        // V6.1 Pattern 19: Schema Property Alignment - item_count doesn't exist in Sales schema
+        receipt_number: null,
+        // V6.1 Pattern 19: Schema Property Alignment - receipt_url doesn't exist in Sales schema
+        // V6.1 Pattern 19: Schema Property Alignment - canceled_at doesn't exist in Sales schema
+        // V6.1 Pattern 19: Schema Property Alignment - processing_fee doesn't exist in Sales schema
+        // V6.1 Pattern 19: Schema Property Alignment - currency doesn't exist in Sales schema
+        // V6.1 Pattern 19: Schema Property Alignment - Add missing required Sale properties
+        provider_fee: null,
+        provider_reference_id: null,
+        provider_report_id: null,
+        settlement_date: null,
+        settlement_status: null,
       }
 
       // Optimistically update the cache
@@ -221,7 +255,7 @@ export function useSales(): UseSalesReturn {
       }
 
       const result = await cancelSaleService(saleId, organizationId, {
-        reverseCashMovement,
+        reverseCashMovement: adaptedReverseCashMovement, // V6.1: Use service contract adapter
       })
 
       if (!result.success) {
@@ -296,7 +330,10 @@ export function useSales(): UseSalesReturn {
   // ========================================
 
   // Create Sale (Legacy Compatible)
-  const createSale = async (data: CreateSaleData) => {
+  const createSale = async (
+    data: CreateSaleData
+  ): Promise<CreateSaleResult | { success: false; error: string }> => {
+    // V6.1 Pattern 18: Return Type Alignment - explicit return type
     try {
       const result = await createSaleMutation.mutateAsync(data)
       return result
@@ -306,7 +343,11 @@ export function useSales(): UseSalesReturn {
   }
 
   // Create Receipt PDF (Legacy Compatible)
-  const createReceiptPDF = async (sale: Sale, items: CartItem[]) => {
+  const createReceiptPDF = async (
+    sale: Sale,
+    items: CartItem[]
+  ): Promise<{ success: true; publicUrl: string } | { success: false; error: string }> => {
+    // V6.1 Pattern 18: Return Type Alignment - explicit return type
     if (!organizationId) {
       return { success: false, error: 'No organization selected' }
     }
@@ -369,10 +410,37 @@ export function useSales(): UseSalesReturn {
   }
 
   // Cancel Sale (Legacy Compatible)
-  const cancelSale = async (saleId: string) => {
+  const cancelSale = async (
+    saleId: string
+  ): Promise<{ success: true; sale: Sale } | { success: false; error: string }> => {
+    // V6.1 Pattern 18: Return Type Alignment - explicit return type
     try {
       const result = await cancelSaleMutation.mutateAsync(saleId)
       return result
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  }
+
+  // ========================================
+  // Service Contract Adapters (V6.1: Bridge between useCashMovements and services)
+  // ========================================
+  const adaptedCreateSaleCashMovement = async (saleId: string, amount: number) => {
+    try {
+      const result = await createSaleCashMovement(saleId, amount)
+      return { success: true, data: result }
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  }
+
+  const adaptedReverseCashMovement = async (
+    referenceId: string,
+    referenceType: 'expense' | 'sale'
+  ) => {
+    try {
+      const result = await reverseCashMovement(referenceId, referenceType)
+      return { success: true, data: result }
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
@@ -405,5 +473,9 @@ export function useSales(): UseSalesReturn {
 
     // Modification Operations (Legacy Compatible)
     cancelSale,
+
+    // Cash Movement Operations (V6.1: Added missing functions)
+    createSaleCashMovement,
+    reverseCashMovement,
   }
 }

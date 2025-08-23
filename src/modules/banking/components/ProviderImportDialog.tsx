@@ -96,10 +96,8 @@ export function ProviderImportDialog({
   // FILE UPLOAD HANDLERS
   // =====================================================
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
+  // Clean Architecture: Separate file processing logic (DRY principle)
+  const handleFileUpload = (file: File) => {
     // Validate file type
     if (!file.name.toLowerCase().endsWith('.csv')) {
       setState((prev) => ({
@@ -125,20 +123,23 @@ export function ProviderImportDialog({
     }))
   }
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    handleFileUpload(file)
+  }
+
+  // Generic drag handlers for any HTML element (Clean Architecture)
+  const handleDrop = (event: React.DragEvent<Element>) => {
     event.preventDefault()
     const file = event.dataTransfer.files[0]
 
     if (file) {
-      // Simulate file input change
-      const fakeEvent = {
-        target: { files: [file] },
-      } as React.ChangeEvent<HTMLInputElement>
-      handleFileSelect(fakeEvent)
+      handleFileUpload(file) // Clean Architecture: Direct file processing
     }
   }
 
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (event: React.DragEvent<Element>) => {
     event.preventDefault()
   }
 

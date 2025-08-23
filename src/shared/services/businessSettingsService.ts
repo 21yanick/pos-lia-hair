@@ -12,6 +12,7 @@ import type {
   WeekDay,
   WorkingHours,
 } from '@/shared/types/businessSettings'
+import type { Json } from '@/types/supabase_generated_v6.1' // V6.1: Json type for JSONB fields
 
 // Helper function to get current organization ID
 async function getCurrentOrganizationId(): Promise<string> {
@@ -83,7 +84,8 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
       throw error
     }
 
-    return data || null
+    // V6.1: Safe type casting for business_settings query result
+    return (data as BusinessSettings) || null
   } catch (error) {
     console.error('🚨 business_settings CATCH:', error)
     throw error
@@ -109,6 +111,11 @@ export async function upsertBusinessSettings(
         {
           organization_id: organizationId, // 🔒 Multi-Tenant Security
           ...settingsData,
+          // V6.1 Pattern 19: Schema Property Alignment - JSONB structured data compatibility
+          working_hours: settingsData.working_hours as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
+          booking_rules: settingsData.booking_rules as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
+          display_preferences: settingsData.display_preferences as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
+          vacation_periods: settingsData.vacation_periods as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
           // Audit trail is handled by database triggers
           // created_by: auto-set on INSERT
           // updated_by: auto-set on UPDATE
@@ -122,7 +129,8 @@ export async function upsertBusinessSettings(
       .single()
 
     if (error) throw error
-    return data
+    // V6.1: Type casting for business_settings result
+    return data as BusinessSettings
   } catch (error) {
     console.error('Error saving business settings:', error)
     throw error
@@ -286,14 +294,16 @@ export async function updateWorkingHours(workingHours: WorkingHours): Promise<Bu
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        working_hours: workingHours,
+        // V6.1 Pattern 19: Schema Property Alignment - JSONB compatibility
+        working_hours: workingHours as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
       })
       .eq('organization_id', organizationId)
       .select()
       .single()
 
     if (error) throw error
-    return data
+    // V6.1: Type casting for business_settings result
+    return data as BusinessSettings
   } catch (error) {
     console.error('Error updating working hours:', error)
     throw error
@@ -310,14 +320,16 @@ export async function updateBookingRules(bookingRules: BookingRules): Promise<Bu
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        booking_rules: bookingRules,
+        // V6.1 Pattern 19: Schema Property Alignment - JSONB compatibility
+        booking_rules: bookingRules as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
       })
       .eq('organization_id', organizationId)
       .select()
       .single()
 
     if (error) throw error
-    return data
+    // V6.1: Type casting for business_settings result
+    return data as BusinessSettings
   } catch (error) {
     console.error('Error updating booking rules:', error)
     throw error
@@ -336,14 +348,16 @@ export async function updateDisplayPreferences(
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        display_preferences: displayPreferences,
+        // V6.1 Pattern 19: Schema Property Alignment - JSONB compatibility
+        display_preferences: displayPreferences as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
       })
       .eq('organization_id', organizationId)
       .select()
       .single()
 
     if (error) throw error
-    return data
+    // V6.1: Type casting for business_settings result
+    return data as BusinessSettings
   } catch (error) {
     console.error('Error updating display preferences:', error)
     throw error
@@ -362,14 +376,16 @@ export async function updateVacationPeriods(
     const { data, error } = await supabase
       .from('business_settings')
       .update({
-        vacation_periods: vacationPeriods,
+        // V6.1 Pattern 19: Schema Property Alignment - JSONB compatibility
+        vacation_periods: vacationPeriods as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
       })
       .eq('organization_id', organizationId)
       .select()
       .single()
 
     if (error) throw error
-    return data
+    // V6.1: Type casting for business_settings result
+    return data as BusinessSettings
   } catch (error) {
     console.error('Error updating vacation periods:', error)
     throw error
@@ -447,7 +463,7 @@ export async function isOrganizationOpen(date: Date, time: string): Promise<bool
 
     // Check break times
     const isInBreak = dayHours.breaks.some(
-      (breakTime) => time >= breakTime.start && time < breakTime.end
+      (breakTime: { start: string; end: string }) => time >= breakTime.start && time < breakTime.end // V6.1 Pattern 17: Explicit type annotation
     )
     if (isInBreak) return false
 
@@ -519,7 +535,8 @@ export async function generateAvailableTimeSlots(date: Date): Promise<string[]> 
 
       // Check if time is not during a break
       const isInBreak = dayHours.breaks.some(
-        (breakTime) => timeStr >= breakTime.start && timeStr < breakTime.end
+        (breakTime: { start: string; end: string }) =>
+          timeStr >= breakTime.start && timeStr < breakTime.end // V6.1 Pattern 17: Explicit type annotation
       )
 
       if (!isInBreak) {

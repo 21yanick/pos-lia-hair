@@ -173,13 +173,16 @@ export function useItems(): UseItemsReturn {
       const optimisticItem: Item = {
         id: `temp-${Date.now()}`,
         name: newItem.name,
-        default_price: newItem.price || 0, // 🔧 FIX: price → default_price
+        default_price: newItem.default_price || 0, // V6.1 Pattern 19: Schema Property Alignment - price → default_price
         type: newItem.type || 'service',
         active: newItem.active ?? true,
         is_favorite: newItem.is_favorite ?? false,
+        booking_buffer_minutes: newItem.booking_buffer_minutes || null, // V6.1 Pattern 19: Schema Property Alignment - missing DB property
+        deleted: newItem.deleted ?? false, // V6.1 Pattern 19: Schema Property Alignment - missing DB property
+        duration_minutes: newItem.duration_minutes || null, // V6.1 Pattern 19: Schema Property Alignment - missing DB property
+        requires_booking: newItem.requires_booking ?? false, // V6.1 Pattern 19: Schema Property Alignment - missing DB property
         organization_id: organizationId,
         created_at: new Date().toISOString(),
-        // 🔧 REMOVED: Non-DB fields (category, description, updated_at)
       }
 
       // Optimistically update the cache
@@ -555,7 +558,10 @@ export function useItems(): UseItemsReturn {
       const result = await syncAuthUser()
       return result
     } catch (err: unknown) {
-      return { success: false, error: err.message || 'Fehler bei der Synchronisierung' }
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Fehler bei der Synchronisierung',
+      } // V6.1 Pattern 17: Null Safety - safe error access
     }
   }
 
@@ -570,7 +576,7 @@ export function useItems(): UseItemsReturn {
     toggleFavoriteMutation.isPending ||
     toggleActiveMutation.isPending
 
-  const combinedError = error || queryError?.message || null
+  const combinedError = error || (queryError instanceof Error ? queryError.message : null) || null // V6.1 Pattern 17: Null Safety - safe queryError access
 
   // ========================================
   // Return Interface (Legacy Compatible)

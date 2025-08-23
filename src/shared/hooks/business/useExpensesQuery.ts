@@ -146,7 +146,8 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
     if (result.success && Array.isArray(result.data)) {
       return result.data
     } else {
-      throw new Error(result.error || 'Fehler beim Laden der Ausgaben')
+      // V6.1 Pattern 18: Type Guard for error handling
+      throw new Error(result.success === false ? result.error : 'Fehler beim Laden der Ausgaben')
     }
   }, [organizationId])
 
@@ -211,13 +212,13 @@ export function useExpensesQuery(): UseExpensesQueryReturn {
       const previousExpenses = queryClient.getQueryData(queryKey) as ExpenseWithSupplier[]
 
       // Optimistically update
-      const optimisticExpense: ExpenseWithSupplier = {
+      const optimisticExpense = {
         id: `temp-${Date.now()}`,
         ...data,
         organization_id: organizationId,
         created_at: new Date().toISOString(),
         supplier: null,
-      }
+      } as ExpenseWithSupplier // V6.1 Pattern 19: Schema Property Alignment - Type cast for optimistic update
 
       queryClient.setQueryData(queryKey, (old: ExpenseWithSupplier[] = []) => [
         optimisticExpense,

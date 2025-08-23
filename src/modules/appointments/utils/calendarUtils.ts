@@ -4,6 +4,7 @@
  */
 
 import type { BusinessSettings, VacationPeriod, WeekDay } from '@/shared/types/businessSettings'
+import { safeVacationPeriods, safeWorkingHours } from '@/shared/types/businessSettings'
 import {
   eachDayOfInterval,
   formatDateForAPI,
@@ -99,8 +100,8 @@ function applyBusinessLogicToDay(
   const dayKey = formatDateForAPI(day.date)
   const appointmentCount = appointmentCounts[dayKey] || 0
 
-  // Check vacation periods
-  const vacationInfo = getVacationInfo(day.date, settings.vacation_periods)
+  // Check vacation periods - V6.1: Use safe type guard for JSONB union type
+  const vacationInfo = getVacationInfo(day.date, safeVacationPeriods(settings.vacation_periods))
   if (vacationInfo) {
     return {
       ...day,
@@ -121,9 +122,10 @@ function applyBusinessLogicToDay(
     }
   }
 
-  // Check if business is open on this day
+  // Check if business is open on this day - V6.1: Use safe type guard for JSONB union type
   const weekDay = getWeekDay(day.date)
-  const dayWorkingHours = settings.working_hours[weekDay]
+  const workingHours = safeWorkingHours(settings.working_hours)
+  const dayWorkingHours = workingHours[weekDay]
 
   if (dayWorkingHours.closed) {
     return {

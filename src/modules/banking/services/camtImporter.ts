@@ -5,14 +5,9 @@
 
 import { supabase } from '@/shared/lib/supabase/client'
 import { formatDateForAPI } from '@/shared/utils/dateUtils'
-import type {
-  BankImportSessionInsert,
-  BankTransactionInsert,
-  CAMTDocument,
-  CAMTDuplicateCheck,
-  CAMTEntry,
-  CAMTImportPreview,
-} from '../types/camt'
+import type { BankTransactionInsert } from '@/types/database' // V6.1: Use real database type
+import type { Json } from '@/types/supabase_generated_v6.1' // V6.1: Json type for JSONB fields
+import type { CAMTDocument, CAMTDuplicateCheck, CAMTEntry, CAMTImportPreview } from '../types/camt'
 
 // =====================================================
 // DUPLICATE DETECTION
@@ -127,29 +122,29 @@ function mapCAMTEntryToBankTransaction(
   entry: CAMTEntry,
   bankAccountId: string,
   filename: string,
-  userId: string
+  _userId: string,
+  organizationId: string // ✅ ADDED: Multi-Tenant Security Parameter
 ): BankTransactionInsert {
   // Convert CRDT/DBIT to signed amount
   const signedAmount = entry.creditDebitIndicator === 'CRDT' ? entry.amount : -entry.amount
 
   // Serialize bank transaction code
-  const transactionCode = entry.bankTransactionCode
+  const _transactionCode = entry.bankTransactionCode
     ? `${entry.bankTransactionCode.domain}/${entry.bankTransactionCode.family}/${entry.bankTransactionCode.subfamily || ''}`
     : undefined
 
   return {
     bank_account_id: bankAccountId,
     transaction_date: formatDateForAPI(entry.bookingDate),
-    booking_date: formatDateForAPI(entry.valueDate),
+    value_date: formatDateForAPI(entry.valueDate), // V6.1: Use value_date instead of booking_date
     amount: signedAmount,
     description: entry.description,
     reference: entry.accountServiceReference,
-    transaction_code: transactionCode,
     import_filename: filename,
-    import_date: new Date().toISOString(),
-    raw_data: entry,
+    raw_data: entry as unknown as Json, // V6.1 Pattern 18: JSONB Json Type Compatibility
     status: 'unmatched',
-    user_id: userId,
+    organization_id: organizationId, // V6.1: Multi-tenant requirement
+    // Note: transaction_code, import_date, user_id not in V6.1 Insert schema
   }
 }
 
@@ -177,8 +172,9 @@ export async function executeCAMTImport(
     }
 
     // 2. Map entries to database format
-    const bankTransactions = duplicateCheck.newEntries.map((entry) =>
-      mapCAMTEntryToBankTransaction(entry, bankAccountId, filename, userId)
+    const bankTransactions = duplicateCheck.newEntries.map(
+      (entry) =>
+        mapCAMTEntryToBankTransaction(entry, bankAccountId, filename, userId, organizationId) // ✅ FIXED: Pass organizationId
     )
 
     // 3. Insert bank transactions
@@ -191,31 +187,8 @@ export async function executeCAMTImport(
       throw new Error(`Failed to insert transactions: ${insertError.message}`)
     }
 
-    // 4. Create import session record
-    const importSession: BankImportSessionInsert = {
-      bank_account_id: bankAccountId,
-      import_filename: filename,
-      import_type: 'camt053',
-      total_entries: duplicateCheck.totalEntries,
-      new_entries: duplicateCheck.newEntries.length,
-      duplicate_entries: duplicateCheck.duplicateEntries.length,
-      error_entries: duplicateCheck.errorEntries.length,
-      statement_from_date: formatDateForAPI(document.statement.fromDateTime),
-      statement_to_date: formatDateForAPI(document.statement.toDateTime),
-      status: 'completed',
-      imported_by: userId,
-      organization_id: organizationId, // ✅ CRITICAL FIX: Organization security
-      notes: `CAMT.053 import: ${document.statement.statementId}`,
-    }
-
-    const { error: sessionError } = await supabase
-      .from('bank_import_sessions')
-      .insert(importSession)
-
-    if (sessionError) {
-      // console.warn('Failed to create import session:', sessionError)
-      // Don't fail the import if session creation fails
-    }
+    // V6.1: Import tracking handled via import_filename in bank_transactions
+    // No session table needed - V6.1 uses direct filename-based duplicate prevention
 
     return {
       success: true,
@@ -225,28 +198,8 @@ export async function executeCAMTImport(
   } catch (error) {
     console.error('Import execution failed:', error)
 
-    // Try to create failed import session
-    try {
-      const failedSession: BankImportSessionInsert = {
-        bank_account_id: bankAccountId,
-        import_filename: filename,
-        import_type: 'camt053',
-        total_entries: document.statement.entries.length,
-        new_entries: 0,
-        duplicate_entries: 0,
-        error_entries: document.statement.entries.length,
-        statement_from_date: formatDateForAPI(document.statement.fromDateTime),
-        statement_to_date: formatDateForAPI(document.statement.toDateTime),
-        status: 'failed',
-        imported_by: userId,
-        organization_id: organizationId, // ✅ CRITICAL FIX: Organization security
-        notes: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      }
-
-      await supabase.from('bank_import_sessions').insert(failedSession)
-    } catch (_sessionError) {
-      // console.warn('Failed to create failed import session:', sessionError)
-    }
+    // V6.1: Error tracking handled via application logs
+    // No session table needed - import failures logged directly
 
     return {
       success: false,
@@ -364,11 +317,13 @@ export async function importCAMTFile(
 // =====================================================
 
 export async function getImportHistory(bankAccountId: string) {
+  // V6.1: Use bank_transactions with import_filename for history tracking
   const { data, error } = await supabase
-    .from('bank_import_sessions')
-    .select('*')
+    .from('bank_transactions')
+    .select('import_filename, created_at')
     .eq('bank_account_id', bankAccountId)
-    .order('imported_at', { ascending: false })
+    .not('import_filename', 'is', null)
+    .order('created_at', { ascending: false })
     .limit(20)
 
   if (error) {
@@ -376,5 +331,16 @@ export async function getImportHistory(bankAccountId: string) {
     return []
   }
 
-  return data || []
+  // Group by filename to get unique imports
+  const uniqueImports = new Map()
+  data?.forEach((transaction) => {
+    if (transaction.import_filename && !uniqueImports.has(transaction.import_filename)) {
+      uniqueImports.set(transaction.import_filename, {
+        filename: transaction.import_filename,
+        imported_at: transaction.created_at,
+      })
+    }
+  })
+
+  return Array.from(uniqueImports.values())
 }

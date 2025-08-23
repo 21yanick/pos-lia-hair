@@ -65,8 +65,8 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
     try {
       const result = await createCustomer.mutateAsync({
         name: formData.name.trim(),
-        phone: formData.phone.trim() || undefined,
-        email: formData.email.trim() || undefined,
+        phone: formData.phone?.trim() || undefined, // V6.1: Safe optional chaining
+        email: formData.email?.trim() || undefined, // V6.1: Safe optional chaining
       })
 
       toast({

@@ -240,7 +240,12 @@ export function OwnerTransactionDialog({
       const { error: apiError } = await createOwnerTransaction(transactionData)
 
       if (apiError) {
-        throw new Error(apiError.message || 'Failed to create owner transaction')
+        // Type-safe error message extraction (Clean Architecture)
+        const errorMessage =
+          typeof apiError === 'object' && apiError !== null && 'message' in apiError
+            ? String(apiError.message)
+            : 'Failed to create owner transaction'
+        throw new Error(errorMessage)
       }
 
       // Success

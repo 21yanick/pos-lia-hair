@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import type { CashMovementWithBanking } from '@/modules/banking/types/banking'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { supabase } from '@/shared/lib/supabase/client'
 import { getSwissDayRange } from '@/shared/utils/dateUtils'
@@ -126,13 +127,13 @@ export function useCashBalance() {
         })
       )
 
-      return { success: true, movements: enrichedData || [] }
+      return { success: true, movements: (enrichedData as CashMovementWithBanking[]) || [] }
     } catch (err: unknown) {
       console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
       const errorMessage =
         err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
       setError(errorMessage)
-      return { success: false, error: errorMessage, movements: [] }
+      return { success: false, error: errorMessage, movements: [] as CashMovementWithBanking[] }
     } finally {
       setLoading(false)
     }
@@ -172,7 +173,7 @@ export function useCashBalance() {
       const errorMessage =
         err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
       setError(errorMessage)
-      return { success: false, error: errorMessage, movements: [] }
+      return { success: false, error: errorMessage, movements: [] as CashMovementWithBanking[] }
     } finally {
       setLoading(false)
     }

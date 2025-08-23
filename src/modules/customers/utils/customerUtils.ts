@@ -70,8 +70,8 @@ export const matchesSearchQuery = (customer: Customer, query: string): boolean =
   const searchTerm = query.toLowerCase()
   return (
     customer.name.toLowerCase().includes(searchTerm) ||
-    customer.phone?.toLowerCase().includes(searchTerm) ||
-    customer.email?.toLowerCase().includes(searchTerm)
+    (customer.phone?.toLowerCase().includes(searchTerm) ?? false) || // V6.1: Ensure boolean return
+    (customer.email?.toLowerCase().includes(searchTerm) ?? false) // V6.1: Ensure boolean return
   )
 }
 

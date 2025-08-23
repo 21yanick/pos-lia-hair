@@ -91,7 +91,10 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
       const activeCount = data.filter((s) => s.is_active).length
       const categoryStats = data.reduce(
         (acc, supplier) => {
-          acc[supplier.category] = (acc[supplier.category] || 0) + 1
+          // V6.1 Pattern 17: Null Safety - handle null category
+          if (supplier.category) {
+            acc[supplier.category] = (acc[supplier.category] || 0) + 1
+          }
           return acc
         },
         {} as Record<SupplierCategory, number>

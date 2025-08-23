@@ -54,20 +54,23 @@ interface UseBusinessSettingsQueryReturn {
   isFetching: boolean
   isSuccess: boolean
 
-  // General Actions
-  updateSettings: (data: BusinessSettingsFormData) => Promise<void>
-  uploadCompanyLogo: (file: File) => Promise<void>
+  // General Actions - V6.1: Updated return types to match actual mutation responses
+  updateSettings: (data: BusinessSettingsFormData) => Promise<BusinessSettings>
+  uploadCompanyLogo: (file: File) => Promise<{ url: string; path: string }>
   deleteCompanyLogo: () => Promise<void>
-  uploadAppLogo: (file: File, theme: 'light' | 'dark') => Promise<void>
-  deleteAppLogo: (theme: 'light' | 'dark') => Promise<void>
+  uploadAppLogo: (
+    file: File,
+    theme: 'light' | 'dark'
+  ) => Promise<{ url: string; path: string; theme: 'light' | 'dark' }>
+  deleteAppLogo: (theme: 'light' | 'dark') => Promise<'light' | 'dark'>
 
-  // Appointment Settings Actions
-  updateWorkingHours: (workingHours: WorkingHours) => Promise<void>
-  updateBookingRules: (bookingRules: BookingRules) => Promise<void>
-  updateDisplayPreferences: (displayPreferences: DisplayPreferences) => Promise<void>
-  updateVacationPeriods: (vacationPeriods: VacationPeriod[]) => Promise<void>
-  addVacationPeriod: (vacation: VacationPeriod) => Promise<void>
-  removeVacationPeriod: (index: number) => Promise<void>
+  // Appointment Settings Actions - V6.1: Updated return types to match actual mutation responses
+  updateWorkingHours: (workingHours: WorkingHours) => Promise<BusinessSettings>
+  updateBookingRules: (bookingRules: BookingRules) => Promise<BusinessSettings>
+  updateDisplayPreferences: (displayPreferences: DisplayPreferences) => Promise<BusinessSettings>
+  updateVacationPeriods: (vacationPeriods: VacationPeriod[]) => Promise<BusinessSettings>
+  addVacationPeriod: (vacation: VacationPeriod) => Promise<BusinessSettings>
+  removeVacationPeriod: (index: number) => Promise<BusinessSettings>
 
   // Business Logic Helpers
   isOrganizationOpen: (date: Date, time: string) => Promise<boolean>

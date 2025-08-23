@@ -406,7 +406,17 @@ export class CsvToJsonTransformer {
             'online_marketplace',
             'real_estate',
             'other',
-          ]) as string,
+          ]) as
+            | 'beauty_supplies'
+            | 'equipment'
+            | 'utilities'
+            | 'rent'
+            | 'insurance'
+            | 'professional_services'
+            | 'retail'
+            | 'online_marketplace'
+            | 'real_estate'
+            | 'other', // V6.1 Pattern 19: Explicit union type casting for SupplierImport compatibility
           contact_email:
             CsvToJsonTransformer.getOptionalString(row, 'contact_email', mappingConfig) ||
             undefined,
@@ -1056,11 +1066,13 @@ function validateBankAccounts(bankAccounts: BankAccountImport[]) {
       errorCount++
     }
 
-    if (account.current_balance < 0) {
+    if (account.current_balance != null && account.current_balance < 0) {
+      // V6.1 Pattern 17: Null Safety for current_balance
       warnings.push(`Row ${index + 1}: Negative account balance`)
     }
 
-    if (account.current_balance > 1000000) {
+    if (account.current_balance != null && account.current_balance > 1000000) {
+      // V6.1 Pattern 17: Null Safety for current_balance
       warnings.push(`Row ${index + 1}: Very high account balance, please verify`)
     }
 

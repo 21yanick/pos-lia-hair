@@ -95,7 +95,7 @@ export function SupplierEditDialog({
       setSupplier(supplierData)
       setFormData({
         name: supplierData.name,
-        category: supplierData.category,
+        category: supplierData.category || 'other', // V6.1 Pattern 17: Null Safety - Fallback to 'other' category
         contact_email: supplierData.contact_email || '',
         contact_phone: supplierData.contact_phone || '',
         website: supplierData.website || '',
@@ -107,7 +107,7 @@ export function SupplierEditDialog({
         iban: supplierData.iban || '',
         vat_number: supplierData.vat_number || '',
         notes: supplierData.notes || '',
-        is_active: supplierData.is_active,
+        is_active: supplierData.is_active ?? true, // V6.1 Pattern 17: Null Safety - Default to active if null
       })
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Fehler beim Laden der Daten')

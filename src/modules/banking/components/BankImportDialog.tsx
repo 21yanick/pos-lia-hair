@@ -211,10 +211,18 @@ export function BankImportDialog({
       )
 
       if (result.success && result.importResult) {
+        // Type-safe ImportExecutionResult structure conversion (Clean Architecture)
+        const executionResult: ImportExecutionResult = {
+          success: true, // Known successful at this point
+          importedCount: result.importResult.importedCount,
+          errors: result.importResult.errors,
+          // sessionId is optional, not provided by API
+        }
+
         setState((prev) => ({
           ...prev,
           loading: false,
-          result: result.importResult,
+          result: executionResult,
           step: 'confirm',
         }))
 

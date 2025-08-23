@@ -149,7 +149,12 @@ export class SettlementDetectionService {
     const amountAnalysis = this.matchingCore.analyzeAmountMatch(
       bankTransaction.amount,
       group.totalAmount,
-      { exactAmountTolerance: 0.0, closeAmountTolerance: 0.1, maxAmountTolerance: 2.0 }
+      {
+        exactAmountTolerance: 0.0,
+        closeAmountTolerance: 0.1,
+        maxAmountTolerance: 2.0,
+        maxDaysTolerance: 7, // Settlement detection uses default date tolerance
+      }
     )
 
     // 2. Provider detection in bank description (25% weight)

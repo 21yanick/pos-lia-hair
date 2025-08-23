@@ -8,8 +8,16 @@ import { cn } from '@/shared/utils'
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
-const IconLeft = () => <ChevronLeft className="h-4 w-4" />
-const IconRight = () => <ChevronRight className="h-4 w-4" />
+// V6.1 Pattern 21: Library API Compatibility - react-day-picker v9 Chevron with optional orientation
+const CalendarChevron = ({
+  orientation,
+  ...props
+}: {
+  orientation?: 'left' | 'right' | 'up' | 'down'
+}) => {
+  const Icon = orientation === 'left' ? ChevronLeft : ChevronRight
+  return <Icon className="h-4 w-4" {...props} />
+}
 
 function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
   return (
@@ -49,8 +57,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ...classNames,
       }}
       components={{
-        IconLeft,
-        IconRight,
+        Chevron: CalendarChevron,
       }}
       {...props}
     />

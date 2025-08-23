@@ -10,6 +10,11 @@
     "lint:fix": "biome check --write",
     "format": "biome format --write",
     "check": "biome check --write",
+    "type-check": "tsc --noEmit --pretty --incremental",
+    "type-check:watch": "tsc --noEmit --watch --pretty --incremental --preserveWatchOutput",
+    "type-check:ci": "tsc --noEmit --pretty",
+    "pre-commit": "pnpm run lint && pnpm run type-check:ci",
+    "quality-gate": "pnpm run lint && pnpm run type-check:ci && pnpm run build",
     "analyze": "npm run build && npx -p @next/bundle-analyzer analyze",
     "build:analyze": "next build"
   },

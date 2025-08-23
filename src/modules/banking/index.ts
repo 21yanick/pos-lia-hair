@@ -16,9 +16,10 @@ export type {
   BankingStats,
   ProviderImportSession,
   UnmatchedBankTransaction,
-  UnmatchedProviderReport,
-  UnmatchedSaleForProvider,
 } from './services/bankingApi'
+
+// Clean Architecture: Import canonical types from centralized location
+export type { UnmatchedProviderReport, UnmatchedSaleForProvider } from './types/banking'
 
 // Re-export provider types
 export type {

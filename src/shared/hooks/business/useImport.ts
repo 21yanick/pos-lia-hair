@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { useAuth } from '@/shared/hooks/auth/useAuth' // V6.1 Pattern 19: Schema Property Alignment - import useAuth for user
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import {
   // generateDailyReportPDFs, // Disabled - Banking Module will replace Daily Reports
@@ -35,7 +36,8 @@ export function useImport() {
   })
 
   // 🔒 SECURITY: Multi-Tenant Organization Context
-  const { currentOrganization, user } = useCurrentOrganization()
+  const { currentOrganization } = useCurrentOrganization()
+  const { user } = useAuth() // V6.1 Pattern 19: Schema Property Alignment - get user from useAuth
 
   const updateProgress = useCallback((progress: number, phase: string) => {
     setState((prev) => ({
@@ -145,7 +147,7 @@ export function useImport() {
         let suppliersImported = 0
 
         if (data.items && data.items.length > 0) {
-          itemsImported = await importItems(data.items, updateProgress)
+          itemsImported = await importItems(data.items, fullConfig.organizationId, updateProgress) // V6.1: Multi-tenant support
         }
 
         if (data.users && data.users.length > 0) {
@@ -164,6 +166,7 @@ export function useImport() {
           bankAccountsImported = await importBankAccounts(
             data.bank_accounts,
             fullConfig.targetUserId,
+            fullConfig.organizationId, // V6.1: Multi-tenant support
             updateProgress
           )
         }
@@ -172,6 +175,7 @@ export function useImport() {
           suppliersImported = await importSuppliers(
             data.suppliers,
             fullConfig.targetUserId,
+            fullConfig.organizationId, // V6.1: Multi-tenant support
             updateProgress
           )
         }
@@ -181,13 +185,19 @@ export function useImport() {
         let expensesImported = 0
 
         if (data.sales && data.sales.length > 0) {
-          salesImported = await importSales(data.sales, fullConfig.targetUserId, updateProgress)
+          salesImported = await importSales(
+            data.sales,
+            fullConfig.targetUserId,
+            fullConfig.organizationId,
+            updateProgress
+          ) // V6.1: Multi-tenant support
         }
 
         if (data.expenses && data.expenses.length > 0) {
           expensesImported = await importExpenses(
             data.expenses,
             fullConfig.targetUserId,
+            fullConfig.organizationId, // V6.1: Multi-tenant support
             updateProgress
           )
         }

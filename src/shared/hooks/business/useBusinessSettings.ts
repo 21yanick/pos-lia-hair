@@ -37,13 +37,16 @@ interface UseBusinessSettingsQueryReturn {
   isFetching: boolean
   isSuccess: boolean
 
-  // Actions
+  // Actions (V6.1: Updated return types to match mutation implementations)
   loadSettings: () => Promise<unknown>
-  updateSettings: (data: BusinessSettingsFormData) => Promise<void>
-  uploadCompanyLogo: (file: File) => Promise<void>
+  updateSettings: (data: BusinessSettingsFormData) => Promise<BusinessSettings>
+  uploadCompanyLogo: (file: File) => Promise<{ url: string; path: string }>
   deleteCompanyLogo: () => Promise<void>
-  uploadAppLogo: (file: File, theme: 'light' | 'dark') => Promise<void>
-  deleteAppLogo: (theme: 'light' | 'dark') => Promise<void>
+  uploadAppLogo: (
+    file: File,
+    theme: 'light' | 'dark'
+  ) => Promise<{ url: string; path: string; theme: 'light' | 'dark' }>
+  deleteAppLogo: (theme: 'light' | 'dark') => Promise<'light' | 'dark'>
 
   // Utilities
   getFormattedAddress: () => string

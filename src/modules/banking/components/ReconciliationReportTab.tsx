@@ -110,7 +110,22 @@ export function ReconciliationReportTab() {
       if (error) {
         // console.error('Error loading generated reports:', error)
       } else {
-        setGeneratedReports(documents || [])
+        // Type-safe conversion: filter and map to DocumentReport (Clean Architecture)
+        const validDocuments: DocumentReport[] = (documents || [])
+          .filter(
+            (doc) =>
+              doc.file_name !== null && doc.file_name !== undefined && doc.file_name.trim() !== ''
+          )
+          .map(
+            (doc): DocumentReport => ({
+              id: doc.id,
+              file_name: doc.file_name as string, // Safe after filter
+              file_path: doc.file_path,
+              created_at: doc.created_at || '', // Convert null to empty string
+              file_size: doc.file_size,
+            })
+          )
+        setGeneratedReports(validDocuments)
       }
     } catch (err) {
       console.error('Error loading reports:', err)

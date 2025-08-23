@@ -40,7 +40,7 @@ export function ProfileForm() {
   useEffect(() => {
     if (user) {
       setProfileData({
-        name: user.name || '',
+        name: user.user_metadata?.full_name || user.email?.split('@')[0] || '', // V6.1 Pattern 19: Schema Property Alignment - user.name → user_metadata.full_name
         email: user.email || '',
       })
     }

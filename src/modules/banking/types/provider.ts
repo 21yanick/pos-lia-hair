@@ -125,26 +125,10 @@ export interface ProviderImportResult {
 }
 
 // =====================================================
-// IMPORT SESSION TRACKING
+// V6.1 NOTE: provider_import_sessions table removed
 // =====================================================
-
-export interface ProviderImportSession {
-  id: string
-  provider: 'twint' | 'sumup'
-  filename: string
-  import_type: 'csv'
-  total_records: number
-  new_records: number
-  duplicate_records: number
-  error_records: number
-  date_range_from: string // ISO date string
-  date_range_to: string // ISO date string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
-  imported_by: string // User ID
-  created_at: string
-  completed_at?: string
-  notes?: string
-}
+// V6.1 uses report_filename field in provider_reports table for direct tracking
+// with duplicate prevention via provider/transaction_date/gross_amount uniqueness
 
 // =====================================================
 // DUPLICATE DETECTION TYPES
@@ -194,19 +178,6 @@ export interface ProviderDetectionResult {
 }
 
 // =====================================================
-// EXPORTS
+// V6.1 NOTE: All types exported normally at declaration
+// No need for redundant export type block (TS5+ stricter)
 // =====================================================
-
-export type {
-  TWINTCsvRow,
-  SumUpCsvRow,
-  ProviderRecord,
-  ProviderImportPreview,
-  ProviderImportError,
-  ProviderImportResult,
-  ProviderImportSession,
-  ProviderDuplicateCheck,
-  ProviderValidationError,
-  ProviderParserConfig,
-  ProviderDetectionResult,
-}

@@ -115,7 +115,9 @@ export function ServiceSelectionStep({
                   <div className="flex items-center gap-3">
                     <Checkbox
                       checked={isSelected}
-                      onChange={(checked) => handleServiceToggle(service.id, checked)}
+                      onChange={(e) =>
+                        handleServiceToggle(service.id, (e.target as HTMLInputElement).checked)
+                      }
                       onClick={(e) => e.stopPropagation()}
                     />
                     <div className="flex-1">
