@@ -88,11 +88,13 @@ const nextConfig = withPWA({
     },
   ],
 })({
+  // V6.1 Clean Build: Error ignoring removed - we have 0 TypeScript errors and 0 lint errors
+  // Only 19 legitimate V6.1 pattern warnings remain (PDF types + JSONB types)
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // ✅ Enable ESLint validation during builds
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // ✅ Enable TypeScript error checking during builds
   },
   images: {
     unoptimized: true,
