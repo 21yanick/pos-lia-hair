@@ -1,8 +1,8 @@
 'use client'
 
 /**
- * Customer Selection Step - Customer picker with booking summary
- * Step 2 of QuickBookingDialog
+ * Customer Selection Step (Corrected Version)
+ * Step 2 of QuickBookingDialog - Customer picker OR create new customer
  */
 
 import { Check, Phone, Search, User } from 'lucide-react'
@@ -31,77 +31,73 @@ import type { CustomerStepProps } from '../../types/quickBooking'
 interface Customer {
   id: string
   name: string
-  phone?: string | null // V6.1 compatibility: allow both undefined and null
-  email?: string | null // V6.1 compatibility: allow both undefined and null
+  phone?: string | null
+  email?: string | null
 }
 
 export function CustomerSelectionStep({
-  customerId,
   customerName,
   customerPhone,
+  customerEmail,
   notes,
-  isWalkIn,
   onCustomerChange,
-  onWalkInToggle,
   onNotesChange,
-  selectedServices,
   timeSlot,
-  totalDuration,
+  duration,
 }: CustomerStepProps) {
   const { currentOrganization } = useCurrentOrganization()
   const { data: customers = [] } = useCustomersQuery(currentOrganization?.id || '')
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false)
-  const [walkInForm, setWalkInForm] = useState({
+  const [isCreateMode, setIsCreateMode] = useState(false) // false = select existing, true = create new
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [newCustomerForm, setNewCustomerForm] = useState({
     name: customerName,
     phone: customerPhone || '',
-    email: '',
+    email: customerEmail || '',
   })
 
   // Generate unique IDs for form elements
-  const walkInNameId = useId()
-  const walkInPhoneId = useId()
-  const walkInEmailId = useId()
+  const newCustomerNameId = useId()
+  const newCustomerPhoneId = useId()
+  const newCustomerEmailId = useId()
   const notesId = useId()
 
-  const selectedCustomer = customers.find((c) => c.id === customerId)
-  const selectedServiceNames = selectedServices
-    .filter((s) => s.selected)
-    .map((s) => s.service.name)
-    .join(' + ')
+  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId)
 
   // Handle existing customer selection
   const handleCustomerSelect = (customer: Customer) => {
-    onCustomerChange(customer.id, customer.name, customer.phone || null)
+    setSelectedCustomerId(customer.id)
+    onCustomerChange(customer.name, customer.phone || null, customer.email || null, customer.id)
     setCustomerSearchOpen(false)
-
-    // Switch to existing customer mode
-    if (isWalkIn) {
-      onWalkInToggle(false)
-    }
   }
 
-  // Handle walk-in customer form
-  const handleWalkInFormChange = (field: string, value: string) => {
-    const updatedForm = { ...walkInForm, [field]: value }
-    setWalkInForm(updatedForm)
+  // Handle new customer form changes
+  const handleNewCustomerFormChange = (field: string, value: string) => {
+    const updatedForm = { ...newCustomerForm, [field]: value }
+    setNewCustomerForm(updatedForm)
 
-    // Update parent state
-    onCustomerChange(null, updatedForm.name, updatedForm.phone || null)
+    // Update parent state (null customerId = create new customer)
+    onCustomerChange(updatedForm.name, updatedForm.phone || null, updatedForm.email || null, null)
   }
 
   // Handle customer type toggle
-  const handleCustomerTypeToggle = (walkIn: boolean) => {
-    onWalkInToggle(walkIn)
+  const handleCustomerTypeToggle = (createMode: boolean) => {
+    setIsCreateMode(createMode)
 
-    if (walkIn) {
-      // Switch to walk-in: set "Laufkundschaft" as default name
-      const defaultName = walkInForm.name || 'Laufkundschaft'
-      setWalkInForm((prev) => ({ ...prev, name: defaultName }))
-      onCustomerChange(null, defaultName, walkInForm.phone || null)
+    if (createMode) {
+      // Switch to create mode: use form data
+      onCustomerChange(
+        newCustomerForm.name,
+        newCustomerForm.phone || null,
+        newCustomerForm.email || null
+      )
+      setSelectedCustomerId(null)
     } else {
-      // Switch to existing: clear form data
-      onCustomerChange(null, '', null)
-      setWalkInForm({ name: '', phone: '', email: '' })
+      // Switch to existing: clear if no customer selected
+      if (!selectedCustomer) {
+        onCustomerChange('', null, null)
+        setNewCustomerForm({ name: '', phone: '', email: '' })
+      }
     }
   }
 
@@ -110,14 +106,14 @@ export function CustomerSelectionStep({
       <div>
         <h3 className="text-lg font-semibold mb-1">Kunde auswählen</h3>
         <p className="text-sm text-muted-foreground">
-          Wählen Sie einen bestehenden Kunden oder geben Sie Laufkundschaft ein
+          Wählen Sie einen bestehenden Kunden oder erstellen Sie einen neuen
         </p>
       </div>
 
       {/* Customer Type Toggle - Mobile Optimized */}
       <div className="flex flex-col sm:flex-row gap-2">
         <Button
-          variant={!isWalkIn ? 'default' : 'outline'}
+          variant={!isCreateMode ? 'default' : 'outline'}
           onClick={() => handleCustomerTypeToggle(false)}
           className="flex-1"
         >
@@ -126,17 +122,17 @@ export function CustomerSelectionStep({
           <span className="sm:hidden">Bestehend</span>
         </Button>
         <Button
-          variant={isWalkIn ? 'default' : 'outline'}
+          variant={isCreateMode ? 'default' : 'outline'}
           onClick={() => handleCustomerTypeToggle(true)}
           className="flex-1"
         >
           <User className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">Laufkundschaft</span>
-          <span className="sm:hidden">Laufkunde</span>
+          <span className="hidden sm:inline">Kunde erstellen</span>
+          <span className="sm:hidden">Neu erstellen</span>
         </Button>
       </div>
 
-      {!isWalkIn ? (
+      {!isCreateMode ? (
         /* Existing Customer Selection */
         <div className="space-y-4">
           <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
@@ -213,35 +209,35 @@ export function CustomerSelectionStep({
           </Popover>
         </div>
       ) : (
-        /* Walk-in Customer Form */
+        /* New Customer Creation Form */
         <div className="space-y-4">
           <div>
-            <Label htmlFor={walkInNameId}>Name *</Label>
+            <Label htmlFor={newCustomerNameId}>Name *</Label>
             <Input
-              id={walkInNameId}
-              value={walkInForm.name}
-              onChange={(e) => handleWalkInFormChange('name', e.target.value)}
-              placeholder="Name der Laufkundschaft"
+              id={newCustomerNameId}
+              value={newCustomerForm.name}
+              onChange={(e) => handleNewCustomerFormChange('name', e.target.value)}
+              placeholder="Vollständiger Name"
               className="mt-1"
             />
           </div>
           <div>
-            <Label htmlFor={walkInPhoneId}>Telefon</Label>
+            <Label htmlFor={newCustomerPhoneId}>Telefon</Label>
             <Input
-              id={walkInPhoneId}
-              value={walkInForm.phone}
-              onChange={(e) => handleWalkInFormChange('phone', e.target.value)}
+              id={newCustomerPhoneId}
+              value={newCustomerForm.phone}
+              onChange={(e) => handleNewCustomerFormChange('phone', e.target.value)}
               placeholder="Telefonnummer (optional)"
               className="mt-1"
             />
           </div>
           <div>
-            <Label htmlFor={walkInEmailId}>E-Mail</Label>
+            <Label htmlFor={newCustomerEmailId}>E-Mail</Label>
             <Input
-              id={walkInEmailId}
+              id={newCustomerEmailId}
               type="email"
-              value={walkInForm.email}
-              onChange={(e) => handleWalkInFormChange('email', e.target.value)}
+              value={newCustomerForm.email}
+              onChange={(e) => handleNewCustomerFormChange('email', e.target.value)}
               placeholder="E-Mail-Adresse (optional)"
               className="mt-1"
             />
@@ -263,7 +259,7 @@ export function CustomerSelectionStep({
       </div>
 
       {/* Booking Summary */}
-      {(customerName || selectedCustomer) && selectedServices.length > 0 && timeSlot && (
+      {(customerName || selectedCustomer) && timeSlot && (
         <Card className="border-success/20 bg-success/5">
           <CardContent className="p-4">
             <h4 className="font-medium text-success-foreground mb-3 flex items-center gap-2">
@@ -274,14 +270,17 @@ export function CustomerSelectionStep({
               <div>
                 <div className="text-muted-foreground mb-1">Kunde:</div>
                 <div className="font-medium truncate">
-                  {isWalkIn ? walkInForm.name : selectedCustomer?.name}
+                  {isCreateMode ? newCustomerForm.name : selectedCustomer?.name}
                 </div>
+                {((isCreateMode && newCustomerForm.phone) ||
+                  (!isCreateMode && selectedCustomer?.phone)) && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Tel: {isCreateMode ? newCustomerForm.phone : selectedCustomer?.phone}
+                  </div>
+                )}
               </div>
-              <div>
-                <div className="text-muted-foreground mb-1">Services:</div>
-                <div className="font-medium break-words">{selectedServiceNames}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <div className="text-muted-foreground mb-1">Datum:</div>
                   <div className="font-medium text-xs sm:text-sm">
@@ -295,10 +294,18 @@ export function CustomerSelectionStep({
                   </div>
                 </div>
               </div>
+
               <div>
                 <div className="text-muted-foreground mb-1">Dauer:</div>
-                <div className="font-medium">{totalDuration} Minuten</div>
+                <div className="font-medium">{duration} Minuten</div>
               </div>
+
+              {notes && (
+                <div>
+                  <div className="text-muted-foreground mb-1">Notizen:</div>
+                  <div className="text-xs bg-background/50 p-2 rounded">{notes}</div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

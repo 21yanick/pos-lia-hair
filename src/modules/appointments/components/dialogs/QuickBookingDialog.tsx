@@ -1,8 +1,8 @@
 'use client'
 
 /**
- * Quick Booking Dialog - 2-Step simplified booking flow
- * Mobile-first design with multi-service selection
+ * Quick Booking Dialog (Simplified KISS Version)
+ * 2-Step booking flow: Time Selection → Customer Creation
  */
 
 import { AlertTriangle, Check, ChevronLeft, Loader2 } from 'lucide-react'
@@ -19,9 +19,11 @@ import {
 } from '@/shared/components/ui/dialog'
 import { Progress } from '@/shared/components/ui/progress'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useItems } from '@/shared/hooks/business/useItems'
+import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import { useToast } from '@/shared/hooks/core/useToast'
 import type { AppointmentInsert } from '@/shared/services/appointmentService'
+import { createCustomer } from '@/shared/services/customerService'
+import { safeBookingRules } from '@/shared/types/businessSettings'
 import { cn } from '@/shared/utils'
 import { formatDateForAPI, formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { useCreateAppointment } from '../../hooks/useAppointments'
@@ -30,10 +32,9 @@ import type {
   BookingTimeSlot,
   QuickBookingDialogProps,
   QuickBookingFormData,
-  ServiceSelection,
 } from '../../types/quickBooking'
 import { CustomerSelectionStep } from './CustomerSelectionStep'
-import { ServiceSelectionStep } from './ServiceSelectionStep'
+import { TimeSelectionStep } from './TimeSelectionStep'
 
 export function QuickBookingDialog({
   isOpen,
@@ -45,93 +46,77 @@ export function QuickBookingDialog({
 }: QuickBookingDialogProps) {
   const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
-  const { items } = useItems()
+  const { settings } = useBusinessSettingsQuery()
   const createAppointment = useCreateAppointment(currentOrganization?.id || '')
 
-  // Steps state
-  const [currentStep, setCurrentStep] = useState<BookingStep>('services')
+  // Get default duration from settings
+  const defaultDuration = useMemo(() => {
+    const bookingRules = safeBookingRules(settings?.booking_rules)
+    return bookingRules.defaultDuration
+  }, [settings])
 
-  // Form state
+  // Steps state
+  const [currentStep, setCurrentStep] = useState<BookingStep>('time')
+
+  // Form state (simplified)
   const [formData, setFormData] = useState<QuickBookingFormData>({
-    selectedServices: [],
-    totalDuration: 0,
     timeSlot: initialTimeSlot || null,
+    duration: defaultDuration,
     customerId: null,
     customerName: '',
     customerPhone: null,
+    customerEmail: null,
     notes: '',
-    isWalkIn: false,
     isExceptionAppointment,
   })
 
-  // Available services (filter for bookable services)
-  const availableServices = useMemo(() => {
-    return items.filter(
-      (item) => item.type === 'service' && item.active && item.requires_booking !== false
-    )
-  }, [items])
-
-  // Initialize service selections when services load
-  useEffect(() => {
-    if (availableServices.length > 0 && formData.selectedServices.length === 0) {
-      const serviceSelections: ServiceSelection[] = availableServices.map((service) => ({
-        service,
-        selected: false,
-      }))
-      setFormData((prev) => ({
-        ...prev,
-        selectedServices: serviceSelections,
-      }))
-    }
-  }, [availableServices, formData.selectedServices.length])
-
-  // Calculate total duration from selected services using standard durations
-  const totalDuration = useMemo(() => {
-    return formData.selectedServices
-      .filter((s) => s.selected)
-      .reduce((sum, s) => sum + (s.service.duration_minutes || 60), 0)
-  }, [formData.selectedServices])
-
-  // Update total duration when services change
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      totalDuration,
-    }))
-  }, [totalDuration])
+  // Note: Duration is set in the dialog initialization useEffect below
+  // No need for separate duration update useEffect to avoid race conditions
 
   // Reset/Initialize form when dialog opens/closes
   useEffect(() => {
     if (isOpen) {
-      setCurrentStep('services')
-      setFormData({
-        selectedServices: [],
-        totalDuration: 0,
-        timeSlot: initialTimeSlot || {
+      setCurrentStep('time')
+
+      // Calculate proper end time for initial time slot
+      let calculatedTimeSlot: BookingTimeSlot
+      if (initialTimeSlot) {
+        calculatedTimeSlot = {
+          start: initialTimeSlot.start,
+          end: calculateEndTime(initialTimeSlot.start, defaultDuration),
+          date: initialTimeSlot.date,
+        }
+      } else {
+        calculatedTimeSlot = {
           start: '09:00',
-          end: '10:00',
+          end: calculateEndTime('09:00', defaultDuration),
           date: initialDate,
-        },
+        }
+      }
+
+      setFormData({
+        timeSlot: calculatedTimeSlot,
+        duration: defaultDuration,
         customerId: null,
         customerName: '',
         customerPhone: null,
+        customerEmail: null,
         notes: '',
-        isWalkIn: false,
         isExceptionAppointment,
       })
     }
-  }, [isOpen, initialTimeSlot, initialDate, isExceptionAppointment])
+  }, [isOpen, initialTimeSlot, initialDate, isExceptionAppointment, defaultDuration])
 
   // Progress calculation
-  const progress = currentStep === 'services' ? 50 : 100
+  const progress = currentStep === 'time' ? 50 : 100
 
   // Validation for each step
   const canProceedToNextStep = useMemo(() => {
     switch (currentStep) {
-      case 'services':
-        return formData.selectedServices.some((s) => s.selected) && formData.timeSlot
+      case 'time':
+        return formData.timeSlot && formData.duration > 0
       case 'customer':
-        return (formData.customerId || formData.customerName.trim()) && formData.timeSlot
+        return formData.customerName.trim().length > 0 && formData.timeSlot
       default:
         return false
     }
@@ -144,7 +129,7 @@ export function QuickBookingDialog({
   }
 
   const goToPreviousStep = () => {
-    setCurrentStep('services')
+    setCurrentStep('time')
   }
 
   // Form submission
@@ -154,31 +139,42 @@ export function QuickBookingDialog({
     }
 
     try {
-      const selectedServices = formData.selectedServices.filter((s) => s.selected)
+      // Step 1: Handle customer (existing or create new)
+      let finalCustomerId: string | null = null
 
-      // Prepare notes with exception marker if needed
+      if (formData.customerId) {
+        // Use existing customer
+        finalCustomerId = formData.customerId
+      } else if (formData.customerName.trim()) {
+        // Create new customer
+        const customerData = {
+          name: formData.customerName.trim(),
+          phone: formData.customerPhone?.trim() || undefined,
+          email: formData.customerEmail?.trim() || undefined,
+        }
+
+        const newCustomer = await createCustomer(currentOrganization.id, customerData)
+        finalCustomerId = newCustomer.id
+      }
+
+      // Step 2: Prepare notes with exception marker if needed
       const baseNotes = formData.notes.trim()
       const exceptionNote = formData.isExceptionAppointment ? '[AUSNAHMETERMIN]' : ''
       const combinedNotes =
         [exceptionNote, baseNotes].filter((note) => note.length > 0).join(' - ') || null
 
-      // Create new appointment
+      // Step 3: Create appointment (without services)
       const appointmentData: AppointmentInsert = {
         appointment_date: formatDateForAPI(formData.timeSlot.date),
         start_time: formData.timeSlot.start,
         end_time: formData.timeSlot.end,
-        customer_id: formData.customerId,
+        customer_id: finalCustomerId,
         customer_name: formData.customerName || null,
         customer_phone: formData.customerPhone,
         notes: combinedNotes,
         organization_id: currentOrganization.id,
-        // Multi-service structure
-        services: selectedServices.map((serviceSelection, index) => ({
-          item_id: serviceSelection.service.id,
-          service_price: serviceSelection.service.default_price || null,
-          service_duration_minutes: serviceSelection.service.duration_minutes || 60,
-          sort_order: index + 1,
-        })),
+        // No services - simplified booking
+        services: [],
       }
 
       await createAppointment.mutateAsync(appointmentData)
@@ -204,42 +200,27 @@ export function QuickBookingDialog({
   }
 
   // Update handlers for child components
-  const handleServicesChange = (services: ServiceSelection[]) => {
-    setFormData((prev) => ({ ...prev, selectedServices: services }))
-  }
-
   const handleTimeSlotChange = (timeSlot: BookingTimeSlot) => {
     setFormData((prev) => ({ ...prev, timeSlot }))
   }
 
-  const handleDurationAdjust = (newDuration: number) => {
-    setFormData((prev) => ({ ...prev, totalDuration: newDuration }))
-
-    // Update end time if we have a time slot
-    if (formData.timeSlot) {
-      const endTime = calculateEndTime(formData.timeSlot.start, newDuration)
-      handleTimeSlotChange({
-        ...formData.timeSlot,
-        end: endTime,
-      })
-    }
+  const handleDurationChange = (duration: number) => {
+    setFormData((prev) => ({ ...prev, duration }))
   }
 
   const handleCustomerChange = (
-    customerId: string | null,
     customerName: string,
-    customerPhone: string | null
+    customerPhone: string | null,
+    customerEmail: string | null,
+    customerId?: string | null
   ) => {
     setFormData((prev) => ({
       ...prev,
-      customerId,
+      customerId: customerId || null,
       customerName,
       customerPhone,
+      customerEmail,
     }))
-  }
-
-  const handleWalkInToggle = (isWalkIn: boolean) => {
-    setFormData((prev) => ({ ...prev, isWalkIn }))
   }
 
   const handleNotesChange = (notes: string) => {
@@ -255,9 +236,9 @@ export function QuickBookingDialog({
             {formData.timeSlot ? formatDateForDisplay(formData.timeSlot.date) : 'Datum auswählen'}
           </DialogTitle>
           <DialogDescription>
-            {currentStep === 'services'
-              ? 'Wählen Sie Services und passen Sie die Zeit an'
-              : 'Wählen Sie einen Kunden und bestätigen Sie den Termin'}
+            {currentStep === 'time'
+              ? 'Wählen Sie die Start- und Endzeit für den Termin'
+              : 'Geben Sie die Kundendaten ein und bestätigen Sie den Termin'}
           </DialogDescription>
 
           {/* Exception Appointment Warning */}
@@ -281,20 +262,20 @@ export function QuickBookingDialog({
             <div
               className={cn(
                 'flex items-center gap-2',
-                currentStep === 'services' ? 'text-primary' : 'text-muted-foreground'
+                currentStep === 'time' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
               <div
                 className={cn(
                   'w-6 h-6 rounded-full flex items-center justify-center text-xs',
-                  currentStep === 'services'
+                  currentStep === 'time'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground'
                 )}
               >
-                1
+                {currentStep === 'customer' ? <Check className="h-3 w-3" /> : '1'}
               </div>
-              <span className="font-medium">Services & Zeit</span>
+              <span className="font-medium">Zeit festlegen</span>
             </div>
 
             <div
@@ -311,41 +292,36 @@ export function QuickBookingDialog({
                     : 'bg-muted text-muted-foreground'
                 )}
               >
-                {currentStep === 'customer' ? <Check className="h-3 w-3" /> : '2'}
+                2
               </div>
-              <span className="font-medium">Kunde & Bestätigung</span>
+              <span className="font-medium">Kunde erstellen</span>
             </div>
           </div>
         </DialogHeader>
 
         <div className="py-6">
-          {/* Step 1: Service Selection */}
-          {currentStep === 'services' && (
-            <ServiceSelectionStep
-              availableServices={availableServices}
-              selectedServices={formData.selectedServices}
-              totalDuration={formData.totalDuration}
+          {/* Step 1: Time Selection */}
+          {currentStep === 'time' && (
+            <TimeSelectionStep
               timeSlot={formData.timeSlot}
-              onServicesChange={handleServicesChange}
+              duration={formData.duration}
+              defaultDuration={defaultDuration}
               onTimeSlotChange={handleTimeSlotChange}
-              onDurationAdjust={handleDurationAdjust}
+              onDurationChange={handleDurationChange}
             />
           )}
 
-          {/* Step 2: Customer Selection */}
+          {/* Step 2: Customer Selection/Creation */}
           {currentStep === 'customer' && (
             <CustomerSelectionStep
-              customerId={formData.customerId}
               customerName={formData.customerName}
               customerPhone={formData.customerPhone}
+              customerEmail={formData.customerEmail}
               notes={formData.notes}
-              isWalkIn={formData.isWalkIn}
               onCustomerChange={handleCustomerChange}
-              onWalkInToggle={handleWalkInToggle}
               onNotesChange={handleNotesChange}
-              selectedServices={formData.selectedServices}
               timeSlot={formData.timeSlot}
-              totalDuration={formData.totalDuration}
+              duration={formData.duration}
             />
           )}
         </div>
@@ -365,7 +341,7 @@ export function QuickBookingDialog({
           </Button>
 
           {/* Next/Save Button */}
-          {currentStep === 'services' ? (
+          {currentStep === 'time' ? (
             <Button onClick={goToNextStep} disabled={!canProceedToNextStep}>
               Weiter
             </Button>

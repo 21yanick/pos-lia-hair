@@ -1,17 +1,9 @@
 /**
- * Quick Booking Dialog Types
- * 2-Step booking flow with multi-service selection
+ * Quick Booking Dialog Types (Simplified KISS Version)
+ * 2-Step booking flow: Time → Customer Creation
  */
 
-import type { Item } from '@/shared/hooks/business/useItems'
-
-export type BookingStep = 'services' | 'customer'
-
-export interface ServiceSelection {
-  service: Item
-  selected: boolean
-  // Duration is always taken from service.duration_minutes (no override)
-}
+export type BookingStep = 'time' | 'customer'
 
 export interface BookingTimeSlot {
   start: string // "11:00"
@@ -20,17 +12,16 @@ export interface BookingTimeSlot {
 }
 
 export interface QuickBookingFormData {
-  // Step 1: Services + Time
-  selectedServices: ServiceSelection[]
-  totalDuration: number
+  // Step 1: Time Selection (simplified)
   timeSlot: BookingTimeSlot | null
+  duration: number // Duration in minutes (from settings defaultDuration)
 
-  // Step 2: Customer
-  customerId: string | null
+  // Step 2: Customer Selection/Creation
+  customerId: string | null // null = create new, string = use existing
   customerName: string
   customerPhone: string | null
+  customerEmail: string | null
   notes: string
-  isWalkIn: boolean
 
   // Exception Appointment
   isExceptionAppointment: boolean // True if booked outside working hours
@@ -45,31 +36,27 @@ export interface QuickBookingDialogProps {
   isExceptionAppointment?: boolean // True if this is an exception appointment outside working hours
 }
 
-export interface ServiceStepProps {
-  availableServices: Item[]
-  selectedServices: ServiceSelection[]
-  totalDuration: number
+export interface TimeStepProps {
   timeSlot: BookingTimeSlot | null
-  onServicesChange: (services: ServiceSelection[]) => void
+  duration: number
+  defaultDuration: number // From settings
   onTimeSlotChange: (timeSlot: BookingTimeSlot) => void
-  onDurationAdjust: (newDuration: number) => void
+  onDurationChange: (duration: number) => void
 }
 
 export interface CustomerStepProps {
-  customerId: string | null
   customerName: string
   customerPhone: string | null
+  customerEmail: string | null
   notes: string
-  isWalkIn: boolean
   onCustomerChange: (
-    customerId: string | null,
     customerName: string,
-    customerPhone: string | null
+    customerPhone: string | null,
+    customerEmail: string | null,
+    customerId?: string | null // Add customerId for existing customers
   ) => void
-  onWalkInToggle: (isWalkIn: boolean) => void
   onNotesChange: (notes: string) => void
   // Summary data for display
-  selectedServices: ServiceSelection[]
   timeSlot: BookingTimeSlot | null
-  totalDuration: number
+  duration: number
 }
