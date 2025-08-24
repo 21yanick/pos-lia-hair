@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { CashMovementWithBanking } from '@/modules/banking/types/banking'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { supabase } from '@/shared/lib/supabase/client'
@@ -29,8 +29,8 @@ export function useCashBalance() {
   // 🔒 SECURITY: Multi-Tenant Organization Context
   const { currentOrganization } = useCurrentOrganization()
 
-  // Get current cash balance (organization-scoped)
-  const getCurrentCashBalance = async () => {
+  // Get current cash balance (organization-scoped) - V6.1 Performance: useCallback for stable reference
+  const getCurrentCashBalance = useCallback(async () => {
     try {
       // 🔒 CRITICAL SECURITY: Organization required
       if (!currentOrganization) {
@@ -56,128 +56,134 @@ export function useCashBalance() {
         balance: 0,
       }
     }
-  }
+  }, [currentOrganization]) // V6.1 Performance: Dependency on currentOrganization only
 
-  // Get cash movements for a month (organization-scoped)
-  const getCashMovementsForMonth = async (monthStart: Date, monthEnd: Date) => {
-    try {
-      setLoading(true)
-      setError(null)
+  // Get cash movements for a month (organization-scoped) - V6.1 Performance: useCallback for stable reference
+  const getCashMovementsForMonth = useCallback(
+    async (monthStart: Date, monthEnd: Date) => {
+      try {
+        setLoading(true)
+        setError(null)
 
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt.')
-      }
+        // 🔒 CRITICAL SECURITY: Organization required
+        if (!currentOrganization) {
+          throw new Error('Keine Organization ausgewählt.')
+        }
 
-      // Convert to UTC for database query
-      const startUTC = new Date(
-        monthStart.getFullYear(),
-        monthStart.getMonth(),
-        monthStart.getDate()
-      ).toISOString()
-      const endUTC = new Date(
-        monthEnd.getFullYear(),
-        monthEnd.getMonth(),
-        monthEnd.getDate(),
-        23,
-        59,
-        59
-      ).toISOString()
+        // Convert to UTC for database query
+        const startUTC = new Date(
+          monthStart.getFullYear(),
+          monthStart.getMonth(),
+          monthStart.getDate()
+        ).toISOString()
+        const endUTC = new Date(
+          monthEnd.getFullYear(),
+          monthEnd.getMonth(),
+          monthEnd.getDate(),
+          23,
+          59,
+          59
+        ).toISOString()
 
-      // Get cash movements with ORGANIZATION SECURITY
-      const { data, error } = await supabase
-        .from('cash_movements')
-        .select('*')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', startUTC)
-        .lte('created_at', endUTC)
-        .order('created_at', { ascending: false })
+        // Get cash movements with ORGANIZATION SECURITY
+        const { data, error } = await supabase
+          .from('cash_movements')
+          .select('*')
+          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
+          .gte('created_at', startUTC)
+          .lte('created_at', endUTC)
+          .order('created_at', { ascending: false })
 
-      if (error) {
-        // console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
-        throw error
-      }
+        if (error) {
+          // console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
+          throw error
+        }
 
-      // Enrich with sales data where reference_type = 'sale'
-      const enrichedData = await Promise.all(
-        (data || []).map(async (movement) => {
-          if (movement.reference_type === 'sale' && movement.reference_id) {
-            try {
-              const { data: saleData, error: saleError } = await supabase
-                .from('sales')
-                .select('receipt_number')
-                .eq('id', movement.reference_id)
-                .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-                .single()
+        // Enrich with sales data where reference_type = 'sale'
+        const enrichedData = await Promise.all(
+          (data || []).map(async (movement) => {
+            if (movement.reference_type === 'sale' && movement.reference_id) {
+              try {
+                const { data: saleData, error: saleError } = await supabase
+                  .from('sales')
+                  .select('receipt_number')
+                  .eq('id', movement.reference_id)
+                  .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
+                  .single()
 
-              if (saleError) {
-                // console.error(`Failed to fetch sale data for ${movement.reference_id}:`, saleError)
+                if (saleError) {
+                  // console.error(`Failed to fetch sale data for ${movement.reference_id}:`, saleError)
+                }
+
+                return {
+                  ...movement,
+                  sale_receipt_number: saleData?.receipt_number || null,
+                }
+              } catch (err) {
+                console.error(`Error enriching movement ${movement.movement_number}:`, err)
+                return movement
               }
-
-              return {
-                ...movement,
-                sale_receipt_number: saleData?.receipt_number || null,
-              }
-            } catch (err) {
-              console.error(`Error enriching movement ${movement.movement_number}:`, err)
-              return movement
             }
-          }
-          return movement
-        })
-      )
+            return movement
+          })
+        )
 
-      return { success: true, movements: (enrichedData as CashMovementWithBanking[]) || [] }
-    } catch (err: unknown) {
-      console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
-      const errorMessage =
-        err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
-      setError(errorMessage)
-      return { success: false, error: errorMessage, movements: [] as CashMovementWithBanking[] }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Get cash movements for a specific date (organization-scoped)
-  const getCashMovementsForDate = async (date: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // 🔒 CRITICAL SECURITY: Organization required
-      if (!currentOrganization) {
-        throw new Error('Keine Organization ausgewählt.')
+        return { success: true, movements: (enrichedData as CashMovementWithBanking[]) || [] }
+      } catch (err: unknown) {
+        console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
+        const errorMessage =
+          err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
+        setError(errorMessage)
+        return { success: false, error: errorMessage, movements: [] as CashMovementWithBanking[] }
+      } finally {
+        setLoading(false)
       }
+    },
+    [currentOrganization]
+  ) // V6.1 Performance: useState setters are stable, only currentOrganization needed
 
-      // Parse Swiss date and get UTC range for database query
-      const swissDate = new Date(`${date}T12:00:00`)
-      const { start, end } = getSwissDayRange(swissDate)
+  // Get cash movements for a specific date (organization-scoped) - V6.1 Performance: useCallback for stable reference
+  const getCashMovementsForDate = useCallback(
+    async (date: string) => {
+      try {
+        setLoading(true)
+        setError(null)
 
-      const { data, error } = await supabase
-        .from('cash_movements')
-        .select('*')
-        .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
-        .gte('created_at', start)
-        .lte('created_at', end)
-        .order('created_at', { ascending: false })
+        // 🔒 CRITICAL SECURITY: Organization required
+        if (!currentOrganization) {
+          throw new Error('Keine Organization ausgewählt.')
+        }
 
-      if (error) {
-        // console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
-        throw error
+        // Parse Swiss date and get UTC range for database query
+        const swissDate = new Date(`${date}T12:00:00`)
+        const { start, end } = getSwissDayRange(swissDate)
+
+        const { data, error } = await supabase
+          .from('cash_movements')
+          .select('*')
+          .eq('organization_id', currentOrganization.id) // 🔒 SECURITY: Organization-scoped
+          .gte('created_at', start)
+          .lte('created_at', end)
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          // console.error('Datenbankfehler beim Abrufen der Bargeld-Bewegungen:', error)
+          throw error
+        }
+
+        return { success: true, movements: data || [] }
+      } catch (err: unknown) {
+        console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
+        const errorMessage =
+          err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
+        setError(errorMessage)
+        return { success: false, error: errorMessage, movements: [] as CashMovementWithBanking[] }
+      } finally {
+        setLoading(false)
       }
-
-      return { success: true, movements: data || [] }
-    } catch (err: unknown) {
-      console.error('Fehler beim Abrufen der Bargeld-Bewegungen:', err)
-      const errorMessage =
-        err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten'
-      setError(errorMessage)
-      return { success: false, error: errorMessage, movements: [] as CashMovementWithBanking[] }
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+    [currentOrganization]
+  ) // V6.1 Performance: useState setters are stable, only currentOrganization needed
 
   return {
     loading,
