@@ -285,11 +285,11 @@ export async function createAppointment(
     // Validate data
     validateAppointmentData(appointmentWithoutServices)
 
-    if (!services || services.length === 0) {
-      return {
-        success: false,
-        error: 'Mindestens ein Service muss ausgewählt werden.',
-      }
+    // ✅ KISS Dialog Support: Allow simplified booking without services
+    const isSimplifiedBooking = !services || services.length === 0
+
+    if (isSimplifiedBooking) {
+      console.log('Creating simplified appointment without services (KISS Dialog)')
     }
 
     // Check for conflicts
@@ -310,10 +310,12 @@ export async function createAppointment(
     // Get current user
     const currentUserId = await getCurrentUserId()
 
-    // Calculate total price from services
-    const totalPrice = services.reduce((sum, service) => {
-      return sum + (service.service_price || 0)
-    }, 0)
+    // Calculate total price from services (or use estimated_price for simplified booking)
+    const totalPrice = isSimplifiedBooking
+      ? appointmentWithoutServices.estimated_price || 0
+      : services.reduce((sum, service) => {
+          return sum + (service.service_price || 0)
+        }, 0)
 
     // Prepare appointment data (without services)
     const completeAppointmentData = {
@@ -336,26 +338,28 @@ export async function createAppointment(
       throw appointmentError
     }
 
-    // Then create appointment services
-    const appointmentServices = services.map((service, index) => ({
-      appointment_id: createdAppointment.id,
-      item_id: service.item_id,
-      service_price: service.service_price,
-      service_duration_minutes: service.service_duration_minutes,
-      service_notes: service.service_notes,
-      sort_order: service.sort_order || index + 1,
-    }))
+    // Create appointment services (only if not simplified booking)
+    if (!isSimplifiedBooking) {
+      const appointmentServices = services.map((service, index) => ({
+        appointment_id: createdAppointment.id,
+        item_id: service.item_id,
+        service_price: service.service_price,
+        service_duration_minutes: service.service_duration_minutes,
+        service_notes: service.service_notes,
+        sort_order: service.sort_order || index + 1,
+      }))
 
-    const { error: servicesError } = await supabase
-      .from('appointment_services')
-      .insert(appointmentServices)
+      const { error: servicesError } = await supabase
+        .from('appointment_services')
+        .insert(appointmentServices)
 
-    if (servicesError) {
-      // Rollback - delete the appointment if services failed
-      await supabase.from('appointments').delete().eq('id', createdAppointment.id)
+      if (servicesError) {
+        // Rollback - delete the appointment if services failed
+        await supabase.from('appointments').delete().eq('id', createdAppointment.id)
 
-      console.error('Error creating appointment services:', servicesError)
-      throw servicesError
+        console.error('Error creating appointment services:', servicesError)
+        throw servicesError
+      }
     }
 
     // Fetch the complete appointment with services using the view
