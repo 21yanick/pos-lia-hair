@@ -14,19 +14,19 @@ export async function POST() {
 
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { data, error } = await resend.emails.send({
-      from: 'Lia Hair POS <noreply@lia-hair.ch>',
+      from: 'Ledgr <noreply@example.ch>',
       to: ['bullenmarkt@pm.me'],
-      subject: '🎉 Lia Hair POS Email Test',
+      subject: '🎉 Ledgr Email Test',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">Email System funktioniert! 🚀</h1>
           <p>Hallo!</p>
-          <p>Das ist eine Test-Email von deinem Lia Hair POS System.</p>
+          <p>Das ist eine Test-Email von deinem Ledgr System.</p>
           <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3>✅ Erfolgreich konfiguriert:</h3>
             <ul>
               <li>Resend API Integration</li>
-              <li>DNS Records (lia-hair.ch)</li>
+              <li>DNS Records (example.ch)</li>
               <li>Email Templates Ready</li>
             </ul>
           </div>
@@ -35,7 +35,7 @@ export async function POST() {
           </p>
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
           <p style="font-size: 12px; color: #999;">
-            Gesendet von Lia Hair POS System
+            Gesendet von Ledgr System
           </p>
         </div>
       `,

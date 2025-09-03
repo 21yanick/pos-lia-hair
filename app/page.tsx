@@ -21,7 +21,7 @@ function LoadingFallback() {
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-          <CardTitle>LIA HAIR</CardTitle>
+          <CardTitle>Ledgr.</CardTitle>
         </CardHeader>
       </Card>
     </div>

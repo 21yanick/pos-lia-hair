@@ -5,6 +5,6 @@ export default function TransactionsPage() {
 }
 
 export const metadata = {
-  title: 'Transaction Center - POS Lia Hair',
+  title: 'Transaction Center - Ledgr',
   description: 'Übersicht und Verwaltung aller Transaktionen',
 }

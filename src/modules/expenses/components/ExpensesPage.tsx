@@ -269,7 +269,6 @@ export function ExpensesPage() {
       {/* Header */}
       <div className="space-y-4 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ausgaben</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Geschäftsausgaben verwalten</p>
         </div>
 

@@ -41,9 +41,9 @@ export async function sendInvitationEmail({
   try {
     const resend = getResendClient()
     const { data, error } = await resend.emails.send({
-      from: `${organizationName} <einladung@lia-hair.ch>`,
+      from: `${organizationName} <einladung@example.ch>`,
       to: [to],
-      subject: `Einladung zu ${organizationName} - Lia Hair POS`,
+      subject: `Einladung zu ${organizationName} - Ledgr`,
       react: InviteUserEmail({
         inviterName,
         organizationName,
@@ -79,10 +79,10 @@ export async function sendWelcomeEmail({
   try {
     const resend = getResendClient()
     const { data, error } = await resend.emails.send({
-      from: `Lia Hair POS <willkommen@lia-hair.ch>`,
+      from: `Ledgr <willkommen@example.ch>`,
       to: [to],
       subject: isOwner
-        ? `Willkommen bei Lia Hair POS! Dein Salon "${organizationName}" ist bereit`
+        ? `Willkommen bei Ledgr! Dein Business "${organizationName}" ist bereit`
         : `Willkommen im Team von "${organizationName}"`,
       react: WelcomeEmail({
         userName,
@@ -111,9 +111,9 @@ export async function sendTestEmail(to: string) {
   try {
     const resend = getResendClient()
     const { data, error } = await resend.emails.send({
-      from: 'Lia Hair POS <test@lia-hair.ch>',
+      from: 'Ledgr <test@example.ch>',
       to: [to],
-      subject: '🧪 Lia Hair POS Test Email',
+      subject: '🧪 Ledgr Test Email',
       html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h1>Test Email erfolgreich! ✅</h1>

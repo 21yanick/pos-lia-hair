@@ -190,7 +190,7 @@ export const MonthlyReportPDF: React.FC<MonthlyReportPDFProps> = ({
                   ]
                     .filter(Boolean)
                     .join('\n')
-                : 'Römerstrasse 6\n4512 Bellach\nhello@lia-hair.ch'}
+                : 'Musterstrasse 1\n1234 Musterort\nhello@example.ch'}
             </Text>
           </View>
 

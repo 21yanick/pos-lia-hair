@@ -674,7 +674,7 @@ export async function generatePlaceholderReceipt(
       businessSettings: resolvedBusinessSettings,
     }) as React.ReactElement
 
-    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
+    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety (Library compatibility)
     const fileName = `placeholder-beleg-${expense.id}.pdf`
     const filePath = `${validOrgId}/expense_receipts/${fileName}`
 

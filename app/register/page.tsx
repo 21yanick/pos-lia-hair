@@ -1,7 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import type React from 'react'
 import { Suspense, useCallback, useEffect, useId, useState } from 'react'
 import { PublicRoute } from '@/shared/components/auth'
@@ -16,7 +18,6 @@ import {
 } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { SmartAppLogo } from '@/shared/components/ui/SmartAppLogo'
 import { supabase } from '@/shared/lib/supabase/client'
 import { sendWelcomeEmail } from '@/shared/services/emailService'
 import { acceptInvitation } from '@/shared/services/invitationService'
@@ -30,8 +31,13 @@ interface InvitationInfo {
 }
 
 function RegisterForm() {
+  const { resolvedTheme } = useTheme()
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get('invite')
+
+  // Theme-aware logo selection
+  const logoSrc =
+    resolvedTheme === 'dark' ? '/logo/Ledgr_Logo_dark.png' : '/logo/Ledgr_Logo_light.png'
 
   // Generate unique IDs for form fields
   const nameId = useId()
@@ -207,18 +213,18 @@ function RegisterForm() {
       >
         <CardHeader className="space-y-1 flex flex-col items-center pb-6">
           <div className="relative mb-4 transform transition-transform duration-300 hover:scale-105">
-            <SmartAppLogo
-              size="lg"
-              alt="Lia Hair Logo"
-              className="drop-shadow-lg w-24 h-24"
-              fallback={
-                <div className="relative w-24 h-24 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">LH</div>
-                </div>
-              }
+            <Image
+              src={logoSrc}
+              alt="Ledger Logo"
+              width={96}
+              height={96}
+              className="drop-shadow-lg w-24 h-24 object-contain rounded-3xl"
+              priority
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Lia Hair POS</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Ledgr - Dein Business in einer App
+          </CardTitle>
           <CardDescription className="text-center text-muted-foreground/80">
             {invitationInfo
               ? `Einladung zu ${invitationInfo.organizationName}`

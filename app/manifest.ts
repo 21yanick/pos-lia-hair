@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
-    name: 'LIA HAIR - POS System',
-    short_name: 'LIA HAIR',
+    name: 'Ledgr - Dein Business in einer App',
+    short_name: 'Ledgr',
     description:
       'Professional Hair Salon Point of Sale System - Appointments, Sales, Customer Management',
     start_url: '/',

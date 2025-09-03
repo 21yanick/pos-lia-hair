@@ -40,7 +40,6 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground">Überblick über Ihr Salon-Geschäft</p>
           </div>
         </div>
@@ -62,7 +61,6 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Herzlich Willkommen</p>
         </div>
         <Button onClick={handleRefreshStats} disabled={statsLoading} variant="outline">

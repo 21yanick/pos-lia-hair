@@ -133,7 +133,7 @@ const REAL_TWINT_TRANSACTIONS = [
 ]
 
 // ============================================================================
-// SERVICE CATALOG (Realistic Lia Hair Services)
+// SERVICE CATALOG (Sample Business Services)
 // ============================================================================
 
 const HAIR_SERVICES: ItemImport[] = [

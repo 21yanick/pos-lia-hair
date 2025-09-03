@@ -17,11 +17,11 @@ export interface TWINTCsvRow {
   Transaktionszeit: string // Transaction time: "09:47"
   'Transaktions-ID': string // Transaction ID: UUID
   'Händlertransaktions-ID': string // Merchant transaction ID: UUID
-  'Kennung Verkaufsstelle': string // Store name: "Lia Hair"
+  'Kennung Verkaufsstelle': string // Store name: "Sample Business"
 }
 
 export interface SumUpCsvRow {
-  'E-Mail': string // Store email: "admin@lia-hair.ch"
+  'E-Mail': string // Store email: "admin@example.ch"
   Datum: string // Transaction date: "2024-11-27 12:43:22"
   'Transaktions-ID': string // Transaction ID: "TTHLYLAXES"
   Zahlungsart: string // Payment type: "Umsatz" | "Auszahlung"

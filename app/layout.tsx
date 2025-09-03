@@ -9,15 +9,15 @@ import { inter } from '@/shared/styles/fonts'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'LIA HAIR - POS System',
+  title: 'Ledgr - Dein Business in einer App',
   description:
     'Professional Hair Salon Point of Sale System - Appointments, Sales, Customer Management',
   generator: 'Next.js',
   manifest: '/manifest.json',
   keywords: ['hair salon', 'pos system', 'appointments', 'beauty', 'switzerland', 'pwa'],
-  authors: [{ name: 'LIA HAIR' }],
-  creator: 'LIA HAIR',
-  publisher: 'LIA HAIR',
+  authors: [{ name: '21design' }],
+  creator: '21design',
+  publisher: '21design',
   formatDetection: {
     email: false,
     address: false,
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'LIA HAIR',
+    title: 'Ledgr - Dein Business in einer App',
     startupImage: ['/icons/apple-touch-icon.png'],
   },
   other: {

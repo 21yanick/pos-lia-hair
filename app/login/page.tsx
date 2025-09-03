@@ -1,6 +1,8 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import type React from 'react'
 import { useId, useState } from 'react'
 import { PublicRoute } from '@/shared/components/auth'
@@ -16,11 +18,11 @@ import {
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { SmartAppLogo } from '@/shared/components/ui/SmartAppLogo'
 import { supabase } from '@/shared/lib/supabase/client'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { resolvedTheme } = useTheme()
   const emailId = useId()
   const passwordId = useId()
   const rememberId = useId()
@@ -30,6 +32,10 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+
+  // Theme-aware logo selection
+  const logoSrc =
+    resolvedTheme === 'dark' ? '/logo/Ledgr_Logo_dark.png' : '/logo/Ledgr_Logo_light.png'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,29 +84,18 @@ export default function LoginPage() {
         >
           <CardHeader className="space-y-1 flex flex-col items-center pb-8">
             <div className="relative mb-6 transform transition-transform duration-300 hover:scale-105">
-              <SmartAppLogo
-                size="xl"
-                alt="Nexus Logo"
-                className="drop-shadow-lg w-32 h-32"
-                fallback={
-                  <div className="relative w-32 h-32 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                    {/* Horizontale Verbindungslinie */}
-                    <div className="absolute w-16 h-0.5 bg-gradient-to-r from-slate-400 to-slate-600 dark:from-slate-500 dark:to-slate-300"></div>
-                    {/* Vertikale Verbindungslinie */}
-                    <div className="absolute h-16 w-0.5 bg-gradient-to-b from-slate-400 to-slate-600 dark:from-slate-500 dark:to-slate-300"></div>
-                    {/* Zentrale Nexus Node */}
-                    <div className="relative z-10 w-3 h-3 bg-blue-500 rounded-full shadow-lg ring-2 ring-blue-200 dark:ring-blue-400"></div>
-                    {/* Nexus Text */}
-                    <div className="absolute bottom-3 text-sm font-bold text-slate-700 dark:text-slate-300 tracking-wider">
-                      NEXUS
-                    </div>
-                  </div>
-                }
+              <Image
+                src={logoSrc}
+                alt="Ledger Logo"
+                width={128}
+                height={128}
+                className="drop-shadow-lg w-32 h-32 object-contain rounded-3xl"
+                priority
               />
             </div>
-            <CardTitle className="text-3xl font-bold text-center">Nexus</CardTitle>
+            <CardTitle className="text-3xl font-bold text-center">Ledgr.</CardTitle>
             <CardDescription className="text-center text-muted-foreground/80 mt-2">
-              Business Connection Platform
+              Dein Business in einer App
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleLogin}>

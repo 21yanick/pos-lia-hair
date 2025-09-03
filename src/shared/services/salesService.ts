@@ -339,7 +339,7 @@ export async function createReceiptPDF(
       items,
       businessSettings: resolvedBusinessSettings,
     })
-    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
+    const blob = await pdf(pdfComponent as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety (Library compatibility)
     const fileName = `quittung-${sale.id}.pdf`
     const file = new File([blob], fileName, { type: 'application/pdf' })
 

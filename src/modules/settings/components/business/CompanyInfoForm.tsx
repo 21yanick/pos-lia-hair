@@ -152,7 +152,7 @@ export function CompanyInfoForm() {
               id={companyAddressId}
               value={formData.company_address}
               onChange={(e) => handleInputChange('company_address', e.target.value)}
-              placeholder="Römerstrasse 6"
+              placeholder="Musterstrasse 1"
               className="bg-background border-input"
             />
           </div>
@@ -175,7 +175,7 @@ export function CompanyInfoForm() {
                 id={companyCityId}
                 value={formData.company_city}
                 onChange={(e) => handleInputChange('company_city', e.target.value)}
-                placeholder="Bellach"
+                placeholder="Musterort"
                 className="bg-background border-input"
               />
             </div>
@@ -211,7 +211,7 @@ export function CompanyInfoForm() {
               type="email"
               value={formData.company_email}
               onChange={(e) => handleInputChange('company_email', e.target.value)}
-              placeholder="hello@lia-hair.ch"
+              placeholder="hello@example.ch"
               className="bg-background border-input"
             />
           </div>

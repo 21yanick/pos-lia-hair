@@ -422,7 +422,6 @@ export default function TransactionPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Transaktionen</h1>
           <p className="text-muted-foreground">Übersicht und Verwaltung</p>
         </div>
 

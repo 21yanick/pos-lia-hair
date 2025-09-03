@@ -28,49 +28,67 @@ export function Header() {
     setTheme(isDarkMode ? 'light' : 'dark')
   }
 
-  // Get page title based on pathname (organization-aware)
-  const getPageTitle = () => {
-    // Handle organization routes: /org/[slug]/page
+  // Get organization-first header title (display_name - Page Name)
+  const getHeaderTitle = () => {
+    // 🏢 Organization Identity (Primary)
+    const orgName = currentOrganization?.display_name || currentOrganization?.name || 'POS System'
+
+    // 📄 Page Context (Secondary)
     const pathParts = pathname?.split('/') || []
     const path =
       pathParts.length >= 4 && pathParts[1] === 'org'
         ? pathParts[3] // For /org/slug/dashboard -> "dashboard"
         : pathParts[1] // For legacy routes
 
-    switch (path) {
-      case 'dashboard':
-        return 'Dashboard'
-      case 'pos':
-        return 'Verkauf'
-      case 'cash-register':
-        return 'Kassenbuch'
-      case 'products':
-        return 'Produkte'
-      case 'expenses':
-        return 'Ausgaben'
-      case 'transactions':
-        return 'Transaktionen'
-      case 'banking':
-        return 'Banking'
-      case 'settings': {
-        // Check for settings sub-pages
-        const subPath = pathParts[pathParts.length - 1]
-        switch (subPath) {
-          case 'business':
-            return 'Geschäfts-Einstellungen'
-          case 'import':
-            return 'Import Center'
-          case 'suppliers':
-            return 'Lieferanten'
-          default:
-            return 'Einstellungen'
+    const pageName = (() => {
+      switch (path) {
+        case 'dashboard':
+          return 'Dashboard'
+        case 'pos':
+          return 'Verkauf'
+        case 'cash-register':
+          return 'Kassenbuch'
+        case 'products':
+          return 'Produkte'
+        case 'expenses':
+          return 'Ausgaben'
+        case 'transactions':
+          return 'Transaktionen'
+        case 'banking':
+          return 'Banking'
+        case 'customers':
+          return 'Kunden'
+        case 'appointments':
+          return 'Termine'
+        case 'settings': {
+          // Check for settings sub-pages
+          const subPath = pathParts[pathParts.length - 1]
+          switch (subPath) {
+            case 'business':
+              return 'Geschäfts-Einstellungen'
+            case 'import':
+              return 'Import Center'
+            case 'suppliers':
+              return 'Lieferanten'
+            case 'management':
+              return 'Verwaltung'
+            case 'team':
+              return 'Team Verwaltung'
+            case 'profile':
+              return 'Mein Profil'
+            default:
+              return 'Einstellungen'
+          }
         }
+        case 'organizations':
+          return 'Organisation wählen'
+        default:
+          return null
       }
-      case 'organizations':
-        return 'Organisation wählen'
-      default:
-        return currentOrganization?.display_name || currentOrganization?.name || 'POS System'
-    }
+    })()
+
+    // 🎯 Organization-First Pattern: "Org Name - Page Name" or just "Org Name"
+    return pageName ? `${orgName} - ${pageName}` : orgName
   }
 
   return (
@@ -80,7 +98,7 @@ export function Header() {
         <Separator orientation="vertical" className="mr-2 h-4 md:hidden" />
         <SidebarTrigger className="hidden md:flex" />
         <Separator orientation="vertical" className="mr-2 h-4 hidden md:block" />
-        <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
+        <h1 className="text-xl font-semibold">{getHeaderTitle()}</h1>
       </div>
 
       <div className="flex items-center space-x-3">

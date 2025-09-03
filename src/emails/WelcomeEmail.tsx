@@ -9,8 +9,8 @@ interface WelcomeEmailProps {
 
 export const WelcomeEmail = ({
   userName = 'Benutzer',
-  organizationName = 'Dein Salon',
-  dashboardLink = 'https://pos.lia-hair.ch',
+  organizationName = 'Dein Business',
+  dashboardLink = 'https://pos.example.ch',
   isOwner = false,
 }: WelcomeEmailProps) => {
   return (
@@ -20,7 +20,7 @@ export const WelcomeEmail = ({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
-            <Text style={title}>Willkommen bei Lia Hair POS! 🎉</Text>
+            <Text style={title}>Willkommen bei Ledgr! 🎉</Text>
           </Section>
 
           {/* Content */}
@@ -29,12 +29,12 @@ export const WelcomeEmail = ({
 
             <Text style={paragraph}>
               {isOwner
-                ? `Herzlichen Glückwunsch! Dein Salon "${organizationName}" wurde erfolgreich eingerichtet.`
+                ? `Herzlichen Glückwunsch! Dein Business "${organizationName}" wurde erfolgreich eingerichtet.`
                 : `Willkommen im Team von "${organizationName}"! Dein Account wurde erfolgreich erstellt.`}
             </Text>
 
             <Text style={paragraph}>
-              Du kannst jetzt das professionelle POS System für Friseursalons nutzen:
+              Du kannst jetzt das professionelle Business System nutzen:
             </Text>
 
             {/* Features List */}
@@ -72,9 +72,9 @@ export const WelcomeEmail = ({
           {/* Footer */}
           <Section style={footer}>
             <Text style={footerText}>
-              Bei Fragen sind wir gerne da. Viel Erfolg mit deinem digitalen Salon!
+              Bei Fragen sind wir gerne da. Viel Erfolg mit deinem digitalen Business!
             </Text>
-            <Text style={footerText}>Dein Lia Hair POS Team</Text>
+            <Text style={footerText}>Dein Ledgr Team</Text>
           </Section>
         </Container>
       </Body>

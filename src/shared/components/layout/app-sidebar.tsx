@@ -69,7 +69,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-2 text-card-foreground">
           <SmartAppLogo
             size={state === 'collapsed' ? 'sm' : 'lg'}
-            alt="Lia Hair Logo"
+            alt="Ledgr Logo"
             className={cn(
               'transition-all duration-200',
               state === 'collapsed' ? 'w-8 h-8' : 'w-20 h-10'
@@ -94,9 +94,7 @@ export function AppSidebar() {
           />
           {state === 'expanded' && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-card-foreground">
-                {currentOrganization?.display_name || currentOrganization?.name || 'POS System'}
-              </span>
+              <span className="text-sm font-semibold text-card-foreground">Ledgr.</span>
             </div>
           )}
         </div>

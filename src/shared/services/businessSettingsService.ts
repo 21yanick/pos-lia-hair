@@ -1,6 +1,13 @@
 // Business Settings Service
 // CRUD operations for company data and configuration (Multi-Tenant)
+//
+// 🔄 AUTO-SYNC PATTERN:
+// When company_name is updated via upsertBusinessSettings(),
+// it automatically syncs to organizations.display_name to keep
+// business settings and sidebar display consistent.
+// This maintains Single Source of Truth for user-visible company name.
 
+import { organizationService } from '@/modules/organization/services/organizationService'
 import { supabase } from '@/shared/lib/supabase/client'
 import type {
   BookingRules,
@@ -105,6 +112,9 @@ export async function upsertBusinessSettings(
     } = await supabase.auth.getUser()
     if (userError || !user) throw new Error('User not authenticated')
 
+    // 🔄 Auto-Sync Pattern: Check if company_name changed for display_name sync
+    const shouldSyncDisplayName = settingsData.company_name?.trim()
+
     const { data, error } = await supabase
       .from('business_settings')
       .upsert(
@@ -129,6 +139,21 @@ export async function upsertBusinessSettings(
       .single()
 
     if (error) throw error
+
+    // 🎯 Auto-Sync Pattern: Sync company_name → organization.display_name
+    if (shouldSyncDisplayName) {
+      try {
+        await organizationService.updateOrganization(organizationId, {
+          display_name: settingsData.company_name.trim(),
+        })
+        // ✅ Silent success - user doesn't need to know about this sync
+      } catch (orgError) {
+        // ⚠️ Non-critical error - business settings were saved, but display_name sync failed
+        console.warn('Auto-sync to organization display_name failed:', orgError)
+        // Don't throw error - business settings update was successful
+      }
+    }
+
     // V6.1: Type casting for business_settings result
     return data as BusinessSettings
   } catch (error) {

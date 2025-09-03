@@ -33,11 +33,11 @@ export interface BusinessSettings {
   custom_supplier_categories?: Record<string, string>
 
   // Appointment Settings (JSONB fields from database)
-  // V6.1: JSONB fields compatible with both structured types and Json
-  working_hours: WorkingHours | Record<string, any> | null
-  booking_rules: BookingRules | Record<string, any> | null
-  display_preferences: DisplayPreferences | Record<string, any> | null
-  vacation_periods: VacationPeriod[] | any[] | null
+  // V6.1: Service layer expects structured types after processing via type guards
+  working_hours: WorkingHours | null
+  booking_rules: BookingRules | null
+  display_preferences: DisplayPreferences | null
+  vacation_periods: VacationPeriod[] | null
 
   // Timestamps
   created_at: string
@@ -67,11 +67,11 @@ export interface BusinessSettingsFormData {
   pdf_show_company_details: boolean
   custom_expense_categories?: Record<string, string>
   custom_supplier_categories?: Record<string, string>
-  // V6.1: JSONB fields compatible with both structured types and Json
-  working_hours?: WorkingHours | Record<string, any> | null
-  booking_rules?: BookingRules | Record<string, any> | null
-  display_preferences?: DisplayPreferences | Record<string, any> | null
-  vacation_periods?: VacationPeriod[] | any[] | null
+  // V6.1: Optional structured types for form data
+  working_hours?: WorkingHours | null
+  booking_rules?: BookingRules | null
+  display_preferences?: DisplayPreferences | null
+  vacation_periods?: VacationPeriod[] | null
 }
 
 // =================================

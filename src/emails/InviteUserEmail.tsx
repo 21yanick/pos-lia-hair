@@ -10,7 +10,7 @@ interface InviteUserEmailProps {
 export const InviteUserEmail = ({
   inviterName = 'Teammitglied',
   organizationName = 'Salon',
-  inviteLink = 'https://pos.lia-hair.ch/register?invite=token',
+  inviteLink = 'https://pos.example.ch/register?invite=token',
   role = 'staff',
 }: InviteUserEmailProps) => {
   const roleText = {
@@ -39,8 +39,8 @@ export const InviteUserEmail = ({
             </Text>
 
             <Text style={paragraph}>
-              Du wirst als <strong>{roleText[role]}</strong> hinzugefügt und kannst das Lia Hair POS
-              System nutzen.
+              Du wirst als <strong>{roleText[role]}</strong> hinzugefügt und kannst das Ledgr System
+              nutzen.
             </Text>
 
             {/* CTA Button */}
@@ -59,7 +59,7 @@ export const InviteUserEmail = ({
           {/* Footer */}
           <Section style={footer}>
             <Text style={footerText}>Diese Einladung läuft in 7 Tagen ab.</Text>
-            <Text style={footerText}>Lia Hair POS - Professionelles Salon Management</Text>
+            <Text style={footerText}>Ledgr - Dein Business in einer App</Text>
           </Section>
         </Container>
       </Body>

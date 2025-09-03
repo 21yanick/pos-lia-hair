@@ -297,7 +297,6 @@ export default function CashRegisterPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Kassenbuch</h1>
           <p className="text-muted-foreground">Übersicht aller Bargeldbewegungen</p>
         </div>
 

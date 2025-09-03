@@ -82,7 +82,6 @@ export function AppointmentsPage() {
           <div className="flex items-center gap-3">
             <CalendarIcon className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold">Termine</h1>
               <p className="text-sm text-muted-foreground">
                 {appointmentStats.total} Termin{appointmentStats.total !== 1 ? 'e' : ''} am{' '}
                 {formatDateForDisplay(selectedDate)}

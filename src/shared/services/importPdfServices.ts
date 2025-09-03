@@ -180,7 +180,7 @@ export async function generateReceiptPDFsForSales(
           items: itemsForPDF,
         }) as React.ReactElement // V6.1 Pattern 17: PDF ReactElement type compatibility
 
-        const pdfBlob = await pdf(pdfDocument as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
+        const pdfBlob = await pdf(pdfDocument as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety (Library compatibility)
 
         // console.log(`🔍 PDF generated successfully, size: ${pdfBlob.size} bytes`)
 
@@ -347,7 +347,7 @@ export async function generateExpenseReceiptPDFs(
           expense: dbExpense,
         }) as React.ReactElement // V6.1 Pattern 17: PDF ReactElement type compatibility
 
-        const pdfBlob = await pdf(pdfDocument as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety
+        const pdfBlob = await pdf(pdfDocument as React.ReactElement<any>).toBlob() // V6.1 Pattern 22: PDF ReactElement Type Safety (Library compatibility)
 
         // console.log(`🔍 Expense PDF generated, size: ${pdfBlob.size} bytes`)
 

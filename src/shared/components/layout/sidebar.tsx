@@ -58,7 +58,7 @@ export function Sidebar() {
             <div className="flex items-center">
               <SmartAppLogo
                 size="lg"
-                alt="Lia Hair Logo"
+                alt="Ledgr Logo"
                 className="w-20 h-10 mr-2"
                 fallback={
                   <div className="w-20 h-10 flex items-center justify-center bg-muted rounded border border-border mr-2">
@@ -80,7 +80,7 @@ export function Sidebar() {
           <div className="w-full flex flex-col items-center">
             <SmartAppLogo
               size="sm"
-              alt="Lia Hair Logo"
+              alt="Ledgr Logo"
               className="w-8 h-8 mb-2"
               fallback={
                 <div className="w-8 h-8 flex items-center justify-center bg-muted rounded border border-border mb-2">
