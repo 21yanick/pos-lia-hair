@@ -75,6 +75,7 @@ export type MonthStatsData = {
 export type YearTotalData = {
   revenue: number
   expenses: number
+  salaryExpenses: number
   profit: number
 }
 
@@ -470,7 +471,7 @@ export async function getYearTotal(orgId: string, year?: number): Promise<YearTo
 
     supabase
       .from('expenses')
-      .select('amount')
+      .select('amount, category')
       .eq('organization_id', orgId)
       .gte('payment_date', formatDateForAPI(startDate))
       .lte('payment_date', formatDateForAPI(endDate)),
@@ -493,9 +494,14 @@ export async function getYearTotal(orgId: string, year?: number): Promise<YearTo
     0
   )
 
+  const salaryExpenses = (expensesResult.data || [])
+    .filter((expense) => expense.category === 'salary')
+    .reduce((sum, expense) => sum + (expense.amount || 0), 0)
+
   return {
     revenue,
     expenses,
+    salaryExpenses,
     profit: revenue - expenses,
   }
 }

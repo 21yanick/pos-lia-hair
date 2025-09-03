@@ -375,7 +375,7 @@ GRANT EXECUTE ON FUNCTION public.handle_new_user() TO authenticated;
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES 
   ('documents', 'documents', true, 52428800, ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
-  ('business-logos', 'business-logos', false, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']);
+  ('business-logos', 'business-logos', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']);
 
 -- Storage RLS Policies (Organization-scoped file access)
 CREATE POLICY "Users manage organization documents" ON storage.objects 

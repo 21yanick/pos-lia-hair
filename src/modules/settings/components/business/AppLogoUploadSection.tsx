@@ -107,8 +107,9 @@ function LogoUploadTab({
       )}
 
       {/* Upload Area */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         className={`
           border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer w-full
           ${
@@ -122,6 +123,12 @@ function LogoUploadTab({
         onDragOver={(e) => onDrag(e, theme)}
         onDrop={(e) => onDrop(e, theme)}
         onClick={() => document.getElementById(`file-input-${theme}`)?.click()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            document.getElementById(`file-input-${theme}`)?.click()
+          }
+        }}
       >
         <div className="space-y-4">
           {previewUrl ? (
@@ -185,7 +192,7 @@ function LogoUploadTab({
           className="hidden"
           disabled={uploading}
         />
-      </button>
+      </div>
     </div>
   )
 }

@@ -20,6 +20,7 @@ export type DashboardStatsData = {
   yearTotal: {
     revenue: number
     expenses: number
+    salaryExpenses: number
     profit: number
     grossRevenue?: number
     providerFees?: number
@@ -145,13 +146,25 @@ export function DashboardStats({ data, loading = false }: DashboardStatsProps) {
                 <div className="text-orange-600">
                   Gebühren: CHF {data.yearTotal.providerFees.toFixed(0)}
                 </div>
+                {data.yearTotal.salaryExpenses > 0 && (
+                  <div className="text-purple-600">
+                    Lohn: CHF {data.yearTotal.salaryExpenses.toFixed(0)}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              Umsatz: {(data.yearTotal.revenue / 1000).toFixed(1)}k | Ausgaben:{' '}
-              {(data.yearTotal.expenses / 1000).toFixed(1)}k
-            </p>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Umsatz: {(data.yearTotal.revenue / 1000).toFixed(1)}k | Ausgaben:{' '}
+                {(data.yearTotal.expenses / 1000).toFixed(1)}k
+              </p>
+              {data.yearTotal.salaryExpenses > 0 && (
+                <div className="text-xs text-purple-600">
+                  Lohn: CHF {data.yearTotal.salaryExpenses.toFixed(0)}
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -56,6 +56,7 @@ export type DashboardStatsData = {
   yearTotal: {
     revenue: number
     expenses: number
+    salaryExpenses: number
     profit: number
   }
 }
@@ -340,6 +341,7 @@ export function useReports(): UseReportsQueryReturn {
       yearTotal: {
         revenue: yearTotalData?.revenue || 0,
         expenses: yearTotalData?.expenses || 0,
+        salaryExpenses: yearTotalData?.salaryExpenses || 0,
         profit: yearTotalData?.profit || 0,
       },
     },
