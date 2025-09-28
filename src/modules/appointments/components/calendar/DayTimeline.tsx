@@ -12,12 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import { cn } from '@/shared/utils'
-import {
-  formatDateForAPI,
-  formatFullDate,
-  formatWeekdayName,
-  timeToMinutes,
-} from '@/shared/utils/dateUtils'
+import { formatFullDate, formatWeekdayName, isToday, timeToMinutes } from '@/shared/utils/dateUtils'
 import { useAppointmentsByDate } from '../../hooks/useAppointments'
 import type {
   AppointmentBlock,
@@ -156,8 +151,8 @@ export function DayTimeline({
   useEffect(() => {
     if (!timelineRef.current) return
 
-    const isToday = formatDateForAPI(selectedDate) === formatDateForAPI(new Date())
-    if (!isToday) return
+    const isTodayCheck = isToday(selectedDate)
+    if (!isTodayCheck) return
 
     // Scroll to current time with some offset
     const currentHour = parseInt(currentTime.split(':')[0], 10)
@@ -475,9 +470,9 @@ function CurrentTimeIndicator({
   currentTime: string
   timelineData: TimelineData
 }) {
-  const isToday = formatDateForAPI(selectedDate) === formatDateForAPI(new Date())
+  const isTodayCheck = isToday(selectedDate)
 
-  if (!isToday) return null
+  if (!isTodayCheck) return null
 
   const currentHour = parseInt(currentTime.split(':')[0], 10)
   const currentMinutes = parseInt(currentTime.split(':')[1], 10)

@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Ban,
   Briefcase,
   CalendarDays,
   CalendarIcon,
@@ -24,7 +25,6 @@ import {
 } from '@/shared/components/ui/alert-dialog'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import { Calendar } from '@/shared/components/ui/calendar'
 import {
   Card,
   CardContent,
@@ -47,7 +47,8 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import type { VacationPeriod } from '@/shared/types/businessSettings'
 import { cn } from '@/shared/utils'
-import { formatDateForDisplay, swissLocale } from '@/shared/utils/dateUtils'
+import { createSwissDate, formatDateForDisplay } from '@/shared/utils/dateUtils'
+import { SwissDatePicker } from './SwissDatePicker'
 
 interface VacationManagerProps {
   className?: string
@@ -56,6 +57,7 @@ interface VacationManagerProps {
 const VACATION_ICONS = {
   Urlaub: Plane,
   Ferien: Plane,
+  Blocker: Ban,
   Feiertag: Coffee,
   Geschäftsreise: Briefcase,
   Fortbildung: Briefcase,
@@ -223,13 +225,10 @@ export function VacationManager({ className }: VacationManagerProps) {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
+                        <SwissDatePicker
                           selected={newVacation.start ? new Date(newVacation.start) : undefined}
                           onSelect={(date) => handleDateSelect(date, 'start')}
-                          locale={swissLocale}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
+                          disabled={(date) => date < createSwissDate()}
                         />
                       </PopoverContent>
                     </Popover>
@@ -253,17 +252,14 @@ export function VacationManager({ className }: VacationManagerProps) {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
+                        <SwissDatePicker
                           selected={newVacation.end ? new Date(newVacation.end) : undefined}
                           onSelect={(date) => handleDateSelect(date, 'end')}
-                          locale={swissLocale}
                           disabled={(date) => {
-                            if (date < new Date()) return true
+                            if (date < createSwissDate()) return true
                             if (newVacation.start && date < new Date(newVacation.start)) return true
                             return false
                           }}
-                          initialFocus
                         />
                       </PopoverContent>
                     </Popover>
@@ -291,7 +287,7 @@ export function VacationManager({ className }: VacationManagerProps) {
                     onChange={(e) =>
                       setNewVacation((prev) => ({ ...prev, reason: e.target.value }))
                     }
-                    placeholder="z.B. Sommerurlaub, Weihnachtsferien, Fortbildung..."
+                    placeholder="z.B. Ferien, Blocker, Termine gesperrt..."
                     rows={3}
                   />
                 </div>
@@ -300,7 +296,7 @@ export function VacationManager({ className }: VacationManagerProps) {
                 <div className="space-y-2">
                   <Label className="text-sm">Schnellauswahl:</Label>
                   <div className="flex flex-wrap gap-2">
-                    {['Sommerurlaub', 'Weihnachtsferien', 'Fortbildung', 'Feiertag'].map(
+                    {['Ferien', 'Blocker'].map(
                       (preset) => (
                         <Button
                           key={preset}
@@ -349,9 +345,10 @@ export function VacationManager({ className }: VacationManagerProps) {
             {vacationPeriods.map((vacation, index) => {
               const VacationIcon = getVacationIcon(vacation.reason)
               const days = calculateDays(vacation.start, vacation.end)
-              const isUpcoming = new Date(vacation.start) > new Date()
+              const isUpcoming = new Date(vacation.start) > createSwissDate()
               const isCurrent =
-                new Date() >= new Date(vacation.start) && new Date() <= new Date(vacation.end)
+                createSwissDate() >= new Date(vacation.start) &&
+                createSwissDate() <= new Date(vacation.end)
 
               return (
                 <div

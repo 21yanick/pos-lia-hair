@@ -668,7 +668,7 @@ ALTER TABLE ONLY public.documents
     ADD CONSTRAINT documents_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.documents
-    ADD CONSTRAINT documents_document_number_key UNIQUE (document_number);
+    ADD CONSTRAINT documents_document_number_org_key UNIQUE (document_number, organization_id);
 
 -- =====================================================
 -- LATE CONSTRAINTS (AFTER FUNCTIONS)

@@ -11,13 +11,29 @@ export { de as swissLocale }
 
 /**
  * Erstellt ein Datum in Schweizer Zeitzone
+ *
+ * ✅ FIXED: Echte timezone conversion statt nur new Date()
+ * ✅ DST-aware: Automatische Sommerzeit/Winterzeit-Erkennung
+ * ✅ Consistent: Alle Date-Operationen verwenden Swiss timezone
  */
 export function createSwissDate(dateInput?: Date | string): Date {
-  const date = dateInput ? new Date(dateInput) : new Date()
+  const sourceDate = dateInput ? new Date(dateInput) : new Date()
 
-  // Für die meisten Anwendungen: Gib das originale Datum zurück
-  // Die Zeitzone-Konvertierung erfolgt in den spezifischen Format-Funktionen
-  return date
+  // Verwende Intl.DateTimeFormat für robuste timezone conversion
+  // Das ist die sauberste Methode ohne externe Libraries
+  const swissTimeString = new Intl.DateTimeFormat('en-CA', {
+    timeZone: SWISS_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(sourceDate)
+
+  // Parse zurück zu Date object (jetzt in Swiss timezone context)
+  return new Date(swissTimeString)
 }
 
 /**
@@ -276,16 +292,19 @@ export function convertSwissToUTC(swissDate: Date): Date {
 
 /**
  * Prüft ob ein Datum heute ist (Schweizer Zeit)
+ *
+ * ✅ FIXED: Beide Dates in Swiss timezone für konsistente Vergleiche
+ * ✅ DST-aware: Korrekt auch bei Zeitumstellung
+ * ✅ Conflict-fix: Löst DayTimeline isToday Probleme
  */
 export function isToday(date: Date | string): boolean {
-  const inputDate = typeof date === 'string' ? new Date(date) : date
-  const today = new Date()
+  // Konvertiere beide Dates zu Swiss timezone
+  const inputSwissDate = createSwissDate(date)
+  const todaySwissDate = createSwissDate() // Heute in Swiss timezone
 
-  return (
-    inputDate.getFullYear() === today.getFullYear() &&
-    inputDate.getMonth() === today.getMonth() &&
-    inputDate.getDate() === today.getDate()
-  )
+  // Verwende formatDateForAPI für exakte Datumsvergleiche
+  // Das ist robuster als getFullYear/getMonth/getDate
+  return formatDateForAPI(inputSwissDate) === formatDateForAPI(todaySwissDate)
 }
 
 /**

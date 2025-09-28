@@ -569,16 +569,16 @@ ALTER TABLE ONLY public.bank_accounts
     ADD CONSTRAINT bank_accounts_iban_key UNIQUE (iban);
 
 ALTER TABLE ONLY public.document_sequences
-    ADD CONSTRAINT document_sequences_type_year_key UNIQUE (sequence_type, year);
+    ADD CONSTRAINT document_sequences_type_year_org_key UNIQUE (sequence_type, year, organization_id);
 
 ALTER TABLE ONLY public.daily_summaries
-    ADD CONSTRAINT daily_summaries_report_date_key UNIQUE (report_date);
+    ADD CONSTRAINT daily_summaries_report_date_org_key UNIQUE (report_date, organization_id);
 
 ALTER TABLE ONLY public.monthly_summaries
-    ADD CONSTRAINT monthly_summaries_year_month_key UNIQUE (year, month);
+    ADD CONSTRAINT monthly_summaries_year_month_org_key UNIQUE (year, month, organization_id);
 
 ALTER TABLE ONLY public.bank_reconciliation_sessions
-    ADD CONSTRAINT bank_reconciliation_sessions_year_month_key UNIQUE (year, month);
+    ADD CONSTRAINT bank_reconciliation_sessions_year_month_org_key UNIQUE (year, month, organization_id);
 
 -- =====================================================
 -- FOREIGN KEY RELATIONSHIPS
