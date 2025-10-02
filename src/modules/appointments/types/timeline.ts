@@ -44,9 +44,10 @@ export interface AppointmentBlock {
   estimatedPrice?: number
   totalPrice?: number // Calculated from services
   totalDuration?: number // Calculated from services
-  // Additional fields for editing
+  // Additional fields for editing and customer details
   customerId?: string | null
   customerPhone?: string | null
+  customerEmail?: string | null
   // Note: V6.1 doesn't have status field - removed for KISS compliance
 }
 

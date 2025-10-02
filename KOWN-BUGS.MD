@@ -9,6 +9,3 @@
 - Profil Einstellungen Grunddaten der Name wird nicht gespeichert, bei aktualisierung wird es nicht übernommen.
 
 - Termine: wenn sich überschneidet, muss fehlermeldung kommen und nicht einfach nicht funktionieren.
-
-- Termineinstellungen: Kalender bei Ferien eingeben ist kapput (automatische Schlagwörter für Ferien ändern)
-

@@ -13,7 +13,6 @@ import { Card, CardContent } from '@/shared/components/ui/card'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -26,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { useToast } from '@/shared/hooks/core/useToast'
-import { formatDateForDisplay, formatTimeShort } from '@/shared/utils/dateUtils'
+import { formatTimeShort, formatWeekdayFullDate } from '@/shared/utils/dateUtils'
 import type { AppointmentBlock } from '../types/timeline'
 
 interface AppointmentDetailDialogProps {
@@ -80,10 +79,18 @@ export function AppointmentDetailDialog({
               <Calendar className="h-6 w-6 text-primary" />
               <div>
                 <DialogTitle className="text-xl">Termin-Details</DialogTitle>
-                <DialogDescription>
-                  {formatDateForDisplay(new Date())} • {appointment.startTime} -{' '}
-                  {appointment.endTime}
-                </DialogDescription>
+                <div className="space-y-1 mt-1">
+                  <div className="text-base font-medium text-foreground">
+                    {formatWeekdayFullDate(appointment.date)}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>
+                      {appointment.startTime} - {appointment.endTime} Uhr
+                    </span>
+                    <span>({appointment.duration} Min.)</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -133,15 +140,21 @@ export function AppointmentDetailDialog({
                       {appointment.customerName || 'Unbekannter Kunde'}
                     </h3>
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                      {/* TODO: Add phone/email from customer data */}
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        <span>Nicht verfügbar</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        <span>Nicht verfügbar</span>
-                      </div>
+                      {appointment.customerPhone ? (
+                        <div className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          <span>{appointment.customerPhone}</span>
+                        </div>
+                      ) : null}
+                      {appointment.customerEmail ? (
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          <span>{appointment.customerEmail}</span>
+                        </div>
+                      ) : null}
+                      {!appointment.customerPhone && !appointment.customerEmail && (
+                        <span className="text-xs">Keine Kontaktdaten verfügbar</span>
+                      )}
                     </div>
                   </div>
                 </div>

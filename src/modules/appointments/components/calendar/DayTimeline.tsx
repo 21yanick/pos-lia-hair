@@ -13,6 +13,7 @@ import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganizati
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
 import { cn } from '@/shared/utils'
 import { formatFullDate, formatWeekdayName, isToday, timeToMinutes } from '@/shared/utils/dateUtils'
+import type { CustomerRelation } from '@/types/database'
 import { useAppointmentsByDate } from '../../hooks/useAppointments'
 import type {
   AppointmentBlock,
@@ -74,6 +75,9 @@ export function DayTimeline({
     }
 
     const converted = appointmentsData.map((apt) => {
+      // Type-safe customer relation (Supabase loads customer:customers(...))
+      const customer = (apt as unknown as { customer?: CustomerRelation }).customer
+
       // Type-safe Json to AppointmentService[] conversion (Clean Architecture)
       let services: AppointmentService[] = []
       try {
@@ -115,9 +119,10 @@ export function DayTimeline({
         totalDuration: apt.total_duration_minutes || undefined,
         notes: apt.notes || undefined, // Convert null to undefined for AppointmentBlock
         duration: calculateDurationFromTimes(apt.start_time || '00:00', apt.end_time || '00:00'),
-        // Additional fields for editing
+        // Additional fields for editing and customer details
         customerId: apt.customer_id,
-        customerPhone: apt.customer_phone,
+        customerPhone: apt.customer_phone || customer?.phone || undefined,
+        customerEmail: customer?.email || undefined,
         // Note: V6.1 doesn't have status field - removed for KISS compliance
       }
 

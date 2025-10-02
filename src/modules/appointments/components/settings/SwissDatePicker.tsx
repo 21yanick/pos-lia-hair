@@ -5,14 +5,24 @@ import { useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
 import { cn } from '@/shared/utils'
-import { eachDayOfInterval, formatMonthYear } from '@/shared/utils/dateUtils'
+import { eachDayOfInterval } from '@/shared/utils/dateUtils'
 
 const SWISS_CALENDAR_CONFIG = {
   monthNames: [
-    'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+    'Januar',
+    'Februar',
+    'März',
+    'April',
+    'Mai',
+    'Juni',
+    'Juli',
+    'August',
+    'September',
+    'Oktober',
+    'November',
+    'Dezember',
   ],
-  weekDayNames: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+  weekDayNames: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
 }
 
 interface SwissDatePickerProps {
@@ -76,9 +86,7 @@ export function SwissDatePicker({ selected, onSelect, disabled, className }: Swi
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          <h2 className="text-xl font-semibold text-center min-w-0 flex-1">
-            {monthName}
-          </h2>
+          <h2 className="text-xl font-semibold text-center min-w-0 flex-1">{monthName}</h2>
 
           <Button
             variant="ghost"
@@ -107,45 +115,52 @@ export function SwissDatePicker({ selected, onSelect, disabled, className }: Swi
 
           {/* Days Grid */}
           <div className="space-y-1">
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="grid grid-cols-7 gap-1">
-                {week.map((day) => {
-                  const isCurrentMonth = day.getMonth() === month
-                  const isSelected = selected &&
-                    day.getDate() === selected.getDate() &&
-                    day.getMonth() === selected.getMonth() &&
-                    day.getFullYear() === selected.getFullYear()
-                  const isToday = new Date().toDateString() === day.toDateString()
-                  const isDisabled = disabled?.(day)
+            {weeks.map((week) => {
+              // Generate stable key from first day of week instead of array index
+              const weekKey = `week-${week[0].getFullYear()}-${week[0].getMonth()}-${week[0].getDate()}`
+              return (
+                <div key={weekKey} className="grid grid-cols-7 gap-1">
+                  {week.map((day) => {
+                    const isCurrentMonth = day.getMonth() === month
+                    const isSelected =
+                      selected &&
+                      day.getDate() === selected.getDate() &&
+                      day.getMonth() === selected.getMonth() &&
+                      day.getFullYear() === selected.getFullYear()
+                    const isToday = new Date().toDateString() === day.toDateString()
+                    const isDisabled = disabled?.(day)
 
-                  return (
-                    <button
-                      key={day.getTime()}
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => handleDayClick(day)}
-                      className={cn(
-                        'relative h-12 flex items-center justify-center text-sm rounded-md transition-all duration-200 p-0',
-                        // Base styles
-                        isCurrentMonth
-                          ? 'text-foreground hover:bg-muted cursor-pointer'
-                          : 'text-muted-foreground/40 cursor-pointer hover:text-muted-foreground/60',
-                        // Today
-                        isToday && 'bg-primary text-primary-foreground font-semibold',
-                        // Selected
-                        isSelected && !isToday && 'bg-secondary text-secondary-foreground font-medium',
-                        // Disabled
-                        isDisabled && 'opacity-50 cursor-not-allowed hover:bg-transparent',
-                        // Interactive
-                        !isDisabled && 'hover:scale-105 active:scale-95'
-                      )}
-                    >
-                      {day.getDate()}
-                    </button>
-                  )
-                })}
-              </div>
-            ))}
+                    return (
+                      <button
+                        key={day.getTime()}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => handleDayClick(day)}
+                        className={cn(
+                          'relative h-12 flex items-center justify-center text-sm rounded-md transition-all duration-200 p-0',
+                          // Base styles
+                          isCurrentMonth
+                            ? 'text-foreground hover:bg-muted cursor-pointer'
+                            : 'text-muted-foreground/40 cursor-pointer hover:text-muted-foreground/60',
+                          // Today
+                          isToday && 'bg-primary text-primary-foreground font-semibold',
+                          // Selected
+                          isSelected &&
+                            !isToday &&
+                            'bg-secondary text-secondary-foreground font-medium',
+                          // Disabled
+                          isDisabled && 'opacity-50 cursor-not-allowed hover:bg-transparent',
+                          // Interactive
+                          !isDisabled && 'hover:scale-105 active:scale-95'
+                        )}
+                      >
+                        {day.getDate()}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })}
           </div>
         </div>
       </CardContent>

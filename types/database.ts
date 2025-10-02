@@ -106,6 +106,14 @@ export type AppointmentServiceRow = Tables['appointment_services']['Row']
 export type AppointmentServiceInsert = Tables['appointment_services']['Insert']
 export type AppointmentServiceUpdate = Tables['appointment_services']['Update']
 
+// Customer relation type (for Supabase joins: customer:customers(...))
+export type CustomerRelation = {
+  id: string
+  name: string
+  phone: string | null
+  email: string | null
+}
+
 // ▶️ AUDIT & REPORTING TABLES
 export type AuditLogRow = Tables['audit_log']['Row']
 export type AuditLogInsert = Tables['audit_log']['Insert']

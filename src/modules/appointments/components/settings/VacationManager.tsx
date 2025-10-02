@@ -296,19 +296,17 @@ export function VacationManager({ className }: VacationManagerProps) {
                 <div className="space-y-2">
                   <Label className="text-sm">Schnellauswahl:</Label>
                   <div className="flex flex-wrap gap-2">
-                    {['Ferien', 'Blocker'].map(
-                      (preset) => (
-                        <Button
-                          key={preset}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setNewVacation((prev) => ({ ...prev, reason: preset }))}
-                          className="h-7 text-xs"
-                        >
-                          {preset}
-                        </Button>
-                      )
-                    )}
+                    {['Ferien', 'Blocker'].map((preset) => (
+                      <Button
+                        key={preset}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setNewVacation((prev) => ({ ...prev, reason: preset }))}
+                        className="h-7 text-xs"
+                      >
+                        {preset}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               </div>
