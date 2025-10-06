@@ -11,7 +11,7 @@ import { ShoppingCart } from './ShoppingCart'
 
 export function POSPage() {
   const { currentOrganization, loading } = useCurrentOrganization()
-  const pos = usePOS()
+  const pos = usePOS(currentOrganization?.id)
 
   // Wait for organization to load before showing POS
   if (loading || !currentOrganization) {

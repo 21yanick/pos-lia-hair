@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Item } from '@/shared/hooks/business/useItems'
 import { useItems } from '@/shared/hooks/business/useItems'
 import { usePOSState } from '@/shared/hooks/business/usePOSState'
@@ -24,9 +24,66 @@ function saleToTransactionItem(sale: Sale): TransactionItem {
   }
 }
 
-// Warenkorb-Logik Hook (optimized with useCallback)
-function useCart() {
-  const [cart, setCart] = useState<CartItem[]>([])
+// Warenkorb-Logik Hook mit localStorage-Persistierung (optimized with useCallback)
+function useCart(organizationId?: string) {
+  // Storage-Key für Multi-Tenant Isolation
+  const STORAGE_KEY = organizationId ? `pos-cart-${organizationId}` : 'pos-cart-default'
+
+  // Initialize cart from localStorage (SSR-safe)
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    // SSR-Check: localStorage ist nur im Browser verfügbar
+    if (typeof window === 'undefined') return []
+
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (!stored) return []
+
+      const parsed = JSON.parse(stored) as CartItem[]
+
+      // Validate parsed data structure
+      if (!Array.isArray(parsed)) return []
+
+      // Basic validation: Ensure all required CartItem properties exist
+      const isValid = parsed.every(
+        (item) =>
+          item &&
+          typeof item === 'object' &&
+          typeof item.id === 'string' &&
+          typeof item.name === 'string' &&
+          typeof item.price === 'number' &&
+          typeof item.quantity === 'number' &&
+          typeof item.total === 'number'
+      )
+
+      return isValid ? parsed : []
+    } catch (error) {
+      // JSON.parse error oder andere Fehler → leeren Warenkorb zurückgeben
+      console.error('Failed to load cart from localStorage:', error)
+      return []
+    }
+  })
+
+  // Persist cart to localStorage on every change
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    try {
+      if (cart.length === 0) {
+        // Leeren Warenkorb aus Storage entfernen
+        localStorage.removeItem(STORAGE_KEY)
+      } else {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cart))
+      }
+    } catch (error) {
+      // Quota exceeded oder andere Storage-Fehler
+      console.error('Failed to save cart to localStorage:', error)
+
+      // Optional: User-Feedback bei Quota-Fehler
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.warn('localStorage quota exceeded - cart not saved')
+      }
+    }
+  }, [cart, STORAGE_KEY])
 
   const addToCart = useCallback((item: Item) => {
     setCart((prevCart) => {
@@ -117,11 +174,11 @@ function useCart() {
 }
 
 // Hauptorchestrator Hook für das gesamte POS System
-export function usePOS() {
+export function usePOS(organizationId?: string) {
   const posState = usePOSState()
   const sales = useSales()
   const { items, loading: itemsLoading } = useItems()
-  const cart = useCart()
+  const cart = useCart(organizationId)
 
   // Memoized cart total to prevent recalculation on every render
   const cartTotal = useMemo(() => cart.getCartTotal(), [cart.getCartTotal])
