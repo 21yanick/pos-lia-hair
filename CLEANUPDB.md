@@ -4,7 +4,7 @@
 
 **Result**: Complete standalone POS system with Swiss compliance, banking integration, auto-bootstrap, and audit trail
 
-**Architecture**: V6.1 Enhanced Domain-Focused Migration Suite (5 files, 4,200+ lines)
+**Architecture**: V6.1 Enhanced Domain-Focused Migration Suite (6 files, 4,400+ lines)
 
 ## 🆕 **V6.1 ENHANCEMENTS (Auto-Bootstrap + Production Parity)**
 
@@ -128,7 +128,7 @@ Currency: CHF, Tax Rate: 7.7% (Swiss defaults) ✅
 
 ## 🏆 **V6.1 MIGRATION SUITE - ENHANCED DOMAIN-FOCUSED ARCHITECTURE**
 
-### **✅ V6.1 Migration Files Complete (5 Files, 4,200+ Lines)**
+### **✅ V6.1 Migration Files Complete (6 Files, 4,400+ Lines)**
 
 **✅ 01_foundation_and_security_v6.sql** (760+ lines)
 ```sql
@@ -177,6 +177,17 @@ Currency: CHF, Tax Rate: 7.7% (Swiss defaults) ✅
 -- 148+ performance indexes across all business domains
 -- 4 Business Intelligence views for reporting
 -- Complete system health validation with scoring (100/100 achieved)
+```
+
+**✅ 06_appointment_title_support_v6.sql** (176 lines) ✨ **NEW (2025-10-12)**
+```sql
+-- Appointment System Enhancement: Private Appointments Support
+-- KISS/YAGNI Implementation: Enable appointments without customer requirement
+-- Add title column for private/blocker appointments (e.g., "Kids Kindergarten abholen", "Arzttermin")
+-- Constraint: customer_id OR customer_name OR title required (at least one)
+-- Updated appointments_with_services view to include title field
+-- Backwards Compatible: All existing 47 customer appointments preserved
+-- Production-Safe: Atomic transaction with validation checks
 ```
 
 ### **🎯 V6.1 Architecture Benefits**

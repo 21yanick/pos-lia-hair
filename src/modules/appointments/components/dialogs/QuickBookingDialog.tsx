@@ -58,14 +58,16 @@ export function QuickBookingDialog({
   // Steps state
   const [currentStep, setCurrentStep] = useState<BookingStep>('time')
 
-  // Form state (simplified)
+  // Form state (simplified) - V6.1 Enhanced with appointmentType and title
   const [formData, setFormData] = useState<QuickBookingFormData>({
     timeSlot: initialTimeSlot || null,
     duration: defaultDuration,
+    appointmentType: 'customer', // Default to customer appointments
     customerId: null,
     customerName: '',
     customerPhone: null,
     customerEmail: null,
+    title: '', // V6.1: For private appointments
     notes: '',
     isExceptionAppointment,
   })
@@ -97,10 +99,12 @@ export function QuickBookingDialog({
       setFormData({
         timeSlot: calculatedTimeSlot,
         duration: defaultDuration,
+        appointmentType: 'customer', // Reset to customer on open
         customerId: null,
         customerName: '',
         customerPhone: null,
         customerEmail: null,
+        title: '', // V6.1: Reset title
         notes: '',
         isExceptionAppointment,
       })
@@ -110,12 +114,16 @@ export function QuickBookingDialog({
   // Progress calculation
   const progress = currentStep === 'time' ? 50 : 100
 
-  // Validation for each step
+  // Validation for each step - V6.1 Enhanced with private appointment support
   const canProceedToNextStep = useMemo(() => {
     switch (currentStep) {
       case 'time':
         return formData.timeSlot && formData.duration > 0
       case 'customer':
+        // V6.1: Validate based on appointmentType
+        if (formData.appointmentType === 'private') {
+          return formData.title.trim().length > 0 && formData.timeSlot
+        }
         return formData.customerName.trim().length > 0 && formData.timeSlot
       default:
         return false
@@ -139,22 +147,24 @@ export function QuickBookingDialog({
     }
 
     try {
-      // Step 1: Handle customer (existing or create new)
+      // Step 1: Handle customer (existing or create new) - V6.1: Only for customer appointments
       let finalCustomerId: string | null = null
 
-      if (formData.customerId) {
-        // Use existing customer
-        finalCustomerId = formData.customerId
-      } else if (formData.customerName.trim()) {
-        // Create new customer
-        const customerData = {
-          name: formData.customerName.trim(),
-          phone: formData.customerPhone?.trim() || undefined,
-          email: formData.customerEmail?.trim() || undefined,
-        }
+      if (formData.appointmentType === 'customer') {
+        if (formData.customerId) {
+          // Use existing customer
+          finalCustomerId = formData.customerId
+        } else if (formData.customerName.trim()) {
+          // Create new customer
+          const customerData = {
+            name: formData.customerName.trim(),
+            phone: formData.customerPhone?.trim() || undefined,
+            email: formData.customerEmail?.trim() || undefined,
+          }
 
-        const newCustomer = await createCustomer(currentOrganization.id, customerData)
-        finalCustomerId = newCustomer.id
+          const newCustomer = await createCustomer(currentOrganization.id, customerData)
+          finalCustomerId = newCustomer.id
+        }
       }
 
       // Step 2: Prepare notes with exception marker if needed
@@ -163,14 +173,17 @@ export function QuickBookingDialog({
       const combinedNotes =
         [exceptionNote, baseNotes].filter((note) => note.length > 0).join(' - ') || null
 
-      // Step 3: Create appointment (without services)
+      // Step 3: Create appointment (without services) - V6.1 Enhanced
       const appointmentData: AppointmentInsert = {
         appointment_date: formatDateForAPI(formData.timeSlot.date),
         start_time: formData.timeSlot.start,
         end_time: formData.timeSlot.end,
-        customer_id: finalCustomerId,
-        customer_name: formData.customerName || null,
-        customer_phone: formData.customerPhone,
+        // V6.1: Include customer OR title based on appointmentType
+        customer_id: formData.appointmentType === 'customer' ? finalCustomerId : null,
+        customer_name:
+          formData.appointmentType === 'customer' ? formData.customerName || null : null,
+        customer_phone: formData.appointmentType === 'customer' ? formData.customerPhone : null,
+        title: formData.appointmentType === 'private' ? formData.title : undefined,
         notes: combinedNotes,
         organization_id: currentOrganization.id,
         // No services - simplified booking
@@ -179,9 +192,15 @@ export function QuickBookingDialog({
 
       await createAppointment.mutateAsync(appointmentData)
 
+      // V6.1: Display appropriate success message
+      const displayName =
+        formData.appointmentType === 'private'
+          ? `"${formData.title}"`
+          : appointmentData.customer_name || 'Kunde'
+
       toast({
         title: 'Termin erstellt',
-        description: `Termin für ${appointmentData.customer_name} am ${formatDateForDisplay(formData.timeSlot.date)} um ${formData.timeSlot.start} wurde erfolgreich erstellt.`,
+        description: `Termin für ${displayName} am ${formatDateForDisplay(formData.timeSlot.date)} um ${formData.timeSlot.start} wurde erfolgreich erstellt.`,
       })
 
       onSuccess?.()
@@ -225,6 +244,15 @@ export function QuickBookingDialog({
 
   const handleNotesChange = (notes: string) => {
     setFormData((prev) => ({ ...prev, notes }))
+  }
+
+  // V6.1: Handlers for appointment type and title
+  const handleAppointmentTypeChange = (type: 'customer' | 'private') => {
+    setFormData((prev) => ({ ...prev, appointmentType: type }))
+  }
+
+  const handleTitleChange = (title: string) => {
+    setFormData((prev) => ({ ...prev, title }))
   }
 
   return (
@@ -311,12 +339,16 @@ export function QuickBookingDialog({
             />
           )}
 
-          {/* Step 2: Customer Selection/Creation */}
+          {/* Step 2: Customer Selection/Creation - V6.1 Enhanced */}
           {currentStep === 'customer' && (
             <CustomerSelectionStep
+              appointmentType={formData.appointmentType}
+              onAppointmentTypeChange={handleAppointmentTypeChange}
               customerName={formData.customerName}
               customerPhone={formData.customerPhone}
               customerEmail={formData.customerEmail}
+              title={formData.title}
+              onTitleChange={handleTitleChange}
               notes={formData.notes}
               onCustomerChange={handleCustomerChange}
               onNotesChange={handleNotesChange}

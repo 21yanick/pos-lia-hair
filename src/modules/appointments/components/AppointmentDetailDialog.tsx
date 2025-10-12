@@ -121,44 +121,68 @@ export function AppointmentDetailDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Customer Information */}
+          {/* V6.1 Enhanced: Display Title (Private) or Customer Information */}
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {appointment.customerName
-                        ?.split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-lg">
-                      {appointment.customerName || 'Unbekannter Kunde'}
-                    </h3>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                      {appointment.customerPhone ? (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          <span>{appointment.customerPhone}</span>
-                        </div>
-                      ) : null}
-                      {appointment.customerEmail ? (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          <span>{appointment.customerEmail}</span>
-                        </div>
-                      ) : null}
-                      {!appointment.customerPhone && !appointment.customerEmail && (
-                        <span className="text-xs">Keine Kontaktdaten verfügbar</span>
-                      )}
+              {appointment.title ? (
+                /* Private Appointment Display */
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-secondary/10 text-secondary font-semibold">
+                        P
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        {appointment.title}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs bg-secondary/20 text-secondary-foreground px-2 py-1 rounded">
+                          Privater Termin
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Customer Appointment Display */
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                        {appointment.customerName
+                          ?.split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {appointment.customerName || 'Unbekannter Kunde'}
+                      </h3>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                        {appointment.customerPhone ? (
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            <span>{appointment.customerPhone}</span>
+                          </div>
+                        ) : null}
+                        {appointment.customerEmail ? (
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            <span>{appointment.customerEmail}</span>
+                          </div>
+                        ) : null}
+                        {!appointment.customerPhone && !appointment.customerEmail && (
+                          <span className="text-xs">Keine Kontaktdaten verfügbar</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -142,10 +142,15 @@ export function validateAppointmentData(appointmentData: AppointmentDataForValid
     }
   }
 
-  // Validate customer data (either customer_id or customer_name required)
-  if ('customer_id' in appointmentData || 'customer_name' in appointmentData) {
-    if (!appointmentData.customer_id && !appointmentData.customer_name) {
-      throw new Error('Kunde muss ausgewählt oder Name eingegeben werden.')
+  // V6.1 Enhanced: Validate customer data OR title (at least one required)
+  // Constraint matches DB: customer_id OR customer_name OR title
+  if (
+    'customer_id' in appointmentData ||
+    'customer_name' in appointmentData ||
+    'title' in appointmentData
+  ) {
+    if (!appointmentData.customer_id && !appointmentData.customer_name && !appointmentData.title) {
+      throw new Error('Kunde oder Titel muss angegeben werden.')
     }
   }
 

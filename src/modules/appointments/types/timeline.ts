@@ -31,7 +31,7 @@ export interface TimeSlot {
 
 export interface AppointmentBlock {
   id: string
-  title: string
+  title?: string // V6.1 Enhanced: For private appointments (e.g., "Kids Kindergarten abholen")
   customerName?: string
   startTime: string // "09:00"
   endTime: string // "10:30"

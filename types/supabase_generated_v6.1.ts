@@ -75,6 +75,7 @@ export type Database = {
           notes: string | null
           organization_id: string
           start_time: string
+          title: string | null
           updated_at: string | null
           updated_by: string | null
         }
@@ -91,6 +92,7 @@ export type Database = {
           notes?: string | null
           organization_id: string
           start_time: string
+          title?: string | null
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -107,6 +109,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           start_time?: string
+          title?: string | null
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -1674,6 +1677,7 @@ export type Database = {
           organization_id: string | null
           services: Json | null
           start_time: string | null
+          title: string | null
           total_duration_minutes: number | null
           total_price: number | null
           updated_at: string | null
