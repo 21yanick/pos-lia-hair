@@ -7,6 +7,7 @@
 
 import { AlertTriangle, Check, ChevronLeft, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -20,7 +21,6 @@ import {
 import { Progress } from '@/shared/components/ui/progress'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useBusinessSettingsQuery } from '@/shared/hooks/business/useBusinessSettingsQuery'
-import { useToast } from '@/shared/hooks/core/useToast'
 import type { AppointmentInsert } from '@/shared/services/appointmentService'
 import { createCustomer } from '@/shared/services/customerService'
 import { safeBookingRules } from '@/shared/types/businessSettings'
@@ -44,7 +44,6 @@ export function QuickBookingDialog({
   initialDate = new Date(),
   isExceptionAppointment = false,
 }: QuickBookingDialogProps) {
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const { settings } = useBusinessSettingsQuery()
   const createAppointment = useCreateAppointment(currentOrganization?.id || '')
@@ -190,7 +189,7 @@ export function QuickBookingDialog({
         services: [],
       }
 
-      await createAppointment.mutateAsync(appointmentData)
+      const _result = await createAppointment.mutateAsync(appointmentData)
 
       // V6.1: Display appropriate success message
       const displayName =
@@ -198,19 +197,29 @@ export function QuickBookingDialog({
           ? `"${formData.title}"`
           : appointmentData.customer_name || 'Kunde'
 
-      toast({
-        title: 'Termin erstellt',
+      toast.success('Termin erstellt', {
         description: `Termin für ${displayName} am ${formatDateForDisplay(formData.timeSlot.date)} um ${formData.timeSlot.start} wurde erfolgreich erstellt.`,
       })
 
       onSuccess?.()
       onClose()
-    } catch (_error) {
-      toast({
-        title: 'Fehler',
-        description: 'Termin konnte nicht erstellt werden.',
-        variant: 'destructive',
+    } catch (error: unknown) {
+      // V6.1 Enhanced: Improved error handling with specific conflict detection (KISS: Same as EditDialog)
+      console.error('Create appointment error:', error)
+
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler'
+
+      // Check if this is a conflict error (KISS: Simple string check)
+      const isConflict = errorMessage.includes('Terminkonflikt') || errorMessage.includes('belegt')
+
+      toast.error(isConflict ? 'Terminüberschneidung!' : 'Fehler beim Erstellen', {
+        description: isConflict
+          ? `${errorMessage}\n\nBitte wählen Sie eine andere Zeit.`
+          : errorMessage,
+        duration: isConflict ? 8000 : 5000, // Longer display for conflicts
       })
+
+      // Don't close dialog on error - let user fix the conflict
     }
   }
 

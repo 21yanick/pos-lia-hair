@@ -2,6 +2,7 @@
 
 import { Upload, X } from 'lucide-react'
 import { useId, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -12,7 +13,6 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog'
 import { Label } from '@/shared/components/ui/label'
-import { useToast } from '@/shared/hooks/core/useToast'
 
 interface PDFReplaceDialogProps {
   open: boolean
@@ -34,27 +34,21 @@ export function PDFReplaceDialog({
   const fileInputId = useId()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const { toast } = useToast()
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        // 10MB Limit
-        toast({
-          title: 'Datei zu groß',
+        toast.error('Datei zu groß', {
           description: 'Die Datei darf maximal 10MB groß sein.',
-          variant: 'destructive',
         })
         return
       }
 
       const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
       if (!validTypes.includes(file.type)) {
-        toast({
-          title: 'Ungültiger Dateityp',
+        toast.error('Ungültiger Dateityp', {
           description: 'Nur PDF, JPG und PNG Dateien sind erlaubt.',
-          variant: 'destructive',
         })
         return
       }
@@ -65,10 +59,8 @@ export function PDFReplaceDialog({
 
   const handleReplace = async () => {
     if (!selectedFile) {
-      toast({
-        title: 'Keine Datei ausgewählt',
+      toast.error('Keine Datei ausgewählt', {
         description: 'Bitte wählen Sie eine Datei aus.',
-        variant: 'destructive',
       })
       return
     }
@@ -79,24 +71,19 @@ export function PDFReplaceDialog({
       const result = await onReplace(expenseId, selectedFile)
 
       if (result.success) {
-        toast({
-          title: 'Beleg erfolgreich ersetzt',
+        toast.success('Beleg erfolgreich ersetzt', {
           description: 'Der neue Beleg wurde hochgeladen und der alte ersetzt.',
         })
         onReplaceSuccess()
         handleClose()
       } else {
-        toast({
-          title: 'Fehler beim Ersetzen',
+        toast.error('Fehler beim Ersetzen', {
           description: result.error || 'Ein unbekannter Fehler ist aufgetreten.',
-          variant: 'destructive',
         })
       }
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Ein unerwarteter Fehler ist aufgetreten.',
-        variant: 'destructive',
       })
     } finally {
       setIsUploading(false)

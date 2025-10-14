@@ -2,6 +2,7 @@
 
 import { Loader2, Plus, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -22,14 +23,12 @@ import {
   TableRow,
 } from '@/shared/components/ui/table'
 import { type Item, useItems } from '@/shared/hooks/business/useItems'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { type ProductFormData, useProductActions } from '../hooks/useProductActions'
 import { ProductCard } from './ProductCard'
 import { ProductDialog } from './ProductDialog'
 
 export function ProductsPage() {
   const { items, loading, error, syncAuthUser } = useItems()
-  const { toast } = useToast()
   const {
     handleSaveItem,
     handleToggleFavorite,
@@ -89,11 +88,8 @@ export function ProductsPage() {
   useEffect(() => {
     if (!error) return
 
-    // Immer allgemeine Fehlermeldung anzeigen
-    toast({
-      title: 'Fehler aufgetreten',
+    toast.error('Fehler aufgetreten', {
       description: error,
-      variant: 'destructive',
     })
 
     // Berechtigungsfehler speziell behandeln
@@ -104,17 +100,14 @@ export function ProductsPage() {
       error?.includes('Forbidden')
 
     if (isPermissionError) {
-      // Wir öffnen schon vorher einen Dialog, um Benutzer zu informieren
       setSyncDialogOpen(true)
       setSyncMessage('Automatische Synchronisierung läuft...')
 
-      // Synchronisierung versuchen
       syncAuthUser()
         .then((result) => {
           if (result.success) {
             setSyncMessage('Synchronisierung erfolgreich! Die Seite wird neu geladen...')
 
-            // Kurze Pause zum Lesen der Meldung
             setTimeout(() => {
               window.location.reload()
             }, 1500)
@@ -126,7 +119,7 @@ export function ProductsPage() {
           setSyncMessage(`Unerwarteter Fehler: ${err.message}`)
         })
     }
-  }, [error, toast, syncAuthUser])
+  }, [error, syncAuthUser])
 
   return (
     <div className="space-y-6">

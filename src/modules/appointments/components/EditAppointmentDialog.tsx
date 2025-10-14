@@ -7,6 +7,7 @@
 
 import { Clock, Edit, Loader2, User } from 'lucide-react'
 import { useCallback, useEffect, useId, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -20,7 +21,6 @@ import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useToast } from '@/shared/hooks/core/useToast'
 import type { AppointmentUpdate } from '@/shared/services/appointmentService'
 import { formatDateForAPI, formatDateForDisplay } from '@/shared/utils/dateUtils'
 import { useUpdateAppointment } from '../hooks/useAppointments'
@@ -37,7 +37,10 @@ interface EditFormData {
   startTime: string
   endTime: string
   duration: number
+  // V6.1 Enhanced: Support both customer and private appointments
+  appointmentType: 'customer' | 'private'
   customerName: string
+  title: string // For private appointments
   notes: string
 }
 
@@ -47,7 +50,6 @@ export function EditAppointmentDialog({
   onSuccess,
   appointment,
 }: EditAppointmentDialogProps) {
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const updateAppointment = useUpdateAppointment(currentOrganization?.id || '')
 
@@ -55,7 +57,9 @@ export function EditAppointmentDialog({
     startTime: '',
     endTime: '',
     duration: 60,
+    appointmentType: 'customer', // Default
     customerName: '',
+    title: '',
     notes: '',
   })
 
@@ -63,7 +67,11 @@ export function EditAppointmentDialog({
   const startTimeId = useId()
   const endTimeId = useId()
   const customerNameId = useId()
+  const titleId = useId()
   const notesId = useId()
+
+  // V6.1 Enhanced: Detect appointment type (KISS: Simple detection based on title presence)
+  const isPrivateAppointment = !!appointment?.title && !appointment?.customerName
 
   // Normalize time to HH:mm format
   const normalizeTime = useCallback((time: string): string => {
@@ -75,27 +83,44 @@ export function EditAppointmentDialog({
   // Initialize form when appointment changes
   useEffect(() => {
     if (appointment) {
+      // V6.1 Enhanced: Detect type and populate appropriate fields
+      const isPrivate = !!appointment.title && !appointment.customerName
+
       setFormData({
         startTime: normalizeTime(appointment.startTime),
         endTime: normalizeTime(appointment.endTime),
         duration: appointment.duration || 60,
+        appointmentType: isPrivate ? 'private' : 'customer',
         customerName: appointment.customerName || '',
+        title: appointment.title || '',
         notes: appointment.notes || '',
       })
     }
   }, [appointment, normalizeTime])
 
-  // Calculate end time when start time or duration changes
-  const calculateEndTime = (startTime: string, durationMinutes: number): string => {
+  // V6.1 Enhanced: Simplified time management (KISS: Like TimeSelectionStep)
+  // Helper: Calculate duration from start and end time
+  const calculateDuration = useCallback((startTime: string, endTime: string): number => {
+    const [startHours, startMinutes] = startTime.split(':').map(Number)
+    const [endHours, endMinutes] = endTime.split(':').map(Number)
+
+    const startTotalMinutes = startHours * 60 + startMinutes
+    const endTotalMinutes = endHours * 60 + endMinutes
+
+    return Math.max(0, endTotalMinutes - startTotalMinutes)
+  }, [])
+
+  // Helper: Calculate end time from start time and duration
+  const calculateEndTime = useCallback((startTime: string, durationMinutes: number): string => {
     const [hours, minutes] = startTime.split(':').map(Number)
     const startMinutes = hours * 60 + minutes
     const endMinutes = startMinutes + durationMinutes
     const endHours = Math.floor(endMinutes / 60)
     const endMins = endMinutes % 60
     return `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`
-  }
+  }, [])
 
-  // Update end time when start time changes
+  // Handle start time change - auto-calculate end time based on current duration
   const handleStartTimeChange = (newStartTime: string) => {
     const normalizedStartTime = normalizeTime(newStartTime)
     const newEndTime = calculateEndTime(normalizedStartTime, formData.duration)
@@ -106,13 +131,15 @@ export function EditAppointmentDialog({
     }))
   }
 
-  // Update end time when duration changes
-  const handleDurationChange = (newDuration: number) => {
-    const newEndTime = calculateEndTime(formData.startTime, newDuration)
+  // Handle end time change - auto-calculate duration
+  const handleEndTimeChange = (newEndTime: string) => {
+    const normalizedEndTime = normalizeTime(newEndTime)
+    const newDuration = calculateDuration(formData.startTime, normalizedEndTime)
+
     setFormData((prev) => ({
       ...prev,
-      duration: newDuration,
-      endTime: newEndTime,
+      endTime: normalizedEndTime,
+      duration: newDuration, // Auto-calculated
     }))
   }
 
@@ -124,36 +151,61 @@ export function EditAppointmentDialog({
       const normalizedStartTime = normalizeTime(formData.startTime)
       const normalizedEndTime = normalizeTime(formData.endTime)
 
+      // V6.1 Enhanced: Handle both customer and private appointments (KISS approach)
       const updateData: AppointmentUpdate = {
         id: appointment.id,
         appointment_date: formatDateForAPI(appointment.date),
         start_time: normalizedStartTime,
         end_time: normalizedEndTime,
-        customer_name: formData.customerName || null,
         notes: formData.notes || null,
-        // Keep existing customer_id and phone
-        customer_id: appointment.customerId,
-        customer_phone: appointment.customerPhone,
+        // Conditional fields based on appointment type
+        ...(formData.appointmentType === 'private'
+          ? {
+              // Private appointment: Update title, clear customer fields
+              title: formData.title || undefined,
+              customer_name: null,
+              customer_id: null,
+              customer_phone: null,
+            }
+          : {
+              // Customer appointment: Update customer fields, clear title
+              customer_name: formData.customerName || null,
+              customer_id: appointment.customerId,
+              customer_phone: appointment.customerPhone,
+              title: undefined,
+            }),
         // No services update - services stay unchanged
       }
 
-      await updateAppointment.mutateAsync(updateData)
+      const _result = await updateAppointment.mutateAsync(updateData)
 
-      toast({
-        title: 'Termin aktualisiert',
-        description: `Termin für ${formData.customerName} wurde erfolgreich aktualisiert.`,
+      // V6.1: Display appropriate success message
+      const displayName =
+        formData.appointmentType === 'private' ? formData.title : formData.customerName
+
+      toast.success('Termin aktualisiert', {
+        description: `Termin "${displayName}" wurde erfolgreich aktualisiert.`,
       })
 
       onSuccess?.()
       onClose()
     } catch (error: unknown) {
+      // V6.1 Enhanced: Improved error handling with specific conflict detection
       console.error('Edit appointment error:', error)
-      toast({
-        title: 'Fehler',
-        description:
-          error instanceof Error ? error.message : 'Termin konnte nicht aktualisiert werden.',
-        variant: 'destructive',
+
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler'
+
+      // Check if this is a conflict error (KISS: Simple string check)
+      const isConflict = errorMessage.includes('Terminkonflikt') || errorMessage.includes('belegt')
+
+      toast.error(isConflict ? 'Terminüberschneidung!' : 'Fehler beim Aktualisieren', {
+        description: isConflict
+          ? `${errorMessage}\n\nBitte wählen Sie eine andere Zeit oder verschieben Sie den überschneidenden Termin.`
+          : errorMessage,
+        duration: isConflict ? 8000 : 5000, // Longer display for conflicts
       })
+
+      // Don't close dialog on error - let user fix the conflict
     }
   }
 
@@ -178,63 +230,73 @@ export function EditAppointmentDialog({
               Zeitplan
             </div>
 
+            {/* V6.1 Enhanced: Both start and end time are editable (KISS: Like TimeSelectionStep) */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor={startTimeId}>Startzeit</Label>
+                <Label htmlFor={startTimeId}>Von</Label>
                 <Input
                   id={startTimeId}
                   type="time"
                   value={formData.startTime}
                   onChange={(e) => handleStartTimeChange(e.target.value)}
+                  className="font-mono text-center"
+                  step="900" // 15-minute steps
                 />
               </div>
               <div>
-                <Label htmlFor={endTimeId}>Endzeit</Label>
+                <Label htmlFor={endTimeId}>Bis</Label>
                 <Input
                   id={endTimeId}
                   type="time"
                   value={formData.endTime}
-                  readOnly
-                  className="bg-muted"
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                  className="font-mono text-center"
+                  step="900" // 15-minute steps
                 />
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="duration">Dauer (Minuten)</Label>
-              <div className="flex gap-2 mt-1">
-                {[30, 45, 60, 90, 120].map((mins) => (
-                  <Button
-                    key={mins}
-                    type="button"
-                    variant={formData.duration === mins ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleDurationChange(mins)}
-                  >
-                    {mins}
-                  </Button>
-                ))}
-              </div>
+            {/* Duration Display (auto-calculated) */}
+            <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Dauer: {formData.duration} Minuten</span>
             </div>
           </div>
 
-          {/* Kunde Section */}
+          {/* V6.1 Enhanced: Conditional UI - Customer OR Private Appointment (KISS: Read-only type detection) */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">
               <User className="h-4 w-4" />
-              Kunde
+              {isPrivateAppointment ? 'Privater Termin' : 'Kunde'}
             </div>
 
-            <div>
-              <Label htmlFor={customerNameId}>Name</Label>
-              <Input
-                id={customerNameId}
-                type="text"
-                value={formData.customerName}
-                onChange={(e) => setFormData((prev) => ({ ...prev, customerName: e.target.value }))}
-                placeholder="Kundenname"
-              />
-            </div>
+            {isPrivateAppointment ? (
+              // Private Appointment: Show title field
+              <div>
+                <Label htmlFor={titleId}>Titel *</Label>
+                <Input
+                  id={titleId}
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder='z.B. "Kids Kindergarten abholen"'
+                />
+              </div>
+            ) : (
+              // Customer Appointment: Show customer name field
+              <div>
+                <Label htmlFor={customerNameId}>Name *</Label>
+                <Input
+                  id={customerNameId}
+                  type="text"
+                  value={formData.customerName}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, customerName: e.target.value }))
+                  }
+                  placeholder="Kundenname"
+                />
+              </div>
+            )}
           </div>
 
           {/* Notizen Section */}
@@ -256,7 +318,10 @@ export function EditAppointmentDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={updateAppointment.isPending || !formData.customerName.trim()}
+            disabled={
+              updateAppointment.isPending ||
+              (isPrivateAppointment ? !formData.title.trim() : !formData.customerName.trim())
+            }
           >
             {updateAppointment.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Aktualisieren

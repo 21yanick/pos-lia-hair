@@ -7,6 +7,7 @@
 
 import { Calendar, Clock, Edit, Mail, MoreHorizontal, Phone, Scissors, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
@@ -24,7 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { formatTimeShort, formatWeekdayFullDate } from '@/shared/utils/dateUtils'
 import type { AppointmentBlock } from '../types/timeline'
 
@@ -43,7 +43,6 @@ export function AppointmentDetailDialog({
   onEdit,
   onDelete,
 }: AppointmentDetailDialogProps) {
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   if (!appointment) return null
@@ -54,16 +53,13 @@ export function AppointmentDetailDialog({
     setIsLoading(true)
     try {
       await onDelete?.(appointment.id)
-      toast({
-        title: 'Termin gelöscht',
+      toast.success('Termin gelöscht', {
         description: 'Der Termin wurde erfolgreich gelöscht.',
       })
       onClose()
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Termin konnte nicht gelöscht werden.',
-        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -186,47 +182,49 @@ export function AppointmentDetailDialog({
             </CardContent>
           </Card>
 
-          {/* Services */}
-          <Card>
-            <CardContent className="p-6">
-              <h4 className="font-semibold mb-4 flex items-center gap-2">
-                <Scissors className="h-4 w-4" />
-                Services
-              </h4>
-              <div className="space-y-3">
-                {appointment.services.map((service, index) => (
-                  <div
-                    key={service.id || index}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
-                  >
-                    <div>
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {service.duration_minutes} Minuten
+          {/* Services - V6.1 Enhanced: Only show if services exist (KISS: Prevent crash for private appointments) */}
+          {appointment.services && appointment.services.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <Scissors className="h-4 w-4" />
+                  Services
+                </h4>
+                <div className="space-y-3">
+                  {appointment.services.map((service, index) => (
+                    <div
+                      key={service.id || index}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                    >
+                      <div>
+                        <div className="font-medium">{service.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {service.duration_minutes} Minuten
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">CHF {service.price.toFixed(2)}</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-semibold">CHF {service.price.toFixed(2)}</div>
+                  ))}
+                </div>
+
+                {appointment.services.length > 1 && (
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Gesamt</span>
+                      <span className="font-semibold text-lg">
+                        CHF{' '}
+                        {appointment.services
+                          .reduce((sum, service) => sum + service.price, 0)
+                          .toFixed(2)}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {appointment.services.length > 1 && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Gesamt</span>
-                    <span className="font-semibold text-lg">
-                      CHF{' '}
-                      {appointment.services
-                        .reduce((sum, service) => sum + service.price, 0)
-                        .toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Time & Duration */}
           <Card>

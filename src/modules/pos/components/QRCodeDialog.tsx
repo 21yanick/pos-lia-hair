@@ -3,6 +3,7 @@
 import { Check, Copy, Download, QrCode, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog'
-import { useToast } from '@/shared/hooks/core/useToast'
 
 interface QRCodeDialogProps {
   isOpen: boolean
@@ -21,7 +21,6 @@ interface QRCodeDialogProps {
 }
 
 export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps) {
-  const { toast } = useToast()
   const [copied, setCopied] = useState(false)
 
   // Reset copied state when dialog opens/closes
@@ -35,18 +34,14 @@ export function QRCodeDialog({ isOpen, receiptUrl, onClose }: QRCodeDialogProps)
     try {
       await navigator.clipboard.writeText(receiptUrl)
       setCopied(true)
-      toast({
-        title: 'Link kopiert',
+      toast.success('Link kopiert', {
         description: 'Der Link zur Quittung wurde in die Zwischenablage kopiert.',
       })
 
-      // Reset after 3 seconds
       setTimeout(() => setCopied(false), 3000)
     } catch (_error) {
-      toast({
-        title: 'Fehler beim Kopieren',
+      toast.error('Fehler beim Kopieren', {
         description: 'Der Link konnte nicht kopiert werden.',
-        variant: 'destructive',
       })
     }
   }

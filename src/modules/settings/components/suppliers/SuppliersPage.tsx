@@ -3,6 +3,7 @@
 import { Building2, Filter, Plus, Search, Upload, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { SettingsHeader } from '@/shared/components/settings/SettingsHeader'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
 import { Badge } from '@/shared/components/ui/badge'
@@ -23,7 +24,6 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { supabase } from '@/shared/lib/supabase/client'
 import { getSuppliers } from '@/shared/services/supplierServices'
 import type { Supplier, SupplierCategory } from '@/shared/types/suppliers'
@@ -35,7 +35,6 @@ interface SuppliersPageProps {
 }
 
 export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
 
   // 🔗 Helper: Organization-aware URL builder
@@ -106,15 +105,13 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
         categories: categoryStats,
       })
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Lieferanten konnten nicht geladen werden',
-        variant: 'destructive',
       })
     } finally {
       setLoading(false)
     }
-  }, [currentOrganization, activeFilter, categoryFilter, searchQuery, toast])
+  }, [currentOrganization, activeFilter, categoryFilter, searchQuery])
 
   // Load suppliers on mount and filter changes
   useEffect(() => {
@@ -123,9 +120,8 @@ export function SuppliersPage({ hideHeader = false }: SuppliersPageProps) {
 
   // Handle supplier created
   const handleSupplierCreated = (_supplier: Supplier) => {
-    loadSuppliers() // Refresh list
-    toast({
-      title: 'Erfolg',
+    loadSuppliers()
+    toast.success('Erfolg', {
       description: 'Lieferant wurde erfolgreich erstellt',
     })
   }

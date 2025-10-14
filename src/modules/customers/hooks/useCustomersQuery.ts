@@ -5,19 +5,27 @@ import { queryKeys } from '@/shared/lib/react-query/queryKeys'
 import { getCustomers, searchCustomers } from '@/shared/services/customerService'
 
 /**
- * Hook for fetching customers list with optional search
+ * Hook for fetching customers list with optional search and filter
  */
-export const useCustomersQuery = (organizationId: string, searchQuery?: string) => {
+export const useCustomersQuery = (
+  organizationId: string,
+  searchQuery?: string,
+  filter: 'active' | 'archived' | 'all' = 'active'
+) => {
   return useQuery({
     queryKey:
       searchQuery && searchQuery.length >= 2
-        ? queryKeys.business.customers.search(organizationId, searchQuery)
-        : queryKeys.business.customers.list(organizationId, { active_only: true }),
+        ? queryKeys.business.customers.search(organizationId, searchQuery, filter)
+        : queryKeys.business.customers.list(organizationId, {
+            active_only: filter === 'active' ? true : filter === 'archived' ? false : undefined,
+          }),
     queryFn: async () => {
       if (searchQuery && searchQuery.length >= 2) {
-        return searchCustomers(organizationId, searchQuery)
+        return searchCustomers(organizationId, searchQuery, filter)
       }
-      const result = await getCustomers(organizationId, { active_only: true })
+
+      const active_only = filter === 'active' ? true : filter === 'archived' ? false : undefined
+      const result = await getCustomers(organizationId, { active_only })
       return result.data
     },
     staleTime: 2 * 60 * 1000, // 2 minutes

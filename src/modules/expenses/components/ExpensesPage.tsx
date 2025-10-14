@@ -2,6 +2,7 @@
 
 import { Plus, Search, Upload } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
+import { toast } from 'sonner'
 import { SupplierAutocomplete } from '@/shared/components/supplier/SupplierAutocomplete'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
 import { Badge } from '@/shared/components/ui/badge'
@@ -29,7 +30,6 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { useExpenseCategories } from '@/shared/hooks/business/useExpenseCategories'
 import { type ExpenseCategory, useExpenses } from '@/shared/hooks/business/useExpenses'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Supplier } from '@/shared/types/suppliers'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
@@ -53,8 +53,7 @@ export function ExpensesPage() {
 
   const { categories: EXPENSE_CATEGORIES } = useExpenseCategories()
 
-  const { toast } = useToast()
-  const { currentOrganization } = useCurrentOrganization() // V6.1: Multi-tenant support
+  const { currentOrganization } = useCurrentOrganization()
 
   // State für neue Ausgabe
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -109,16 +108,13 @@ export function ExpensesPage() {
     getCurrentUser()
   }, [])
 
-  // Fehlerbehandlung
   useEffect(() => {
     if (error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: error,
-        variant: 'destructive',
       })
     }
-  }, [error, toast])
+  }, [error])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,39 +126,30 @@ export function ExpensesPage() {
       !formData.payment_method ||
       !selectedSupplier
     ) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Bitte füllen Sie alle Pflichtfelder aus (inkl. Lieferant).',
-        variant: 'destructive',
       })
       return
     }
 
     if (receiptType === 'upload' && !selectedFile) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: "Bitte laden Sie einen Beleg hoch oder wählen Sie 'Physischer Beleg'.",
-        variant: 'destructive',
       })
       return
     }
 
     if (receiptType === 'physical' && !archiveLocation.trim()) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Bitte geben Sie den Archiv-Standort für den physischen Beleg an.',
-        variant: 'destructive',
       })
       return
     }
 
-    // Get current user
     const { data: userData } = await supabase.auth.getUser()
     if (!userData?.user) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Sie müssen angemeldet sein.',
-        variant: 'destructive',
       })
       return
     }
@@ -198,18 +185,15 @@ export function ExpensesPage() {
         )
 
         if (!placeholderResult.success) {
-          toast({
-            title: 'Warnung',
+          toast.error('Warnung', {
             description: 'Ausgabe erstellt, aber Platzhalter-Beleg konnte nicht generiert werden.',
-            variant: 'destructive',
           })
         }
       }
     }
 
     if (result.success) {
-      toast({
-        title: 'Erfolg',
+      toast.success('Erfolg', {
         description:
           receiptType === 'upload'
             ? 'Ausgabe und Beleg wurden erfolgreich erstellt.'

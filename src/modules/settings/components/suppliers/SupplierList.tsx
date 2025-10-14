@@ -2,6 +2,7 @@
 
 import { Edit, ExternalLink, Eye, Mail, MoreHorizontal, Phone, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { SupplierEditDialog } from '@/shared/components/supplier/SupplierEditDialog'
 import { SupplierViewDialog } from '@/shared/components/supplier/SupplierViewDialog'
 import { Badge } from '@/shared/components/ui/badge'
@@ -21,7 +22,6 @@ import {
   TableRow,
 } from '@/shared/components/ui/table'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { deleteSupplier, updateSupplier } from '@/shared/services/supplierServices'
 import type { Supplier } from '@/shared/types/suppliers'
 import { SUPPLIER_CATEGORIES } from '@/shared/types/suppliers'
@@ -34,7 +34,6 @@ interface SupplierListProps {
 }
 
 export function SupplierList({ suppliers, loading, onSupplierUpdated }: SupplierListProps) {
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization() // V6.1 Pattern 18: Function Signature Alignment
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -56,17 +55,14 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
         currentOrganization.id
       ) // V6.1 Pattern 18: Function Signature Alignment - added missing organizationId
 
-      toast({
-        title: 'Erfolg',
+      toast.success('Erfolg', {
         description: `Lieferant wurde ${!supplier.is_active ? 'aktiviert' : 'deaktiviert'}`,
       })
 
       onSupplierUpdated()
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Status konnte nicht geändert werden',
-        variant: 'destructive',
       })
     } finally {
       setActionLoading(null)
@@ -84,17 +80,14 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
     try {
       await deleteSupplier(supplier.id, currentOrganization.id) // V6.1 Pattern 18: Function Signature Alignment - added missing organizationId
 
-      toast({
-        title: 'Erfolg',
+      toast.success('Erfolg', {
         description: 'Lieferant wurde gelöscht',
       })
 
       onSupplierUpdated()
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Lieferant konnte nicht gelöscht werden',
-        variant: 'destructive',
       })
     } finally {
       setActionLoading(null)
@@ -119,8 +112,7 @@ export function SupplierList({ suppliers, loading, onSupplierUpdated }: Supplier
   }
 
   const handleEditSuccess = (_updatedSupplier: Supplier) => {
-    toast({
-      title: 'Erfolg',
+    toast.success('Erfolg', {
       description: 'Lieferant wurde erfolgreich aktualisiert',
     })
     onSupplierUpdated()

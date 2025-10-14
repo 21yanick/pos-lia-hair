@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useState } from 'react'
+import { toast } from 'sonner'
 import { SupplierAutocomplete } from '@/shared/components/supplier/SupplierAutocomplete'
 import { SupplierCreateDialog } from '@/shared/components/supplier/SupplierCreateDialog'
 import { Button } from '@/shared/components/ui/button'
@@ -23,7 +24,6 @@ import {
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useExpenseCategories } from '@/shared/hooks/business/useExpenseCategories'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { supabase } from '@/shared/lib/supabase/client'
 import type { Expense, ExpenseCategory } from '@/shared/types/expenses'
 import type { Supplier } from '@/shared/types/suppliers'
@@ -43,7 +43,6 @@ export function ExpenseEditDialog({
   onUpdate,
 }: ExpenseEditDialogProps) {
   const { categories: EXPENSE_CATEGORIES } = useExpenseCategories()
-  const { toast } = useToast()
 
   const [loading, setLoading] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
@@ -111,10 +110,8 @@ export function ExpenseEditDialog({
       !formData.category ||
       !formData.payment_method
     ) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Bitte füllen Sie alle Pflichtfelder aus.',
-        variant: 'destructive',
       })
       return
     }
@@ -137,8 +134,7 @@ export function ExpenseEditDialog({
       const result = await onUpdate(expense.id, updates)
 
       if (result.success) {
-        toast({
-          title: 'Erfolgreich aktualisiert',
+        toast.success('Erfolgreich aktualisiert', {
           description: 'Die Ausgabe wurde erfolgreich bearbeitet.',
         })
         onOpenChange(false)
@@ -146,10 +142,8 @@ export function ExpenseEditDialog({
         throw new Error(result.error || 'Fehler beim Aktualisieren')
       }
     } catch (error) {
-      toast({
-        title: 'Fehler beim Speichern',
+      toast.error('Fehler beim Speichern', {
         description: error instanceof Error ? error.message : 'Unbekannter Fehler',
-        variant: 'destructive',
       })
     } finally {
       setLoading(false)

@@ -110,8 +110,10 @@ export function DayTimeline({
         id: apt.id || '',
         startTime: apt.start_time || '00:00',
         endTime: apt.end_time || '00:00',
-        title: apt.customer_name || 'Unbekannter Kunde',
-        customerName: apt.customer_name || 'Unbekannter Kunde',
+        // V6.1 Enhanced: Keep DB values pure for type detection
+        // KISS: No fallbacks here - let display logic handle it
+        title: apt.title || undefined, // Only for private appointments
+        customerName: apt.customer_name || undefined, // Only for customer appointments
         date: selectedDate,
         services: mappedServices,
         estimatedPrice: apt.estimated_price || undefined,

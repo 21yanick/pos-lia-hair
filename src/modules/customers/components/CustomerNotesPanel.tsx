@@ -2,6 +2,7 @@
 
 import { FileText, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useToast } from '@/shared/hooks/core/useToast'
 import type { CustomerNote, CustomerWithNotes } from '@/shared/services/customerService'
 import { useCustomerActions } from '../hooks/useCustomerActions'
 import { formatRelativeDate } from '../utils/customerUtils'
@@ -33,7 +33,6 @@ interface EditingNote {
 }
 
 export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const { createNote, updateNote, deleteNote } = useCustomerActions(currentOrganization?.id || '')
 
@@ -49,10 +48,8 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
 
   const handleSaveNewNote = async () => {
     if (!newNote.block_name.trim() || !newNote.content.trim()) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Titel und Inhalt sind erforderlich.',
-        variant: 'destructive',
       })
       return
     }
@@ -67,15 +64,12 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
       setIsAddingNote(false)
       setNewNote({ block_name: '', content: '' })
 
-      toast({
-        title: 'Notiz erstellt',
+      toast.success('Notiz erstellt', {
         description: 'Die Notiz wurde erfolgreich hinzugefügt.',
       })
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Notiz konnte nicht erstellt werden.',
-        variant: 'destructive',
       })
     }
   }
@@ -97,10 +91,8 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
     if (!editingNote) return
 
     if (!editingNote.block_name.trim() || !editingNote.content.trim()) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Titel und Inhalt sind erforderlich.',
-        variant: 'destructive',
       })
       return
     }
@@ -117,15 +109,12 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
 
       setEditingNote(null)
 
-      toast({
-        title: 'Notiz aktualisiert',
+      toast.success('Notiz aktualisiert', {
         description: 'Die Änderungen wurden gespeichert.',
       })
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Notiz konnte nicht aktualisiert werden.',
-        variant: 'destructive',
       })
     }
   }
@@ -143,15 +132,12 @@ export function CustomerNotesPanel({ customer }: CustomerNotesPanelProps) {
 
       setDeleteNoteId(null)
 
-      toast({
-        title: 'Notiz gelöscht',
+      toast.success('Notiz gelöscht', {
         description: 'Die Notiz wurde entfernt.',
       })
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Notiz konnte nicht gelöscht werden.',
-        variant: 'destructive',
       })
     }
   }

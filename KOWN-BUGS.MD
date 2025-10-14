@@ -11,5 +11,5 @@
 - Termine: wenn sich überschneidet, muss fehlermeldung kommen und nicht einfach nicht funktionieren.
 
 - Kundenkarten Löschen?
-- Möglichkeit Termine Speichern für Pirvat zb Zeitfenster für 1h oder 2h blocker 
-- möglichkeit zb Kids Termine ohne Kundenkarte erstellen abspeichern
+
+- Ferien in Termin settings können nicht bearbeitet werden.

@@ -132,21 +132,32 @@ export async function getCustomers(
 /**
  * Search customers by name, phone, or email
  */
-export async function searchCustomers(organizationId: string, query: string): Promise<Customer[]> {
+export async function searchCustomers(
+  organizationId: string,
+  query: string,
+  filter: 'active' | 'archived' | 'all' = 'active'
+): Promise<Customer[]> {
   if (!query || query.length < 2) {
     return []
   }
 
   const validOrgId = validateOrganizationId(organizationId)
 
-  const { data, error } = await supabase
+  let queryBuilder = supabase
     .from('customers')
     .select('*')
     .eq('organization_id', validOrgId) // 🔒 Multi-Tenant Security
-    .eq('is_active', true)
     .or(`name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
-    .order('name', { ascending: true })
-    .limit(10)
+
+  // Filter anwenden
+  if (filter === 'active') {
+    queryBuilder = queryBuilder.eq('is_active', true)
+  } else if (filter === 'archived') {
+    queryBuilder = queryBuilder.eq('is_active', false)
+  }
+  // 'all' → kein Filter
+
+  const { data, error } = await queryBuilder.order('name', { ascending: true }).limit(10)
 
   if (error) {
     throw new Error(`Error searching customers: ${error.message}`)
@@ -250,20 +261,50 @@ export async function updateCustomer(
 }
 
 /**
- * Soft delete customer (set is_active = false)
+ * Delete customer only if no sales exist (Protected Delete)
+ * Returns error with sales count if customer has sales
  */
-export async function deleteCustomer(customerId: string, organizationId: string): Promise<void> {
+export async function deleteCustomerProtected(
+  customerId: string,
+  organizationId: string
+): Promise<{ success: true } | { success: false; salesCount: number; error: string }> {
   const validOrgId = validateOrganizationId(organizationId)
 
-  const { error } = await supabase
+  // 1. Count customer sales (completed + cancelled)
+  const { count, error: countError } = await supabase
+    .from('sales')
+    .select('id', { count: 'exact', head: true })
+    .eq('customer_id', customerId)
+    .eq('organization_id', validOrgId)
+    .in('status', ['completed', 'cancelled'])
+
+  if (countError) {
+    throw new Error(`Error counting customer sales: ${countError.message}`)
+  }
+
+  const salesCount = count || 0
+
+  // 2. Block deletion if sales exist
+  if (salesCount > 0) {
+    return {
+      success: false,
+      salesCount,
+      error: `Dieser Kunde hat ${salesCount} Verkauf${salesCount !== 1 ? 'e' : ''}. Bitte löschen Sie zuerst die Verkäufe oder ordnen Sie sie einem anderen Kunden zu.`,
+    }
+  }
+
+  // 3. Hard Delete (CASCADE deletes customer_notes automatically)
+  const { error: deleteError } = await supabase
     .from('customers')
-    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .delete()
     .eq('id', customerId)
     .eq('organization_id', validOrgId) // 🔒 Multi-Tenant Security
 
-  if (error) {
-    throw new Error(`Error deleting customer: ${error.message}`)
+  if (deleteError) {
+    throw new Error(`Error deleting customer: ${deleteError.message}`)
   }
+
+  return { success: true }
 }
 
 // ========================================

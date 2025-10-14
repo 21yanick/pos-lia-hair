@@ -143,14 +143,20 @@ export function validateAppointmentData(appointmentData: AppointmentDataForValid
   }
 
   // V6.1 Enhanced: Validate customer data OR title (at least one required)
-  // Constraint matches DB: customer_id OR customer_name OR title
+  // KISS: Matches DB constraint - customer_id OR customer_name OR title
+  // Only validate if we're actually setting these fields (CREATE or UPDATE)
   if (
     'customer_id' in appointmentData ||
     'customer_name' in appointmentData ||
     'title' in appointmentData
   ) {
-    if (!appointmentData.customer_id && !appointmentData.customer_name && !appointmentData.title) {
-      throw new Error('Kunde oder Titel muss angegeben werden.')
+    const hasCustomer = appointmentData.customer_id || appointmentData.customer_name
+    const hasTitle = appointmentData.title
+
+    if (!hasCustomer && !hasTitle) {
+      throw new Error(
+        'Entweder Kunde (customer_id/customer_name) oder Titel für privaten Termin muss angegeben werden.'
+      )
     }
   }
 

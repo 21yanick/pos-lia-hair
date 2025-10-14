@@ -2,6 +2,7 @@
 
 import { CheckCircle, Download, Info, Loader2, Smartphone } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -12,11 +13,9 @@ import {
   CardTitle,
 } from '@/shared/components/ui/card'
 import { usePWAInstall } from '@/shared/hooks/core/usePWAInstall'
-import { useToast } from '@/shared/hooks/core/useToast'
 
 export function PWAInstallCard() {
   const [isInstalling, setIsInstalling] = useState(false)
-  const { toast } = useToast()
 
   const {
     isInstalled,
@@ -35,23 +34,18 @@ export function PWAInstallCard() {
       const success = await install()
 
       if (success) {
-        toast({
-          title: 'App erfolgreich installiert! 🎉',
+        toast.success('App erfolgreich installiert! 🎉', {
           description: 'LIA HAIR wurde zu Ihrem Startbildschirm hinzugefügt.',
         })
       } else {
-        toast({
-          title: 'Installation abgebrochen',
+        toast.error('Installation abgebrochen', {
           description: 'Die App-Installation wurde vom Benutzer abgebrochen.',
-          variant: 'destructive',
         })
       }
     } catch (_error) {
-      toast({
-        title: 'Installation fehlgeschlagen',
+      toast.error('Installation fehlgeschlagen', {
         description:
           'Es gab einen Fehler bei der App-Installation. Versuchen Sie es später erneut.',
-        variant: 'destructive',
       })
     } finally {
       setIsInstalling(false)
@@ -185,8 +179,7 @@ export function PWAInstallCard() {
                     variant="outline"
                     className="w-full"
                     onClick={() => {
-                      toast({
-                        title: 'Installationsschritte',
+                      toast.info('Installationsschritte', {
                         description: getInstallInstructions(),
                         duration: 8000,
                       })

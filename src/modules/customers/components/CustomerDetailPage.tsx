@@ -1,10 +1,24 @@
 'use client'
 
-import { AlertCircle, ArrowLeft, Loader2, User } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Loader2, Trash2, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
+import { useOrganizationPermissions } from '@/shared/hooks/auth/useOrganizationPermissions'
+import { useCustomerActions } from '../hooks/useCustomerActions'
 import { useCustomerDetail } from '../hooks/useCustomerDetail'
 import { CustomerInfoCard } from './CustomerInfoCard'
 import { CustomerNotesPanel } from './CustomerNotesPanel'
@@ -17,6 +31,8 @@ interface CustomerDetailPageProps {
 export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const router = useRouter()
   const { currentOrganization } = useCurrentOrganization()
+  const { isAdmin } = useOrganizationPermissions()
+  const { deleteCustomer } = useCustomerActions(currentOrganization?.id || '')
 
   const {
     data: customer,
@@ -24,11 +40,42 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
     error,
   } = useCustomerDetail(customerId, currentOrganization?.id || '')
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
   const handleBack = () => {
     if (currentOrganization) {
       router.push(`/org/${currentOrganization.slug}/customers`)
     } else {
       router.back()
+    }
+  }
+
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!customer) return
+
+    try {
+      const result = await deleteCustomer.mutateAsync(customer.id)
+
+      if (result.success) {
+        toast.success('Kunde gelöscht', {
+          description: 'Der Kunde wurde erfolgreich entfernt.',
+        })
+        handleBack()
+      } else {
+        toast.error('Löschen nicht möglich', {
+          description: result.error,
+        })
+      }
+    } catch (_error) {
+      toast.error('Fehler', {
+        description: 'Kunde konnte nicht gelöscht werden.',
+      })
+    } finally {
+      setShowDeleteDialog(false)
     }
   }
 
@@ -117,15 +164,25 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   return (
     <div className="flex flex-1 flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-        <Button variant="ghost" size="sm" onClick={handleBack} className="shrink-0">
-          <ArrowLeft className="h-4 w-4" />
-          <span className="hidden sm:inline ml-1">Zurück</span>
-        </Button>
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          <User className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
-          <h1 className="text-xl sm:text-3xl font-bold truncate">{customer.name}</h1>
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0 justify-between w-full">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="ghost" size="sm" onClick={handleBack} className="shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1">Zurück</span>
+          </Button>
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <User className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
+            <h1 className="text-xl sm:text-3xl font-bold truncate">{customer.name}</h1>
+          </div>
         </div>
+
+        {/* Delete Button - Only for Admins */}
+        {isAdmin && (
+          <Button variant="destructive" size="sm" onClick={handleDeleteClick} className="shrink-0">
+            <Trash2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Löschen</span>
+          </Button>
+        )}
       </div>
 
       {/* Customer Info Section */}
@@ -136,6 +193,30 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
 
       {/* Sales History Section */}
       <CustomerSalesHistory customerId={customer.id} />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kunde wirklich löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Diese Aktion kann nicht rückgängig gemacht werden. Der Kunde und alle zugehörigen
+              Notizen werden permanent gelöscht.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteCustomer.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteCustomer.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Endgültig löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -6,8 +6,8 @@ import type { Customer, CustomerFormData } from '@/shared/services/customerServi
 import {
   createCustomer,
   createCustomerNote,
-  deleteCustomer,
   deleteCustomerNote,
+  deleteCustomerProtected,
   updateCustomer,
   updateCustomerNote,
 } from '@/shared/services/customerService'
@@ -78,9 +78,9 @@ export const useCustomerActions = (organizationId: string) => {
     },
   })
 
-  // Soft delete customer
+  // Delete customer (protected - only if no sales exist)
   const deleteMutation = useMutation({
-    mutationFn: (customerId: string) => deleteCustomer(customerId, organizationId),
+    mutationFn: (customerId: string) => deleteCustomerProtected(customerId, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.business.customers.all(organizationId),

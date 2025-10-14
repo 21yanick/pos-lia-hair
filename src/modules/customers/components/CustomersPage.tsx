@@ -7,15 +7,18 @@ import { Card, CardContent } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useCustomersQuery } from '../hooks/useCustomersQuery'
+import { useAllCustomersQuery, useCustomersQuery } from '../hooks/useCustomersQuery'
 import { matchesSearchQuery } from '../utils/customerUtils'
 import { CustomerCard } from './CustomerCard'
 import { CustomerCreateDialog } from './CustomerCreateDialog'
+
+type CustomerFilter = 'active' | 'archived' | 'all'
 
 export function CustomersPage() {
   const { currentOrganization } = useCurrentOrganization()
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [filter, setFilter] = useState<CustomerFilter>('active')
 
   // Use debounced search query for API calls
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -29,17 +32,26 @@ export function CustomersPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
+  // Query 1: Get ALL customers (for accurate counts)
+  const { data: allCustomers = [] } = useAllCustomersQuery(currentOrganization?.id || '')
+
+  // Query 2: Get filtered customers (for display)
   const {
     data: customers = [],
     isLoading,
     error,
-  } = useCustomersQuery(currentOrganization?.id || '', debouncedQuery)
+  } = useCustomersQuery(currentOrganization?.id || '', debouncedQuery, filter)
 
   // Client-side filtering for immediate feedback
   const filteredCustomers = useMemo(() => {
     if (!searchQuery) return customers
     return customers.filter((customer) => matchesSearchQuery(customer, searchQuery))
   }, [customers, searchQuery])
+
+  // Calculate counts from ALL customers (not filtered)
+  const activeCount = allCustomers.filter((c) => c.is_active).length
+  const archivedCount = allCustomers.filter((c) => !c.is_active).length
+  const totalCount = allCustomers.length
 
   const handleCreateSuccess = () => {
     // Dialog will close automatically, query will refetch
@@ -68,6 +80,31 @@ export function CustomersPage() {
           <Plus className="mr-2 h-4 w-4" />
           <span className="sm:hidden">Kunde erstellen</span>
           <span className="hidden sm:inline">Neuen Kunden erstellen</span>
+        </Button>
+      </div>
+
+      {/* Filter Toggle */}
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          variant={filter === 'active' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('active')}
+        >
+          Aktive ({activeCount})
+        </Button>
+        <Button
+          variant={filter === 'archived' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('archived')}
+        >
+          Archivierte ({archivedCount})
+        </Button>
+        <Button
+          variant={filter === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('all')}
+        >
+          Alle ({totalCount})
         </Button>
       </div>
 

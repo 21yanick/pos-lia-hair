@@ -1,9 +1,9 @@
 'use client'
 
 import { RefreshCw } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import { useReports } from '@/shared/hooks/business/useReports'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { DashboardStats } from './DashboardStats'
 // Import dashboard components
 import { MonthlyTrendChart } from './MonthlyTrendChart'
@@ -17,20 +17,15 @@ export default function DashboardPage() {
     refreshDashboard: refreshStats,
   } = useReports()
 
-  const { toast } = useToast()
-
   const handleRefreshStats = async () => {
     try {
       await refreshStats()
-      toast({
-        title: 'Aktualisiert',
+      toast.success('Aktualisiert', {
         description: 'Dashboard-Statistiken wurden erfolgreich aktualisiert.',
       })
     } catch (_err: unknown) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Statistiken konnten nicht aktualisiert werden.',
-        variant: 'destructive',
       })
     }
   }

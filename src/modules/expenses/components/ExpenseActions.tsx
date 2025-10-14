@@ -13,6 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -29,7 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
-import { useToast } from '@/shared/hooks/core/useToast'
 import type { Expense } from '@/shared/types/expenses'
 import type { ExpenseUpdate } from '@/types/database'
 import { useExpensePDFs } from '../hooks/useExpensePDFs'
@@ -56,7 +56,6 @@ export function ExpenseActions({
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [replaceDialogOpen, setReplaceDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
 
   // PDF functionality
   const { getExpensePDFsFromCache, hasExpensePDFs, invalidateCache, loadExpensePDFs } =
@@ -71,8 +70,7 @@ export function ExpenseActions({
     try {
       const result = await onDelete(expense.id)
       if (result.success) {
-        toast({
-          title: 'Erfolgreich gelöscht',
+        toast.success('Erfolgreich gelöscht', {
           description: `Ausgabe "${expense.description}" wurde gelöscht.`,
         })
         setDeleteDialogOpen(false)
@@ -80,10 +78,8 @@ export function ExpenseActions({
         throw new Error(result.error || 'Fehler beim Löschen')
       }
     } catch (error) {
-      toast({
-        title: 'Fehler beim Löschen',
+      toast.error('Fehler beim Löschen', {
         description: error instanceof Error ? error.message : 'Unbekannter Fehler',
-        variant: 'destructive',
       })
     } finally {
       setLoading(false)
@@ -93,8 +89,7 @@ export function ExpenseActions({
   const handleDuplicate = () => {
     if (onDuplicate) {
       onDuplicate(expense)
-      toast({
-        title: 'Ausgabe dupliziert',
+      toast.success('Ausgabe dupliziert', {
         description: 'Die Ausgabe wurde als Vorlage geladen.',
       })
     }
@@ -120,10 +115,8 @@ export function ExpenseActions({
     if (url) {
       window.open(url, '_blank')
     } else {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'PDF konnte nicht geladen werden.',
-        variant: 'destructive',
       })
     }
   }
@@ -143,28 +136,23 @@ export function ExpenseActions({
 
       window.URL.revokeObjectURL(downloadUrl)
 
-      toast({
-        title: 'Download erfolgreich',
+      toast.success('Download erfolgreich', {
         description: `${fileName} wurde heruntergeladen.`,
       })
     } catch (_error) {
-      toast({
-        title: 'Download fehlgeschlagen',
+      toast.error('Download fehlgeschlagen', {
         description: 'Die Datei konnte nicht heruntergeladen werden.',
-        variant: 'destructive',
       })
     }
   }
 
   const handleReplaceSuccess = () => {
     invalidateCache(expense.id)
-    // Reload PDFs after replacement
     setTimeout(() => {
       loadExpensePDFs(expense.id)
     }, 500)
 
-    toast({
-      title: 'Beleg erfolgreich ersetzt',
+    toast.success('Beleg erfolgreich ersetzt', {
       description: 'Der neue Beleg wurde hochgeladen.',
     })
   }

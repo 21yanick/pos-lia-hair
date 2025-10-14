@@ -2,6 +2,7 @@
 
 import { CheckCircle, Download, QrCode } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -11,7 +12,6 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog'
 import type { PaymentMethod, TransactionResult } from '@/shared/hooks/business/usePOSState'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { QRCodeDialog } from './QRCodeDialog'
 
 interface ConfirmationDialogProps {
@@ -33,7 +33,6 @@ export function ConfirmationDialog({
   onStartNewSale,
   onClose,
 }: ConfirmationDialogProps) {
-  const { toast } = useToast()
   const [showQRCode, setShowQRCode] = useState(false)
 
   const handleDownloadPDF = () => {
@@ -41,11 +40,8 @@ export function ConfirmationDialog({
       // console.log('Opening PDF URL:', transactionResult.receiptUrl)
       window.open(transactionResult.receiptUrl, '_blank')
     } else {
-      // console.error('No receipt URL available:', transactionResult)
-      toast({
-        title: 'PDF nicht verfügbar',
+      toast.error('PDF nicht verfügbar', {
         description: 'Die Quittung konnte nicht erstellt werden.',
-        variant: 'destructive',
       })
     }
   }
@@ -54,10 +50,8 @@ export function ConfirmationDialog({
     if (transactionResult?.receiptUrl) {
       setShowQRCode(true)
     } else {
-      toast({
-        title: 'QR-Code nicht verfügbar',
+      toast.error('QR-Code nicht verfügbar', {
         description: 'Die Quittung konnte nicht erstellt werden.',
-        variant: 'destructive',
       })
     }
   }

@@ -14,6 +14,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import type { CashMovementWithBanking } from '@/modules/banking/types/banking'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -35,12 +36,9 @@ import {
   TableRow,
 } from '@/shared/components/ui/table'
 import { useCashBalance } from '@/shared/hooks/business/useCashBalance'
-import { useToast } from '@/shared/hooks/core/useToast'
 import { getTodaySwiss } from '@/shared/utils/dateUtils'
 
 export default function CashRegisterPage() {
-  // Hooks
-  const { toast } = useToast()
   const { loading, getCurrentCashBalance, getCashMovementsForMonth } = useCashBalance()
 
   // State für Cash Register Page
@@ -152,10 +150,8 @@ export default function CashRegisterPage() {
   // CSV Export-Funktion
   const handleExport = () => {
     if (entries.length === 0) {
-      toast({
-        title: 'Keine Daten',
+      toast.error('Keine Daten', {
         description: 'Es gibt keine Daten zum Exportieren.',
-        variant: 'destructive',
       })
       return
     }
@@ -181,8 +177,7 @@ export default function CashRegisterPage() {
     link.download = `kassenbuch_${monthFormatted}.csv`
     link.click()
 
-    toast({
-      title: 'Export erfolgreich',
+    toast.success('Export erfolgreich', {
       description: `Kassenbuch für ${format(currentMonth, 'MMMM yyyy', { locale: de })} wurde exportiert.`,
     })
   }

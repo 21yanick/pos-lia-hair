@@ -128,6 +128,25 @@ export type MonthlySummaryUpdate = Tables['monthly_summaries']['Update']
 
 export type DocumentRow = Tables['documents']['Row']
 export type DocumentInsert = Tables['documents']['Insert']
+export type DocumentUpdate = Tables['documents']['Update']
+
+// ▶️ V6.1 MIGRATION 07: PDF Versioning Extensions
+// These columns were added in migration 07_pdf_versioning_tracking_v6.sql
+// They extend the documents table for audit trail support
+export type DocumentWithVersioning = DocumentRow & {
+  replaced_by: string | null
+  replacement_reason: 'customer_changed' | 'correction' | 'data_fix' | null
+}
+
+export type DocumentArchiveUpdate = {
+  file_path: string
+  replacement_reason: 'customer_changed' | 'correction' | 'data_fix'
+  notes: string
+}
+
+export type DocumentLinkUpdate = {
+  replaced_by: string
+}
 
 // ▶️ ADDITIONAL V6.1 TABLES
 export type DailyClosureLockRow = Tables['daily_closure_locks']['Row']

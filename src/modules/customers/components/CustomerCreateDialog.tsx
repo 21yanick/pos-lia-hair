@@ -2,6 +2,7 @@
 
 import { Loader2, Plus } from 'lucide-react'
 import { useId, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -14,7 +15,6 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useToast } from '@/shared/hooks/core/useToast'
 import type { CustomerFormData } from '@/shared/services/customerService'
 import type { CustomerRow } from '@/types/database'
 import { useCustomerActions } from '../hooks/useCustomerActions'
@@ -30,7 +30,6 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
   const phoneId = useId()
   const emailId = useId()
 
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const { createCustomer } = useCustomerActions(currentOrganization?.id || '')
 
@@ -65,22 +64,19 @@ export function CustomerCreateDialog({ isOpen, onClose, onSuccess }: CustomerCre
     try {
       const result = await createCustomer.mutateAsync({
         name: formData.name.trim(),
-        phone: formData.phone?.trim() || undefined, // V6.1: Safe optional chaining
-        email: formData.email?.trim() || undefined, // V6.1: Safe optional chaining
+        phone: formData.phone?.trim() || undefined,
+        email: formData.email?.trim() || undefined,
       })
 
-      toast({
-        title: 'Kunde erstellt',
+      toast.success('Kunde erstellt', {
         description: `${result.name} wurde erfolgreich erstellt.`,
       })
 
       onSuccess?.(result)
       handleClose()
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Kunde konnte nicht erstellt werden.',
-        variant: 'destructive',
       })
     }
   }

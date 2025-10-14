@@ -101,8 +101,8 @@ export const queryKeys = {
       list: (orgId: string, filters?: unknown) =>
         [...queryKeys.business.customers.lists(orgId), filters] as const,
       active: (orgId: string) => [...queryKeys.business.customers.lists(orgId), 'active'] as const,
-      search: (orgId: string, query: string) =>
-        [...queryKeys.business.customers.lists(orgId), 'search', query] as const,
+      search: (orgId: string, query: string, filter?: string) =>
+        [...queryKeys.business.customers.lists(orgId), 'search', query, filter] as const,
       details: (orgId: string) => [...queryKeys.business.customers.all(orgId), 'detail'] as const,
       detail: (orgId: string, customerId: string) =>
         [...queryKeys.business.customers.details(orgId), customerId] as const,

@@ -2,8 +2,8 @@
 
 import { Eye } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
-import { useToast } from '@/shared/hooks/core/useToast'
 import type { Expense } from '@/shared/types/expenses'
 import { useExpensePDFs } from '../hooks/useExpensePDFs'
 
@@ -15,7 +15,6 @@ export function ExpensePDFActions({ expense }: ExpensePDFActionsProps) {
   const { loadExpensePDFs, getExpensePDFsFromCache, hasExpensePDFs, loading } = useExpensePDFs()
 
   const [pdfsLoaded, setPdfsLoaded] = useState(false)
-  const { toast } = useToast()
 
   // 🛡️ VALIDATION: Check if this is a temporary expense from optimistic update
   const isTemporaryExpense = expense.id.startsWith('temp-')
@@ -46,10 +45,8 @@ export function ExpensePDFActions({ expense }: ExpensePDFActionsProps) {
     if (url) {
       window.open(url, '_blank')
     } else {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'PDF konnte nicht geladen werden.',
-        variant: 'destructive',
       })
     }
   }

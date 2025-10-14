@@ -2,6 +2,7 @@ import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/render
 import type React from 'react'
 import type { CartItem, Sale } from '@/shared/hooks/business/useSales'
 import type { BusinessSettings } from '@/shared/types/businessSettings'
+import { formatDateForDisplay, formatTimeForDisplay } from '@/shared/utils/dateUtils'
 
 interface ReceiptPDFProps {
   sale: Sale
@@ -280,9 +281,11 @@ const getPaymentMethodLabel = (method: string): string => {
 }
 
 export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSettings }) => {
-  const currentDate = new Date()
-  const formattedDate = currentDate.toLocaleDateString('de-CH')
-  const formattedTime = currentDate.toLocaleTimeString('de-CH')
+  // ✅ Use ORIGINAL sale date, not current time (Swiss compliance requirement)
+  // Defensive: created_at should always exist (PostgreSQL DEFAULT now()), but TypeScript requires null check
+  const saleDate = sale.created_at ? new Date(sale.created_at) : new Date()
+  const formattedDate = formatDateForDisplay(saleDate)
+  const formattedTime = formatTimeForDisplay(saleDate)
 
   // Helper function to get company address
   const getCompanyAddress = () => {
@@ -408,7 +411,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({ sale, items, businessSet
             {/* Right: Receipt Info */}
             <View style={styles.footerRight}>
               <Text style={styles.footerText}>
-                Erstellt: {formattedDate} {formattedTime}
+                Verkauft: {formattedDate} {formattedTime}
               </Text>
               <Text style={styles.footerText}>Beleg: {sale.receipt_number || sale.id}</Text>
             </View>

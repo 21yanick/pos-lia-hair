@@ -2,6 +2,7 @@
 
 import { Mail, Pencil, Phone, User, X } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
@@ -14,7 +15,6 @@ import {
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
-import { useToast } from '@/shared/hooks/core/useToast'
 import type { Customer, CustomerFormData } from '@/shared/services/customerService'
 import { useCustomerActions } from '../hooks/useCustomerActions'
 
@@ -23,10 +23,9 @@ interface CustomerInfoCardProps {
   onUpdate?: (updatedCustomer: Customer) => void
 }
 
-type EditField = 'name' | 'phone' | 'email' | 'is_active' | null // V6.1: Add missing is_active field
+type EditField = 'name' | 'phone' | 'email' | 'is_active' | null
 
 export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const { updateCustomer } = useCustomerActions(currentOrganization?.id || '')
 
@@ -84,22 +83,16 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
       return
     }
 
-    // Validate required fields
     if (field === 'name' && !newValue) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Name ist erforderlich.',
-        variant: 'destructive',
       })
       return
     }
 
-    // Validate email format - V6.1: Type guard for string values only
     if (field === 'email' && newValue && typeof newValue === 'string' && !newValue.includes('@')) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Ungültige E-Mail-Adresse.',
-        variant: 'destructive',
       })
       return
     }
@@ -116,15 +109,12 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
 
       setEditingField(null)
 
-      toast({
-        title: 'Aktualisiert',
+      toast.success('Aktualisiert', {
         description: `${field === 'name' ? 'Name' : field === 'phone' ? 'Telefon' : 'E-Mail'} wurde aktualisiert.`,
       })
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Änderung konnte nicht gespeichert werden.',
-        variant: 'destructive',
       })
     }
   }
@@ -138,15 +128,12 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
         data: { is_active: newStatus },
       })
 
-      toast({
-        title: 'Status aktualisiert',
-        description: `Kunde ist jetzt ${newStatus ? 'aktiv' : 'inaktiv'}.`,
+      toast.success('Archivierung aktualisiert', {
+        description: `Kunde wurde ${newStatus ? 'aktiviert' : 'archiviert'}.`,
       })
     } catch (_error) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Status konnte nicht geändert werden.',
-        variant: 'destructive',
       })
     }
   }
@@ -254,7 +241,7 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
 
         {/* Customer Status */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Status</Label>
+          <Label className="text-sm font-medium">Archivierung</Label>
           <div className="flex items-center gap-3">
             <TooltipProvider>
               <Tooltip>
@@ -272,7 +259,7 @@ export function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
                           : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
                       }`}
                     >
-                      {customer.is_active ? 'Aktiv' : 'Inaktiv'}
+                      {customer.is_active ? 'Aktiv' : 'Archiviert'}
                     </span>
                   </div>
                 </TooltipTrigger>

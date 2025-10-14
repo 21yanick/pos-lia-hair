@@ -1,9 +1,9 @@
 'use client'
 
 import { useCallback } from 'react'
+import { toast } from 'sonner'
 import { useCurrentOrganization } from '@/shared/hooks/auth/useCurrentOrganization'
 import { type Item, type ItemInsert, useItems } from '@/shared/hooks/business/useItems'
-import { useToast } from '@/shared/hooks/core/useToast'
 
 export interface ProductFormData {
   name: string
@@ -30,7 +30,6 @@ interface UseProductActionsReturn {
 }
 
 export function useProductActions(): UseProductActionsReturn {
-  const { toast } = useToast()
   const { currentOrganization } = useCurrentOrganization()
   const { addItem, updateItem, toggleFavorite, toggleActive, deleteItem, syncAuthUser, loading } =
     useItems()
@@ -67,16 +66,13 @@ export function useProductActions(): UseProductActionsReturn {
           })
 
           if (error) {
-            toast({
-              title: 'Fehler',
+            toast.error('Fehler', {
               description: `Fehler beim Aktualisieren: ${error}`,
-              variant: 'destructive',
             })
             return false
           }
 
-          toast({
-            title: 'Erfolg',
+          toast.success('Erfolg', {
             description: 'Produkt erfolgreich aktualisiert',
           })
         } else {
@@ -84,16 +80,13 @@ export function useProductActions(): UseProductActionsReturn {
           const { error } = await addItem(itemData)
 
           if (error) {
-            toast({
-              title: 'Fehler',
+            toast.error('Fehler', {
               description: `Fehler beim Hinzufügen: ${error}`,
-              variant: 'destructive',
             })
             return false
           }
 
-          toast({
-            title: 'Erfolg',
+          toast.success('Erfolg', {
             description: 'Produkt erfolgreich hinzugefügt',
           })
         }
@@ -101,15 +94,13 @@ export function useProductActions(): UseProductActionsReturn {
         return true
       } catch (err) {
         console.error('Fehler beim Speichern:', err)
-        toast({
-          title: 'Fehler',
+        toast.error('Fehler', {
           description: 'Ein unerwarteter Fehler ist aufgetreten',
-          variant: 'destructive',
         })
         return false
       }
     },
-    [addItem, updateItem, currentOrganization?.id, toast]
+    [addItem, updateItem, currentOrganization?.id]
   )
 
   // 🚀 Performance-optimierter Favorite Toggle
@@ -118,82 +109,67 @@ export function useProductActions(): UseProductActionsReturn {
       const { error } = await toggleFavorite(id, currentValue)
 
       if (error) {
-        toast({
-          title: 'Fehler',
+        toast.error('Fehler', {
           description: `Fehler beim Ändern des Favoriten-Status: ${error}`,
-          variant: 'destructive',
         })
       }
     },
-    [toggleFavorite, toast]
+    [toggleFavorite]
   )
 
-  // 🚀 Performance-optimierter Active Toggle
   const handleToggleActive = useCallback(
     async (id: string, currentValue: boolean) => {
       const { error } = await toggleActive(id, currentValue)
 
       if (error) {
-        toast({
-          title: 'Fehler',
+        toast.error('Fehler', {
           description: `Fehler beim Ändern des Aktiv-Status: ${error}`,
-          variant: 'destructive',
         })
       }
     },
-    [toggleActive, toast]
+    [toggleActive]
   )
 
-  // 🚀 Performance-optimierter Delete Handler
   const handleDeleteItem = useCallback(
     async (id: string) => {
       if (confirm('Sind Sie sicher, dass Sie dieses Produkt löschen möchten?')) {
         const { error } = await deleteItem(id)
 
         if (error) {
-          toast({
-            title: 'Fehler',
+          toast.error('Fehler', {
             description: `Fehler beim Löschen: ${error}`,
-            variant: 'destructive',
           })
         } else {
-          toast({
-            title: 'Erfolg',
+          toast.success('Erfolg', {
             description: 'Produkt erfolgreich gelöscht',
           })
         }
       }
     },
-    [deleteItem, toast]
+    [deleteItem]
   )
 
-  // 🚀 Performance-optimierter Manual Sync
   const handleManualSync = useCallback(async () => {
     try {
       const result = await syncAuthUser()
       if (result.success) {
-        toast({
-          title: 'Erfolg',
+        toast.success('Erfolg', {
           description: 'Synchronisierung erfolgreich! Die Seite wird neu geladen...',
         })
         setTimeout(() => {
           window.location.reload()
         }, 1500)
       } else {
-        toast({
-          title: 'Fehler',
+        toast.error('Fehler', {
           description: `Fehler: ${result.error}`,
-          variant: 'destructive',
         })
       }
     } catch (err: unknown) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: `Fehler: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`,
-        variant: 'destructive',
       })
     }
-  }, [syncAuthUser, toast])
+  }, [syncAuthUser])
 
   return {
     handleSaveItem,

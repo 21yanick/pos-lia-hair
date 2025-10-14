@@ -47,6 +47,11 @@ export function CustomerCard({ customer }: CustomerCardProps) {
           </Avatar>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-card-foreground truncate">{customer.name}</h3>
+            {!customer.is_active && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 mt-1">
+                Archiviert
+              </span>
+            )}
           </div>
         </div>
 

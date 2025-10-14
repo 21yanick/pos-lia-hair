@@ -2,6 +2,7 @@
 
 import { Building, Edit2, Plus, Trash2 } from 'lucide-react'
 import { useId, useState } from 'react'
+import { toast } from 'sonner'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -23,7 +24,6 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { useSupplierCategories } from '@/shared/hooks/business/useSupplierCategories'
-import { useToast } from '@/shared/hooks/core/useToast'
 
 export function SupplierCategoriesForm() {
   const {
@@ -34,8 +34,6 @@ export function SupplierCategoriesForm() {
     removeCategory,
     validateCategoryKey,
   } = useSupplierCategories()
-
-  const { toast } = useToast()
 
   // Add Category State
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -55,20 +53,16 @@ export function SupplierCategoriesForm() {
 
   const handleAddCategory = async () => {
     if (!newCategoryKey.trim() || !newCategoryLabel.trim()) {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Bitte Key und Label ausfüllen',
-        variant: 'destructive',
       })
       return
     }
 
     const validation = validateCategoryKey(newCategoryKey.trim())
     if (!validation.isValid) {
-      toast({
-        title: 'Ungültiger Key',
+      toast.error('Ungültiger Key', {
         description: validation.error,
-        variant: 'destructive',
       })
       return
     }
@@ -77,26 +71,21 @@ export function SupplierCategoriesForm() {
       const result = await addCategory(newCategoryKey.trim(), newCategoryLabel.trim())
 
       if (result.success) {
-        toast({
-          title: 'Erfolg',
+        toast.success('Erfolg', {
           description: 'Lieferanten-Kategorie wurde hinzugefügt',
         })
         setIsAddDialogOpen(false)
         setNewCategoryKey('')
         setNewCategoryLabel('')
       } else {
-        toast({
-          title: 'Fehler',
+        toast.error('Fehler', {
           description: result.error,
-          variant: 'destructive',
         })
       }
     } catch (error) {
       console.error('Error in handleAddCategory:', error)
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: 'Ein unerwarteter Fehler ist aufgetreten',
-        variant: 'destructive',
       })
     }
   }
@@ -107,17 +96,14 @@ export function SupplierCategoriesForm() {
     const result = await updateCategory(editingCategory.key, editLabel.trim())
 
     if (result.success) {
-      toast({
-        title: 'Erfolg',
+      toast.success('Erfolg', {
         description: 'Lieferanten-Kategorie wurde aktualisiert',
       })
       setEditingCategory(null)
       setEditLabel('')
     } else {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: result.error,
-        variant: 'destructive',
       })
     }
   }
@@ -126,15 +112,12 @@ export function SupplierCategoriesForm() {
     const result = await removeCategory(key)
 
     if (result.success) {
-      toast({
-        title: 'Erfolg',
+      toast.success('Erfolg', {
         description: 'Lieferanten-Kategorie wurde entfernt',
       })
     } else {
-      toast({
-        title: 'Fehler',
+      toast.error('Fehler', {
         description: result.error,
-        variant: 'destructive',
       })
     }
   }
